@@ -1,0 +1,7 @@
+kernel = "rump-kernel"
+memory = 8
+# vcpus == 1 required
+vcpus=1
+name = "rumpkernel"
+disk = [ 'file:test.ffs,hda,rw' ]
+vif = [ '' ]
