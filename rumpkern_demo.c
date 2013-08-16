@@ -151,6 +151,7 @@ donet(void)
 
 #define PROMPT "LOGON: "
 #define GREET "GREETINGS PROFESSOR FALKEN.\n"
+#define NOPE "LOGIN INCORRECT\n"
 		rump_sys_write(s2, PROMPT, sizeof(PROMPT)-1);
 
 		memset(buf, 0, sizeof(buf));
@@ -168,10 +169,13 @@ donet(void)
 		}
 		*p = '\0';
 		/* multiple holes here, some more microsofty than others */
-		if (strncmp(buf, "Joshua", 6) == 0)
+		if (strncmp(buf, "Joshua", 6) == 0) {
 			rump_sys_write(s2, GREET, sizeof(GREET)-1);
-		if (strncmp(buf, "reboot", 6) == 0)
+		} else if (strncmp(buf, "reboot", 6) == 0) {
 			return;
+		} else {
+			rump_sys_write(s2, NOPE, sizeof(NOPE)-1);
+		}
 		msleep(5000);
 		rump_sys_close(s2);
 	}
