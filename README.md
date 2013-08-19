@@ -10,6 +10,7 @@ kernel-quality drivers as part of the single-image application.
 
 The current status is working, with the block and NIC I/O devices having
 been verified by using the Fast File System and TCP, respectively.
+These drivers are also provided as demos, see instructions below.
 The immediate TODO is cleaning up the build procedure.
 
 See http://www.NetBSD.org/docs/rump for more information on rump kernels.
@@ -17,18 +18,14 @@ See http://www.NetBSD.org/docs/rump for more information on rump kernels.
 Using / Testing
 ---------------
 
-To run the demos, you need a Xen Dom0 (surprise).  Additionally, you need
-to build rump kernel components for your target system.  Even if your
-system supplies rump kernel components as binaries, you need a fairly
-recent build.  The easiest way to ensure this is to use
-[buildrump.sh](https://github.com/anttikantee/buildrump.sh), which will
-get the necessary things done with a single command.
-
 To build and use, get the Xen source tree which matches your hypervisor
 version.  Then, clone this repository into the `extras` subdirectory
 of your Xen source tree and follow/copypaste the commands below.
 
-First, build rump kernel components for your machine architecture:
+First, build rump kernel components for your machine architecture.
+The easiest way to do this is to use
+[buildrump.sh](https://github.com/anttikantee/buildrump.sh), which is
+also provided as a submodule:
 
 	git submodule update --init --recursive
 	./buildrump.sh/buildrump.sh -s rumpsrc -T rumptools -o rumpobj -V NOPIC=1
