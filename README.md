@@ -29,14 +29,14 @@ To run, use the standard Xen tools:
 
 	xl create -c domain_config
 
-If you want to run the fs demo, copy the file system image
+Check out `domain_config` to change which tests/demos are run.
+If you run the fs demo, copy the file system image
 `test_clean.ffs` to `test.ffs` -- the image is also written, so this
-avoids dirtying the version-controlled image.  If you want to run the
+avoids dirtying the version-controlled image.  If run the
 networking demo, make sure your have a suitable Xen networking interface
 (in addition to regular bridging, I had to use `ethtool -K if tx off` to
 make connections from Dom0 work).  Also, check out what `rumpkern_demo.c`
-actually does.  If you modify `rumpkern_demo.c`, you can rebuild the
-bootable image simply by typing `make`.
+actually does.
 
 
 Implementation

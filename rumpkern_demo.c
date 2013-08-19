@@ -287,13 +287,20 @@ donet(void)
 void
 demo_thread(void *arg)
 {
+	start_info_t *si = arg;
+	int tests;
+
+	if (si->cmd_line[0]) {
+		tests = si->cmd_line[0] - '0';
+		if (tests < 0 || tests > 3)
+			tests = 0;
+	}
 
 	rump_init();
 
-	if (1)
+	if (tests & 0x1)
 		dofs();
-	schedule();
-	if (1)
+	if (tests & 0x2)
 		donet();
 
 	rump_sys_reboot(0, 0);
