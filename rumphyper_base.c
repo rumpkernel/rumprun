@@ -142,15 +142,14 @@ rumpuser_free(void *buf, size_t buflen)
 	xfree(buf);
 }
 
-/* random until proven not.  eh eh eh */
+/* Not very random */
 int
 rumpuser_getrandom(void *buf, size_t buflen, int flags, size_t *retp)
 {
-	static uint8_t rnd = 37;
 	uint8_t *rndbuf;
 
 	for (*retp = 0, rndbuf = buf; *retp < buflen; (*retp)++) {
-		*rndbuf++ = rnd++;
+		*rndbuf++ = NOW() & 0xff;
 	}
 
 	return 0;
