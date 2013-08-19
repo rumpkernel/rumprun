@@ -35,11 +35,21 @@
 
 struct rumpuser_hyperup rumpuser__hyp;
 
+static void biothread(void *arg);
+static struct rumpuser_mtx *bio_mtx;
+static struct rumpuser_cv *bio_cv;
+static int bio_outstanding;
+
 int
 rumpuser_init(int ver, const struct rumpuser_hyperup *hyp)
 {
 
 	rumpuser__hyp = *hyp;
+
+	rumpuser_mutex_init(&bio_mtx, RUMPUSER_MTX_SPIN);
+	rumpuser_cv_init(&bio_cv);
+	create_thread("biopoll", biothread, NULL);
+
 	return 0;
 }
 
@@ -218,22 +228,43 @@ struct biocb {
 	struct blkfront_aiocb bio_aiocb;
 	rump_biodone_fn bio_done;
 	void *bio_arg;
-	int complete;
 };
 
 static void
 biocomp(struct blkfront_aiocb *aiocb, int ret)
 {
 	struct biocb *bio = aiocb->data;
-	int nlocks;
+	int dummy;
 
 	rumpkern_sched(0, NULL);
 	if (ret)
 		bio->bio_done(bio->bio_arg, 0, RUMP_EIO);
 	else
 		bio->bio_done(bio->bio_arg, bio->bio_aiocb.aio_nbytes, 0);
-	rumpkern_unsched(&nlocks, NULL);
-	bio->complete = 1;
+	rumpkern_unsched(&dummy, NULL);
+	xfree(bio);
+
+	rumpuser_mutex_enter_nowrap(bio_mtx);
+	bio_outstanding--;
+	rumpuser_mutex_exit(bio_mtx);
+}
+
+static void
+biothread(void *arg)
+{
+
+	rumpuser__hyp.hyp_schedule();
+	rumpuser__hyp.hyp_lwproc_newlwp(0);
+	rumpuser__hyp.hyp_unschedule();
+
+	for (;;) {
+		rumpuser_mutex_enter_nowrap(bio_mtx);
+		while (bio_outstanding == 0)
+			rumpuser_cv_wait_nowrap(bio_cv, bio_mtx);
+		rumpuser_mutex_exit(bio_mtx);
+
+		blkfront_aio_poll(blkdevs[0]);
+	}
 }
 
 void
@@ -250,7 +281,6 @@ rumpuser_bio(int fd, int op, void *data, size_t dlen, int64_t off,
 
 	bio->bio_done = biodone;
 	bio->bio_arg = donearg;
-	bio->complete = 0;
 
 	aiocb->aio_dev = blkdevs[0];
 	aiocb->aio_buf = data;
@@ -264,11 +294,10 @@ rumpuser_bio(int fd, int op, void *data, size_t dlen, int64_t off,
 	else
 		blkfront_aio_write(aiocb);
 
-	/* duh */
-	while (!bio->complete) {
-		blkfront_aio_poll(blkdevs[0]);
-	}
-	xfree(bio);
+	rumpuser_mutex_enter(bio_mtx);
+	bio_outstanding++;
+	rumpuser_cv_signal(bio_cv);
+	rumpuser_mutex_exit(bio_mtx);
 
 	rumpkern_sched(nlocks, NULL);
 }
