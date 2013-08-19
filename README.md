@@ -24,20 +24,14 @@ recent build.  The easiest way to ensure this is to use
 [buildrump.sh](https://github.com/anttikantee/buildrump.sh), which will
 get the necessary things done with a single command.
 
-To build and use, get the Xen source tree, change into the `extras`
-subdirectory, and then follow these copypasta steps:
+To build and use, get the Xen source tree which matches your hypervisor
+version.  Then, clone this repository into the `extras` subdirectory
+of your Xen source tree and follow/copypaste the commands below.
 
-	git clone https://github.com/anttikantee/rumpuser-xen
-	cd rumpuser-xen
+First, build rump kernel components for your machine architecture:
 
-Then clone the buildrump.sh repo and build rump kernel components:
-
-	git clone https://github.com/anttikantee/buildrump.sh
-	./buildrump.sh/buildrump.sh -s rumpsrc -T rumptools -o rumpobj
-
-If you intend to use rump kernels only for Xen, you can also add the
-`-V NOPIC=1` parameters to build only static libraries (shared libraries
-are not useful with Xen).
+	git submodule update --init --recursive
+	./buildrump.sh/buildrump.sh -s rumpsrc -T rumptools -o rumpobj -V NOPIC=1
 
 Next, build networking support (this step will be integrated into the
 build at a later date, but required as a separate step for now).
@@ -49,10 +43,12 @@ Now you can build your domU image:
 	make
 
 If you want to run the fs demo, copy the file system image
-`test_clean.ffs` to `test.ffs`.  If you want to run the networking demo,
-make sure your have a suitable Xen networking interface (in addition to
-regular bridging, I had to use `ethtool -K if tx off` to make connections
-from Dom0 work).  Also, check out what `rumpkern_demo.c` actually does.
+`test_clean.ffs` to `test.ffs` -- the image is also written, so this
+avoids dirtying the version-controlled image.  If you want to run the
+networking demo, make sure your have a suitable Xen networking interface
+(in addition to regular bridging, I had to use `ethtool -K if tx off` to
+make connections from Dom0 work).  Also, check out what `rumpkern_demo.c`
+actually does.
 
 To run, use the standard Xen tools:
 
