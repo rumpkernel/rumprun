@@ -117,6 +117,8 @@ typedef int error_t;
 extern int errno;
 #define ERRNO
 #define errno (get_current()->reent._errno)
+#else
+#define errno (get_current()->threrrno)
 #endif
 
 #endif

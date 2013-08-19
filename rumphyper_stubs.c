@@ -13,8 +13,6 @@ int name(void) __attribute__((alias("nothing")));
 TIMETOPANIC(rumpuser_anonmmap);
 TIMETOPANIC(rumpuser_unmap);
 
-NOTHING(rumpuser_seterrno);
-
 /* just so that we don't miss any */
 TIMETOPANIC(rumpuser_dprintf);
 

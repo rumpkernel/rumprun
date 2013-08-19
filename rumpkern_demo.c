@@ -2,6 +2,7 @@
 #include <mini-os/console.h>
 #include <mini-os/netfront.h>
 #include <mini-os/xmalloc.h>
+#include <mini-os/errno.h>
 
 /* some hacks to satisfy type requirements.  XXX: fix me */
 typedef long register_t;
@@ -64,6 +65,7 @@ dofs(void)
 	/* assume README.md exists, open it, and display first line */
 	if ((fd = rump_sys_open("README.md", RUMP_O_RDWR)) == -1)
 		FAIL("open README");
+
 	memset(buf, 0, sizeof(buf));
 	if (rump_sys_read(fd, buf, 200) < 200)
 		FAIL("read");
@@ -220,7 +222,7 @@ donet(void)
 
 	s = rump_sys_socket(RUMP_PF_INET, RUMP_SOCK_STREAM, 0);
 	if (s == -1) {
-		printk("no socket\n");
+		printk("no socket %d\n", errno);
 		return;
 	}
 	ASSERT(s == 0); /* pseudo-XXX */
@@ -231,11 +233,11 @@ donet(void)
 	sin.sin_port = 0x0010; /* 0x1000 on LE */
 	sin.sin_addr = 0;
 	if (rump_sys_bind(s, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
-		printk("bind fail\n");
+		printk("bind fail %d\n", errno);
 		return;
 	}
 	if (rump_sys_listen(s, 10) == -1) {
-		printk("unix man, please listen()\n");
+		printk("unix man, please listen(): %d\n", errno);
 		return;
 	}
 
@@ -263,7 +265,7 @@ donet(void)
 		}
 
 		if (rv == -1) {
-			printk("fail\n");
+			printk("fail poll %d\n", errno);
 			rump_sys_reboot(0, 0);
 		}
 

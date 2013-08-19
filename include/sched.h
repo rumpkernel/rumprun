@@ -23,6 +23,8 @@ struct thread {
     s_time_t wakeup_time;
 #ifdef HAVE_LIBC
     struct _reent reent;
+#else
+    int threrrno;
 #endif
     void *lwp;
 };
