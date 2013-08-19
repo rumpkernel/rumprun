@@ -37,5 +37,3 @@ NOTHING(rumpuser_daemonize_done);
 
 TIMETOPANIC(rumpuser_iovread);
 TIMETOPANIC(rumpuser_iovwrite);
-
-NOTHING(rumpuser_close);

@@ -166,34 +166,45 @@ rumpuser_exit(int value)
 #define BLKFDOFF 375
 static struct blkfront_dev *blkdevs[NBLKDEV];
 static struct blkfront_info blkinfos[NBLKDEV];
+static int blkopen[NBLKDEV];
 
-/* TODO: refcount + close */
 static int
 devopen(int num)
 {
 	int nlocks;
 
-	if (blkdevs[0])
+	if (num+1 > NBLKDEV)
+		return RUMP_ENXIO;
+
+	if (blkopen[num]) {
+		blkopen[num]++;
 		return 1;
+	}
 
 	rumpkern_unsched(&nlocks, NULL);
-	blkdevs[0] = init_blkfront(NULL, &blkinfos[0]);
+	blkdevs[num] = init_blkfront(NULL, &blkinfos[num]);
 	rumpkern_sched(nlocks, NULL);
-	return blkdevs[0] != NULL;
+
+	if (blkdevs[num] != NULL) {
+		blkopen[num] = 1;
+		return 0;
+	} else {
+		return RUMP_EIO; /* guess something */
+	}
 }
 
 int
 rumpuser_open(const char *name, int mode, int *fdp)
 {
-	int acc;
+	int acc, rv;
 
 	/* we support only the special case */
 	if (strcmp(name, "blk0") != 0
 	    || (mode & RUMPUSER_OPEN_BIO) == 0)
 		return RUMP_EINVAL;
 
-	if (!devopen(0))
-		return RUMP_EPERM;
+	if ((rv = devopen(0)) != 0)
+		return rv;
 
 	acc = mode & RUMPUSER_OPEN_ACCMODE;
 	if (acc == RUMPUSER_OPEN_WRONLY || acc == RUMPUSER_OPEN_RDWR) {
@@ -208,17 +219,40 @@ rumpuser_open(const char *name, int mode, int *fdp)
 }
 
 int
+rumpuser_close(int fd)
+{
+	int rfd = fd - BLKFDOFF;
+
+	if (rfd < 0 || rfd+1 > NBLKDEV)
+		return RUMP_EBADF;
+
+	if (--blkopen[rfd] == 0) {
+		struct blkfront_dev *toclose = blkdevs[rfd];
+		
+		/* not sure if this appropriately prevents races either ... */
+		blkdevs[rfd] = NULL;
+		shutdown_blkfront(toclose);
+		
+	}
+
+	return 0;
+}
+
+int
 rumpuser_getfileinfo(const char *name, uint64_t *size, int *type)
 {
+	int rv;
 
 	if (strcmp(name, "blk0") != 0)
 		return RUMP_EXDEV;
 
-	if (!devopen(0))
-		return RUMP_EBADF;
+	if ((rv = devopen(0)) != 0)
+		return rv;
 
 	*size = blkinfos[0].sectors * blkinfos[0].sector_size;
 	*type = RUMPUSER_FT_BLK;
+
+	rumpuser_close(BLKFDOFF);
 
 	return 0;
 }
