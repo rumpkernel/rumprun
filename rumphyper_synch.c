@@ -45,19 +45,27 @@ TAILQ_HEAD(waithead, waiter);
 struct waiter {
 	struct thread *who;
 	TAILQ_ENTRY(waiter) entries;
+	int onlist;
 };
 
-static void
+static int
 wait(struct waithead *wh, uint64_t nsec)
 {
 	struct waiter w;
 
 	w.who = get_current();
 	TAILQ_INSERT_TAIL(wh, &w, entries);
+	w.onlist = 1;
 	block(w.who);
 	if (nsec)
 		w.who->wakeup_time = NOW() + nsec;
 	schedule();
+
+	/* woken up by timeout? */
+	if (w.onlist)
+		TAILQ_REMOVE(wh, &w, entries);
+
+	return w.onlist ? RUMP_ETIMEDOUT : 0;
 }
 
 static void
@@ -67,6 +75,7 @@ wakeup_one(struct waithead *wh)
 
 	if ((w = TAILQ_FIRST(wh)) != NULL) {
 		TAILQ_REMOVE(wh, w, entries);
+		w->onlist = 0;
 		wake(w->who);
 	}
 }
@@ -78,6 +87,7 @@ wakeup_all(struct waithead *wh)
 
 	while ((w = TAILQ_FIRST(wh)) != NULL) {
 		TAILQ_REMOVE(wh, w, entries);
+		w->onlist = 0;
 		wake(w->who);
 	}
 }
@@ -408,14 +418,15 @@ rumpuser_cv_timedwait(struct rumpuser_cv *cv, struct rumpuser_mtx *mtx,
 	int64_t sec, int64_t nsec)
 {
 	int nlocks;
+	int rv;
 
 	cv->nwaiters++;
 	cv_unsched(mtx, &nlocks);
-	wait(&cv->waiters, sec * 1000*1000*1000ULL + nsec);
+	rv = wait(&cv->waiters, sec * 1000*1000*1000ULL + nsec);
 	cv_resched(mtx, nlocks);
 	cv->nwaiters--;
 
-	return 0; /* XXX */
+	return rv;
 }
 
 void
