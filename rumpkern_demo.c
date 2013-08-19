@@ -94,13 +94,114 @@ struct sockaddr_in {
 	int8_t		sin_zero[8];
 };
 
+/* XXX ditto for pollfd */
+struct pollfd {
+	int	fd;
+	short	events;
+	short	revents;
+};
+#define POLLIN 1
+#define MAXCONN 64
+
+struct conn {
+	int c_bpos;
+	int c_cnt;
+	char c_buf[0xe0];
+};
+
+static struct pollfd pfds[MAXCONN];
+static struct conn conns[MAXCONN];
+int maxfd;
+
+static void
+acceptconn(void)
+{
+	struct sockaddr_in sin;
+	int slen = sizeof(sin);
+	int s;
+
+	if ((s = rump_sys_accept(0, (struct sockaddr *)&sin, &slen)) == -1)
+		return;
+
+	/* drop */
+	if (s >= MAXCONN) {
+		rump_sys_close(s);
+		return;
+	}
+
+	/* init */
+	pfds[s].fd = s;
+	memset(&conns[s], 0, sizeof(conns[s]));
+
+	/* XXX: not g/c'd */
+	if (s+1 > maxfd)
+		maxfd = s+1;
+
+#define PROMPT "LOGON: "
+	/* just assume this will go into the socket without blocking */
+	rump_sys_write(s, PROMPT, sizeof(PROMPT)-1);
+#undef PROMPT
+}
+
+static void
+readconn(int i)
+{
+	struct conn *c = &conns[i];
+	char *p;
+	ssize_t nn;
+
+	nn = rump_sys_read(i, c->c_buf+c->c_bpos, sizeof(c->c_buf)-c->c_bpos);
+	/* treat errors and EOF the same way, we shouldn't get EAGAIN */
+	if (nn <= 0) {
+		rump_sys_close(i);
+		pfds[i].fd = -1;
+		c->c_cnt = -1;
+	}
+
+	if ((p = strchr(c->c_buf, '\n')) == NULL) {
+		c->c_bpos += nn;
+		return;
+	}
+
+	*p = '\0';
+#define GREET "GREETINGS PROFESSOR FALKEN.\n"
+#define NOPE "LOGIN INCORRECT\n"
+	/* multiple holes here, some more microsofty than others */
+	if (strncmp(c->c_buf, "Joshua", 6) == 0) {
+		rump_sys_write(i, GREET, sizeof(GREET)-1);
+	} else if (strncmp(c->c_buf, "reboot", 6) == 0) {
+		rump_sys_reboot(0, 0);
+	} else {
+		rump_sys_write(i, NOPE, sizeof(NOPE)-1);
+	}
+	pfds[i].fd = -1;
+#undef GREET
+#undef NOPE
+}
+
+static void
+processzombies(void)
+{
+	int i;
+
+	/*
+	 * Let each connection live ~10s regardless of it's
+	 * completed or not.
+	 */
+	for (i = 1; i < MAXCONN; i++) {
+		if (conns[i].c_cnt != -1 && ++conns[i].c_cnt > 10) {
+			rump_sys_close(i);
+		}
+	}
+}
+
 static void
 donet(void)
 {
 	struct sockaddr_in sin;
-	char buf[128];
-	int s, s2;
-	int rv;
+	uint64_t zombietime;
+	int rv, i;
+	int s;
 	
 	if ((rv = rump_pub_netconfig_ifcreate("xenif0")) != 0) {
 		printk("creating xenif0 failed: %d\n", rv);
@@ -122,6 +223,7 @@ donet(void)
 		printk("no socket\n");
 		return;
 	}
+	ASSERT(s == 0); /* pseudo-XXX */
 
 	memset(&sin, 0, sizeof(sin));
 	sin.sin_len = sizeof(sin);
@@ -137,47 +239,46 @@ donet(void)
 		return;
 	}
 
-	printk("listening for connections on port 4096 (16 if you're BE)\n");
+	for (i = 0; i < MAXCONN; i++) {
+		pfds[i].fd = -1;
+		pfds[i].events = POLLIN;
+		conns[i].c_cnt = -1;
+	}
+	pfds[0].fd = 0;
+	maxfd = 1;
 
+	printk("WOPR reporting for duty on port 4096 (16 if you're BE)\n");
+
+	zombietime = NOW();
 	for (;;) {
-		int slen = sizeof(sin);
-		char *p;
-		size_t bpos;
-		ssize_t nn;
+		if (NOW() - zombietime >= SECONDS(1)) {
+			processzombies();
+			zombietime = NOW();
+		}
 
-		s2 = rump_sys_accept(s, (struct sockaddr *)&sin, &slen);
-		if (s2 == -1)
+		rv = rump_sys_poll(pfds, maxfd, 1000);
+		if (rv == 0) {
+			printk("still waiting ... %lld\n", NOW());
 			continue;
+		}
 
-#define PROMPT "LOGON: "
-#define GREET "GREETINGS PROFESSOR FALKEN.\n"
-#define NOPE "LOGIN INCORRECT\n"
-		rump_sys_write(s2, PROMPT, sizeof(PROMPT)-1);
+		if (rv == -1) {
+			printk("fail\n");
+			rump_sys_reboot(0, 0);
+		}
 
-		memset(buf, 0, sizeof(buf));
-		bpos = 0;
-		while (!(p = strchr(buf, '\n')) && bpos < sizeof(buf)) {
-			nn = rump_sys_read(s2, buf+bpos, sizeof(buf)-bpos);
-			if (nn <= 0) {
-				break;
+		if (pfds[0].revents & POLLIN) {
+			acceptconn();
+			rv--;
+		}
+
+		for (i = 1; i < MAXCONN && rv; i++) {
+			if (pfds[i].fd != -1 && pfds[i].revents & POLLIN) {
+				readconn(i);
+				rv--;
 			}
-			bpos += nn;
 		}
-		if (!p) {
-			rump_sys_close(s2);
-			continue;
-		}
-		*p = '\0';
-		/* multiple holes here, some more microsofty than others */
-		if (strncmp(buf, "Joshua", 6) == 0) {
-			rump_sys_write(s2, GREET, sizeof(GREET)-1);
-		} else if (strncmp(buf, "reboot", 6) == 0) {
-			return;
-		} else {
-			rump_sys_write(s2, NOPE, sizeof(NOPE)-1);
-		}
-		msleep(5000);
-		rump_sys_close(s2);
+		ASSERT(rv == 0);
 	}
 }
 
