@@ -4,4 +4,4 @@ memory = 8
 vcpus=1
 name = "rumpkernel"
 disk = [ 'file:test.ffs,hda,rw' ]
-vif = [ '' ]
+vif = [ 'mac=b2:11:11:11:11:11' ]
