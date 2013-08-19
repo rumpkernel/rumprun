@@ -1,6 +1,7 @@
-#include <console.h>
+#include <mini-os/console.h>
 
-int ohcrap(void); int ohcrap(void) {printk("pieleen meni\n"); for(;;);}
+int ohcrap(void);
+int ohcrap(void) {printk("rumphyper: unimplemented stub\n"); do_exit();}
 
 int nothing(void); int nothing(void) {return 0;}
 
@@ -16,6 +17,7 @@ TIMETOPANIC(rumpuser_unmap);
 /* just so that we don't miss any */
 TIMETOPANIC(rumpuser_dprintf);
 
+/* signals AND sp not supported */
 TIMETOPANIC(rumpuser_kill);
 
 NOTHING(rumpuser_sp_init);
@@ -33,6 +35,7 @@ NOTHING(rumpuser_dl_globalsym);
 NOTHING(rumpuser_daemonize_begin);
 NOTHING(rumpuser_daemonize_done);
 
-NOTHING(rumpuser_iovread);
-NOTHING(rumpuser_iovwrite);
+TIMETOPANIC(rumpuser_iovread);
+TIMETOPANIC(rumpuser_iovwrite);
+
 NOTHING(rumpuser_close);
