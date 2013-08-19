@@ -38,7 +38,7 @@ struct rumpuser_hyperup rumpuser__hyp;
 static void biothread(void *arg);
 static struct rumpuser_mtx *bio_mtx;
 static struct rumpuser_cv *bio_cv;
-static int bio_outstanding;
+static int bio_outstanding_total;
 
 int
 rumpuser_init(int ver, const struct rumpuser_hyperup *hyp)
@@ -162,27 +162,29 @@ rumpuser_exit(int value)
 	do_exit();
 }
 
-#define NBLKDEV 1
-#define BLKFDOFF 375
+#define NBLKDEV 10
+#define BLKFDOFF 64
 static struct blkfront_dev *blkdevs[NBLKDEV];
 static struct blkfront_info blkinfos[NBLKDEV];
 static int blkopen[NBLKDEV];
+static int blkdev_outstanding[NBLKDEV];
 
 static int
 devopen(int num)
 {
+	int devnum = 768 + (num<<6);
+	char buf[32];
 	int nlocks;
-
-	if (num+1 > NBLKDEV)
-		return RUMP_ENXIO;
 
 	if (blkopen[num]) {
 		blkopen[num]++;
 		return 1;
 	}
 
+	snprintf(buf, sizeof(buf), "device/vbd/%d", devnum);
+
 	rumpkern_unsched(&nlocks, NULL);
-	blkdevs[num] = init_blkfront(NULL, &blkinfos[num]);
+	blkdevs[num] = init_blkfront(buf, &blkinfos[num]);
 	rumpkern_sched(nlocks, NULL);
 
 	if (blkdevs[num] != NULL) {
@@ -193,28 +195,44 @@ devopen(int num)
 	}
 }
 
+static int
+devname2num(const char *name)
+{
+	const char *p;
+	int num;
+
+	/* we support only block devices */
+	if (strncmp(name, "blk", 3) != 0 || strlen(name) != 4)
+		return -1;
+
+	p = name + strlen(name)-1;
+	num = *p - '0';
+	if (num < 0 || num >= NBLKDEV)
+		return -1;
+
+	return num;
+}
+
 int
 rumpuser_open(const char *name, int mode, int *fdp)
 {
-	int acc, rv;
+	int acc, rv, num;
 
-	/* we support only the special case */
-	if (strcmp(name, "blk0") != 0
-	    || (mode & RUMPUSER_OPEN_BIO) == 0)
-		return RUMP_EINVAL;
+	if ((mode & RUMPUSER_OPEN_BIO) == 0 || (num = devname2num(name)) == -1)
+		return RUMP_ENXIO;
 
-	if ((rv = devopen(0)) != 0)
+	if ((rv = devopen(num)) != 0)
 		return rv;
 
 	acc = mode & RUMPUSER_OPEN_ACCMODE;
 	if (acc == RUMPUSER_OPEN_WRONLY || acc == RUMPUSER_OPEN_RDWR) {
-		if (blkinfos[0].mode != O_RDWR) {
+		if (blkinfos[num].mode != O_RDWR) {
 			/* XXX: unopen */
 			return RUMP_EROFS;
 		}
 	}
 
-	*fdp = BLKFDOFF;
+	*fdp = BLKFDOFF + num;
 	return 0;
 }
 
@@ -232,7 +250,6 @@ rumpuser_close(int fd)
 		/* not sure if this appropriately prevents races either ... */
 		blkdevs[rfd] = NULL;
 		shutdown_blkfront(toclose);
-		
 	}
 
 	return 0;
@@ -241,24 +258,24 @@ rumpuser_close(int fd)
 int
 rumpuser_getfileinfo(const char *name, uint64_t *size, int *type)
 {
-	int rv;
+	int rv, num;
 
-	if (strcmp(name, "blk0") != 0)
-		return RUMP_EXDEV;
-
-	if ((rv = devopen(0)) != 0)
+	if ((num = devname2num(name)) == -1)
+		return RUMP_ENXIO;
+	if ((rv = devopen(num)) != 0)
 		return rv;
 
-	*size = blkinfos[0].sectors * blkinfos[0].sector_size;
+	*size = blkinfos[num].sectors * blkinfos[num].sector_size;
 	*type = RUMPUSER_FT_BLK;
 
-	rumpuser_close(BLKFDOFF);
+	rumpuser_close(num + BLKFDOFF);
 
 	return 0;
 }
 
 struct biocb {
 	struct blkfront_aiocb bio_aiocb;
+	int bio_num;
 	rump_biodone_fn bio_done;
 	void *bio_arg;
 };
@@ -278,25 +295,34 @@ biocomp(struct blkfront_aiocb *aiocb, int ret)
 	xfree(bio);
 
 	rumpuser_mutex_enter_nowrap(bio_mtx);
-	bio_outstanding--;
+	bio_outstanding_total--;
+	blkdev_outstanding[bio->bio_num]--;
 	rumpuser_mutex_exit(bio_mtx);
 }
 
 static void
 biothread(void *arg)
 {
+	int i;
 
+	/* for the bio callback */
 	rumpuser__hyp.hyp_schedule();
 	rumpuser__hyp.hyp_lwproc_newlwp(0);
 	rumpuser__hyp.hyp_unschedule();
 
 	for (;;) {
 		rumpuser_mutex_enter_nowrap(bio_mtx);
-		while (bio_outstanding == 0)
+		while (bio_outstanding_total == 0)
 			rumpuser_cv_wait_nowrap(bio_cv, bio_mtx);
 		rumpuser_mutex_exit(bio_mtx);
 
-		blkfront_aio_poll(blkdevs[0]);
+		for (i = 0; i < NBLKDEV; i++) {
+			if (blkdev_outstanding[i])
+				blkfront_aio_poll(blkdevs[i]);
+		}
+
+		/* give other threads a chance to run */
+		schedule();
 	}
 }
 
@@ -307,15 +333,15 @@ rumpuser_bio(int fd, int op, void *data, size_t dlen, int64_t off,
 	struct biocb *bio = _xmalloc(sizeof(*bio), 8);
 	struct blkfront_aiocb *aiocb = &bio->bio_aiocb;
 	int nlocks;
+	int num = fd - BLKFDOFF;
 
 	rumpkern_unsched(&nlocks, NULL);
 
-	/* assert fd == 375 */
-
 	bio->bio_done = biodone;
 	bio->bio_arg = donearg;
+	bio->bio_num = num;
 
-	aiocb->aio_dev = blkdevs[0];
+	aiocb->aio_dev = blkdevs[num];
 	aiocb->aio_buf = data;
 	aiocb->aio_nbytes = dlen;
 	aiocb->aio_offset = off;
@@ -328,7 +354,8 @@ rumpuser_bio(int fd, int op, void *data, size_t dlen, int64_t off,
 		blkfront_aio_write(aiocb);
 
 	rumpuser_mutex_enter(bio_mtx);
-	bio_outstanding++;
+	bio_outstanding_total++;
+	blkdev_outstanding[num]++;
 	rumpuser_cv_signal(bio_cv);
 	rumpuser_mutex_exit(bio_mtx);
 
