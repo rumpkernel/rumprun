@@ -15,29 +15,19 @@ The immediate TODO is cleaning up the build procedure.
 
 See http://www.NetBSD.org/docs/rump for more information on rump kernels.
 
+
 Using / Testing
 ---------------
 
 To build and use, get the Xen source tree which matches your hypervisor
 version.  Then, clone this repository into the `extras` subdirectory
-of your Xen source tree and follow/copypaste the commands below.
+of your Xen source tree and run the following command:
 
-First, build rump kernel components for your machine architecture.
-The easiest way to do this is to use
-[buildrump.sh](https://github.com/anttikantee/buildrump.sh), which is
-also provided as a submodule:
+	./buildxen.sh
 
-	git submodule update --init --recursive
-	./buildrump.sh/buildrump.sh -s rumpsrc -T rumptools -o rumpobj -V NOPIC=1
+To run, use the standard Xen tools:
 
-Next, build networking support (this step will be integrated into the
-build at a later date, but required as a separate step for now).
-
-	( cd rumpxenif ; ../rumptools/rumpmake dependall && ../rumptools/rumpmake install )
-
-Now you can build your domU image:
-
-	make
+	xl create -c domain_config
 
 If you want to run the fs demo, copy the file system image
 `test_clean.ffs` to `test.ffs` -- the image is also written, so this
@@ -45,11 +35,8 @@ avoids dirtying the version-controlled image.  If you want to run the
 networking demo, make sure your have a suitable Xen networking interface
 (in addition to regular bridging, I had to use `ethtool -K if tx off` to
 make connections from Dom0 work).  Also, check out what `rumpkern_demo.c`
-actually does.
-
-To run, use the standard Xen tools:
-
-	xl create -c domain_config
+actually does.  If you modify `rumpkern_demo.c`, you can rebuild the
+bootable image simply by typing `make`.
 
 
 Implementation
