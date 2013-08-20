@@ -674,7 +674,7 @@ char *xenbus_transaction_start(xenbus_transaction_t *xbt)
 	return err;
 
     /* hint: typeof(*xbt) == unsigned long */
-    *xbt = strtoul((char *)rep+1, NULL, 10);
+    *xbt = strtoul((char *)(rep+1), NULL, 10);
 
     free(rep);
     return NULL;
