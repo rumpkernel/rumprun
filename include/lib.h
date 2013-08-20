@@ -57,9 +57,14 @@
 
 #ifdef HAVE_LIBC
 #include <stdio.h>
-#else
-#include <lib-gpl.h>
 #endif
+
+int		sprintf(char *, const char *, ...);
+int		snprintf(char *, size_t, const char *, ...);
+void		vprintf(const char *, va_list);
+int		vsprintf(char *, const char *, va_list);
+int		vsnprintf(char *, size_t, const char *, va_list);
+unsigned long	strtoul(const char *, char **, int);
 
 #ifdef HAVE_LIBC
 #include <string.h>

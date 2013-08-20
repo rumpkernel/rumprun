@@ -672,7 +672,10 @@ char *xenbus_transaction_start(xenbus_transaction_t *xbt)
     err = errmsg(rep);
     if (err)
 	return err;
-    sscanf((char *)(rep + 1), "%u", xbt);
+
+    /* hint: typeof(*xbt) == unsigned long */
+    *xbt = strtoul((char *)rep+1, NULL, 10);
+
     free(rep);
     return NULL;
 }
@@ -714,7 +717,7 @@ int xenbus_read_integer(const char *path)
 	free(res);
 	return -1;
     }
-    sscanf(buf, "%d", &t);
+    t = strtoul(buf, NULL, 10);
     free(buf);
     return t;
 }
@@ -742,7 +745,7 @@ domid_t xenbus_get_self_id(void)
     domid_t ret;
 
     BUG_ON(xenbus_read(XBT_NIL, "domid", &dom_id));
-    sscanf(dom_id, "%d", &ret);
+    ret = strtoul(dom_id, NULL, 10);
 
     return ret;
 }

@@ -460,16 +460,21 @@ done:
 
     unmask_evtchn(dev->evtchn);
 
-        /* Special conversion specifier 'hh' needed for __ia64__. Without
-           this mini-os panics with 'Unaligned reference'. */
-    if (rawmac)
-	sscanf(dev->mac,"%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
-            &rawmac[0],
-            &rawmac[1],
-            &rawmac[2],
-            &rawmac[3],
-            &rawmac[4],
-            &rawmac[5]);
+    if (rawmac) {
+	char *p;
+
+	for (p = dev->mac, i = 0; i < 6; i++) {
+	    unsigned long v;
+	    char *ep;
+
+	    v = strtoul(p, &ep, 16);
+	    if (v > 255 || (ep && *ep != ':')) {
+		printk("invalid mac string %s\n", dev->mac);
+		do_exit();
+	    }
+	    p = ep+1;
+	}
+    }
 
     return dev;
 error:

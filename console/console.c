@@ -158,3 +158,13 @@ void init_console(void)
     /* This is also required to notify the daemon */
     printk("done.\n");
 }
+
+void
+panic(const char *fmt, ...)
+{
+    va_list       args;
+    va_start(args, fmt);
+    print(0, fmt, args);
+    va_end(args);        
+    do_exit();
+}
