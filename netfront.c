@@ -468,10 +468,11 @@ done:
 	    char *ep;
 
 	    v = strtoul(p, &ep, 16);
-	    if (v > 255 || (ep && *ep != ':')) {
+	    if (v > 255 || (*ep && *ep != ':')) {
 		printk("invalid mac string %s\n", dev->mac);
 		do_exit();
 	    }
+	    rawmac[i] = v;
 	    p = ep+1;
 	}
     }
