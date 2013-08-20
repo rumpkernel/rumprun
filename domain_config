@@ -10,3 +10,5 @@ vif = [ 'mac=b2:11:11:11:11:11' ]
 # if 2, run net test
 # if 0 or 3, run neither or both tests, respectively
 extra = "3"
+
+on_crash="preserve"
