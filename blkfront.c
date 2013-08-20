@@ -181,7 +181,7 @@ done:
 
     printk("backend at %s\n", dev->backend);
 
-    dev->handle = strtoul(strrchr(nodename, '/')+1, NULL, 0);
+    dev->handle = strtoul(strrchr(nodename, '/')+1, NULL, 10);
 
     {
         XenbusState state;
