@@ -284,7 +284,7 @@ static void
 biocomp(struct blkfront_aiocb *aiocb, int ret)
 {
 	struct biocb *bio = aiocb->data;
-	int dummy;
+	int dummy, num;
 
 	rumpkern_sched(0, NULL);
 	if (ret)
@@ -292,11 +292,12 @@ biocomp(struct blkfront_aiocb *aiocb, int ret)
 	else
 		bio->bio_done(bio->bio_arg, bio->bio_aiocb.aio_nbytes, 0);
 	rumpkern_unsched(&dummy, NULL);
+	num = bio->bio_num;
 	xfree(bio);
 
 	rumpuser_mutex_enter_nowrap(bio_mtx);
 	bio_outstanding_total--;
-	blkdev_outstanding[bio->bio_num]--;
+	blkdev_outstanding[num]--;
 	rumpuser_mutex_exit(bio_mtx);
 }
 
