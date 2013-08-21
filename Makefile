@@ -196,7 +196,7 @@ clean:	arch_clean
 	done
 	rm -f include/list.h
 	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core $(OBJ_DIR)/$(TARGET).elf $(OBJ_DIR)/$(TARGET).raw $(OBJ_DIR)/$(TARGET) $(OBJ_DIR)/$(TARGET).gz
-	find . $(OBJ_DIR) -type l | xargs rm -f
+	find . $(OBJ_DIR) -type l \! -path ./rumpobj/\* | xargs rm -f
 	$(RM) $(OBJ_DIR)/lwip.a $(LWO)
 	rm -f tags TAGS
 
