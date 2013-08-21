@@ -277,12 +277,47 @@ error:
     return NULL;
 }
 
+/*
+ * XXX: why is the pci function in this module sometimes
+ * an int and sometimes a long?
+ */
+static int
+parsepciaddr(const char *s, unsigned int *domain, unsigned int *bus,
+    unsigned int *slot, unsigned long *fun)
+{
+    char *ep;
+
+    *domain = strtoul(s, &ep, 16);
+    if (*ep != ':') {
+        printk("\"%s\" does not look like a PCI device address\n", s);
+        return 0;
+    }
+    *bus = strtoul(ep+1, &ep, 16);
+    if (*ep != ':') {
+        printk("\"%s\" does not look like a PCI device address\n", s);
+        return 0;
+    }
+    *slot = strtoul(ep+1, &ep, 16);
+    if (*ep != '.') {
+        printk("\"%s\" does not look like a PCI device address\n", s);
+        return 0;
+    }
+    *fun = strtoul(ep+1, &ep, 16);
+    if (*ep != '\0') {
+        printk("\"%s\" does not look like a PCI device address\n", s);
+        return 0;
+    }
+
+    return 1;
+}
+
 void pcifront_scan(struct pcifront_dev *dev, void (*func)(unsigned int domain, unsigned int bus, unsigned slot, unsigned int fun))
 {
     char *path;
-    int i, n, len;
+    int i, n, len, rv;
     char *s, *msg = NULL;
-    unsigned int domain, bus, slot, fun;
+    unsigned int domain, bus, slot;
+    unsigned long fun;
 
     if (!dev)
         dev = pcidev;
@@ -304,12 +339,12 @@ void pcifront_scan(struct pcifront_dev *dev, void (*func)(unsigned int domain, u
             continue;
         }
 
-        if (sscanf(s, "%x:%x:%x.%x", &domain, &bus, &slot, &fun) != 4) {
-            printk("\"%s\" does not look like a PCI device address\n", s);
-            free(s);
-            continue;
-        }
+        rv = parsepciaddr(s, &domain, &bus, &slot, &fun);
         free(s);
+        if (!rv)
+            continue;
+
+#undef NOTPCIADDR
 
         if (func)
             func(domain, bus, slot, fun);
@@ -380,9 +415,10 @@ int pcifront_physical_to_virtual (struct pcifront_dev *dev,
                                   unsigned long *fun)
 {
     char path[strlen(dev->backend) + 1 + 5 + 10 + 1];
-    int i, n;
+    int i, n, rv;
     char *s, *msg = NULL;
-    unsigned int dom1, bus1, slot1, fun1;
+    unsigned int dom1, bus1, slot1;
+    unsigned long fun1;
 
     if (!dev)
         dev = pcidev;
@@ -398,12 +434,10 @@ int pcifront_physical_to_virtual (struct pcifront_dev *dev,
             continue;
         }
 
-        if (sscanf(s, "%x:%x:%x.%x", &dom1, &bus1, &slot1, &fun1) != 4) {
-            printk("\"%s\" does not look like a PCI device address\n", s);
-            free(s);
-            continue;
-        }
+        rv = parsepciaddr(s, &dom1, &bus1, &slot1, &fun1);
         free(s);
+        if (!rv)
+            continue;
 
         if (dom1 == *dom && bus1 == *bus && slot1 == *slot && fun1 == *fun) {
             snprintf(path, sizeof(path), "%s/vdev-%d", dev->backend, i);
@@ -413,12 +447,10 @@ int pcifront_physical_to_virtual (struct pcifront_dev *dev,
                 continue;
             }
 
-            if (sscanf(s, "%x:%x:%x.%x", dom, bus, slot, fun) != 4) {
-                printk("\"%s\" does not look like a PCI device address\n", s);
-                free(s);
-                continue;
-            }
+            rv = parsepciaddr(s, dom, bus, slot, fun);
             free(s);
+            if (!rv)
+                continue;
 
             return 0;
         }
