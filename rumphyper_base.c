@@ -131,7 +131,7 @@ int
 rumpuser_malloc(size_t len, int alignment, void **retval)
 {
 
-	*retval = _xmalloc(len, alignment);
+	*retval = memalloc(len, alignment);
 	return 0;
 }
 
@@ -139,7 +139,7 @@ void
 rumpuser_free(void *buf, size_t buflen)
 {
 
-	xfree(buf);
+	memfree(buf);
 }
 
 /* Not very random */
@@ -330,7 +330,7 @@ void
 rumpuser_bio(int fd, int op, void *data, size_t dlen, int64_t off,
 	rump_biodone_fn biodone, void *donearg)
 {
-	struct biocb *bio = _xmalloc(sizeof(*bio), 8);
+	struct biocb *bio = memalloc(sizeof(*bio), 0);
 	struct blkfront_aiocb *aiocb = &bio->bio_aiocb;
 	int nlocks;
 	int num = fd - BLKFDOFF;

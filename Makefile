@@ -92,12 +92,12 @@ src-$(CONFIG_TEST) += test.c
 
 src-y += lib/ctype.c
 #src-y += lib/math.c
+src-y += lib/memalloc.c
 src-y += lib/printf.c
 src-y += lib/stack_chk_fail.c
 src-y += lib/string.c
 src-y += lib/strtoul.c
 src-y += lib/sys.c
-src-y += lib/xmalloc.c
 src-$(CONFIG_XENBUS) += lib/xs.c
 
 src-y += rumphyper_base.c
