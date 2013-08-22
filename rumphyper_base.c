@@ -131,15 +131,43 @@ int
 rumpuser_malloc(size_t len, int alignment, void **retval)
 {
 
-	*retval = memalloc(len, alignment);
-	return 0;
+	/*
+	 * If we are allocating precisely a page-sized chunk
+	 * (the common case), use the Mini-OS page allocator directly.
+	 * This avoids the malloc header overhead for this very
+	 * common allocation, leading to 50% better memory use.
+	 * We can't easily use the page allocator for larger chucks
+	 * of memory, since those allocations might have stricter
+	 * alignment restrictions, and therefore it's just
+	 * easier to use memalloc() in those rare cases; it's not
+	 * as wasteful for larger chunks anyway.
+	 *
+	 * XXX: how to make sure that rump kernel's and our
+	 * page sizes are the same?  Could be problematic especially
+	 * for architectures which support multiple page sizes.
+	 * Note that the code will continue to work, but the optimization
+	 * will not trigger for the common case.
+	 */
+	if (len == PAGE_SIZE) {
+		ASSERT(alignment <= PAGE_SIZE);
+		*retval = (void *)alloc_page();
+	} else {
+		*retval = memalloc(len, alignment);
+	}
+	if (*retval)
+		return 0;
+	else
+		return RUMP_ENOMEM;
 }
 
 void
 rumpuser_free(void *buf, size_t buflen)
 {
 
-	memfree(buf);
+	if (buflen == PAGE_SIZE)
+		free_page(buf);
+	else
+		memfree(buf);
 }
 
 /* Not very random */
