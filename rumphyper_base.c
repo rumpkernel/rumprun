@@ -332,7 +332,8 @@ biocomp(struct blkfront_aiocb *aiocb, int ret)
 static void
 biothread(void *arg)
 {
-	int i;
+	DEFINE_WAIT(w);
+	int i, flags, did;
 
 	/* for the bio callback */
 	rumpuser__hyp.hyp_schedule();
@@ -341,17 +342,29 @@ biothread(void *arg)
 
 	for (;;) {
 		rumpuser_mutex_enter_nowrap(bio_mtx);
-		while (bio_outstanding_total == 0)
+		while (bio_outstanding_total == 0) {
 			rumpuser_cv_wait_nowrap(bio_cv, bio_mtx);
+		}
 		rumpuser_mutex_exit(bio_mtx);
 
-		for (i = 0; i < NBLKDEV; i++) {
-			if (blkdev_outstanding[i])
-				blkfront_aio_poll(blkdevs[i]);
+		/*
+		 * if we made any progress, recheck.  could be batched,
+		 * but since currently locks are free here ... meh
+		 */
+		local_irq_save(flags);
+		for (did = 0;;) {
+			for (i = 0; i < NBLKDEV; i++) {
+				if (blkdev_outstanding[i])
+					did += blkfront_aio_poll(blkdevs[i]);
+			}
+			if (did)
+				break;
+			add_waiter(w, blkfront_queue);
+			local_irq_restore(flags);
+			schedule();
+			local_irq_save(flags);
 		}
-
-		/* give other threads a chance to run */
-		schedule();
+		local_irq_restore(flags);
 	}
 }
 
