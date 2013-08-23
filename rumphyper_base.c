@@ -35,7 +35,6 @@
 
 struct rumpuser_hyperup rumpuser__hyp;
 
-static void biothread(void *arg);
 static struct rumpuser_mtx *bio_mtx;
 static struct rumpuser_cv *bio_cv;
 static int bio_outstanding_total;
@@ -48,7 +47,6 @@ rumpuser_init(int ver, const struct rumpuser_hyperup *hyp)
 
 	rumpuser_mutex_init(&bio_mtx, RUMPUSER_MTX_SPIN);
 	rumpuser_cv_init(&bio_cv);
-	create_thread("biopoll", biothread, NULL);
 
 	return 0;
 }
@@ -372,12 +370,24 @@ void
 rumpuser_bio(int fd, int op, void *data, size_t dlen, int64_t off,
 	rump_biodone_fn biodone, void *donearg)
 {
+	static int bio_inited;
 	struct biocb *bio = memalloc(sizeof(*bio), 0);
 	struct blkfront_aiocb *aiocb = &bio->bio_aiocb;
 	int nlocks;
 	int num = fd - BLKFDOFF;
 
 	rumpkern_unsched(&nlocks, NULL);
+
+	if (!bio_inited) {
+		rumpuser_mutex_enter_nowrap(bio_mtx);
+		if (!bio_inited) {
+			bio_inited = 1;
+			rumpuser_mutex_exit(bio_mtx);
+			create_thread("biopoll", biothread, NULL);
+		} else {
+			rumpuser_mutex_exit(bio_mtx);
+		}
+	}
 
 	bio->bio_done = biodone;
 	bio->bio_arg = donearg;
