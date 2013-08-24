@@ -148,6 +148,7 @@ create_thread(const char *name, void (*function)(void *), void *data)
     /* Not runable, not exited, not sleeping */
     thread->flags = 0;
     thread->wakeup_time = 0LL;
+    thread->lwp = NULL;
 #ifdef HAVE_LIBC
     _REENT_INIT_PTR((&thread->reent))
 #endif
