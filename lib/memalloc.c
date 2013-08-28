@@ -341,12 +341,12 @@ morecore(int bucket)
 	 * free list for this hash bucket.
 	 */
   	nextf[bucket] = op;
-	op->ov_next = NULL;
   	while (--nblks > 0) {
 		op->ov_next =
 		    (union overhead *)(void *)((char *)(void *)op+(size_t)sz);
 		op = op->ov_next;
   	}
+	op->ov_next = NULL;
 }
 
 void
