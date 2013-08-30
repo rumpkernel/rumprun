@@ -8,7 +8,7 @@ set -e
 
 # fetch buildrump.sh and build rump kernel components
 git submodule update --init --recursive
-./buildrump.sh/buildrump.sh -s rumpsrc -T rumptools -o rumpobj -V NOPIC=1
+./buildrump.sh/buildrump.sh -q -k -s rumpsrc -T rumptools -o rumpobj fullbuild
 
 # build networking driver
 (
