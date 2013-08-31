@@ -314,7 +314,7 @@ rumpuser_rw_held(int enum_rumprwlock, struct rumpuser_rw *rw, int *rvp)
 		*rvp = rw->o == rumpuser_curlwp();
 		break;
 	case RUMPUSER_RW_READER:
-		*rvp = rw->v < 0;
+		*rvp = rw->v > 0;
 		break;
 	}
 }
