@@ -298,6 +298,48 @@ memalloc(size_t nbytes, size_t align)
   	return rv;
 }
 
+int
+posix_memalign(size_t nbytes, size_t align, void **rv)
+{
+	void *v;
+	int error = 10; /* XXX */
+
+	if ((v = memalloc(nbytes, align)) != NULL) {
+		*rv = v;
+		error = 0;
+	}
+
+	return error;
+}
+
+void *
+malloc(size_t size)
+{
+
+	return memalloc(size, 8);
+}
+
+void *
+calloc(size_t n, size_t size)
+{
+	void *v;
+	size_t tot = n * size;
+
+	if ((v = malloc(tot)) != NULL) {
+		memset(v, 0, tot);
+	}
+
+	return v;
+}
+
+void *
+realloc(void *v, size_t size)
+{
+
+	/* XXX */
+	return NULL;
+}
+
 static void *
 corealloc(int shift)
 {
@@ -350,7 +392,7 @@ morecore(int bucket)
 }
 
 void
-memfree(void *cp)
+free(void *cp)
 {   
 	long size;
 	union overhead *op;

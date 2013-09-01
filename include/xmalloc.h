@@ -13,14 +13,18 @@
 
 #include <limits.h>
 
-void *memalloc(size_t, size_t);
-void memfree(void *);
+void *	memalloc(size_t, size_t);
+void	free(void *);
+int	posix_memalign(size_t, size_t, void **);
+void *	realloc(void *, size_t);
+void *	calloc(size_t, size_t);
 
 #define DEFAULT_ALIGN (sizeof(unsigned long))
+
+/* compat */
 #define malloc(size) memalloc(size, DEFAULT_ALIGN)
 #define _xmalloc(size, align) memalloc(size, align)
-#define free(ptr) memfree(ptr)
-#define xfree(ptr) memfree(ptr)
+#define xfree(ptr) free(ptr)
 
 #endif
 
