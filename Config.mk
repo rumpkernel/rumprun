@@ -41,11 +41,4 @@ extra_incl := $(foreach dir,$(EXTRA_INC),-isystem $(MINI-OS_ROOT)/include/$(dir)
 DEF_CPPFLAGS += -isystem $(MINI-OS_ROOT)/include
 DEF_CPPFLAGS += -D__MINIOS__
 
-ifneq ($(LWIPDIR),)
-lwip=y
-DEF_CPPFLAGS += -DHAVE_LWIP
-DEF_CPPFLAGS += -isystem $(LWIPDIR)/src/include
-DEF_CPPFLAGS += -isystem $(LWIPDIR)/src/include/ipv4
-endif
-
 DEF_CPPFLAGS += -DSCHED_DEBUG
