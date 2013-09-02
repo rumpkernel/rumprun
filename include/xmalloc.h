@@ -15,7 +15,7 @@
 
 void *	memalloc(size_t, size_t);
 void	free(void *);
-int	posix_memalign(size_t, size_t, void **);
+int	posix_memalign(void **, size_t, size_t);
 void *	realloc(void *, size_t);
 void *	calloc(size_t, size_t);
 
