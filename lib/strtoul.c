@@ -1,6 +1,7 @@
-#include <posix/limits.h>
 #include <mini-os/console.h>
 #include <mini-os/ctype.h>
+
+#include <limits.h>
 
 #define _FUNCNAME strtoul
 #define __UINT unsigned long
@@ -8,7 +9,5 @@
 
 #define _STANDALONE
 #define _DIAGASSERT(a)
-
-#define __UNCONST(a) (void *)(uintptr_t)(a)
 
 #include "_strtoul.h"
