@@ -1,4 +1,4 @@
-#include <ctype.h>
+#include <mini-os/ctype.h>
 
 unsigned char _ctype[] = {
 _C,_C,_C,_C,_C,_C,_C,_C,                        /* 0-7 */
