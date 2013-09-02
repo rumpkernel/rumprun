@@ -25,10 +25,9 @@
  * SUCH DAMAGE.
  */
 
+#include <sys/types.h>
+
 #define LIBRUMPUSER
-typedef int pid_t;
-#define __dead
-#define __printflike(a,b)
 
 #include <rump/rumpuser.h>
 #include <rump/rumpdefs.h>
