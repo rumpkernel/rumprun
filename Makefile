@@ -52,7 +52,7 @@ LIBS_NET+= -lrumpnet_net -lrumpnet
 
 # Define some default flags for linking.
 LDLIBS_FS = --whole-archive ${LIBS_FS} ${LIBS_NET} -lrump --no-whole-archive
-LDLIBS = -Lrump/lib ${LDLIBS_FS}
+LDLIBS = -Lrump/lib ${LDLIBS_FS} -lc
 
 APP_LDLIBS := 
 LDARCHLIB := -L$(OBJ_DIR)/$(TARGET_ARCH_DIR) -l$(ARCH_LIB_NAME)
