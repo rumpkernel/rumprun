@@ -6,9 +6,56 @@
 # the buildxen.sh is not as forgiving as I am
 set -e
 
-# fetch buildrump.sh and build rump kernel components
+# fetch buildrump.sh and NetBSD sources
 git submodule update --init --recursive
-./buildrump.sh/buildrump.sh -q -k -s rumpsrc -T rumptools -o rumpobj fullbuild
+#./buildrump.sh/buildrump.sh -q -k -s rumpsrc -T rumptools -o rumpobj checkout
+
+# hackish, but meh, we want to get rid of this anyway
+(
+  cd rumpsrc
+  if [ ! -d xen-nblibc ] ; then
+    mv lib/libc lib/libc.orig
+    git clone https://github.com/anttikantee/xen-nblibc
+    ln -s ../xen-nblibc/libc lib/libc
+    ln -s ../xen-nblibc/libpthread lib/libpthread
+  else
+    ( cd xen-nblibc && git pull )
+  fi
+)
+
+# build rump kernel
+#./buildrump.sh/buildrump.sh -q -k -s rumpsrc -T rumptools -o rumpobj \
+    #tools build install
+./buildrump.sh/buildrump.sh -q -k -s rumpsrc -T rumptools -o rumpobj \
+    tools setupdest
+
+#
+# install full set of headers.
+#
+# first, "mtree" (TODO: fetch/use nbmtree)
+INCSDIRS='adosfs altq arpa crypto dev filecorefs fs i386 isofs miscfs
+	msdosfs net net80211 netatalk netbt netinet netinet6 netipsec
+	netisdn netkey netmpls netnatm netsmb nfs ntfs ppath prop
+	protocols rpc rpcsvc ssp sys ufs uvm x86'
+for dir in ${INCSDIRS}; do
+	echo $dir
+	mkdir -p rump/include/$dir
+done
+
+# then, install
+echo '>> Installing headers.  please wait (may take a while) ...'
+(
+  # sys/ produces a lot of errors due to missing tools/sources
+  # "protect" the user from that spew
+
+  cd rumpsrc/sys
+  ../../rumptools/rumpmake -k includes >/dev/null 2>&1
+)
+
+# user headers, OTOH, should install cleanly
+( cd rumpsrc/include && ../../rumptools/rumpmake includes )
+( cd rumpsrc/lib/libc && ../../../rumptools/rumpmake includes )
+( cd rumpsrc/lib/libpthread && ../../../rumptools/rumpmake includes )
 
 # build networking driver
 (
