@@ -5,7 +5,11 @@
 
 #include <sys/types.h>
 
+#include <dirent.h>
+
 #include <netinet/in.h>
+
+#include <ufs/ufs/ufsmount.h>
 
 #include <poll.h>
 
@@ -24,8 +28,8 @@ void demo_thread(void *);
 static void
 dofs(void)
 {
-	struct rump_ufs_args ua;
-	struct rump_dirent *dp;
+	struct ufs_args ua;
+	struct dirent *dp;
 	void *buf;
 	int8_t *p;
 	int fd;
@@ -163,7 +167,7 @@ processzombies(void)
 	int i;
 
 	/*
-	 * Let each connection live ~10s regardless of it's
+	 * Let each connection live ~10s regardless of whether it's
 	 * completed or not.
 	 */
 	for (i = 1; i < MAXCONN; i++) {
