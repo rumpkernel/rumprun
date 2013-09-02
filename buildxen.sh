@@ -61,5 +61,7 @@ echo '>> Installing headers.  please wait (may take a while) ...'
   ../rumptools/rumpmake dependall MKPIC=no && ../rumptools/rumpmake install
 )
 
+[ ! -f test.ffs ] && cp test_clean.ffs test.ffs
+
 # build the domU image
 make
