@@ -5,6 +5,7 @@
 #include <limits.h>
 
 void *	memalloc(size_t, size_t);
+void	memfree(void *);
 void	free(void *);
 int	posix_memalign(void **, size_t, size_t);
 void *	realloc(void *, size_t);
