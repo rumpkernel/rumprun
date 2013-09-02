@@ -43,7 +43,7 @@ DEF_CFLAGS += $(flags-y)
 # Include common mini-os makerules.
 include minios.mk
 
-CFLAGS += -Irump/include
+CFLAGS += -Irump/include -nostdinc
 CFLAGS += -DVIRTIF_BASE=xenif -I.
 
 LIBS_FS = -lrumpfs_ffs -lrumpdev_disk -lrumpdev -lrumpvfs
