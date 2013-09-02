@@ -298,7 +298,7 @@ memalloc(size_t nbytes, size_t align)
 
 #ifndef MEMALLOC_TESTING
 int
-posix_memalign(size_t nbytes, size_t align, void **rv)
+posix_memalign(void **rv, size_t nbytes, size_t align)
 {
 	void *v;
 	int error = 10; /* XXX */
