@@ -2,8 +2,6 @@
 MINI-OS_ROOT=$(XEN_ROOT)/extras/rumpuser-xen
 export MINI-OS_ROOT
 
-libc = $(stubdom)
-
 XEN_INTERFACE_VERSION := 0x00030205
 export XEN_INTERFACE_VERSION
 
@@ -42,12 +40,6 @@ extra_incl := $(foreach dir,$(EXTRA_INC),-isystem $(MINI-OS_ROOT)/include/$(dir)
 
 DEF_CPPFLAGS += -isystem $(MINI-OS_ROOT)/include
 DEF_CPPFLAGS += -D__MINIOS__
-
-ifeq ($(libc),y)
-DEF_CPPFLAGS += -DHAVE_LIBC
-DEF_CPPFLAGS += -isystem $(MINI-OS_ROOT)/include/posix
-DEF_CPPFLAGS += -isystem $(XEN_ROOT)/tools/xenstore
-endif
 
 ifneq ($(LWIPDIR),)
 lwip=y
