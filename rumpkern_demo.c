@@ -1,21 +1,13 @@
-#include <mini-os/types.h>
 #include <mini-os/console.h>
 #include <mini-os/netfront.h>
 #include <mini-os/xmalloc.h>
 #include <mini-os/errno.h>
 
-/* some hacks to satisfy type requirements.  XXX: fix me */
-typedef long register_t;
-typedef uint64_t dev_t;
-typedef int mode_t;
-typedef int pid_t;
-typedef int uid_t;
-typedef int gid_t;
-typedef int socklen_t;
-typedef int sigset_t;
-typedef struct {
-	int xxx;
-} fd_set;
+#include <sys/types.h>
+
+#include <netinet/in.h>
+
+#include <poll.h>
 
 #include <rump/rump.h>
 #include <rump/rump_syscalls.h>
@@ -87,22 +79,6 @@ dofs(void)
 	rump_sys_sync(); /* but just to be safe */
 }
 
-/* XXX: simply copypaste/mangle for now */
-struct sockaddr_in {
-	uint8_t		sin_len;
-	uint8_t		sin_family;
-	uint16_t	sin_port;
-	uint32_t	sin_addr;
-	int8_t		sin_zero[8];
-};
-
-/* XXX ditto for pollfd */
-struct pollfd {
-	int	fd;
-	short	events;
-	short	revents;
-};
-#define POLLIN 1
 #define MAXCONN 64
 
 struct conn {
@@ -119,7 +95,7 @@ static void
 acceptconn(void)
 {
 	struct sockaddr_in sin;
-	int slen = sizeof(sin);
+	socklen_t slen = sizeof(sin);
 	int s;
 
 	if ((s = rump_sys_accept(0, (struct sockaddr *)&sin, &slen)) == -1)
@@ -230,8 +206,8 @@ donet(void)
 	memset(&sin, 0, sizeof(sin));
 	sin.sin_len = sizeof(sin);
 	sin.sin_family = RUMP_AF_INET;
-	sin.sin_port = 0x0010; /* 0x1000 on LE */
-	sin.sin_addr = 0;
+	sin.sin_port = htons(4096);
+	sin.sin_addr.s_addr = INADDR_ANY;
 	if (rump_sys_bind(s, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
 		printk("bind fail %d\n", errno);
 		return;
