@@ -99,6 +99,7 @@ union	overhead {
 
 #define	MAGIC		0xef		/* magic # on accounting info */
 #define UNMAGIC		0x12		/* magic # != MAGIC */
+#define UNMAGIC2	0x24		/* magic # != MAGIC/UNMAGIC */
 #ifdef RCHECK
 #define RMAGIC		0x5555		/* magic # on range info */
 #endif
@@ -140,9 +141,6 @@ static	mutex_t malloc_mutex = MUTEX_INITIALIZER;
 #define malloc_unlock()
 
 static void morecore(int);
-#ifdef WANT_REALLOC
-static int findbucket(union overhead *, int);
-#endif
 #ifdef MSTATS
 void mstats(const char *);
 #endif
@@ -298,6 +296,7 @@ memalloc(size_t nbytes, size_t align)
   	return rv;
 }
 
+#ifndef MEMALLOC_TESTING
 int
 posix_memalign(size_t nbytes, size_t align, void **rv)
 {
@@ -331,14 +330,7 @@ calloc(size_t n, size_t size)
 
 	return v;
 }
-
-void *
-realloc(void *v, size_t size)
-{
-
-	/* XXX */
-	return NULL;
-}
+#endif
 
 static void *
 corealloc(int shift)
@@ -392,7 +384,7 @@ morecore(int bucket)
 }
 
 void
-free(void *cp)
+memfree(void *cp)
 {   
 	long size;
 	union overhead *op;
@@ -441,130 +433,63 @@ free(void *cp)
 	malloc_unlock();
 }
 
-#ifdef WANT_REALLOC
-/*
- * When a program attempts "storage compaction" as mentioned in the
- * old malloc man page, it realloc's an already freed block.  Usually
- * this is the last block it freed; occasionally it might be farther
- * back.  We have to search all the free lists for the block in order
- * to determine its bucket: 1st we make one pass thru the lists
- * checking only the first block in each; if that fails we search
- * ``__realloc_srchlen'' blocks in each list for a match (the variable
- * is extern so the caller can modify it).  If that fails we just copy
- * however many bytes was given to realloc() and hope it's not huge.
- */
-int __realloc_srchlen = 4;	/* 4 should be plenty, -1 =>'s whole list */
-
-void *
-realloc(cp, nbytes)
-	void *cp; 
-	size_t nbytes;
-{   
-  	u_long onb;
-	long i;
-	union overhead *op;
-	char *res;
-	int was_alloced = 0;
-
-  	if (cp == NULL)
-  		return (malloc(nbytes));
-	if (nbytes == 0) {
-		free (cp);
-		return (NULL);
-	}
-	op = (union overhead *)(void *)((char *)cp - sizeof (union overhead));
-	malloc_lock();
-	if (op->ov_magic == MAGIC) {
-		was_alloced++;
-		i = op->ov_index;
-	} else {
-		/*
-		 * Already free, doing "compaction".
-		 *
-		 * Search for the old block of memory on the
-		 * free list.  First, check the most common
-		 * case (last element free'd), then (this failing)
-		 * the last ``__realloc_srchlen'' items free'd.
-		 * If all lookups fail, then assume the size of
-		 * the memory block being realloc'd is the
-		 * largest possible (so that all "nbytes" of new
-		 * memory are copied into).  Note that this could cause
-		 * a memory fault if the old area was tiny, and the moon
-		 * is gibbous.  However, that is very unlikely.
-		 */
-		if ((i = findbucket(op, 1)) < 0 &&
-		    (i = findbucket(op, __realloc_srchlen)) < 0)
-			i = NBUCKETS;
-	}
-	onb = (u_long)1 << (u_long)(i + 3);
-	if (onb < pagesz)
-		onb -= sizeof (*op) + RSLOP;
-	else
-		onb += pagesz - sizeof (*op) - RSLOP;
-	/* avoid the copy if same size block */
-	if (was_alloced) {
-		if (i) {
-			i = (long)1 << (long)(i + 2);
-			if (i < pagesz)
-				i -= sizeof (*op) + RSLOP;
-			else
-				i += pagesz - sizeof (*op) - RSLOP;
-		}
-		if (nbytes <= onb && nbytes > i) {
-#ifdef RCHECK
-			op->ov_size = (nbytes + RSLOP - 1) & ~(RSLOP - 1);
-			*(u_short *)((char *)(op + 1) + op->ov_size) = RMAGIC;
-#endif
-			malloc_unlock();
-			return (cp);
-			
-		}
-#ifndef _REENT
-		else
-			free(cp);
-#endif
-	}
-	malloc_unlock();
-	if ((res = malloc(nbytes)) == NULL) {
-#ifdef _REENT
-		free(cp);
-#endif
-		return (NULL);
-	}
-#ifndef _REENT
-	if (cp != res)		/* common optimization if "compacting" */
-		(void)memmove(res, cp, (size_t)((nbytes < onb) ? nbytes : onb));
-#else
-	(void)memmove(res, cp, (size_t)((nbytes < onb) ? nbytes : onb));
-	free(cp);
-#endif
-  	return (res);
-}
-
-/*
- * Search ``srchlen'' elements of each free list for a block whose
- * header starts at ``freep''.  If srchlen is -1 search the whole list.
- * Return bucket number, or -1 if not found.
- */
-static int
-findbucket(freep, srchlen)
-	union overhead *freep;
-	int srchlen;
+#ifndef MEMALLOC_TESTING
+void
+free(void *cp)
 {
-	union overhead *p;
-	int i, j;
 
-	for (i = 0; i < NBUCKETS; i++) {
-		j = 0;
-		for (p = nextf[i]; p && j != srchlen; p = p->ov_next) {
-			if (p == freep)
-				return (i);
-			j++;
-		}
-	}
-	return (-1);
+	memfree(cp);
 }
-#endif /* WANT_REALLOC */
+#endif
+
+/*
+ * don't do any of "storage compaction" nonsense, "just" the three modes:
+ *   + cp == NULL ==> malloc
+ *   + nbytes == 0 ==> free
+ *   + else ==> realloc
+ */
+void *
+memrealloc(void *cp, size_t nbytes)
+{   
+	union overhead *op;
+  	size_t size;
+	size_t alignpad;
+	void *np;
+
+	if (cp == NULL)
+		return memalloc(nbytes, 8);
+
+	if (nbytes == 0) {
+		memfree(cp);
+		return NULL;
+	}
+
+	op = ((union overhead *)cp)-1;
+  	size = op->ov_index;
+	alignpad = op->ov_alignpad;
+
+	/* don't bother "compacting".  don't like it?  don't use realloc! */
+	if (((1<<(size+MINSHIFT)) - (alignpad+sizeof(*op))) >= nbytes)
+		return cp;
+
+	/* we're gonna need a bigger bucket */
+	np = memalloc(nbytes, 8);
+	if (np == NULL)
+		return NULL;
+
+	memcpy(np, cp, (1<<(size+MINSHIFT)) - (alignpad+sizeof(*op)));
+	memfree(cp);
+	return np;
+}
+
+#ifndef MEMALLOC_TESTING
+void *
+realloc(void *cp, size_t nbytes)
+{
+
+	return memrealloc(cp, nbytes);
+}
+#endif
 
 #ifdef MSTATS
 /*
@@ -611,16 +536,29 @@ mstats(const char *s)
 #define NRING 16
 
 static void *
-testalloc(size_t len, size_t align)
+testalloc(void)
 {
-	void *v;
+	void *v, *nv;
+	size_t size1, size2, align;
 
-	v = memalloc(len, 1<<align);
+	/* doesn't give an even bucket distribution, but ... */
+	size1 = random() % ((TEST_MAXALLOC-TEST_MINALLOC)+1) + TEST_MINALLOC;
+	align = random() % ((TEST_MAXALIGN-TEST_MINALIGN)+1) + TEST_MINALIGN;
+
+	v = memalloc(size1, 1<<align);
 	if (!v)
 		return NULL;
 	ASSERT(((uintptr_t)v & (align-1)) == 0);
-	memset(v, UNMAGIC, len);
-	return v;
+	memset(v, UNMAGIC, size1);
+
+	size2 = random() % ((TEST_MAXALLOC-TEST_MINALLOC)+1) + TEST_MINALLOC;
+	nv = memrealloc(v, size2);
+	if (nv) {
+		memset(nv, UNMAGIC2, size2);
+		return nv;
+	}
+
+	return size2 ? v : NULL;
 }
 
 int
@@ -628,7 +566,6 @@ main()
 {
 	void **rings; /* yay! */
 	void **ring_alloc, **ring_free; /* yay! */
-	size_t size, align;
 	int i, n;
 
 	srandom(time(NULL));
@@ -644,13 +581,7 @@ main()
 		ring_alloc = &rings[n * NALLOC];
 		ring_free = &rings[((n + NRING/2) % NRING) * NALLOC];
 		for (i = 0; i < NALLOC; i++) {
-			/* doesn't give an ever bucket distribution ... */
-			size = random() %
-			    ((TEST_MAXALLOC-TEST_MINALLOC)+1) + TEST_MINALLOC;
-			align = random() %
-			    ((TEST_MAXALIGN-TEST_MINALIGN)+1) + TEST_MINALIGN;
-
-			ring_alloc[i] = testalloc(size, align);
+			ring_alloc[i] = testalloc();
 			memfree(ring_free[i]);
 		}
 	}
