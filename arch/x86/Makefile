@@ -12,6 +12,8 @@ include ../../Config.mk
 include arch.mk
 include ../../minios.mk
 
+CFLAGS+= -I$(MINI-OS_ROOT)/rump/include -nostdinc
+
 # Sources here are all *.c *.S without $(XEN_TARGET_ARCH).S
 # This is handled in $(HEAD_ARCH_OBJ)
 ARCH_SRCS := $(wildcard *.c)
