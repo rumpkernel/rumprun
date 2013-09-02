@@ -76,7 +76,6 @@ src-y += gnttab.c
 src-y += hypervisor.c
 src-y += kernel.c
 src-y += lock.c
-src-y += main.c
 src-y += mm.c
 src-$(CONFIG_NETFRONT) += netfront.c
 src-$(CONFIG_PCIFRONT) += pcifront.c
