@@ -58,7 +58,7 @@ echo '>> Installing headers.  please wait (may take a while) ...'
 # build networking driver
 (
   cd rumpxenif
-  ../rumptools/rumpmake dependall && ../rumptools/rumpmake install
+  ../rumptools/rumpmake dependall MKPIC=no && ../rumptools/rumpmake install
 )
 
 # build the domU image
