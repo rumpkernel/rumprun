@@ -61,8 +61,6 @@ const char HEXDIGITS[] = "0123456789ABCDEF";
 
 #define KPRINTF_BUFSIZE         (sizeof(uint64_t) * 8 / 3 + 2)
 
-#define __UNCONST(p) (void *)(uintptr_t)(p)
-
 static int kprintf_int(const char *, int, void *, char *, va_list);
 
 /*
