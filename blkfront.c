@@ -50,20 +50,10 @@ struct blkfront_dev {
 
     xenbus_event_queue events;
 
-#ifdef HAVE_LIBC
-    int fd;
-#endif
 };
 
 void blkfront_handler(evtchn_port_t port, struct pt_regs *regs, void *data)
 {
-#ifdef HAVE_LIBC
-    struct blkfront_dev *dev = data;
-    int fd = dev->fd;
-
-    if (fd != -1)
-        files[fd].read = 1;
-#endif
     wake_up(&blkfront_queue);
 }
 
@@ -102,9 +92,6 @@ struct blkfront_dev *init_blkfront(char *_nodename, struct blkfront_info *info)
     dev = malloc(sizeof(*dev));
     memset(dev, 0, sizeof(*dev));
     dev->nodename = strdup(nodename);
-#ifdef HAVE_LIBC
-    dev->fd = -1;
-#endif
 
     snprintf(path, sizeof(path), "%s/backend-id", nodename);
     dev->dom = xenbus_read_integer(path); 
@@ -479,12 +466,6 @@ int blkfront_aio_poll(struct blkfront_dev *dev)
     int nr_consumed;
 
 moretodo:
-#ifdef HAVE_LIBC
-    if (dev->fd != -1) {
-        files[dev->fd].read = 0;
-        mb(); /* Make sure to let the handler set read to 1 before we start looking at the ring */
-    }
-#endif
 
     rp = dev->ring.sring->rsp_prod;
     rmb(); /* Ensure we see queued responses up to 'rp'. */
@@ -540,12 +521,3 @@ moretodo:
     return nr_consumed;
 }
 
-#ifdef HAVE_LIBC
-int blkfront_open(struct blkfront_dev *dev)
-{
-    dev->fd = alloc_fd(FTYPE_BLK);
-    printk("blk_open(%s) -> %d\n", dev->nodename, dev->fd);
-    files[dev->fd].blk.dev = dev;
-    return dev->fd;
-}
-#endif

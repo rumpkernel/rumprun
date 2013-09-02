@@ -112,13 +112,6 @@ typedef int error_t;
 
 #define EFTYPE          132     /* Inappropriate file type or format */
 
-#ifdef HAVE_LIBC
-#include <mini-os/sched.h>
-extern int errno;
-#define ERRNO
-#define errno (get_current()->reent._errno)
-#else
 #define errno (get_current()->threrrno)
-#endif
 
 #endif

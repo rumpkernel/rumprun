@@ -79,9 +79,6 @@ struct consfront_dev *init_consfront(char *_nodename)
     dev = malloc(sizeof(*dev));
     memset(dev, 0, sizeof(*dev));
     dev->nodename = strdup(nodename);
-#ifdef HAVE_LIBC
-    dev->fd = -1;
-#endif
 
     snprintf(path, sizeof(path), "%s/backend-id", nodename);
     if ((res = xenbus_read_integer(path)) < 0) 

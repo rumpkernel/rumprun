@@ -55,7 +55,6 @@
 static int console_initialised = 0;
 
 
-#ifndef HAVE_LIBC
 void xencons_rx(char *buf, unsigned len, struct pt_regs *regs)
 {
     if(len > 0)
@@ -73,7 +72,6 @@ void xencons_tx(void)
 {
     /* Do nothing, handled by _rx */
 }
-#endif
 
 
 void console_print(struct consfront_dev *dev, char *data, int length)

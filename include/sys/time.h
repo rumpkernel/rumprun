@@ -20,9 +20,6 @@
 #ifndef _MINIOS_SYS_TIME_H_
 #define _MINIOS_SYS_TIME_H_
 
-#ifdef HAVE_LIBC
-#include_next <sys/time.h>
-#else
 struct timespec {
     time_t      tv_sec;
     long        tv_nsec;
@@ -37,6 +34,5 @@ struct timeval {
 };
 
 int      gettimeofday(struct timeval *tv, void *tz);
-#endif
 
 #endif /* _MINIOS_SYS_TIME_H_ */

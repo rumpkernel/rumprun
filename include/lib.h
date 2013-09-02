@@ -55,9 +55,6 @@
 #include <sys/queue.h>
 #include "gntmap.h"
 
-#ifdef HAVE_LIBC
-#include <stdio.h>
-#endif
 
 int		sprintf(char *, const char *, ...);
 int		snprintf(char *, size_t, const char *, ...);
@@ -66,9 +63,6 @@ int		vsprintf(char *, const char *, va_list);
 int		vsnprintf(char *, size_t, const char *, va_list);
 unsigned long	strtoul(const char *, char **, int);
 
-#ifdef HAVE_LIBC
-#include <string.h>
-#else
 /* string and memory manipulation */
 
 /*
@@ -103,7 +97,6 @@ char *strrchr(const char *p, int ch);
 void	*memcpy(void *to, const void *from, size_t len);
 
 size_t strnlen(const char *, size_t);
-#endif
 
 #include <mini-os/console.h>
 
@@ -131,79 +124,5 @@ do {                                                           \
 /* Consistency check as much as possible. */
 void sanity_check(void);
 
-#ifdef HAVE_LIBC
-enum fd_type {
-    FTYPE_NONE = 0,
-    FTYPE_CONSOLE,
-    FTYPE_FILE,
-    FTYPE_XENBUS,
-    FTYPE_XC,
-    FTYPE_EVTCHN,
-    FTYPE_GNTMAP,
-    FTYPE_SOCKET,
-    FTYPE_TAP,
-    FTYPE_BLK,
-    FTYPE_KBD,
-    FTYPE_FB,
-    FTYPE_MEM,
-    FTYPE_SAVEFILE,
-};
-
-LIST_HEAD(evtchn_port_list, evtchn_port_info);
-
-struct evtchn_port_info {
-        LIST_ENTRY(evtchn_port_info) list;
-        evtchn_port_t port;
-        unsigned long pending;
-        int bound;
-};
-
-extern struct file {
-    enum fd_type type;
-    union {
-	struct {
-            /* lwIP fd */
-	    int fd;
-	} socket;
-	struct {
-            /* FS import fd */
-	    int fd;
-	    off_t offset;
-	} file;
-	struct {
-	    struct evtchn_port_list ports;
-	} evtchn;
-	struct gntmap gntmap;
-	struct {
-	    struct netfront_dev *dev;
-	} tap;
-	struct {
-	    struct blkfront_dev *dev;
-	} blk;
-	struct {
-	    struct kbdfront_dev *dev;
-	} kbd;
-	struct {
-	    struct fbfront_dev *dev;
-	} fb;
-	struct {
-	    struct consfront_dev *dev;
-	} cons;
-#ifdef CONFIG_XENBUS
-        struct {
-            /* To each xenbus FD is associated a queue of watch events for this
-             * FD.  */
-            xenbus_event_queue events;
-        } xenbus;
-#endif
-    };
-    int read;	/* maybe available for read */
-} files[];
-
-int alloc_fd(enum fd_type type);
-void close_all_files(void);
-extern struct thread *main_thread;
-void sparse(unsigned long data, size_t size);
-#endif
 
 #endif /* _LIB_H_ */

@@ -1,15 +1,6 @@
 #ifndef __XMALLOC_H__
 #define __XMALLOC_H__
 
-#ifdef HAVE_LIBC
-
-#include <stdlib.h>
-#include <malloc.h>
-/* Allocate space for typed object. */
-#define _xmalloc(size, align) memalign(align, size)
-#define xfree(ptr) free(ptr)
-
-#else
 
 #include <limits.h>
 
@@ -26,7 +17,6 @@ void *	calloc(size_t, size_t);
 #define _xmalloc(size, align) memalloc(size, align)
 #define xfree(ptr) free(ptr)
 
-#endif
 
 static inline void *_xmalloc_array(size_t size, size_t align, size_t num)
 {

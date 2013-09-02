@@ -4,9 +4,6 @@
 #include <mini-os/list.h>
 #include <mini-os/time.h>
 #include <mini-os/arch_sched.h>
-#ifdef HAVE_LIBC
-#include <sys/reent.h>
-#endif
 
 struct thread {
     const char *name;
@@ -21,11 +18,7 @@ struct thread {
     MINIOS_TAILQ_ENTRY(struct thread) thread_list;
     uint32_t flags;
     s_time_t wakeup_time;
-#ifdef HAVE_LIBC
-    struct _reent reent;
-#else
     int threrrno;
-#endif
     void *lwp;
 };
 
