@@ -17,23 +17,17 @@
  ****************************************************************************
  */
 
-#ifndef _TYPES_H_
-#define _TYPES_H_
+#ifndef _MINIOS_TYPES_H_
+#define _MINIOS_TYPES_H_
+
+#include <sys/types.h>
+#include <stdint.h>
 #include <stddef.h>
 
-/* FreeBSD compat types */
-typedef unsigned char       u_char;
-typedef unsigned int        u_int;
-typedef unsigned long       u_long;
 #ifdef __i386__
-typedef long long           quad_t;
-typedef unsigned long long  u_quad_t;
-
 typedef struct { unsigned long pte_low, pte_high; } pte_t;
 
 #elif defined(__x86_64__) || defined(__ia64__)
-typedef long                quad_t;
-typedef unsigned long       u_quad_t;
 
 typedef struct { unsigned long pte; } pte_t;
 #endif /* __i386__ || __x86_64__ */
@@ -45,33 +39,4 @@ typedef struct { unsigned long pte; } pte_t;
     ((pte_t) {(unsigned long)(_x), (unsigned long)(_x>>32)}); })
 #endif
 
-#ifdef __i386__
-typedef unsigned int        uintptr_t;
-typedef int                 intptr_t;
-#elif defined(__x86_64__) || defined(__ia64__)
-typedef unsigned long       uintptr_t;
-typedef long                intptr_t;
-#endif /* __i386__ || __x86_64__ */
-typedef unsigned char uint8_t;
-typedef   signed char int8_t;
-typedef unsigned short uint16_t;
-typedef   signed short int16_t;
-typedef unsigned int uint32_t;
-typedef   signed int int32_t;
-#ifdef __i386__
-typedef   signed long long int64_t;
-typedef unsigned long long uint64_t;
-#elif defined(__x86_64__) || defined(__ia64__)
-typedef   signed long int64_t;
-typedef unsigned long uint64_t;
-#endif
-typedef uint64_t uintmax_t;
-typedef  int64_t intmax_t;
-typedef uint64_t off_t;
-
-typedef intptr_t            ptrdiff_t;
-
-
-typedef long ssize_t;
-
-#endif /* _TYPES_H_ */
+#endif /* _MINIOS_TYPES_H_ */
