@@ -18,8 +18,6 @@ endif
 # Configuration defaults
 CONFIG_START_NETWORK ?= y
 CONFIG_SPARSE_BSS ?= y
-CONFIG_QEMU_XS_ARGS ?= n
-CONFIG_TEST ?= n
 CONFIG_PCIFRONT ?= n
 CONFIG_BLKFRONT ?= y
 CONFIG_NETFRONT ?= y
@@ -27,7 +25,6 @@ CONFIG_FBFRONT ?= n
 CONFIG_KBDFRONT ?= n
 CONFIG_CONSFRONT ?= y
 CONFIG_XENBUS ?= y
-CONFIG_LWIP ?= $(lwip)
 
 # Export config items as compiler directives
 flags-$(CONFIG_START_NETWORK) += -DCONFIG_START_NETWORK
@@ -46,10 +43,7 @@ DEF_CFLAGS += $(flags-y)
 # Include common mini-os makerules.
 include minios.mk
 
-# Set tester flags
-# CFLAGS += -DBLKTEST_WRITE
-
-CFLAGS += -Irump/include -DRUMP_HOST_NOT_POSIX
+CFLAGS += -Irump/include
 CFLAGS += -DVIRTIF_BASE=xenif -I.
 
 LIBS_FS = -lrumpfs_ffs -lrumpdev_disk -lrumpdev -lrumpvfs
@@ -75,7 +69,6 @@ TARGET := rump-kernel
 SUBDIRS := lib xenbus console
 
 src-$(CONFIG_BLKFRONT) += blkfront.c
-src-y += daytime.c
 src-y += events.c
 src-$(CONFIG_FBFRONT) += fbfront.c
 src-y += gntmap.c
@@ -88,7 +81,6 @@ src-y += mm.c
 src-$(CONFIG_NETFRONT) += netfront.c
 src-$(CONFIG_PCIFRONT) += pcifront.c
 src-y += sched.c
-src-$(CONFIG_TEST) += test.c
 
 src-y += lib/ctype.c
 #src-y += lib/math.c
@@ -139,37 +131,6 @@ links: include/list.h $(ARCH_LINKS)
 .PHONY: arch_lib
 arch_lib:
 	$(MAKE) --directory=$(TARGET_ARCH_DIR) OBJ_DIR=$(OBJ_DIR)/$(TARGET_ARCH_DIR) || exit 1;
-
-ifeq ($(CONFIG_LWIP),y)
-# lwIP library
-LWC	:= $(shell find $(LWIPDIR)/ -type f -name '*.c')
-LWC	:= $(filter-out %6.c %ip6_addr.c %ethernetif.c, $(LWC))
-LWO	:= $(patsubst %.c,%.o,$(LWC))
-LWO	+= $(OBJ_DIR)/lwip-arch.o
-ifeq ($(CONFIG_NETFRONT),y)
-LWO += $(OBJ_DIR)/lwip-net.o
-endif
-
-$(OBJ_DIR)/lwip.a: $(LWO)
-	$(RM) $@
-	$(AR) cqs $@ $^
-
-OBJS += $(OBJ_DIR)/lwip.a
-endif
-
-OBJS := $(filter-out $(OBJ_DIR)/lwip%.o $(LWO), $(OBJS))
-
-ifeq ($(libc),y)
-APP_LDLIBS += -L$(XEN_ROOT)/stubdom/libxc-$(XEN_TARGET_ARCH) -whole-archive -lxenguest -lxenctrl -no-whole-archive
-APP_LDLIBS += -lpci
-APP_LDLIBS += -lz
-APP_LDLIBS += -lm
-LDLIBS += -lc
-endif
-
-ifneq ($(APP_OBJS)-$(lwip),-y)
-OBJS := $(filter-out $(OBJ_DIR)/daytime.o, $(OBJS))
-endif
 
 $(OBJ_DIR)/$(TARGET)_app.o: $(APP_OBJS) app.lds
 	$(LD) -r -d $(LDFLAGS) -\( $^ -\) $(APP_LDLIBS) --undefined main -o $@
