@@ -15,7 +15,6 @@
 
 #include <rump/rump.h>
 #include <rump/rump_syscalls.h>
-#include <rump/rumpdefs.h>
 #include <rump/netconfig.h>
 
 void demo_thread(void *);
