@@ -33,9 +33,11 @@
 #include <mini-os/types.h>
 #include <mini-os/console.h>
 #include <mini-os/sched.h>
-#include <mini-os/xmalloc.h>
 
 #include <sys/queue.h>
+
+#include <stdlib.h>
+#include <string.h>
 
 #include "rumphyper.h"
 

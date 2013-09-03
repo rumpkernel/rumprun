@@ -66,6 +66,8 @@
 #include <mini-os/os.h>
 #include <mini-os/mm.h>
 
+#include <string.h>
+
 #endif
 
 

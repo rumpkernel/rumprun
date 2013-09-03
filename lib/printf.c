@@ -44,6 +44,9 @@
 #include <mini-os/os.h>
 #include <mini-os/lib.h>
 
+#include <stdio.h>
+#include <string.h>
+
 /*
  * local prototypes
  */

@@ -38,6 +38,8 @@
 #include <inttypes.h>
 #include <mini-os/gntmap.h>
 
+#include <string.h>
+
 #define DEFAULT_MAX_GRANTS 128
 
 struct gntmap_entry {

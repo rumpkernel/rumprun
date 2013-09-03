@@ -46,6 +46,8 @@
 #include <xen/features.h>
 #include <xen/version.h>
 
+#include <string.h>
+
 uint8_t xen_features[XENFEAT_NR_SUBMAPS * 32];
 
 void setup_xen_features(void)

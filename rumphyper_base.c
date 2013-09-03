@@ -31,6 +31,9 @@
 #include <mini-os/blkfront.h>
 #include <mini-os/fcntl.h>
 
+#include <stdio.h>
+#include <string.h>
+
 #include "rumphyper.h"
 
 struct rumpuser_hyperup rumpuser__hyp;

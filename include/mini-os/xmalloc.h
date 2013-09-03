@@ -14,7 +14,6 @@ void *	calloc(size_t, size_t);
 #define DEFAULT_ALIGN (sizeof(unsigned long))
 
 /* compat */
-#define malloc(size) memalloc(size, DEFAULT_ALIGN)
 #define _xmalloc(size, align) memalloc(size, align)
 #define xfree(ptr) free(ptr)
 

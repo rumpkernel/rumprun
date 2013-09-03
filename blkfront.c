@@ -17,6 +17,10 @@
 #include <mini-os/lib.h>
 #include <fcntl.h>
 
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+
 /* Note: we generally don't need to disable IRQs since we hardly do anything in
  * the interrupt handler.  */
 

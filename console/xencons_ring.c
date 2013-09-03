@@ -11,7 +11,11 @@
 #include <xen/io/ring.h>
 #include <mini-os/xmalloc.h>
 #include <mini-os/gnttab.h>
-#include "console.h"
+
+#include <console/console.h>
+
+#include <stdlib.h>
+#include <string.h>
 
 DECLARE_WAIT_QUEUE_HEAD(console_queue);
 

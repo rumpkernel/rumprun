@@ -21,9 +21,8 @@
 #include <sys/types.h>
 #include <sys/null.h>
 
-#include <mini-os/xmalloc.h>
-
 #include <string.h>
+#include <stdlib.h>
 
 char *strdup(const char *x)
 {

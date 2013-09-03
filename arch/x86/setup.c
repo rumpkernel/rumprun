@@ -27,7 +27,8 @@
  */
 
 #include <mini-os/os.h>
-#include <mini-os/lib.h> /* for printk, memcpy */
+
+#include <string.h>
 
 /*
  * Shared page for communicating with the hypervisor.

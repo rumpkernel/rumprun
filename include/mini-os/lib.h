@@ -48,55 +48,9 @@
 #ifndef _LIB_H_
 #define _LIB_H_
 
-#include <stdarg.h>
-#include <stddef.h>
 #include <xen/xen.h>
 #include <xen/event_channel.h>
-#include <sys/queue.h>
 #include "gntmap.h"
-
-
-int		sprintf(char *, const char *, ...);
-int		snprintf(char *, size_t, const char *, ...);
-void		vprintf(const char *, va_list);
-int		vsprintf(char *, const char *, va_list);
-int		vsnprintf(char *, size_t, const char *, va_list);
-unsigned long	strtoul(const char *, char **, int);
-
-/* string and memory manipulation */
-
-/*
- * From:
- *	@(#)libkern.h	8.1 (Berkeley) 6/10/93
- * $FreeBSD$
- */
-int	 memcmp(const void *b1, const void *b2, size_t len);
-
-char	*strcat(char * __restrict, const char * __restrict);
-int	 strcmp(const char *, const char *);
-char	*strcpy(char * __restrict, const char * __restrict);
-
-char	*strdup(const char *__restrict);
-
-size_t	 strlen(const char *);
-
-int	 strncmp(const char *, const char *, size_t);
-char	*strncpy(char * __restrict, const char * __restrict, size_t);
-
-char	*strstr(const char *, const char *);
-
-void *memset(void *, int, size_t);
-
-char *strchr(const char *p, int ch);
-char *strrchr(const char *p, int ch);
-
-/* From:
- *	@(#)systm.h	8.7 (Berkeley) 3/29/95
- * $FreeBSD$
- */
-void	*memcpy(void *to, const void *from, size_t len);
-
-size_t strnlen(const char *, size_t);
 
 #include <mini-os/console.h>
 

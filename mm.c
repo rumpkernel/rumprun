@@ -42,6 +42,8 @@
 #include <mini-os/lib.h>
 #include <mini-os/xmalloc.h>
 
+#include <string.h>
+
 #ifdef MM_DEBUG
 #define DEBUG(_f, _a...) \
     printk("MINI_OS(file=mm.c, line=%d) " _f "\n", __LINE__, ## _a)

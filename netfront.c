@@ -17,15 +17,15 @@
 #include <mini-os/lib.h>
 #include <mini-os/semaphore.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 DECLARE_WAIT_QUEUE_HEAD(netfront_queue);
-
-
-
 
 #define NET_TX_RING_SIZE __CONST_RING_SIZE(netif_tx, PAGE_SIZE)
 #define NET_RX_RING_SIZE __CONST_RING_SIZE(netif_rx, PAGE_SIZE)
 #define GRANT_INVALID_REF 0
-
 
 struct net_buffer {
     void* page;

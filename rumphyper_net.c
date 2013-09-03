@@ -25,7 +25,9 @@
 
 #include <mini-os/os.h>
 #include <mini-os/netfront.h>
-#include <mini-os/xmalloc.h>
+
+#include <stdlib.h>
+#include <string.h>
 
 #include "rumphyper.h"
 #include <rump/rumpuser.h>

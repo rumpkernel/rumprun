@@ -11,7 +11,12 @@
 #include <xen/io/ring.h>
 #include <mini-os/xmalloc.h>
 #include <mini-os/gnttab.h>
-#include "console.h"
+
+#include <console/console.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 void free_consfront(struct consfront_dev *dev)
 {

@@ -20,6 +20,8 @@
 #include <mini-os/gnttab.h>
 #include <mini-os/semaphore.h>
 
+#include <string.h>
+
 #define NR_RESERVED_ENTRIES 8
 
 /* NR_GRANT_FRAMES must be less than or equal to that configured in Xen */

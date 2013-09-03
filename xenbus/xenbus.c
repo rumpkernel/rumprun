@@ -28,6 +28,10 @@
 #include <mini-os/spinlock.h>
 #include <mini-os/xmalloc.h>
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #define min(x,y) ({                       \
         typeof(x) tmpx = (x);                 \
         typeof(y) tmpy = (y);                 \

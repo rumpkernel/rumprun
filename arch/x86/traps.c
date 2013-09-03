@@ -6,6 +6,8 @@
 #include <mini-os/lib.h>
 #include <mini-os/sched.h>
 
+#include <string.h>
+
 /*
  * These are assembler stubs in entry.S.
  * They are the actual entry points for virtual exceptions.
