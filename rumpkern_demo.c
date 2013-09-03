@@ -9,6 +9,7 @@
 
 #include <dirent.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 #include <poll.h>
@@ -34,7 +35,7 @@ dofs(void)
 	int fd;
 	int rv;
 
-	if (rump_sys_open("/not_there", RUMP_O_RDWR) != -1 || errno != ENOENT)
+	if (rump_sys_open("/not_there", O_RDWR) != -1 || errno != ENOENT)
 		FAIL("errno test");
 
 	if ((rv = rump_pub_etfs_register(BLKDEV, "blk0",
@@ -48,7 +49,7 @@ dofs(void)
 
 	buf = malloc(BUFSIZE);
 	rump_sys_chdir("/mnt");
-	if ((fd = rump_sys_open(".", RUMP_O_RDONLY)) == -1)
+	if ((fd = rump_sys_open(".", O_RDONLY)) == -1)
 		FAIL("open");
 
 	if ((rv = rump_sys_getdents(fd, buf, BUFSIZE)) <= 1)
@@ -61,7 +62,7 @@ dofs(void)
 	}
 
 	/* assume README.md exists, open it, and display first line */
-	if ((fd = rump_sys_open("README.md", RUMP_O_RDWR)) == -1)
+	if ((fd = rump_sys_open("README.md", O_RDWR)) == -1)
 		FAIL("open README");
 
 	memset(buf, 0, sizeof(buf));
@@ -202,7 +203,7 @@ donet(void)
 		return;
 	}
 
-	s = rump_sys_socket(RUMP_PF_INET, RUMP_SOCK_STREAM, 0);
+	s = rump_sys_socket(PF_INET, SOCK_STREAM, 0);
 	if (s == -1) {
 		printk("no socket %d\n", errno);
 		return;
@@ -211,7 +212,7 @@ donet(void)
 
 	memset(&sin, 0, sizeof(sin));
 	sin.sin_len = sizeof(sin);
-	sin.sin_family = RUMP_AF_INET;
+	sin.sin_family = AF_INET;
 	sin.sin_port = htons(4096);
 	sin.sin_addr.s_addr = INADDR_ANY;
 	if (rump_sys_bind(s, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
