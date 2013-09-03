@@ -1,5 +1,5 @@
-#ifndef __ASM_SPINLOCK_H
-#define __ASM_SPINLOCK_H
+#ifndef __MINIOS_ASM_SPINLOCK_H
+#define __MINIOS_ASM_SPINLOCK_H
 
 #include <mini-os/lib.h>
 

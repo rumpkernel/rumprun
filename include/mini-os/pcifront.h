@@ -1,3 +1,6 @@
+#ifndef _MINIOS_PCIFRONT_H_
+#define _MINIOS_PCIFRONT_H_
+
 #include <mini-os/types.h>
 #include <xen/io/pciif.h>
 struct pcifront_dev;
@@ -27,3 +30,5 @@ int pcifront_disable_msix(struct pcifront_dev *dev,
                           unsigned int dom,
                           unsigned int bus, unsigned int slot, unsigned long fun);
 void shutdown_pcifront(struct pcifront_dev *dev);
+
+#endif /* _MINIOS_PCIFRONT_H_ */

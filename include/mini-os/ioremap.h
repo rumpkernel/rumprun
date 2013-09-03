@@ -21,13 +21,13 @@
  */
 
 
-#ifndef _IOREMAP_H_
-#define _IOREMAP_H_
+#ifndef _MINIOS_IOREMAP_H_
+#define _MINIOS_IOREMAP_H_
 
 void *ioremap(unsigned long phys_addr, unsigned long size);
 void *ioremap_nocache(unsigned long phys_addr, unsigned long size);
 void iounmap(void *virt_addr, unsigned long size);
 
-#endif /* _IOREMAP_H_ */
+#endif /* _MINIOS_IOREMAP_H_ */
 
 /* -*-  Mode:C; c-basic-offset:4; tab-width:4 indent-tabs-mode:nil -*- */

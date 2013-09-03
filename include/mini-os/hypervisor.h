@@ -10,8 +10,8 @@
  * Updates: Dietmar Hahn <dietmar.hahn@fujitsu-siemens.com> for ia64
  */
 
-#ifndef _HYPERVISOR_H_
-#define _HYPERVISOR_H_
+#ifndef _MINIOS_HYPERVISOR_H_
+#define _MINIOS_HYPERVISOR_H_
 
 #include <mini-os/types.h>
 #include <xen/xen.h>
@@ -44,4 +44,4 @@ void clear_evtchn(uint32_t port);
 
 extern int in_callback;
 
-#endif /* __HYPERVISOR_H__ */
+#endif /* __MINIOS_HYPERVISOR_H__ */

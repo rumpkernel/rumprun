@@ -1,5 +1,5 @@
-#ifndef __SCHED_H__
-#define __SCHED_H__
+#ifndef __MINIOS_SCHED_H__
+#define __MINIOS_SCHED_H__
 
 #include <mini-os/time.h>
 #include <mini-os/arch_sched.h>
@@ -52,4 +52,4 @@ void wake(struct thread *thread);
 void block(struct thread *thread);
 void msleep(uint32_t millisecs);
 
-#endif /* __SCHED_H__ */
+#endif /* __MINIOS_SCHED_H__ */

@@ -1,5 +1,5 @@
-#ifndef __WAIT_H__
-#define __WAIT_H__
+#ifndef __MINIOS_WAIT_H__
+#define __MINIOS_WAIT_H__
 
 #include <mini-os/sched.h>
 #include <mini-os/os.h>
@@ -94,7 +94,7 @@ static inline void wake_up(struct wait_queue_head *head)
 
 
 
-#endif /* __WAIT_H__ */
+#endif /* __MINIOS_WAIT_H__ */
 
 /*
  * Local variables:

@@ -33,8 +33,8 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
  * DEALINGS IN THE SOFTWARE.
  */
-#ifndef _LIB_CONSOLE_H_
-#define _LIB_CONSOLE_H_
+#ifndef _MINIOS_LIB_CONSOLE_H_
+#define _MINIOS_LIB_CONSOLE_H_
 
 #include <mini-os/os.h>
 #include <mini-os/traps.h>
@@ -85,4 +85,4 @@ int xencons_ring_avail(struct consfront_dev *dev);
 int xencons_ring_recv(struct consfront_dev *dev, char *data, unsigned len);
 void free_consfront(struct consfront_dev *dev);
 
-#endif /* _LIB_CONSOLE_H_ */
+#endif /* _MINIOS_LIB_CONSOLE_H_ */

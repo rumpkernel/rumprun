@@ -1,5 +1,5 @@
-#ifndef _CTYPE_H
-#define _CTYPE_H
+#ifndef _MINIOS_CTYPE_H
+#define _MINIOS_CTYPE_H
 
 /*
  * NOTE! This ctype does not handle EOF like the standard C

@@ -1,3 +1,6 @@
+#ifndef _MINIOS_FBFRONT_H_
+#define _MINIOS_FBFRONT_H_
+
 #include <xen/io/kbdif.h>
 #include <xen/io/fbif.h>
 #include <mini-os/semaphore.h>
@@ -38,3 +41,5 @@ void fbfront_update(struct fbfront_dev *dev, int x, int y, int width, int height
 void fbfront_resize(struct fbfront_dev *dev, int width, int height, int stride, int depth, int offset);
 
 void shutdown_fbfront(struct fbfront_dev *dev);
+
+#endif /* _MINIOS_FBFRONT_H_ */

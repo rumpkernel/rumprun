@@ -1,5 +1,5 @@
-#ifndef _I386_FCNTL_H
-#define _I386_FCNTL_H
+#ifndef _MINIOS_I386_FCNTL_H
+#define _MINIOS_I386_FCNTL_H
 
 
 /* open/fcntl - O_SYNC is only implemented on blocks devices and on files

@@ -1,5 +1,5 @@
-#ifndef _ERRNO_H
-#define _ERRNO_H
+#ifndef _MINIOS_ERRNO_H
+#define _MINIOS_ERRNO_H
 
 #include <mini-os/errno-base.h>
 

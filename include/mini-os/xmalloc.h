@@ -1,5 +1,5 @@
-#ifndef __XMALLOC_H__
-#define __XMALLOC_H__
+#ifndef __MINIOS_XMALLOC_H__
+#define __MINIOS_XMALLOC_H__
 
 
 #include <limits.h>
@@ -32,4 +32,4 @@ static inline void *_xmalloc_array(size_t size, size_t align, size_t num)
 /* Allocate space for array of typed objects. */
 #define xmalloc_array(_type, _num) ((_type *)_xmalloc_array(sizeof(_type), __alignof__(_type), _num))
 
-#endif /* __XMALLOC_H__ */
+#endif /* __MINIOS_XMALLOC_H__ */

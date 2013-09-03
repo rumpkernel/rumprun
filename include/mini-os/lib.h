@@ -45,8 +45,8 @@
  *
  */
 
-#ifndef _LIB_H_
-#define _LIB_H_
+#ifndef _MINIOS_LIB_H_
+#define _MINIOS_LIB_H_
 
 #include <xen/xen.h>
 #include <xen/event_channel.h>
@@ -79,4 +79,4 @@ do {                                                           \
 void sanity_check(void);
 
 
-#endif /* _LIB_H_ */
+#endif /* _MINIOS_LIB_H_ */

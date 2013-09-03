@@ -1,5 +1,5 @@
-#ifndef _SEMAPHORE_H_
-#define _SEMAPHORE_H_
+#ifndef _MINIOS_SEMAPHORE_H_
+#define _MINIOS_SEMAPHORE_H_
 
 #include <mini-os/wait.h>
 #include <mini-os/spinlock.h>
@@ -107,4 +107,4 @@ static inline void down_write(struct rw_semaphore *sem)
 {
 }
 
-#endif /* _SEMAPHORE_H */
+#endif /* _MINIOS_SEMAPHORE_H */

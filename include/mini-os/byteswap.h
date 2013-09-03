@@ -1,5 +1,5 @@
-#ifndef _BYTESWAP_H_
-#define _BYTESWAP_H_
+#ifndef _MINIOS_BYTESWAP_H_
+#define _MINIOS_BYTESWAP_H_
 
 /* Unfortunately not provided by newlib.  */
 
@@ -30,4 +30,4 @@ static inline uint64_t bswap_64(uint64_t x)
      (((x) & 0x00000000000000ffULL) << 56));
 }
 
-#endif /* _BYTESWAP_H */
+#endif /* _MINIOS_BYTESWAP_H */

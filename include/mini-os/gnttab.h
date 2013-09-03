@@ -1,5 +1,5 @@
-#ifndef __GNTTAB_H__
-#define __GNTTAB_H__
+#ifndef __MINIOS_GNTTAB_H__
+#define __MINIOS_GNTTAB_H__
 
 #include <xen/grant_table.h>
 
@@ -13,4 +13,4 @@ int gnttab_end_access(grant_ref_t ref);
 const char *gnttabop_error(int16_t status);
 void fini_gnttab(void);
 
-#endif /* !__GNTTAB_H__ */
+#endif /* !__MINIOS_GNTTAB_H__ */

@@ -1,5 +1,5 @@
-#ifndef __GNTMAP_H__
-#define __GNTMAP_H__
+#ifndef __MINIOS_GNTMAP_H__
+#define __MINIOS_GNTMAP_H__
 
 #include <mini-os/os.h>
 
@@ -32,4 +32,4 @@ gntmap_init(struct gntmap *map);
 void
 gntmap_fini(struct gntmap *map);
 
-#endif /* !__GNTMAP_H__ */
+#endif /* !__MINIOS_GNTMAP_H__ */

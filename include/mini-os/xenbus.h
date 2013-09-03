@@ -1,5 +1,5 @@
-#ifndef XENBUS_H__
-#define XENBUS_H__
+#ifndef MINIOS_XENBUS_H__
+#define MINIOS_XENBUS_H__
 
 #include <xen/io/xenbus.h>
 
@@ -113,4 +113,4 @@ static inline void fini_xenbus(void)
 }
 #endif
 
-#endif /* XENBUS_H__ */
+#endif /* MINIOS_XENBUS_H__ */

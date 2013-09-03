@@ -16,8 +16,8 @@
  ****************************************************************************
  */
 
-#ifndef _EVENTS_H_
-#define _EVENTS_H_
+#ifndef _MINIOS_EVENTS_H_
+#define _MINIOS_EVENTS_H_
 
 #include<mini-os/traps.h>
 #include<xen/event_channel.h>
@@ -48,4 +48,4 @@ static inline int notify_remote_via_evtchn(evtchn_port_t port)
 
 void fini_events(void);
 
-#endif /* _EVENTS_H_ */
+#endif /* _MINIOS_EVENTS_H_ */

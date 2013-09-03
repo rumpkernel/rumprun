@@ -22,8 +22,8 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef _MM_H_
-#define _MM_H_
+#ifndef _MINIOS_MM_H_
+#define _MINIOS_MM_H_
 
 #if defined(__i386__)
 #include <xen/arch-x86_32.h>
@@ -77,4 +77,4 @@ unsigned long alloc_contig_pages(int order, unsigned int addr_bits);
 int free_physical_pages(xen_pfn_t *mfns, int n);
 void fini_mm(void);
 
-#endif /* _MM_H_ */
+#endif /* _MINIOS_MM_H_ */

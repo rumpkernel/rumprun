@@ -1,5 +1,5 @@
-#ifndef __WAITTYPE_H__
-#define __WAITTYPE_H__
+#ifndef __MINIOS_WAITTYPE_H__
+#define __MINIOS_WAITTYPE_H__
 
 #include <sys/queue.h>
 

@@ -1,3 +1,6 @@
+#ifndef _MINIOS_BLKFRONT_H_
+#define _MINIOS_BLKFRONT_H_
+
 #include <mini-os/wait.h>
 #include <xen/io/blkif.h>
 #include <mini-os/types.h>
@@ -39,3 +42,5 @@ void blkfront_sync(struct blkfront_dev *dev);
 void shutdown_blkfront(struct blkfront_dev *dev);
 
 extern struct wait_queue_head blkfront_queue;
+
+#endif /* _MINIOS_BLKFRONT_H_ */
