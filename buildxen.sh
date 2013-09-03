@@ -25,7 +25,7 @@ git submodule update --init --recursive
 
 # build rump kernel
 ./buildrump.sh/buildrump.sh -q -k -s rumpsrc -T rumptools -o rumpobj \
-    tools build install
+    -V RUMP_KERNEL_IS_LIBC=1 tools build install
 
 #
 # install full set of headers.
