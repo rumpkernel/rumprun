@@ -67,13 +67,10 @@ void setup_xen_features(void)
 }
 
 void demo_thread(void *);
-int test_app_main(start_info_t *);
-/* This should be overridden by the application we are linked against. */
 int app_main(start_info_t *si)
 {
-    printk("Dummy main: start_info=%p\n", si);
+
     create_thread("demo_thread", demo_thread, si);
-    //test_app_main(si);
     return 0;
 }
 
