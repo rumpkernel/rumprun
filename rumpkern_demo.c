@@ -263,6 +263,12 @@ donet(void)
 	}
 }
 
+#if 0
+static char *the_env[1] = { NULL } ;
+extern void *environ;
+void _libc_init(void);
+#endif
+
 void
 demo_thread(void *arg)
 {
@@ -276,6 +282,12 @@ demo_thread(void *arg)
 	}
 
 	rump_init();
+
+/* soon */
+#if 0
+	environ = the_env;
+	_libc_init();
+#endif
 
 	if (tests & 0x1)
 		dofs();
