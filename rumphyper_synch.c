@@ -35,7 +35,7 @@
 #include <mini-os/sched.h>
 #include <mini-os/xmalloc.h>
 
-#include <nb/queue.h>
+#include <sys/queue.h>
 
 #include "rumphyper.h"
 
