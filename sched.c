@@ -42,10 +42,10 @@
 #include <mini-os/types.h>
 #include <mini-os/lib.h>
 #include <mini-os/xmalloc.h>
-#include <mini-os/list.h>
 #include <mini-os/sched.h>
 #include <mini-os/semaphore.h>
 
+#include <sys/queue.h>
 
 #ifdef SCHED_DEBUG
 #define DEBUG(_f, _a...) \
@@ -54,11 +54,11 @@
 #define DEBUG(_f, _a...)    ((void)0)
 #endif
 
-MINIOS_TAILQ_HEAD(thread_list, struct thread);
+TAILQ_HEAD(thread_list, thread);
 
 struct thread *idle_thread = NULL;
-static struct thread_list exited_threads = MINIOS_TAILQ_HEAD_INITIALIZER(exited_threads);
-static struct thread_list thread_list = MINIOS_TAILQ_HEAD_INITIALIZER(thread_list);
+static struct thread_list exited_threads = TAILQ_HEAD_INITIALIZER(exited_threads);
+static struct thread_list thread_list = TAILQ_HEAD_INITIALIZER(thread_list);
 static int threads_started;
 
 struct thread *main_thread;
@@ -66,7 +66,7 @@ struct thread *main_thread;
 void inline print_runqueue(void)
 {
     struct thread *th;
-    MINIOS_TAILQ_FOREACH(th, &thread_list, thread_list)
+    TAILQ_FOREACH(th, &thread_list, thread_list)
     {
         printk("   Thread \"%s\", runnable=%d\n", th->name, is_runnable(th));
     }
@@ -97,7 +97,7 @@ void schedule(void)
         s_time_t now = NOW();
         s_time_t min_wakeup_time = now + SECONDS(10);
         next = NULL;
-        MINIOS_TAILQ_FOREACH_SAFE(thread, &thread_list, thread_list, tmp)
+        TAILQ_FOREACH_SAFE(thread, &thread_list, thread_list, tmp)
         {
             if (!is_runnable(thread) && thread->wakeup_time != 0LL)
             {
@@ -110,8 +110,8 @@ void schedule(void)
             {
                 next = thread;
                 /* Put this thread on the end of the list */
-                MINIOS_TAILQ_REMOVE(&thread_list, thread, thread_list);
-                MINIOS_TAILQ_INSERT_TAIL(&thread_list, thread, thread_list);
+                TAILQ_REMOVE(&thread_list, thread, thread_list);
+                TAILQ_INSERT_TAIL(&thread_list, thread, thread_list);
                 break;
             }
         }
@@ -127,11 +127,11 @@ void schedule(void)
        inturrupted at the return instruction. And therefore at safe point. */
     if(prev != next) switch_threads(prev, next);
 
-    MINIOS_TAILQ_FOREACH_SAFE(thread, &exited_threads, thread_list, tmp)
+    TAILQ_FOREACH_SAFE(thread, &exited_threads, thread_list, tmp)
     {
         if(thread != prev)
         {
-            MINIOS_TAILQ_REMOVE(&exited_threads, thread, thread_list);
+            TAILQ_REMOVE(&exited_threads, thread, thread_list);
             free_pages(thread->stack, STACK_SIZE_PAGE_ORDER);
             xfree(thread);
         }
@@ -151,7 +151,7 @@ create_thread(const char *name, void (*function)(void *), void *data)
     thread->lwp = NULL;
     set_runnable(thread);
     local_irq_save(flags);
-    MINIOS_TAILQ_INSERT_TAIL(&thread_list, thread, thread_list);
+    TAILQ_INSERT_TAIL(&thread_list, thread, thread_list);
     local_irq_restore(flags);
     return thread;
 }
@@ -164,10 +164,10 @@ void exit_thread(void)
     printk("Thread \"%s\" exited.\n", thread->name);
     local_irq_save(flags);
     /* Remove from the thread list */
-    MINIOS_TAILQ_REMOVE(&thread_list, thread, thread_list);
+    TAILQ_REMOVE(&thread_list, thread, thread_list);
     clear_runnable(thread);
     /* Put onto exited list */
-    MINIOS_TAILQ_INSERT_HEAD(&exited_threads, thread, thread_list);
+    TAILQ_INSERT_HEAD(&exited_threads, thread, thread_list);
     local_irq_restore(flags);
     /* Schedule will free the resources */
     while(1)

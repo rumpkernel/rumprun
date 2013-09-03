@@ -42,7 +42,6 @@
 #include <mini-os/types.h>
 #include <mini-os/lib.h>
 #include <mini-os/xmalloc.h>
-#include <mini-os/list.h>
 #include <mini-os/sched.h>
 #include <mini-os/semaphore.h>
 

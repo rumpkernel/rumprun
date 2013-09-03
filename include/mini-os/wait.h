@@ -5,6 +5,8 @@
 #include <mini-os/os.h>
 #include <mini-os/waittypes.h>
 
+#include <sys/queue.h>
+
 #define DEFINE_WAIT(name)                          \
 struct wait_queue name = {                         \
     .thread       = get_current(),                 \
@@ -14,7 +16,7 @@ struct wait_queue name = {                         \
 
 static inline void init_waitqueue_head(struct wait_queue_head *h)
 {
-    MINIOS_STAILQ_INIT(h);
+    STAILQ_INIT(h);
 }
 
 static inline void init_waitqueue_entry(struct wait_queue *q, struct thread *thread)
@@ -26,7 +28,7 @@ static inline void init_waitqueue_entry(struct wait_queue *q, struct thread *thr
 static inline void add_wait_queue(struct wait_queue_head *h, struct wait_queue *q)
 {
     if (!q->waiting) {
-        MINIOS_STAILQ_INSERT_HEAD(h, q, thread_list);
+        STAILQ_INSERT_HEAD(h, q, thread_list);
         q->waiting = 1;
     }
 }
@@ -34,7 +36,7 @@ static inline void add_wait_queue(struct wait_queue_head *h, struct wait_queue *
 static inline void remove_wait_queue(struct wait_queue_head *h, struct wait_queue *q)
 {
     if (q->waiting) {
-        MINIOS_STAILQ_REMOVE(h, q, struct wait_queue, thread_list);
+        STAILQ_REMOVE(h, q, wait_queue, thread_list);
         q->waiting = 0;
     }
 }
@@ -44,7 +46,7 @@ static inline void wake_up(struct wait_queue_head *head)
     unsigned long flags;
     struct wait_queue *curr, *tmp;
     local_irq_save(flags);
-    MINIOS_STAILQ_FOREACH_SAFE(curr, head, thread_list, tmp)
+    STAILQ_FOREACH_SAFE(curr, head, thread_list, tmp)
          wake(curr->thread);
     local_irq_restore(flags);
 }

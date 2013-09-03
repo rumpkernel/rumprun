@@ -115,12 +115,8 @@ $(ARCH_LINKS):
 	$(arch_links)
 endif
 
-include/mini-os/list.h: $(XEN_ROOT)/tools/include/xen-external/bsd-sys-queue-h-seddery $(XEN_ROOT)/tools/include/xen-external/bsd-sys-queue.h
-	perl $^ --prefix=minios  >$@.new
-	$(call move-if-changed,$@.new,$@)
-
 .PHONY: links
-links: include/mini-os/list.h $(ARCH_LINKS)
+links: $(ARCH_LINKS)
 	[ -e include/xen ] || ln -sf ../../../xen/include/public include/xen
 	[ -e include/mini-os/machine ] || ln -sf $(TARGET_ARCH_FAM) include/mini-os/machine
 
@@ -135,7 +131,7 @@ ifneq ($(APP_OBJS),)
 APP_O=$(OBJ_DIR)/$(TARGET)_app.o 
 endif
 
-$(OBJ_DIR)/$(TARGET): links include/mini-os/list.h $(OBJS) $(APP_O) arch_lib
+$(OBJ_DIR)/$(TARGET): links $(OBJS) $(APP_O) arch_lib
 	$(LD) -r $(LDFLAGS) $(HEAD_OBJ) $(APP_O) $(OBJS) $(LDARCHLIB) $(LDLIBS) -o $@.o
 	$(OBJCOPY) -w -G $(GLOBAL_PREFIX)* -G _start $@.o $@.o
 	$(LD) $(LDFLAGS) $(LDFLAGS_FINAL) $@.o $(EXTRA_OBJS) -o $@
@@ -150,7 +146,6 @@ clean:	arch_clean
 	for dir in $(addprefix $(OBJ_DIR)/,$(SUBDIRS)); do \
 		rm -f $$dir/*.o; \
 	done
-	rm -f include/mini-os/list.h
 	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core $(OBJ_DIR)/$(TARGET).elf $(OBJ_DIR)/$(TARGET).raw $(OBJ_DIR)/$(TARGET) $(OBJ_DIR)/$(TARGET).gz
 	rm -f $(OBJ_DIR)/include/xen $(OBJ_DIR)/include/mini-os/machine
 	rm -f tags TAGS

@@ -1,23 +1,23 @@
 #ifndef __WAITTYPE_H__
 #define __WAITTYPE_H__
 
-#include <mini-os/list.h>
+#include <sys/queue.h>
 
 struct thread;
 struct wait_queue
 {
     int waiting;
     struct thread *thread;
-    MINIOS_STAILQ_ENTRY(struct wait_queue) thread_list;
+    STAILQ_ENTRY(wait_queue) thread_list;
 };
 
 /* TODO - lock required? */
-MINIOS_STAILQ_HEAD(wait_queue_head, struct wait_queue);
+STAILQ_HEAD(wait_queue_head, wait_queue);
 
 #define DECLARE_WAIT_QUEUE_HEAD(name) \
-    struct wait_queue_head name = MINIOS_STAILQ_HEAD_INITIALIZER(name)
+    struct wait_queue_head name = STAILQ_HEAD_INITIALIZER(name)
 
-#define __WAIT_QUEUE_HEAD_INITIALIZER(name) MINIOS_STAILQ_HEAD_INITIALIZER(name)
+#define __WAIT_QUEUE_HEAD_INITIALIZER(name) STAILQ_HEAD_INITIALIZER(name)
 
 #endif
 

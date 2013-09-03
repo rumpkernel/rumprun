@@ -1,9 +1,10 @@
 #ifndef __SCHED_H__
 #define __SCHED_H__
 
-#include <mini-os/list.h>
 #include <mini-os/time.h>
 #include <mini-os/arch_sched.h>
+
+#include <sys/queue.h>
 
 struct thread {
     const char *name;
@@ -15,7 +16,7 @@ struct thread {
 #else /* !defined(__ia64__) */
     thread_regs_t regs;
 #endif /* !defined(__ia64__) */
-    MINIOS_TAILQ_ENTRY(struct thread) thread_list;
+    TAILQ_ENTRY(thread) thread_list;
     uint32_t flags;
     s_time_t wakeup_time;
     int threrrno;
