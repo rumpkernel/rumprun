@@ -31,6 +31,9 @@ of your Xen source tree and run the following command:
 
 	./buildxen.sh
 
+NOTE! On this branch you can run `buildxen.sh` exactly once.  Rebuilds are
+currently not supported.  Rebuilds will be fixed before merge to master.
+
 To run, use the standard Xen tools:
 
 	xl create -c domain_config
