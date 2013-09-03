@@ -75,6 +75,7 @@ src-y += gntmap.c
 src-y += gnttab.c
 src-y += hypervisor.c
 src-y += kernel.c
+src-y += libc_stubs.c
 src-y += mm.c
 src-$(CONFIG_NETFRONT) += netfront.c
 src-$(CONFIG_PCIFRONT) += pcifront.c
