@@ -10,12 +10,12 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <poll.h>
 #include <stdlib.h>
 #include <string.h>
-#include <poll.h>
+#include <unistd.h>
 
 #include <rump/rump.h>
-#include <rump/rump_syscalls.h>
 #include <rump/netconfig.h>
 
 void demo_thread(void *);
@@ -35,26 +35,26 @@ dofs(void)
 	int fd;
 	int rv;
 
-	if (rump_sys_open("/not_there", O_RDWR) != -1 || errno != ENOENT)
+	if (open("/not_there", O_RDWR) != -1 || errno != ENOENT)
 		FAIL("errno test");
 
 	if ((rv = rump_pub_etfs_register(BLKDEV, "blk0",
 	    RUMP_ETFS_BLK)) != 0)
 		FAIL("etfs");
 
-	rump_sys_mkdir("/mnt", 0777);
+	mkdir("/mnt", 0777);
 	ua.fspec = BLKDEV;
-	if (rump_sys_mount("ffs", "/mnt", 0, &ua, sizeof(ua)) != 0)
+	if (mount(MOUNT_FFS, "/mnt", 0, &ua, sizeof(ua)) != 0)
 		FAIL("mount");
 
 	buf = malloc(BUFSIZE);
-	rump_sys_chdir("/mnt");
-	if ((fd = rump_sys_open(".", O_RDONLY)) == -1)
+	chdir("/mnt");
+	if ((fd = open(".", O_RDONLY)) == -1)
 		FAIL("open");
 
-	if ((rv = rump_sys_getdents(fd, buf, BUFSIZE)) <= 1)
+	if ((rv = getdents(fd, buf, BUFSIZE)) <= 1)
 		FAIL("getdents");
-	rump_sys_close(fd);
+	close(fd);
 
 	for (p = buf; p < (int8_t *)buf + rv; p += dp->d_reclen) {
 		dp = (void *)p;
@@ -62,11 +62,11 @@ dofs(void)
 	}
 
 	/* assume README.md exists, open it, and display first line */
-	if ((fd = rump_sys_open("README.md", O_RDWR)) == -1)
+	if ((fd = open("README.md", O_RDWR)) == -1)
 		FAIL("open README");
 
 	memset(buf, 0, sizeof(buf));
-	if (rump_sys_read(fd, buf, 200) < 200)
+	if (read(fd, buf, 200) < 200)
 		FAIL("read");
 
 	if ((p = (void *)strchr(buf, '\n')) == NULL)
@@ -76,14 +76,14 @@ dofs(void)
 
 #define GARBAGE "   TRASHED!   "
 	/* write some garbage in there.  spot the difference the next time */
-	rump_sys_pwrite(fd, GARBAGE, sizeof(GARBAGE)-1, 20);
-	rump_sys_close(fd);
+	pwrite(fd, GARBAGE, sizeof(GARBAGE)-1, 20);
+	close(fd);
 
 	/*
 	 * FS will be unmounted when you type "reboot" into the
 	 * net demo, just like in any regular OS
 	 */
-	rump_sys_sync(); /* but just to be safe */
+	sync(); /* but just to be safe */
 }
 
 #define MAXCONN 64
@@ -105,12 +105,12 @@ acceptconn(void)
 	socklen_t slen = sizeof(sin);
 	int s;
 
-	if ((s = rump_sys_accept(0, (struct sockaddr *)&sin, &slen)) == -1)
+	if ((s = accept(0, (struct sockaddr *)&sin, &slen)) == -1)
 		return;
 
 	/* drop */
 	if (s >= MAXCONN) {
-		rump_sys_close(s);
+		close(s);
 		return;
 	}
 
@@ -124,7 +124,7 @@ acceptconn(void)
 
 #define PROMPT "LOGON: "
 	/* just assume this will go into the socket without blocking */
-	rump_sys_write(s, PROMPT, sizeof(PROMPT)-1);
+	write(s, PROMPT, sizeof(PROMPT)-1);
 #undef PROMPT
 }
 
@@ -135,10 +135,10 @@ readconn(int i)
 	char *p;
 	ssize_t nn;
 
-	nn = rump_sys_read(i, c->c_buf+c->c_bpos, sizeof(c->c_buf)-c->c_bpos);
+	nn = read(i, c->c_buf+c->c_bpos, sizeof(c->c_buf)-c->c_bpos);
 	/* treat errors and EOF the same way, we shouldn't get EAGAIN */
 	if (nn <= 0) {
-		rump_sys_close(i);
+		close(i);
 		pfds[i].fd = -1;
 		c->c_cnt = -1;
 	}
@@ -153,11 +153,11 @@ readconn(int i)
 #define NOPE "LOGIN INCORRECT\n"
 	/* multiple holes here, some more microsofty than others */
 	if (strncmp(c->c_buf, "Joshua", 6) == 0) {
-		rump_sys_write(i, GREET, sizeof(GREET)-1);
+		write(i, GREET, sizeof(GREET)-1);
 	} else if (strncmp(c->c_buf, "reboot", 6) == 0) {
-		rump_sys_reboot(0, 0);
+		reboot(0, 0);
 	} else {
-		rump_sys_write(i, NOPE, sizeof(NOPE)-1);
+		write(i, NOPE, sizeof(NOPE)-1);
 	}
 	pfds[i].fd = -1;
 #undef GREET
@@ -175,7 +175,7 @@ processzombies(void)
 	 */
 	for (i = 1; i < MAXCONN; i++) {
 		if (conns[i].c_cnt != -1 && ++conns[i].c_cnt > 10) {
-			rump_sys_close(i);
+			close(i);
 		}
 	}
 }
@@ -203,7 +203,7 @@ donet(void)
 		return;
 	}
 
-	s = rump_sys_socket(PF_INET, SOCK_STREAM, 0);
+	s = socket(PF_INET, SOCK_STREAM, 0);
 	if (s == -1) {
 		printk("no socket %d\n", errno);
 		return;
@@ -215,11 +215,11 @@ donet(void)
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(4096);
 	sin.sin_addr.s_addr = INADDR_ANY;
-	if (rump_sys_bind(s, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
+	if (bind(s, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
 		printk("bind fail %d\n", errno);
 		return;
 	}
-	if (rump_sys_listen(s, 10) == -1) {
+	if (listen(s, 10) == -1) {
 		printk("unix man, please listen(): %d\n", errno);
 		return;
 	}
@@ -241,7 +241,7 @@ donet(void)
 			zombietime = NOW();
 		}
 
-		rv = rump_sys_poll(pfds, maxfd, 1000);
+		rv = poll(pfds, maxfd, 1000);
 		if (rv == 0) {
 			printk("still waiting ... %lld\n", NOW());
 			continue;
@@ -249,7 +249,7 @@ donet(void)
 
 		if (rv == -1) {
 			printk("fail poll %d\n", errno);
-			rump_sys_reboot(0, 0);
+			reboot(0, 0);
 		}
 
 		if (pfds[0].revents & POLLIN) {
@@ -293,5 +293,5 @@ demo_thread(void *arg)
 	if (tests & 0x2)
 		donet();
 
-	rump_sys_reboot(0, 0);
+	reboot(0, 0);
 }
