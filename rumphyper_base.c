@@ -31,6 +31,7 @@
 #include <mini-os/blkfront.h>
 #include <mini-os/fcntl.h>
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -79,7 +80,7 @@ rumpuser_getparam(const char *name, void *buf, size_t blen)
 	for (i = 0; envtab[i].name; i++) {
 		if (strcmp(name, envtab[i].name) == 0) {
 			if (blen < strlen(envtab[i].value)+1) {
-				return RUMP_E2BIG;
+				return E2BIG;
 			} else {
 				strcpy(buf, envtab[i].value);
 				return 0;
@@ -87,7 +88,7 @@ rumpuser_getparam(const char *name, void *buf, size_t blen)
 		}
 	}
 
-        return RUMP_ENOENT;
+        return ENOENT;
 }
 
 /* Use same values both for absolute and relative clock. */
@@ -158,7 +159,7 @@ rumpuser_malloc(size_t len, int alignment, void **retval)
 	if (*retval)
 		return 0;
 	else
-		return RUMP_ENOMEM;
+		return ENOMEM;
 }
 
 void
@@ -220,7 +221,7 @@ devopen(int num)
 		blkopen[num] = 1;
 		return 0;
 	} else {
-		return RUMP_EIO; /* guess something */
+		return EIO; /* guess something */
 	}
 }
 
@@ -248,7 +249,7 @@ rumpuser_open(const char *name, int mode, int *fdp)
 	int acc, rv, num;
 
 	if ((mode & RUMPUSER_OPEN_BIO) == 0 || (num = devname2num(name)) == -1)
-		return RUMP_ENXIO;
+		return ENXIO;
 
 	if ((rv = devopen(num)) != 0)
 		return rv;
@@ -257,7 +258,7 @@ rumpuser_open(const char *name, int mode, int *fdp)
 	if (acc == RUMPUSER_OPEN_WRONLY || acc == RUMPUSER_OPEN_RDWR) {
 		if (blkinfos[num].mode != O_RDWR) {
 			/* XXX: unopen */
-			return RUMP_EROFS;
+			return EROFS;
 		}
 	}
 
@@ -271,7 +272,7 @@ rumpuser_close(int fd)
 	int rfd = fd - BLKFDOFF;
 
 	if (rfd < 0 || rfd+1 > NBLKDEV)
-		return RUMP_EBADF;
+		return EBADF;
 
 	if (--blkopen[rfd] == 0) {
 		struct blkfront_dev *toclose = blkdevs[rfd];
@@ -290,7 +291,7 @@ rumpuser_getfileinfo(const char *name, uint64_t *size, int *type)
 	int rv, num;
 
 	if ((num = devname2num(name)) == -1)
-		return RUMP_ENXIO;
+		return ENXIO;
 	if ((rv = devopen(num)) != 0)
 		return rv;
 
@@ -317,7 +318,7 @@ biocomp(struct blkfront_aiocb *aiocb, int ret)
 
 	rumpkern_sched(0, NULL);
 	if (ret)
-		bio->bio_done(bio->bio_arg, 0, RUMP_EIO);
+		bio->bio_done(bio->bio_arg, 0, EIO);
 	else
 		bio->bio_done(bio->bio_arg, bio->bio_aiocb.aio_nbytes, 0);
 	rumpkern_unsched(&dummy, NULL);

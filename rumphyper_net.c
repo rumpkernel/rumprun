@@ -23,24 +23,17 @@
  * SUCH DAMAGE.
  */
 
+#include <sys/uio.h>
+
 #include <mini-os/os.h>
 #include <mini-os/netfront.h>
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "rumphyper.h"
 #include <rump/rumpuser.h>
-#include <rump/rumpdefs.h>
-
-/*
- * minios doesn't give us iovec, so just define it here since it's
- * pretty much guaranteed to remain static for all eternity
- */
-struct iovec {
-	void *iov_base;
-	size_t iov_len;
-};
 
 #include <rumpxenif/if_virt.h>
 #include <rumpxenif/if_virt_user.h>
@@ -153,7 +146,7 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 
 	viu = malloc(sizeof(*viu));
 	if (viu == NULL) {
-		rv = RUMP_ENOMEM;
+		rv = ENOMEM;
 		goto out;
 	}
 	memset(viu, 0, sizeof(*viu));
@@ -161,7 +154,7 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 
 	viu->viu_dev = init_netfront(NULL, myrecv, enaddr, NULL, viu);
 	if (!viu->viu_dev) {
-		rv = RUMP_EINVAL; /* ? */
+		rv = EINVAL; /* ? */
 		free(viu);
 		goto out;
 	}
