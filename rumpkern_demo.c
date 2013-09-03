@@ -1,6 +1,5 @@
 #include <mini-os/console.h>
 #include <mini-os/netfront.h>
-#include <mini-os/errno.h>
 
 #include <sys/types.h>
 
@@ -9,6 +8,7 @@
 #include <ufs/ufs/ufsmount.h>
 
 #include <dirent.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <poll.h>

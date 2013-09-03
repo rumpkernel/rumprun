@@ -21,7 +21,6 @@
 #include <mini-os/lib.h>
 #include <mini-os/xenbus.h>
 #include <mini-os/events.h>
-#include <mini-os/errno.h>
 #include <mini-os/sched.h>
 #include <mini-os/wait.h>
 #include <xen/io/xs_wire.h>

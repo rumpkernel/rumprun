@@ -80,6 +80,7 @@ src-$(CONFIG_NETFRONT) += netfront.c
 src-$(CONFIG_PCIFRONT) += pcifront.c
 src-y += sched.c
 
+src-y += lib/__errno.c
 src-y += lib/ctype.c
 #src-y += lib/math.c
 src-y += lib/memalloc.c
