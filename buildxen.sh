@@ -8,7 +8,7 @@ set -e
 
 # fetch buildrump.sh and NetBSD sources
 git submodule update --init --recursive
-#./buildrump.sh/buildrump.sh -q -k -s rumpsrc -T rumptools -o rumpobj checkout
+./buildrump.sh/buildrump.sh -q -k -s rumpsrc -T rumptools -o rumpobj checkout
 
 # hackish, but meh, we want to get rid of this anyway
 (
@@ -24,10 +24,8 @@ git submodule update --init --recursive
 )
 
 # build rump kernel
-#./buildrump.sh/buildrump.sh -q -k -s rumpsrc -T rumptools -o rumpobj \
-    #tools build install
 ./buildrump.sh/buildrump.sh -q -k -s rumpsrc -T rumptools -o rumpobj \
-    tools setupdest
+    tools build install
 
 #
 # install full set of headers.
@@ -38,7 +36,6 @@ INCSDIRS='adosfs altq arpa crypto dev filecorefs fs i386 isofs miscfs
 	netisdn netkey netmpls netnatm netsmb nfs ntfs ppath prop
 	protocols rpc rpcsvc ssp sys ufs uvm x86'
 for dir in ${INCSDIRS}; do
-	echo $dir
 	mkdir -p rump/include/$dir
 done
 
@@ -47,15 +44,16 @@ echo '>> Installing headers.  please wait (may take a while) ...'
 (
   # sys/ produces a lot of errors due to missing tools/sources
   # "protect" the user from that spew
-
   cd rumpsrc/sys
   ../../rumptools/rumpmake -k includes >/dev/null 2>&1
 )
 
-# user headers, OTOH, should install cleanly
-( cd rumpsrc/include && ../../rumptools/rumpmake includes )
-( cd rumpsrc/lib/libc && ../../../rumptools/rumpmake includes )
-( cd rumpsrc/lib/libpthread && ../../../rumptools/rumpmake includes )
+# rpcgen lossage
+( cd rumpsrc/include && ../../rumptools/rumpmake -k includes > /dev/null 2>&1)
+
+( cd rumpsrc/lib/libc && ../../../rumptools/rumpmake includes >/dev/null 2>&1)
+( cd rumpsrc/lib/libpthread && ../../../rumptools/rumpmake includes >/dev/null)
+
 
 # build networking driver
 (
