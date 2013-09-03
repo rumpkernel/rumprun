@@ -206,44 +206,6 @@ void idle_thread_fn(void *unused)
     }
 }
 
-DECLARE_MUTEX(mutex);
-
-void th_f1(void *data)
-{
-    struct timeval tv1, tv2;
-
-    for(;;)
-    {
-        down(&mutex);
-        printk("Thread \"%s\" got semaphore, runnable %d\n", current->name, is_runnable(current));
-        schedule();
-        printk("Thread \"%s\" releases the semaphore\n", current->name);
-        up(&mutex);
-        
-        
-        gettimeofday(&tv1, NULL);
-        for(;;)
-        {
-            gettimeofday(&tv2, NULL);
-            if(tv2.tv_sec - tv1.tv_sec > 2) break;
-        }
-                
-        
-        schedule(); 
-    }
-}
-
-void th_f2(void *data)
-{
-    for(;;)
-    {
-        printk("Thread OTHER executing, data 0x%lx\n", data);
-        schedule();
-    }
-}
-
-
-
 void init_sched(void)
 {
     printk("Initialising scheduler\n");
