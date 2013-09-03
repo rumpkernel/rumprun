@@ -125,7 +125,7 @@ include/mini-os/list.h: $(XEN_ROOT)/tools/include/xen-external/bsd-sys-queue-h-s
 .PHONY: links
 links: include/mini-os/list.h $(ARCH_LINKS)
 	[ -e include/xen ] || ln -sf ../../../xen/include/public include/xen
-	[ -e include/$(TARGET_ARCH_FAM)/mini-os ] || ln -sf . include/$(TARGET_ARCH_FAM)/mini-os
+	[ -e include/mini-os/machine ] || ln -sf $(TARGET_ARCH_FAM) include/mini-os/machine
 
 .PHONY: arch_lib
 arch_lib:

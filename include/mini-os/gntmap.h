@@ -1,7 +1,7 @@
 #ifndef __GNTMAP_H__
 #define __GNTMAP_H__
 
-#include <os.h>
+#include <mini-os/os.h>
 
 /*
  * Please consider struct gntmap opaque. If instead you choose to disregard
