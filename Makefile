@@ -155,8 +155,7 @@ clean:	arch_clean
 	done
 	rm -f include/mini-os/list.h
 	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core $(OBJ_DIR)/$(TARGET).elf $(OBJ_DIR)/$(TARGET).raw $(OBJ_DIR)/$(TARGET) $(OBJ_DIR)/$(TARGET).gz
-	#find . $(OBJ_DIR) -type l \! -path \*/rumpobj/dest/\* | xargs rm -f
-	$(RM) $(OBJ_DIR)/lwip.a $(LWO)
+	rm -f $(OBJ_DIR)/include/xen $(OBJ_DIR)/include/mini-os/machine
 	rm -f tags TAGS
 
 
