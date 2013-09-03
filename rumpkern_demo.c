@@ -34,6 +34,9 @@ dofs(void)
 	int fd;
 	int rv;
 
+	if (rump_sys_open("/not_there", RUMP_O_RDWR) != -1 || errno != ENOENT)
+		FAIL("errno test");
+
 	if ((rv = rump_pub_etfs_register(BLKDEV, "blk0",
 	    RUMP_ETFS_BLK)) != 0)
 		FAIL("etfs");
