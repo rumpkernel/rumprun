@@ -29,9 +29,9 @@
 #include <xen/io/console.h>
 #include <mini-os/xmalloc.h>
 #include <mini-os/blkfront.h>
-#include <mini-os/fcntl.h>
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 
