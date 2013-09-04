@@ -8,6 +8,7 @@
 #include <ufs/ufs/ufsmount.h>
 
 #include <dirent.h>
+#include <err.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -29,7 +30,8 @@ static void
 dofs(void)
 {
 	struct ufs_args ua;
-	struct dirent *dp;
+	struct dirent *dent;
+	DIR *dp;
 	void *buf;
 	int8_t *p;
 	int fd;
@@ -49,17 +51,17 @@ dofs(void)
 
 	buf = malloc(BUFSIZE);
 	chdir("/mnt");
-	if ((fd = open(".", O_RDONLY)) == -1)
-		FAIL("open");
 
-	if ((rv = getdents(fd, buf, BUFSIZE)) <= 1)
-		FAIL("getdents");
-	close(fd);
+	dp = opendir(".");
+	if (dp == NULL)
+		err(1, "opendir");
 
-	for (p = buf; p < (int8_t *)buf + rv; p += dp->d_reclen) {
-		dp = (void *)p;
-		printk("%d %d %s\n", dp->d_type, (int)dp->d_fileno, dp->d_name);
+	printk("\treading directory contents\n");
+	while ((dent = readdir(dp)) != NULL) {
+		printk("%d %"PRIu64" %s\n",
+		    dent->d_type, dent->d_fileno, dent->d_name);
 	}
+	closedir(dp);
 
 	/* assume README.md exists, open it, and display first line */
 	if ((fd = open("README.md", O_RDWR)) == -1)
