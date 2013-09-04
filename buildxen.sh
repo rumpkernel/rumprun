@@ -8,7 +8,7 @@ set -e
 
 # fetch buildrump.sh and NetBSD sources
 git submodule update --init --recursive
-./buildrump.sh/buildrump.sh -q -k -s rumpsrc -T rumptools -o rumpobj checkout
+./buildrump.sh/buildrump.sh -s rumpsrc checkout
 
 # hackish, but meh, we want to get rid of this anyway
 (
