@@ -3,7 +3,7 @@ memory = 16
 # vcpus == 1 required
 vcpus=1
 name = "rump-kernel"
-disk = [ 'file:test.ffs,hda,rw' ]
+disk = [ 'file:test.ffs,hda,rw', 'file:etc.ffs,hdb,rw' ]
 vif = [ 'mac=b2:11:11:11:11:11' ]
 
 # if 1, run fs test
