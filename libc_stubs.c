@@ -1,15 +1,19 @@
 #include <mini-os/console.h>
 
+#include <errno.h>
+
 #define STUB(name)				\
   int name(void); int name(void) {		\
 	static int done = 0;			\
-	if (done) return 1; done = 1;		\
+	errno = ENOTSUP;			\
+	if (done) return ENOTSUP; done = 1;	\
 	printk("STUB ``%s'' called\n", #name);	\
-	return 2;}
+	return ENOTSUP;}
 
 #define STUBNULL(name)				\
   void *name(void); void *name(void) {		\
 	static int done = 0;			\
+	errno = ENOTSUP;			\
 	if (done) return NULL; done = 1;	\
 	printk("STUB ``%s'' called\n", #name);	\
 	return NULL;}
