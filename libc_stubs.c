@@ -27,8 +27,6 @@ STUB(__sigprocmask14);
 STUB(_exit);
 STUB(_lwp_kill);
 STUB(_lwp_self);
-STUB(_mmap);
-STUB(munmap);
 STUB(__wait450);
 STUB(__fork);
 

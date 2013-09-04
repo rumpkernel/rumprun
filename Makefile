@@ -69,6 +69,7 @@ TARGET := rump-kernel
 SUBDIRS := lib xenbus console
 
 src-$(CONFIG_BLKFRONT) += blkfront.c
+src-y += emul.c
 src-y += events.c
 src-$(CONFIG_FBFRONT) += fbfront.c
 src-y += gntmap.c
