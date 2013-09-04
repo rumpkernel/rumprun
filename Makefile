@@ -105,6 +105,8 @@ src-$(CONFIG_CONSFRONT) += console/xenbus.c
 # The common mini-os objects to build.
 APP_OBJS :=
 OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(src-y))
+OBJS+= httpd/bozohttpd.o httpd/main.o httpd/ssl-bozo.o httpd/content-bozo.o
+OBJS+= httpd/dir-index-bozo.o
 
 .PHONY: default
 default: $(OBJ_DIR)/$(TARGET)

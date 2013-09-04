@@ -74,5 +74,8 @@ echo '>> Installing headers.  please wait (may take a while) ...'
 
 [ ! -f test.ffs ] && cp test_clean.ffs test.ffs
 
+# build httpd objects
+( cd httpd && make -f Makefile.boot )
+
 # build the domU image
 make
