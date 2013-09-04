@@ -3,6 +3,7 @@ CFLAGS=	-O2 -g -Wall
 CFLAGS+= -nostdinc -I../rump/include -I../include
 CFLAGS+= -DNO_DEBUG -DNO_USER_SUPPORT -DNO_CGIBIN_SUPPORT -DNO_DAEMON_MODE
 CFLAGS+= -DNO_DYNAMIC_CONTENT -DNO_SSL_SUPPORT
+CFLAGS+= -DBOZO_MMAPSZ=65536
 
 FILES=	bozohttpd.o auth-bozo.o cgi-bozo.o content-bozo.o daemon-bozo.o \
 	dir-index-bozo.o ssl-bozo.o tilde-luzah-bozo.o main.o

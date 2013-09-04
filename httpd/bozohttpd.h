@@ -1,4 +1,4 @@
-/*	$NetBSD: bozohttpd.h,v 1.27 2013/07/11 08:24:47 mrg Exp $	*/
+/*	$NetBSD: bozohttpd.h,v 1.28 2013/09/04 22:59:50 pooka Exp $	*/
 
 /*	$eterna: bozohttpd.h,v 1.39 2011/11/18 09:21:15 mrg Exp $	*/
 
@@ -159,9 +159,13 @@ typedef struct bozoprefs_t {
 	char		**value;	/* values for the name entries */
 } bozoprefs_t;
 
-/* write in upto 64KiB chunks, and mmap in upto 64MiB chunks */
+/* by default write in upto 64KiB chunks, and mmap in upto 64MiB chunks */
+#ifndef BOZO_WRSZ
 #define BOZO_WRSZ	(64 * 1024)
+#endif
+#ifndef BOZO_MMAPSZ
 #define BOZO_MMAPSZ	(BOZO_WRSZ * 1024)
+#endif
 
 /* debug flags */
 #define DEBUG_NORMAL	1
