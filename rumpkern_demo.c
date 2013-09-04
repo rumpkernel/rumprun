@@ -183,13 +183,10 @@ processzombies(void)
 }
 
 static void
-donet(void)
+setupnet(void)
 {
-	struct sockaddr_in sin;
-	uint64_t zombietime;
-	int rv, i;
-	int s;
-	
+	int rv;
+
 	if ((rv = rump_pub_netconfig_ifcreate("xenif0")) != 0) {
 		printk("creating xenif0 failed: %d\n", rv);
 		return;
@@ -204,27 +201,42 @@ donet(void)
 		printk("getting IP for xenif0 via DHCP failed: %d\n", rv);
 		return;
 	}
+}
+
+static int
+sucketonport(uint16_t port)
+{
+	struct sockaddr_in sin;
+	int s;
 
 	s = socket(PF_INET, SOCK_STREAM, 0);
-	if (s == -1) {
-		printk("no socket %d\n", errno);
-		return;
-	}
-	ASSERT(s == 0); /* pseudo-XXX */
+	if (s == -1)
+		err(1, "socket");
 
 	memset(&sin, 0, sizeof(sin));
 	sin.sin_len = sizeof(sin);
 	sin.sin_family = AF_INET;
-	sin.sin_port = htons(4096);
+	sin.sin_port = htons(port);
 	sin.sin_addr.s_addr = INADDR_ANY;
-	if (bind(s, (struct sockaddr *)&sin, sizeof(sin)) == -1) {
-		printk("bind fail %d\n", errno);
-		return;
-	}
-	if (listen(s, 10) == -1) {
-		printk("unix man, please listen(): %d\n", errno);
-		return;
-	}
+	if (bind(s, (struct sockaddr *)&sin, sizeof(sin)) == -1)
+		err(1, "bind");
+
+	if (listen(s, 10) == -1)
+		err(1, "unix man, please listen");
+
+	return s;
+}
+
+static void
+donet(void)
+{
+	uint64_t zombietime;
+	int rv, i;
+	int s;
+
+	setupnet();
+	s = sucketonport(4096);
+	ASSERT(s == 0); /* fixme */
 
 	for (i = 0; i < MAXCONN; i++) {
 		pfds[i].fd = -1;
@@ -234,7 +246,7 @@ donet(void)
 	pfds[0].fd = 0;
 	maxfd = 1;
 
-	printk("WOPR reporting for duty on port 4096 (16 if you're BE)\n");
+	printk("WOPR reporting for duty on port 4096\n");
 
 	zombietime = NOW();
 	for (;;) {
@@ -269,6 +281,90 @@ donet(void)
 	}
 }
 
+int main(int, char **);
+void
+wwwbozo(void *arg)
+{
+	char *argv[] = { "bozo", "-X", "/etc" };
+
+	rump_pub_lwproc_switch(arg);
+	main(sizeof(argv)/sizeof(argv[0]), argv);
+
+	close(0);
+	close(1);
+	close(2);
+
+#if 0
+	/* XXX */
+	rump_pub_lwproc_releaselwp();
+#endif
+}
+
+static void
+dohttpd(void)
+{
+	struct ufs_args ua;
+	struct sockaddr_in sin;
+	socklen_t slen;
+	int rv, s, sa, count;
+	struct lwp *l;
+
+	if ((rv = rump_pub_etfs_register(BLKDEV, "blk1", RUMP_ETFS_BLK)) != 0)
+		FAIL("etfs");
+
+	mkdir("/etc", 0777);
+	ua.fspec = BLKDEV;
+	if (mount(MOUNT_FFS, "/etc", MNT_RDONLY, &ua, sizeof(ua)) == -1)
+		err(1, "mount");
+	setupnet();
+
+	/* create a decicated process which does the work */
+	rump_pub_lwproc_rfork(RUMP_RFCFDG);
+	l = rump_pub_lwproc_curlwp();
+
+	/*
+	 * ok, now.  we run bozohttpd in inetd mode to gain control
+	 * of the worker model is uses.  This means that we have to:
+	 *  1: open the listening socket and accept connections
+	 *  2: rfork with descriptor inheritance
+	 *  3: dup2 the accepted fd's to {0,1,2}
+	 *  4: create a mini os thread to handle the request(s)
+	 */
+	s = sucketonport(80);
+	for (count = 0;; count++) {
+		/* 1: accept */
+		slen = sizeof(sin);
+		sa = accept(s, (struct sockaddr *)&sin, &slen);
+		if (sa == -1)
+			err(1, "accept round %d", count);
+
+		/* 2: rfork */
+		rv = rump_pub_lwproc_rfork(RUMP_RFFDG);
+		if (rv != 0)
+			errx(1, "fork failed: %s", strerror(rv));
+
+		/* 3: setup fd's */
+		dup2(sa, 0);
+		dup2(sa, 1);
+		dup2(sa, 2);
+		fcntl(3, F_CLOSEM);
+
+		/* 4: create thread */
+		create_thread("wwwbozo", wwwbozo, rump_pub_lwproc_curlwp());
+
+		/*
+		 * back to handling proc.  yea, this a slightly gray
+		 * area of semantics, and we could do a lot better in
+		 * preventing a race.  that ssaid, we should be fine due
+		 * to cooperative scheduling.
+		 *
+		 * then, release the reference to the socket fd
+		 */
+		rump_pub_lwproc_switch(l);
+		close(sa);
+	}
+}
+
 static char *the_env[1] = { NULL } ;
 extern void *environ;
 void _libc_init(void);
@@ -281,7 +377,7 @@ demo_thread(void *arg)
 
 	if (si->cmd_line[0]) {
 		tests = si->cmd_line[0] - '0';
-		if (tests < 0 || tests > 3)
+		if (tests < 0 || tests > 7)
 			tests = 0;
 	}
 
@@ -294,6 +390,8 @@ demo_thread(void *arg)
 		dofs();
 	if (tests & 0x2)
 		donet();
+	if (tests & 0x4)
+		dohttpd();
 
 	reboot(0, 0);
 }
