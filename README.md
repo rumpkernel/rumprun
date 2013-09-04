@@ -16,8 +16,8 @@ These drivers are also provided as demos, see instructions below.
 For applications a POSIX-y interface is provided.  Some applications,
 such as those using file systems or sockets interfaces, will more or less
 work out-of-the-box.  Limitations include applications which do not fit
-into a single-process no-VM model, such as applications using `fork()`,
-`execve()` or file-backed `mmap()`.
+into a single-process no-VM model, such as applications using `fork()` or
+`execve()`.
 
 See http://www.NetBSD.org/docs/rump/ for more information on rump kernels.
 
