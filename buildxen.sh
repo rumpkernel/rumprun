@@ -23,9 +23,11 @@ git submodule update --init --recursive
   fi
 )
 
-# build rump kernel
+# build rump kernel (FIXME: CPPFLAGS hack)
 ./buildrump.sh/buildrump.sh -q -k -s rumpsrc -T rumptools -o rumpobj \
-    -V RUMP_KERNEL_IS_LIBC=1 tools build install
+    -V RUMP_KERNEL_IS_LIBC=1 tools
+echo 'CPPFLAGS+=-DMAXPHYS=32768' >> rumptools/mk.conf
+./buildrump.sh/buildrump.sh -k -s rumpsrc -T rumptools -o rumpobj build install
 
 #
 # install full set of headers.
