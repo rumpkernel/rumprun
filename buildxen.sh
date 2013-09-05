@@ -6,27 +6,34 @@
 # the buildxen.sh is not as forgiving as I am
 set -e
 
-# fetch buildrump.sh and NetBSD sources
-git submodule update --init --recursive
-./buildrump.sh/buildrump.sh -s rumpsrc checkout
+if [ "$1" = 'checkout' -o ! -f .buildxen-checkoutdone ]; then
+	docheckout=true
+fi
+if ${docheckout:-false} ; then
+	# fetch buildrump.sh and NetBSD sources
+	git submodule update --init --recursive
+	./buildrump.sh/buildrump.sh -s rumpsrc checkout
 
-# hackish, but meh, we want to get rid of this anyway
-(
-  cd rumpsrc
-  if [ ! -d xen-nblibc ] ; then
-    mv lib/libc lib/libc.orig
-    git clone https://github.com/anttikantee/xen-nblibc
-    ln -s ../xen-nblibc/libc lib/libc
-    ln -s ../xen-nblibc/libpthread lib/libpthread
-    ln -s ../xen-nblibc/libm lib/libm
-  else
-    ( cd xen-nblibc && git pull )
-  fi
-)
+	# fetch the userland bits ... hackish, but meh, we want to
+	# get rid of this eventually anyway, so don't sweat it
+	( if [ ! -d xen-nblibc ]; then
+		git clone https://github.com/anttikantee/xen-nblibc
+		( cd xen-nblibc ; ln -sf ../rumpsrc/common . )
+	else
+		( cd xen-nblibc ; git pull )
+	fi )
+	touch .buildxen-checkoutdone
+fi
+
+# build tools.  XXX: build them only if they don't exist already.  If
+# we try to build them after installing the extra headers, the tool
+# compat code gets really confused  FIXME
+if [ ! -f rumptools/rumpmake ]; then
+	./buildrump.sh/buildrump.sh -q -k -s rumpsrc -T rumptools -o rumpobj \
+	    -V RUMP_KERNEL_IS_LIBC=1 tools
+fi
 
 # build rump kernel (FIXME: CPPFLAGS hack)
-./buildrump.sh/buildrump.sh -q -k -s rumpsrc -T rumptools -o rumpobj \
-    -V RUMP_KERNEL_IS_LIBC=1 tools
 echo 'CPPFLAGS+=-DMAXPHYS=32768' >> rumptools/mk.conf
 ./buildrump.sh/buildrump.sh -k -s rumpsrc -T rumptools -o rumpobj build install
 
@@ -54,19 +61,26 @@ echo '>> Installing headers.  please wait (may take a while) ...'
 # rpcgen lossage
 ( cd rumpsrc/include && ../../rumptools/rumpmake -k includes > /dev/null 2>&1)
 
-( cd rumpsrc/lib/libc && ../../../rumptools/rumpmake includes >/dev/null 2>&1)
-( cd rumpsrc/lib/libpthread && ../../../rumptools/rumpmake includes >/dev/null)
+# other lossage
+( cd xen-nblibc/lib/libc \
+    && ../../../rumptools/rumpmake includes >/dev/null 2>&1)
+( cd xen-nblibc/lib/libpthread \
+    && ../../../rumptools/rumpmake includes >/dev/null 2>&1)
+
+echo '>> done with headers'
 
 
 # build networking driver
 (
   cd rumpxenif
-  ../rumptools/rumpmake dependall MKPIC=no && ../rumptools/rumpmake install
+  ../rumptools/rumpmake obj
+  ../rumptools/rumpmake MKPIC=no dependall && ../rumptools/rumpmake install
 )
 
 # build & install libc
 (
-  cd rumpsrc/lib/libc
+  cd xen-nblibc/lib/libc
+  ../../../rumptools/rumpmake obj
   ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no MKYP=no \
     NOGCCERROR=1 dependall
   ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no MKYP=no \
@@ -75,7 +89,8 @@ echo '>> Installing headers.  please wait (may take a while) ...'
 
 # build and install libm
 (
-  cd rumpsrc/lib/libm
+  cd xen-nblibc/lib/libm
+  ../../../rumptools/rumpmake obj
   ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no \
     NOGCCERROR=1 dependall
   ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no install
