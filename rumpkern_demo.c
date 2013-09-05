@@ -290,14 +290,8 @@ wwwbozo(void *arg)
 	rump_pub_lwproc_switch(arg);
 	main(sizeof(argv)/sizeof(argv[0]), argv);
 
-	close(0);
-	close(1);
-	close(2);
-
-#if 0
-	/* XXX */
+	/* among other things, will close fd's */
 	rump_pub_lwproc_releaselwp();
-#endif
 }
 
 static void
