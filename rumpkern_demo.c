@@ -1,3 +1,5 @@
+/* Copyright (c) 2013 Antti Kantee.  See COPYING */
+
 #include <mini-os/console.h>
 #include <mini-os/netfront.h>
 
