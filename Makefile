@@ -87,7 +87,6 @@ src-y += lib/ctype.c
 #src-y += lib/math.c
 src-y += lib/memalloc.c
 src-y += lib/printf.c
-src-y += lib/strtoul.c
 
 src-y += rumphyper_base.c
 src-y += rumphyper_net.c
