@@ -18,6 +18,7 @@ git submodule update --init --recursive
     git clone https://github.com/anttikantee/xen-nblibc
     ln -s ../xen-nblibc/libc lib/libc
     ln -s ../xen-nblibc/libpthread lib/libpthread
+    ln -s ../xen-nblibc/libm lib/libm
   else
     ( cd xen-nblibc && git pull )
   fi
@@ -70,6 +71,13 @@ echo '>> Installing headers.  please wait (may take a while) ...'
     dependall
   ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no MKYP=no \
     install
+)
+
+# build and install libm
+(
+  cd rumpsrc/lib/libm
+  ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no
+  ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no install
 )
 
 [ ! -f test.ffs ] && cp test_clean.ffs test.ffs
