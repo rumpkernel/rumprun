@@ -68,7 +68,7 @@ echo '>> Installing headers.  please wait (may take a while) ...'
 (
   cd rumpsrc/lib/libc
   ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no MKYP=no \
-    dependall
+    NOGCCERROR=1 dependall
   ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no MKYP=no \
     install
 )
@@ -76,7 +76,8 @@ echo '>> Installing headers.  please wait (may take a while) ...'
 # build and install libm
 (
   cd rumpsrc/lib/libm
-  ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no
+  ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no \
+    NOGCCERROR=1 dependall
   ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no install
 )
 
