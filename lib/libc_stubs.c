@@ -15,9 +15,12 @@ STUB(__nanosleep50);
 STUB(__setitimer50);
 STUB(__sigaction14);
 STUB(__sigprocmask14);
+STUB(__getrusage50);
 
 STUB(_exit);
 STUB(_lwp_kill);
 STUB(_lwp_self);
 STUB(__wait450);
 STUB(__fork);
+STUB(__vfork14);
+STUB(execve);
