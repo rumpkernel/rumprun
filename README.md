@@ -1,4 +1,4 @@
-Rump kernel hypercalls for the Xen hypervisor
+Rump kernel hypercalls for the Xen hypervisor [![Build Status](https://travis-ci.org/anttikantee/rumpuser-xen.png?branch=master)](https://travis-ci.org/anttikantee/rumpuser-xen)
 =============================================
 
 This repository contains code that implements the rump kernel hypercall
