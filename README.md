@@ -9,10 +9,6 @@ kernels is being able use unmodified kernel-quality drivers as part of
 a single-image application, with the memory footprint being a fraction
 of that of a full OS, yet still achieving the isolation provided by Xen.
 
-The current status is working, with the block and NIC I/O devices having
-been verified by using the Fast File System and TCP, respectively.
-These drivers are also provided as demos, see instructions below.
-
 For applications a POSIX-y interface is provided.  Some applications,
 such as those using file systems or sockets interfaces, will more or
 less work out-of-the-box.  Limitations include applications which do
@@ -26,9 +22,9 @@ See http://www.NetBSD.org/docs/rump/ for more information on rump kernels.
 Using / Testing
 ---------------
 
-To build and use, get the Xen source tree which matches your hypervisor
-version.  Then, clone this repository into the `extras` subdirectory
-of your Xen source tree and run the following command:
+To build, clone this repository and run the following command.  You
+need Xen headers for a successful build (e.g. on Ubuntu they're in
+the `libxen-dev` package).
 
 	./buildxen.sh
 
