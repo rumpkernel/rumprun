@@ -81,7 +81,6 @@ src-$(CONFIG_PCIFRONT) += pcifront.c
 src-y += sched.c
 
 src-y += lib/__errno.c
-src-y += lib/ctype.c
 src-y += lib/emul.c
 src-y += lib/libc_stubs.c
 #src-y += lib/math.c
