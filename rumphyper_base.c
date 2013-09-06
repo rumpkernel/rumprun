@@ -43,9 +43,17 @@ static struct rumpuser_mtx *bio_mtx;
 static struct rumpuser_cv *bio_cv;
 static int bio_outstanding_total;
 
+#define RUMPHYPER_MYVERSION 17
+
 int
-rumpuser_init(int ver, const struct rumpuser_hyperup *hyp)
+rumpuser_init(int version, const struct rumpuser_hyperup *hyp)
 {
+
+	if (version != RUMPHYPER_MYVERSION) {
+		printk("Unsupported hypercall versions requested, %d vs %d\n",
+		    version, RUMPHYPER_MYVERSION);
+		return 1;
+	}
 
 	rumpuser__hyp = *hyp;
 
