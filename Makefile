@@ -83,7 +83,6 @@ src-y += sched.c
 src-y += lib/__errno.c
 src-y += lib/emul.c
 src-y += lib/libc_stubs.c
-#src-y += lib/math.c
 src-y += lib/memalloc.c
 
 src-y += rumphyper_base.c
