@@ -1,7 +1,8 @@
 #!/bin/sh
 
-# just a script to run the handful of commands required for a
-# bootable domU image
+# Just a script to run the handful of commands required for a
+# bootable domU image.  This is mostly to document the commands
+# required, and is not pretending to be fancy.
 
 # the buildxen.sh is not as forgiving as I am
 set -e
