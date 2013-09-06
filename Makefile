@@ -69,14 +69,12 @@ TARGET := rump-kernel
 SUBDIRS := lib xenbus console
 
 src-$(CONFIG_BLKFRONT) += blkfront.c
-src-y += emul.c
 src-y += events.c
 src-$(CONFIG_FBFRONT) += fbfront.c
 src-y += gntmap.c
 src-y += gnttab.c
 src-y += hypervisor.c
 src-y += kernel.c
-src-y += libc_stubs.c
 src-y += mm.c
 src-$(CONFIG_NETFRONT) += netfront.c
 src-$(CONFIG_PCIFRONT) += pcifront.c
@@ -84,6 +82,8 @@ src-y += sched.c
 
 src-y += lib/__errno.c
 src-y += lib/ctype.c
+src-y += lib/emul.c
+src-y += lib/libc_stubs.c
 #src-y += lib/math.c
 src-y += lib/memalloc.c
 
