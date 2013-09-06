@@ -30,8 +30,8 @@ fi
 # we try to build them after installing the extra headers, the tool
 # compat code gets really confused  FIXME
 if [ ! -f rumptools/rumpmake ]; then
-	./buildrump.sh/buildrump.sh -q -k -s rumpsrc -T rumptools -o rumpobj \
-	    -V RUMP_KERNEL_IS_LIBC=1 tools
+	./buildrump.sh/buildrump.sh -${BUILDXEN_QUIET:-q} -k \
+	    -s rumpsrc -T rumptools -o rumpobj -V RUMP_KERNEL_IS_LIBC=1 tools
 fi
 
 RMAKE=`pwd`/rumptools/rumpmake
@@ -83,7 +83,7 @@ makeuserlib ()
 	lib=$1
 
 	OBJS=`pwd`/rumpobj/lib/$1
-	( cd xen-nblibc/lib/libc
+	( cd xen-nblibc/lib/$1
 		${RMAKE} MAKEOBJDIR=${OBJS} obj
 		${RMAKE} MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no MKYP=no \
 		    NOGCCERROR=1 MAKEOBJDIR=${OBJS} dependall

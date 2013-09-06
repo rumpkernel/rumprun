@@ -1,2 +1,2 @@
 language: c
-script: ./buildxen.sh
+script: BUILDXEN_QUIET=qq ./buildxen.sh
