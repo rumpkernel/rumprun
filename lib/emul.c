@@ -59,6 +59,13 @@ madvise(void *addr, size_t len, int adv)
 }
 
 int
+mprotect(void *addr, size_t len, int prot)
+{
+	/* no protection */
+	return 0;
+}
+
+int
 munmap(void *addr, size_t len)
 {
 
