@@ -4,6 +4,8 @@
 # bootable domU image.  This is mostly to document the commands
 # required, and is not pretending to be fancy.
 
+STDJ='-j4'
+
 # the buildxen.sh is not as forgiving as I am
 set -e
 
@@ -30,7 +32,7 @@ fi
 # we try to build them after installing the extra headers, the tool
 # compat code gets really confused  FIXME
 if [ ! -f rumptools/rumpmake ]; then
-	./buildrump.sh/buildrump.sh -${BUILDXEN_QUIET:-q} -k \
+	./buildrump.sh/buildrump.sh -${BUILDXEN_QUIET:-q} ${STDJ} -k \
 	    -s rumpsrc -T rumptools -o rumpobj -V RUMP_KERNEL_IS_LIBC=1 tools
 fi
 
@@ -86,7 +88,7 @@ makeuserlib ()
 	( cd xen-nblibc/lib/$1
 		${RMAKE} MAKEOBJDIR=${OBJS} obj
 		${RMAKE} MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no MKYP=no \
-		    NOGCCERROR=1 MAKEOBJDIR=${OBJS} dependall
+		    NOGCCERROR=1 MAKEOBJDIR=${OBJS} ${STDJ} dependall
 		${RMAKE} MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no MKYP=no \
 		    MAKEOBJDIR=${OBJS} install
 	)
