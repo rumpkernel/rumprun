@@ -2,7 +2,7 @@
 #ifndef __ARCH_SCHED_H__
 #define __ARCH_SCHED_H__
 
-#include "arch_limits.h"
+#include <mini-os/machine/limits.h>
 
 static inline struct thread* get_current(void)
 {

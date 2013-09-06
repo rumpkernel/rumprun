@@ -2,7 +2,7 @@
 #define __MINIOS_SCHED_H__
 
 #include <mini-os/time.h>
-#include <mini-os/arch_sched.h>
+#include <mini-os/machine/sched.h>
 
 #include <sys/queue.h>
 

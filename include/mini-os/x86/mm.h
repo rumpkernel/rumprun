@@ -140,7 +140,7 @@ typedef unsigned long pgentry_t;
 /* for P2M */
 #define INVALID_P2M_ENTRY (~0UL)
 
-#include "arch_limits.h"
+#include <mini-os/machine/limits.h>
 #define PAGE_SIZE       __PAGE_SIZE
 #define PAGE_SHIFT      __PAGE_SHIFT
 #define PAGE_MASK       (~(PAGE_SIZE-1))
