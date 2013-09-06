@@ -48,6 +48,9 @@
 
 #include <string.h>
 
+#include <rump/rump.h>
+#include <rump/rump_syscalls.h>
+
 uint8_t xen_features[XENFEAT_NR_SUBMAPS * 32];
 
 void setup_xen_features(void)
@@ -66,12 +69,22 @@ void setup_xen_features(void)
     }
 }
 
-void demo_thread(void *);
-int app_main(start_info_t *si)
-{
+static char *the_env[1] = { NULL } ;
+extern void *environ;
+void _libc_init(void);
 
-    create_thread("demo_thread", demo_thread, si);
-    return 0;
+static void
+_app_main(void *arg)
+{
+    start_info_t *si = arg;
+
+    rump_init();
+    environ = the_env;
+    _libc_init();
+
+    app_main(si);
+    rump_sys_reboot(0, 0);
+    /* NOTREACHED */
 }
 
 /*
@@ -79,16 +92,11 @@ int app_main(start_info_t *si)
  */
 void start_kernel(start_info_t *si)
 {
-    static char hello[] = "Bootstrapping...\n";
-
-    (void)HYPERVISOR_console_io(CONSOLEIO_write, strlen(hello), hello);
 
     arch_init(si);
-
     trap_init();
 
     /* print out some useful information  */
-    printk("Xen Minimal OS!\n");
     printk("  start_info: %p(VA)\n", si);
     printk("    nr_pages: 0x%lx\n", si->nr_pages);
     printk("  shared_inf: 0x%08lx(MA)\n", si->shared_info);
@@ -130,7 +138,7 @@ void start_kernel(start_info_t *si)
     init_xenbus();
 
     /* Call (possibly overridden) app_main() */
-    app_main(&start_info);
+    create_thread("main", _app_main, &start_info);
 
     /* Everything initialised, start idle thread */
     run_idle_thread();

@@ -364,14 +364,9 @@ dohttpd(void)
 	}
 }
 
-static char *the_env[1] = { NULL } ;
-extern void *environ;
-void _libc_init(void);
-
-void
-demo_thread(void *arg)
+int
+app_main(start_info_t *si)
 {
-	start_info_t *si = arg;
 	int tests;
 
 	if (si->cmd_line[0]) {
@@ -380,11 +375,6 @@ demo_thread(void *arg)
 			tests = 0;
 	}
 
-	rump_init();
-
-	environ = the_env;
-	_libc_init();
-
 	if (tests & 0x1)
 		dofs();
 	if (tests & 0x2)
@@ -392,5 +382,5 @@ demo_thread(void *arg)
 	if (tests & 0x4)
 		dohttpd();
 
-	reboot(0, 0);
+	return 0;
 }
