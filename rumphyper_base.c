@@ -430,5 +430,5 @@ void
 rumpuser_seterrno(int err)
 {
 
-	get_current()->threrrno = err;
+	errno = err;
 }
