@@ -34,6 +34,8 @@ if [ ! -f rumptools/rumpmake ]; then
 	    -V RUMP_KERNEL_IS_LIBC=1 tools
 fi
 
+RMAKE=`pwd`/rumptools/rumpmake
+
 # build rump kernel (FIXME: CPPFLAGS hack)
 echo 'CPPFLAGS+=-DMAXPHYS=32768' >> rumptools/mk.conf
 ./buildrump.sh/buildrump.sh -k -s rumpsrc -T rumptools -o rumpobj build install
@@ -56,17 +58,15 @@ echo '>> Installing headers.  please wait (may take a while) ...'
   # sys/ produces a lot of errors due to missing tools/sources
   # "protect" the user from that spew
   cd rumpsrc/sys
-  ../../rumptools/rumpmake -k includes >/dev/null 2>&1
+  ${RMAKE} -k includes >/dev/null 2>&1
 )
 
 # rpcgen lossage
-( cd rumpsrc/include && ../../rumptools/rumpmake -k includes > /dev/null 2>&1)
+( cd rumpsrc/include && ${RMAKE} -k includes > /dev/null 2>&1)
 
 # other lossage
-( cd xen-nblibc/lib/libc \
-    && ../../../rumptools/rumpmake includes >/dev/null 2>&1)
-( cd xen-nblibc/lib/libpthread \
-    && ../../../rumptools/rumpmake includes >/dev/null 2>&1)
+( cd xen-nblibc/lib/libc && ${RMAKE} includes >/dev/null 2>&1)
+( cd xen-nblibc/lib/libpthread && ${RMAKE} includes >/dev/null 2>&1)
 
 echo '>> done with headers'
 
@@ -74,28 +74,26 @@ echo '>> done with headers'
 # build networking driver
 (
   cd rumpxenif
-  ../rumptools/rumpmake obj
-  ../rumptools/rumpmake MKPIC=no dependall && ../rumptools/rumpmake install
+  ${RMAKE} obj
+  ${RMAKE} MKPIC=no dependall && ${RMAKE} install
 )
 
-# build & install libc
-(
-  cd xen-nblibc/lib/libc
-  ../../../rumptools/rumpmake obj
-  ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no MKYP=no \
-    NOGCCERROR=1 dependall
-  ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no MKYP=no \
-    install
-)
+makeuserlib ()
+{
+	lib=$1
 
-# build and install libm
-(
-  cd xen-nblibc/lib/libm
-  ../../../rumptools/rumpmake obj
-  ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no \
-    NOGCCERROR=1 dependall
-  ../../../rumptools/rumpmake MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no install
-)
+	OBJS=`pwd`/rumpobj/lib/$1
+	( cd xen-nblibc/lib/libc
+		${RMAKE} MAKEOBJDIR=${OBJS} obj
+		${RMAKE} MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no MKYP=no \
+		    NOGCCERROR=1 MAKEOBJDIR=${OBJS} dependall
+		${RMAKE} MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no MKYP=no \
+		    MAKEOBJDIR=${OBJS} install
+	)
+}
+
+makeuserlib libc
+makeuserlib libm
 
 [ ! -f test.ffs ] && cp test_clean.ffs test.ffs
 
