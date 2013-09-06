@@ -1,8 +1,10 @@
 /* Copyright (c) 2013 Antti Kantee.  See COPYING */
 
 #include <mini-os/console.h>
+#include <mini-os/kernel.h>
 #include <mini-os/netfront.h>
 
+#include <sys/cdefs.h>
 #include <sys/types.h>
 
 #include <netinet/in.h>
@@ -23,7 +25,7 @@
 
 void demo_thread(void *);
 
-#define BLKDEV "/THEMAGICBLK"
+#define BLKDEV(num) "/BLK" __STRING(num)
 #define BUFSIZE (64*1024)
 
 #define FAIL(a) do { printk(a); return; } while (/*CONSTCOND*/0)
@@ -42,12 +44,12 @@ dofs(void)
 	if (open("/not_there", O_RDWR) != -1 || errno != ENOENT)
 		FAIL("errno test");
 
-	if ((rv = rump_pub_etfs_register(BLKDEV, "blk0",
+	if ((rv = rump_pub_etfs_register(BLKDEV(0), "blk0",
 	    RUMP_ETFS_BLK)) != 0)
 		FAIL("etfs");
 
 	mkdir("/mnt", 0777);
-	ua.fspec = BLKDEV;
+	ua.fspec = BLKDEV(0);
 	if (mount(MOUNT_FFS, "/mnt", 0, &ua, sizeof(ua)) != 0)
 		FAIL("mount");
 
@@ -305,11 +307,12 @@ dohttpd(void)
 	int rv, s, sa, count;
 	struct lwp *l;
 
-	if ((rv = rump_pub_etfs_register(BLKDEV, "blk1", RUMP_ETFS_BLK)) != 0)
+	if ((rv = rump_pub_etfs_register(BLKDEV(1),
+	    "blk1", RUMP_ETFS_BLK)) != 0)
 		FAIL("etfs");
 
 	mkdir("/etc", 0777);
-	ua.fspec = BLKDEV;
+	ua.fspec = BLKDEV(1);
 	if (mount(MOUNT_FFS, "/etc", MNT_RDONLY, &ua, sizeof(ua)) == -1)
 		err(1, "mount");
 	setupnet();
