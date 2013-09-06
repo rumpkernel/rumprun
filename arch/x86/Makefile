@@ -3,14 +3,15 @@
 # It's is used for x86_32, x86_32y and x86_64
 #
 
-XEN_ROOT = $(CURDIR)/../../../..
-include $(XEN_ROOT)/Config.mk
-include ../../Config.mk
+MINI-OS_ROOT=../..
+export MINI-OS_ROOT
+
+include $(MINI-OS_ROOT)/Config.mk
 
 # include arch.mk has to be before mini-os.mk!
 
 include arch.mk
-include ../../minios.mk
+include $(MINI-OS_ROOT)/minios.mk
 
 CFLAGS+= -I$(MINI-OS_ROOT)/rump/include -nostdinc
 

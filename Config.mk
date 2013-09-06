@@ -1,6 +1,12 @@
-# Set mini-os root path, used in mini-os.mk.
-MINI-OS_ROOT=$(XEN_ROOT)/extras/rumpuser-xen
-export MINI-OS_ROOT
+# Useful config stuff
+
+# Where to find xen headers from.  XXX: this can probably be done better
+XEN_HEADERS= /usr/include/xen
+
+# from Xen/Config.mk
+XEN_COMPILE_ARCH    ?= $(shell uname -m | sed -e s/i.86/x86_32/ \
+			-e s/i86pc/x86_32/ -e s/amd64/x86_64/ -e s/arm.*/arm/)
+XEN_TARGET_ARCH     ?= $(XEN_COMPILE_ARCH)
 
 XEN_INTERFACE_VERSION := 0x00030205
 export XEN_INTERFACE_VERSION

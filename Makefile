@@ -4,8 +4,9 @@
 # Makefile and a arch.mk.
 #
 
-export XEN_ROOT = $(CURDIR)/../..
-include $(XEN_ROOT)/Config.mk
+MINI-OS_ROOT=$(CURDIR)
+export MINI-OS_ROOT
+
 OBJ_DIR ?= $(CURDIR)
 
 ifeq ($(MINIOS_CONFIG),)
@@ -39,6 +40,8 @@ flags-$(CONFIG_CONSFRONT) += -DCONFIG_CONSFRONT
 flags-$(CONFIG_XENBUS) += -DCONFIG_XENBUS
 
 DEF_CFLAGS += $(flags-y)
+
+OBJCOPY=objcopy
 
 # Include common mini-os makerules.
 include minios.mk
@@ -116,7 +119,7 @@ endif
 
 .PHONY: links
 links: $(ARCH_LINKS)
-	[ -e include/xen ] || ln -sf ../../../xen/include/public include/xen
+	[ -e include/xen ] || ln -sf $(XEN_HEADERS) include/xen
 	[ -e include/mini-os/machine ] || ln -sf $(TARGET_ARCH_FAM) include/mini-os/machine
 
 .PHONY: arch_lib
