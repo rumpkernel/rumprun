@@ -240,15 +240,15 @@ donet(void)
 
 	setupnet();
 	s = sucketonport(4096);
-	ASSERT(s == 0); /* fixme */
+	ASSERT(s < MAXCONN);
 
 	for (i = 0; i < MAXCONN; i++) {
 		pfds[i].fd = -1;
 		pfds[i].events = POLLIN;
 		conns[i].c_cnt = -1;
 	}
-	pfds[0].fd = 0;
-	maxfd = 1;
+	pfds[s].fd = s;
+	maxfd = s+1;
 
 	printk("WOPR reporting for duty on port 4096\n");
 
