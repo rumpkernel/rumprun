@@ -75,9 +75,11 @@ echo '>> done with headers'
 
 # build networking driver
 (
+  OBJS=`pwd`/rumpobj/rumpxenif
   cd rumpxenif
-  ${RMAKE} obj
-  ${RMAKE} MKPIC=no dependall && ${RMAKE} install
+  ${RMAKE} MAKEOBJDIR=${OBJS} obj
+  ${RMAKE} MAKEOBJDIR=${OBJS} MKPIC=no dependall
+  ${RMAKE} MAKEOBJDIR=${OBJS} MKPIC=no install
 )
 
 makeuserlib ()
