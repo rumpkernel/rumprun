@@ -26,7 +26,7 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 	ssize_t nn;
 	int error;
 
-	if ((fd != -1 && prot != PROT_READ) || addr != NULL) {
+	if (fd != -1 && prot != PROT_READ) {
 		errno = ENOTSUP;
 		return MAP_FAILED;
 	}
