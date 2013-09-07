@@ -67,7 +67,7 @@ void xencons_rx(char *buf, unsigned len, struct pt_regs *regs)
         printk("%s", buf);
         
         if(buf[len-1] == '\r')
-            printk("\nNo console input handler.  NAKIT\n");
+            printk("\nNo console input handler.\n");
     }
 }
 
