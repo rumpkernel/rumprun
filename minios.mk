@@ -23,9 +23,6 @@ else
 DEF_CFLAGS += -O3
 endif
 
-# Make the headers define our internal stuff
-DEF_CFLAGS += -D__INSIDE_MINIOS__
-
 # Build the CFLAGS and ASFLAGS for compiling and assembling.
 # DEF_... flags are the common mini-os flags,
 # ARCH_... flags may be defined in arch/$(TARGET_ARCH_FAM/rules.mk

@@ -44,9 +44,7 @@ struct thread* create_thread(const char *name, void (*f)(void *), void *data);
 void exit_thread(void) __attribute__((noreturn));
 void schedule(void);
 
-#ifdef __INSIDE_MINIOS__
 #define current get_current()
-#endif
 
 void wake(struct thread *thread);
 void block(struct thread *thread);
