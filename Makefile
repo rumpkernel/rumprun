@@ -15,25 +15,17 @@ include $(MINIOS_CONFIG)
 endif
 
 # Configuration defaults
-CONFIG_START_NETWORK ?= y
-CONFIG_SPARSE_BSS ?= y
-CONFIG_PCIFRONT ?= n
 CONFIG_BLKFRONT ?= y
 CONFIG_NETFRONT ?= y
-CONFIG_FBFRONT ?= n
-CONFIG_KBDFRONT ?= n
 CONFIG_CONSFRONT ?= y
 CONFIG_XENBUS ?= y
 
+CONFIG_PCIFRONT ?= n
+
 # Export config items as compiler directives
-flags-$(CONFIG_START_NETWORK) += -DCONFIG_START_NETWORK
-flags-$(CONFIG_SPARSE_BSS) += -DCONFIG_SPARSE_BSS
-flags-$(CONFIG_QEMU_XS_ARGS) += -DCONFIG_QEMU_XS_ARGS
 flags-$(CONFIG_PCIFRONT) += -DCONFIG_PCIFRONT
 flags-$(CONFIG_BLKFRONT) += -DCONFIG_BLKFRONT
 flags-$(CONFIG_NETFRONT) += -DCONFIG_NETFRONT
-flags-$(CONFIG_KBDFRONT) += -DCONFIG_KBDFRONT
-flags-$(CONFIG_FBFRONT) += -DCONFIG_FBFRONT
 flags-$(CONFIG_CONSFRONT) += -DCONFIG_CONSFRONT
 flags-$(CONFIG_XENBUS) += -DCONFIG_XENBUS
 
@@ -69,15 +61,14 @@ TARGET := rump-kernel
 # Subdirectories common to mini-os
 SUBDIRS := lib xenbus console
 
-src-$(CONFIG_BLKFRONT) += blkfront.c
+src-y += blkfront.c
 src-y += events.c
-src-$(CONFIG_FBFRONT) += fbfront.c
 src-y += gntmap.c
 src-y += gnttab.c
 src-y += hypervisor.c
 src-y += kernel.c
 src-y += mm.c
-src-$(CONFIG_NETFRONT) += netfront.c
+src-y += netfront.c
 src-$(CONFIG_PCIFRONT) += pcifront.c
 src-y += sched.c
 
