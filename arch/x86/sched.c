@@ -45,15 +45,6 @@
 #include <mini-os/sched.h>
 #include <mini-os/semaphore.h>
 
-
-#ifdef SCHED_DEBUG
-#define DEBUG(_f, _a...) \
-    printk("MINI_OS(file=sched.c, line=%d) " _f "\n", __LINE__, ## _a)
-#else
-#define DEBUG(_f, _a...)    ((void)0)
-#endif
-
-
 void dump_stack(struct thread *thread)
 {
     unsigned long *bottom = (unsigned long *)(thread->stack + STACK_SIZE); 
@@ -132,6 +123,3 @@ void run_idle_thread(void)
                          :"m" (idle_thread->ip));                                                    
 #endif
 }
-
-
-

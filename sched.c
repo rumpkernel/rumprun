@@ -47,13 +47,6 @@
 
 #include <sys/queue.h>
 
-#ifdef SCHED_DEBUG
-#define DEBUG(_f, _a...) \
-    printk("MINI_OS(file=sched.c, line=%d) " _f "\n", __LINE__, ## _a)
-#else
-#define DEBUG(_f, _a...)    ((void)0)
-#endif
-
 TAILQ_HEAD(thread_list, thread);
 
 struct thread *idle_thread = NULL;
