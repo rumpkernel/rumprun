@@ -7,8 +7,6 @@
 MINI-OS_ROOT=$(CURDIR)
 export MINI-OS_ROOT
 
-OBJ_DIR ?= $(CURDIR)
-
 ifeq ($(MINIOS_CONFIG),)
 include Config.mk
 else
@@ -108,7 +106,11 @@ OBJS+= httpd/bozohttpd.o httpd/main.o httpd/ssl-bozo.o httpd/content-bozo.o
 OBJS+= httpd/dir-index-bozo.o
 
 .PHONY: default
-default: $(OBJ_DIR)/$(TARGET)
+default: objs $(TARGET)
+
+objs:
+	mkdir -p $(OBJ_DIR)/lib $(OBJ_DIR)/$(TARGET_ARCH_DIR)
+	mkdir -p $(OBJ_DIR)/console $(OBJ_DIR)/xenbus
 
 # Create special architecture specific links. The function arch_links
 # has to be defined in arch.mk (see include above).
@@ -133,7 +135,7 @@ ifneq ($(APP_OBJS),)
 APP_O=$(OBJ_DIR)/$(TARGET)_app.o 
 endif
 
-$(OBJ_DIR)/$(TARGET): links $(OBJS) $(APP_O) arch_lib
+$(TARGET): links $(OBJS) $(APP_O) arch_lib
 	$(LD) -r $(LDFLAGS) $(HEAD_OBJ) $(APP_O) $(OBJS) $(LDARCHLIB) $(LDLIBS) -o $@.o
 	$(OBJCOPY) -w -G $(GLOBAL_PREFIX)* -G _start $@.o $@.o
 	$(LD) $(LDFLAGS) $(LDFLAGS_FINAL) $@.o $(EXTRA_OBJS) -o $@
@@ -148,7 +150,7 @@ clean:	arch_clean
 	for dir in $(addprefix $(OBJ_DIR)/,$(SUBDIRS)); do \
 		rm -f $$dir/*.o; \
 	done
-	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core $(OBJ_DIR)/$(TARGET).elf $(OBJ_DIR)/$(TARGET).raw $(OBJ_DIR)/$(TARGET) $(OBJ_DIR)/$(TARGET).gz
+	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core $(OBJ_DIR)/$(TARGET).elf $(OBJ_DIR)/$(TARGET).raw $(TARGET) $(OBJ_DIR)/$(TARGET).o
 	rm -f $(OBJ_DIR)/include/xen $(OBJ_DIR)/include/mini-os/machine
 	rm -f tags TAGS
 

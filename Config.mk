@@ -11,6 +11,8 @@ XEN_TARGET_ARCH     ?= $(XEN_COMPILE_ARCH)
 XEN_INTERFACE_VERSION := 0x00030205
 export XEN_INTERFACE_VERSION
 
+OBJ_DIR= $(MINI-OS_ROOT)/obj
+
 # Try to find out the architecture family TARGET_ARCH_FAM.
 # First check whether x86_... is contained (for x86_32, x86_32y, x86_64).
 # If not x86 then use $(XEN_TARGET_ARCH) -> for ia64, ...
