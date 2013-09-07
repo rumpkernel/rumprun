@@ -71,6 +71,24 @@ rumpuser_putchar(int ch)
 	console_print(NULL, &c, 1);
 }
 
+void
+rumpuser_dprintf(const char *fmt, ...)
+{
+	char *buf;
+	va_list va;
+
+	buf = (void *)alloc_pages(0);
+	if (!buf)
+		return;
+
+	va_start(va, fmt);
+	vsnprintf(buf, PAGE_SIZE, fmt, va);
+	va_end(va);
+	console_print(NULL, buf, strlen(buf));
+
+	free_pages(buf, 0);
+}
+
 static struct {
 	const char *name;
 	const char *value;
