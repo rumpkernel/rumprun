@@ -66,8 +66,9 @@ rumpuser_init(int version, const struct rumpuser_hyperup *hyp)
 void
 rumpuser_putchar(int ch)
 {
+	char c = (char)ch;
 
-	printk("%c", ch);
+	console_print(NULL, &c, 1);
 }
 
 static struct {
