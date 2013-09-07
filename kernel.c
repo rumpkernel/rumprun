@@ -78,7 +78,9 @@ _app_main(void *arg)
 {
     start_info_t *si = arg;
 
+    rump_boot_setsigmodel(RUMP_SIGMODEL_IGNORE);
     rump_init();
+
     environ = the_env;
     _libc_init();
 
