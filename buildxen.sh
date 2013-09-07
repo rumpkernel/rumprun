@@ -97,7 +97,7 @@ makeuserlib ()
 makeuserlib libc
 makeuserlib libm
 
-[ ! -f test.ffs ] && cp test_clean.ffs test.ffs
+[ ! -f img/test.ffs ] && cp img/test_clean.ffs img/test.ffs
 
 # build httpd objects
 ( cd httpd && make -f Makefile.boot )
