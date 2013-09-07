@@ -15,18 +15,12 @@ include $(MINIOS_CONFIG)
 endif
 
 # Configuration defaults
-CONFIG_BLKFRONT ?= y
-CONFIG_NETFRONT ?= y
-CONFIG_CONSFRONT ?= y
 CONFIG_XENBUS ?= y
 
 CONFIG_PCIFRONT ?= n
 
 # Export config items as compiler directives
 flags-$(CONFIG_PCIFRONT) += -DCONFIG_PCIFRONT
-flags-$(CONFIG_BLKFRONT) += -DCONFIG_BLKFRONT
-flags-$(CONFIG_NETFRONT) += -DCONFIG_NETFRONT
-flags-$(CONFIG_CONSFRONT) += -DCONFIG_CONSFRONT
 flags-$(CONFIG_XENBUS) += -DCONFIG_XENBUS
 
 DEF_CFLAGS += $(flags-y)
@@ -88,7 +82,7 @@ src-$(CONFIG_XENBUS) += xenbus/xenbus.c
 
 src-y += console/console.c
 src-y += console/xencons_ring.c
-src-$(CONFIG_CONSFRONT) += console/xenbus.c
+src-y += console/xenbus.c
 
 # The common mini-os objects to build.
 APP_OBJS :=
