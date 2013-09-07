@@ -13,13 +13,10 @@ DEF_CFLAGS += -Wstrict-prototypes -Wnested-externs -Wpointer-arith -Winline
 DEF_CPPFLAGS += -D__XEN_INTERFACE_VERSION__=$(XEN_INTERFACE_VERSION)
 
 DEF_ASFLAGS += -D__ASSEMBLY__
-DEF_LDFLAGS +=
 
 ifeq ($(debug),y)
 DEF_CFLAGS += -g
 #DEF_CFLAGS += -DMM_DEBUG
-#DEF_CFLAGS += -DFS_DEBUG
-#DEF_CFLAGS += -DLIBC_DEBUG
 DEF_CFLAGS += -DGNT_DEBUG
 DEF_CFLAGS += -DGNTMAP_DEBUG
 else
@@ -64,13 +61,8 @@ ARCH_LIB := lib$(ARCH_LIB_NAME).a
 HEAD_ARCH_OBJ := $(XEN_TARGET_ARCH).o
 HEAD_OBJ := $(OBJ_DIR)/$(TARGET_ARCH_DIR)/$(HEAD_ARCH_OBJ)
 
-
 $(OBJ_DIR)/%.o: %.c $(HDRS) Makefile $(EXTRA_DEPS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 $(OBJ_DIR)/%.o: %.S $(HDRS) Makefile $(EXTRA_DEPS)
 	$(CC) $(ASFLAGS) $(CPPFLAGS) -c $< -o $@
-
-
-
-
