@@ -292,6 +292,13 @@ wwwbozo(void *arg)
 	char *argv[] = { "bozo", "-X", "/etc" };
 
 	rump_pub_lwproc_switch(arg);
+
+	/*
+	 * Call program main.  Since we don't have a new vm space,
+	 * ensure that options will be re-parsed.
+	 */
+	optind = 1;
+	optreset = 1;
 	main(sizeof(argv)/sizeof(argv[0]), argv);
 
 	/* among other things, will close fd's */
