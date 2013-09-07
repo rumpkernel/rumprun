@@ -379,10 +379,7 @@ static void
 cv_resched(struct rumpuser_mtx *mtx, int nlocks)
 {
 
-	/*
-	 * uuh. I guess another mutex flag to make this more obvious.
-	 * See the verbose comment in NetBSD lib/librumpuser for more info
-	 */
+	/* see rumpuser(3) */
 	if ((mtx->flags & (RUMPUSER_MTX_KMUTEX | RUMPUSER_MTX_SPIN)) ==
 	    (RUMPUSER_MTX_KMUTEX | RUMPUSER_MTX_SPIN)) {
 		rumpkern_sched(nlocks, mtx);
