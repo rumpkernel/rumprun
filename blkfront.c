@@ -3,23 +3,22 @@
  * Based on netfront.c.
  */
 
-#include <stdint.h>
 #include <mini-os/os.h>
 #include <mini-os/xenbus.h>
 #include <mini-os/events.h>
-#include <errno.h>
+#include <mini-os/gnttab.h>
+#include <mini-os/blkfront.h>
+
 #include <xen/io/blkif.h>
 #include <xen/io/protocols.h>
-#include <mini-os/gnttab.h>
-#include <mini-os/xmalloc.h>
-#include <time.h>
-#include <mini-os/blkfront.h>
-#include <mini-os/lib.h>
-#include <fcntl.h>
 
+#include <errno.h>
+#include <fcntl.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <time.h>
 
 /* Note: we generally don't need to disable IRQs since we hardly do anything in
  * the interrupt handler.  */
@@ -28,12 +27,8 @@
 
 DECLARE_WAIT_QUEUE_HEAD(blkfront_queue);
 
-
-
-
 #define BLK_RING_SIZE __RING_SIZE((struct blkif_sring *)0, PAGE_SIZE)
 #define GRANT_INVALID_REF 0
-
 
 struct blk_buffer {
     void* page;
@@ -524,4 +519,3 @@ moretodo:
 
     return nr_consumed;
 }
-
