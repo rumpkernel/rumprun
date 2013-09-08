@@ -21,33 +21,35 @@ DECLARE_WAIT_QUEUE_HEAD(console_queue);
 
 static inline void notify_daemon(struct consfront_dev *dev)
 {
-    /* Use evtchn: this is called early, before irq is set up. */
-    if (!dev)
-        notify_remote_via_evtchn(start_info.console.domU.evtchn);
-    else
-        notify_remote_via_evtchn(dev->evtchn);
+
+	/* Use evtchn: this is called early, before irq is set up. */
+	if (!dev)
+		notify_remote_via_evtchn(start_info.console.domU.evtchn);
+	else
+		notify_remote_via_evtchn(dev->evtchn);
 }
 
 static inline struct xencons_interface *xencons_interface(void)
 {
-    if (start_info.console.domU.evtchn)
-        return mfn_to_virt(start_info.console.domU.mfn);
-    else
-        return NULL;
+
+	if (start_info.console.domU.evtchn)
+		return mfn_to_virt(start_info.console.domU.mfn);
+	else
+		return NULL;
 } 
  
 int xencons_ring_send_no_notify(struct consfront_dev *dev, const char *data, unsigned len)
 {	
-    int sent = 0;
+	int sent = 0;
 	struct xencons_interface *intf;
 	XENCONS_RING_IDX cons, prod;
 
 	if (!dev)
-            intf = xencons_interface();
-        else
-            intf = dev->ring;
-        if (!intf)
-            return sent;
+		intf = xencons_interface();
+	else
+		intf = dev->ring;
+	if (!intf)
+		return sent;
 
 	cons = intf->out_cons;
 	prod = intf->out_prod;
@@ -60,20 +62,18 @@ int xencons_ring_send_no_notify(struct consfront_dev *dev, const char *data, uns
 	wmb();
 	intf->out_prod = prod;
     
-    return sent;
+	return sent;
 }
 
 int xencons_ring_send(struct consfront_dev *dev, const char *data, unsigned len)
 {
-    int sent;
+	int sent;
 
-    sent = xencons_ring_send_no_notify(dev, data, len);
-    notify_daemon(dev);
+	sent = xencons_ring_send_no_notify(dev, data, len);
+	notify_daemon(dev);
 
-    return sent;
+	return sent;
 }	
-
-
 
 void console_handle_input(evtchn_port_t port, struct pt_regs *regs, void *data)
 {
@@ -98,7 +98,6 @@ void console_handle_input(evtchn_port_t port, struct pt_regs *regs, void *data)
 
 	xencons_tx();
 }
-
 
 struct consfront_dev *xencons_ring_init(void)
 {
@@ -136,4 +135,3 @@ void xencons_resume(void)
 {
 	(void)xencons_ring_init();
 }
-
