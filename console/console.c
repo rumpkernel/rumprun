@@ -84,6 +84,7 @@ void console_print(struct consfront_dev *dev, char *data, int length)
     char *copied_ptr;
     int part_len;
     int (*ring_send_fn)(struct consfront_dev *dev, const char *data, unsigned length);
+    int sent;
 
     if(!console_initialised)
         ring_send_fn = xencons_ring_send_no_notify;
@@ -113,7 +114,12 @@ void console_print(struct consfront_dev *dev, char *data, int length)
         length++;
     }
     
-    ring_send_fn(dev, copied_ptr, length);
+    /*
+     * we assume that the lower layer loops until it manages to
+     * send everything.  XXX is this the best place to do "buffering"?
+     */
+    sent = ring_send_fn(dev, copied_ptr, length);
+    ASSERT(ring_send_fn == xencons_ring_send_no_notify || sent == length);
 }
 
 void print(int direct, const char *fmt, va_list args)

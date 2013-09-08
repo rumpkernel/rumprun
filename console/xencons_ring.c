@@ -58,7 +58,6 @@ int xencons_ring_send_no_notify(struct consfront_dev *dev, const char *data, uns
 
 	while ((sent < len) && ((prod - cons) < sizeof(intf->out)))
 		intf->out[MASK_XENCONS_IDX(prod++, intf->out)] = data[sent++];
-
 	wmb();
 	intf->out_prod = prod;
     
@@ -67,10 +66,12 @@ int xencons_ring_send_no_notify(struct consfront_dev *dev, const char *data, uns
 
 int xencons_ring_send(struct consfront_dev *dev, const char *data, unsigned len)
 {
-	int sent;
+	int sent = 0;
 
-	sent = xencons_ring_send_no_notify(dev, data, len);
-	notify_daemon(dev);
+	while (sent < len) {
+		sent += xencons_ring_send_no_notify(dev, data, len);
+		notify_daemon(dev);
+	}
 
 	return sent;
 }	
