@@ -17,7 +17,6 @@
  **/
 #include <mini-os/os.h>
 #include <mini-os/mm.h>
-#include <mini-os/traps.h>
 #include <mini-os/lib.h>
 #include <mini-os/xenbus.h>
 #include <mini-os/events.h>

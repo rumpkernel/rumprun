@@ -37,9 +37,10 @@
 #define _MINIOS_LIB_CONSOLE_H_
 
 #include <mini-os/os.h>
-#include <mini-os/traps.h>
 #include <mini-os/types.h>
 #include <mini-os/xenbus.h>
+
+#include <mini-os/machine/traps.h>
 
 #include <xen/grant_table.h>
 #include <xen/io/console.h>

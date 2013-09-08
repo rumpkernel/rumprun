@@ -19,7 +19,6 @@
 #ifndef _MINIOS_EVENTS_H_
 #define _MINIOS_EVENTS_H_
 
-#include<mini-os/traps.h>
 #include<xen/event_channel.h>
 
 typedef void (*evtchn_handler_t)(evtchn_port_t, struct pt_regs *, void *);

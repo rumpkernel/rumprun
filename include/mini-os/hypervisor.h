@@ -22,7 +22,7 @@
 #else
 #error "Unsupported architecture"
 #endif
-#include <mini-os/traps.h>
+#include <mini-os/machine/traps.h>
 
 /*
  * a placeholder for the start of day information passed up from the hypervisor
