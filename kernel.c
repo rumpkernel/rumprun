@@ -42,7 +42,6 @@
 #include <mini-os/fbfront.h>
 #include <mini-os/pcifront.h>
 #include <mini-os/xmalloc.h>
-#include <fcntl.h>
 #include <xen/features.h>
 #include <xen/version.h>
 
@@ -72,6 +71,7 @@ void setup_xen_features(void)
 static char *the_env[1] = { NULL } ;
 extern void *environ;
 void _libc_init(void);
+extern char *__progname;
 
 static void
 _app_main(void *arg)
@@ -83,6 +83,9 @@ _app_main(void *arg)
 
     environ = the_env;
     _libc_init();
+
+    /* XXX: we should probably use csu, but this is quicker for now */
+    __progname = "rumpxenstack";
 
     app_main(si);
     rump_sys_reboot(0, 0);
