@@ -1,7 +1,6 @@
 /* Copyright (c) 2013 Antti Kantee.  See COPYING */
 
 #include <mini-os/console.h>
-#include <mini-os/kernel.h>
 #include <mini-os/netfront.h>
 
 #include <sys/cdefs.h>
@@ -16,6 +15,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -27,8 +27,6 @@ void demo_thread(void *);
 
 #define BLKDEV(num) "/BLK" __STRING(num)
 #define BUFSIZE (64*1024)
-
-#define FAIL(a) do { printk(a); return; } while (/*CONSTCOND*/0)
 
 static void
 dofs(void)
@@ -42,16 +40,16 @@ dofs(void)
 	int rv;
 
 	if (open("/not_there", O_RDWR) != -1 || errno != ENOENT)
-		FAIL("errno test");
+		errx(1, "errno test");
 
 	if ((rv = rump_pub_etfs_register(BLKDEV(0), "blk0",
 	    RUMP_ETFS_BLK)) != 0)
-		FAIL("etfs");
+		errx(1, "etfs %s", strerror(rv));
 
 	mkdir("/mnt", 0777);
 	ua.fspec = BLKDEV(0);
 	if (mount(MOUNT_FFS, "/mnt", 0, &ua, sizeof(ua)) != 0)
-		FAIL("mount");
+		err(1, "mount");
 
 	buf = malloc(BUFSIZE);
 	chdir("/mnt");
@@ -60,25 +58,25 @@ dofs(void)
 	if (dp == NULL)
 		err(1, "opendir");
 
-	printk("\treading directory contents\n");
+	printf("\treading directory contents\n");
 	while ((dent = readdir(dp)) != NULL) {
-		printk("%d %"PRIu64" %s\n",
+		printf("%d %"PRIu64" %s\n",
 		    dent->d_type, dent->d_fileno, dent->d_name);
 	}
 	closedir(dp);
 
 	/* assume README.md exists, open it, and display first line */
 	if ((fd = open("README.md", O_RDWR)) == -1)
-		FAIL("open README");
+		err(1, "open README");
 
 	memset(buf, 0, sizeof(buf));
 	if (read(fd, buf, 200) < 200)
-		FAIL("read");
+		err(1, "read");
 
 	if ((p = (void *)strchr(buf, '\n')) == NULL)
-		FAIL("strchr");
+		errx(1, "strchr");
 	*p = '\0';
-	printk("Reading first line of README.md:\n\t===\n%s\n\t===\n\n", buf);
+	printf("Reading first line of README.md:\n\t===\n%s\n\t===\n\n", buf);
 
 #define GARBAGE "   TRASHED!   "
 	/* write some garbage in there.  spot the difference the next time */
@@ -192,7 +190,7 @@ setupnet(void)
 	int rv;
 
 	if ((rv = rump_pub_netconfig_ifcreate("xenif0")) != 0) {
-		printk("creating xenif0 failed: %d\n", rv);
+		printf("creating xenif0 failed: %d\n", rv);
 		return;
 	}
 
@@ -202,7 +200,7 @@ setupnet(void)
 	 * the manual interface configuration options.
 	 */
 	if ((rv = rump_pub_netconfig_dhcp_ipv4_oneshot("xenif0")) != 0) {
-		printk("getting IP for xenif0 via DHCP failed: %d\n", rv);
+		printf("getting IP for xenif0 via DHCP failed: %d\n", rv);
 		return;
 	}
 }
@@ -250,7 +248,7 @@ donet(void)
 	pfds[s].fd = s;
 	maxfd = s+1;
 
-	printk("WOPR reporting for duty on port 4096\n");
+	printf("WOPR reporting for duty on port 4096\n");
 
 	zombietime = NOW();
 	for (;;) {
@@ -261,12 +259,12 @@ donet(void)
 
 		rv = poll(pfds, maxfd, 1000);
 		if (rv == 0) {
-			printk("still waiting ... %lld\n", NOW());
+			printf("still waiting ... %lld\n", NOW());
 			continue;
 		}
 
 		if (rv == -1) {
-			printk("fail poll %d\n", errno);
+			printf("fail poll %d\n", errno);
 			reboot(0, 0);
 		}
 
@@ -316,7 +314,7 @@ dohttpd(void)
 
 	if ((rv = rump_pub_etfs_register(BLKDEV(1),
 	    "blk1", RUMP_ETFS_BLK)) != 0)
-		FAIL("etfs");
+		errx(1, "etfs %d", strerror(rv));
 
 	mkdir("/etc", 0777);
 	ua.fspec = BLKDEV(1);
@@ -375,6 +373,8 @@ int
 app_main(start_info_t *si)
 {
 	int tests;
+
+	printf("running demos, command line: %s\n", si->cmd_line);
 
 	if (si->cmd_line[0]) {
 		tests = si->cmd_line[0] - '0';
