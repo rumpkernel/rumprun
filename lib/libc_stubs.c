@@ -17,7 +17,6 @@ STUB(__sigaction14);
 STUB(__sigprocmask14);
 STUB(__getrusage50);
 
-STUB(_exit);
 STUB(_lwp_kill);
 STUB(_lwp_self);
 STUB(__wait450);

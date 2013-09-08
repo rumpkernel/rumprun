@@ -18,6 +18,7 @@
 #include <unistd.h>
 
 #include <mini-os/os.h> /* for PAGE_SIZE */
+#include <mini-os/kernel.h>
 
 void *
 mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
@@ -71,4 +72,11 @@ munmap(void *addr, size_t len)
 
 	free(addr);
 	return 0;
+}
+
+void __dead
+_exit(int eval)
+{
+
+	do_exit();
 }
