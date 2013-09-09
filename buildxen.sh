@@ -13,18 +13,10 @@ if [ "$1" = 'checkout' -o ! -f .buildxen-checkoutdone ]; then
 	docheckout=true
 fi
 if ${docheckout:-false} ; then
-	# fetch buildrump.sh and NetBSD sources
 	git submodule update --init --recursive
 	./buildrump.sh/buildrump.sh -s rumpsrc checkout
+	( cd nblibs ; ln -sf ../rumpsrc/common . )
 
-	# fetch the userland bits ... hackish, but meh, we want to
-	# get rid of this eventually anyway, so don't sweat it
-	( if [ ! -d xen-nblibc ]; then
-		git clone https://github.com/anttikantee/xen-nblibc
-		( cd xen-nblibc ; ln -sf ../rumpsrc/common . )
-	else
-		( cd xen-nblibc ; git pull )
-	fi )
 	touch .buildxen-checkoutdone
 fi
 
@@ -67,8 +59,8 @@ echo '>> Installing headers.  please wait (may take a while) ...'
 ( cd rumpsrc/include && ${RMAKE} -k includes > /dev/null 2>&1)
 
 # other lossage
-( cd xen-nblibc/lib/libc && ${RMAKE} includes >/dev/null 2>&1)
-( cd xen-nblibc/lib/libpthread && ${RMAKE} includes >/dev/null 2>&1)
+( cd nblibs/lib/libc && ${RMAKE} includes >/dev/null 2>&1)
+( cd nblibs/lib/libpthread && ${RMAKE} includes >/dev/null 2>&1)
 
 echo '>> done with headers'
 
@@ -87,7 +79,7 @@ makeuserlib ()
 	lib=$1
 
 	OBJS=`pwd`/rumpobj/lib/$1
-	( cd xen-nblibc/lib/$1
+	( cd nblibs/lib/$1
 		${RMAKE} MAKEOBJDIR=${OBJS} obj
 		${RMAKE} MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no MKYP=no \
 		    NOGCCERROR=1 MAKEOBJDIR=${OBJS} ${STDJ} dependall
