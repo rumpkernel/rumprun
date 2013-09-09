@@ -12,7 +12,7 @@
 #include <mini-os/xmalloc.h>
 #include <mini-os/gnttab.h>
 
-#include <console/console.h>
+#include "console.h"
 
 #include <stdio.h>
 #include <stdlib.h>

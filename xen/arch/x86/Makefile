@@ -3,7 +3,7 @@
 # It's is used for x86_32, x86_32y and x86_64
 #
 
-MINI-OS_ROOT=../..
+MINI-OS_ROOT=../../..
 export MINI-OS_ROOT
 
 include $(MINI-OS_ROOT)/Config.mk

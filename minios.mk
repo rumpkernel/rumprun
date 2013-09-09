@@ -34,7 +34,7 @@ LDFLAGS := $(DEF_LDFLAGS) $(ARCH_LDFLAGS)
 # Special build dependencies.
 # Rebuild all after touching this/these file(s)
 EXTRA_DEPS += $(MINI-OS_ROOT)/minios.mk
-EXTRA_DEPS += $(MINI-OS_ROOT)/$(TARGET_ARCH_DIR)/arch.mk
+EXTRA_DEPS += $(MINI-OS_ROOT)/xen/$(TARGET_ARCH_DIR)/arch.mk
 
 # Find all header files for checking dependencies.
 HDRS := $(wildcard $(MINI-OS_ROOT)/include/*.h)
@@ -56,7 +56,7 @@ ARCH_LIB := lib$(ARCH_LIB_NAME).a
 # This object contains the entrypoint for startup from Xen.
 # $(HEAD_ARCH_OBJ) has to be built in the architecture specific directory.
 HEAD_ARCH_OBJ := $(XEN_TARGET_ARCH).o
-HEAD_OBJ := $(OBJ_DIR)/$(TARGET_ARCH_DIR)/$(HEAD_ARCH_OBJ)
+HEAD_OBJ := $(OBJ_DIR)/xen/$(TARGET_ARCH_DIR)/$(HEAD_ARCH_OBJ)
 
 $(OBJ_DIR)/%.o: %.c $(HDRS) Makefile $(EXTRA_DEPS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@

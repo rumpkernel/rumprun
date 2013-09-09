@@ -31,7 +31,7 @@ OBJCOPY=objcopy
 include minios.mk
 
 CFLAGS += -Irump/include -nostdinc
-CFLAGS += -DVIRTIF_BASE=xenif -I.
+CFLAGS += -DVIRTIF_BASE=xenif -I$(MINI-OS_ROOT)
 
 LIBS_FS = -lrumpfs_ffs -lrumpdev_disk -lrumpdev -lrumpvfs
 LIBS_NET = -lrumpnet_config -lrumpdev_bpf -lrumpnet_xenif -lrumpnet_netinet
@@ -42,8 +42,8 @@ LDLIBS_FS = --whole-archive ${LIBS_FS} ${LIBS_NET} -lrump --no-whole-archive
 LDLIBS = -Lrump/lib ${LDLIBS_FS} -lc
 
 APP_LDLIBS := 
-LDARCHLIB := -L$(OBJ_DIR)/$(TARGET_ARCH_DIR) -l$(ARCH_LIB_NAME)
-LDFLAGS_FINAL := -T $(TARGET_ARCH_DIR)/minios-$(XEN_TARGET_ARCH).lds
+LDARCHLIB := -L$(OBJ_DIR)/xen/$(TARGET_ARCH_DIR) -l$(ARCH_LIB_NAME)
+LDFLAGS_FINAL := -T xen/$(TARGET_ARCH_DIR)/minios-$(XEN_TARGET_ARCH).lds
 
 # Prefix for global API names. All other symbols are localised before
 # linking with EXTRA_OBJS.
@@ -53,18 +53,18 @@ EXTRA_OBJS =
 TARGET := rump-kernel
 
 # Subdirectories common to mini-os
-SUBDIRS := lib xenbus console
+SUBDIRS := lib xen
 
-src-y += blkfront.c
-src-y += events.c
-src-y += gntmap.c
-src-y += gnttab.c
-src-y += hypervisor.c
-src-y += kernel.c
-src-y += mm.c
-src-y += netfront.c
-src-$(CONFIG_PCIFRONT) += pcifront.c
-src-y += sched.c
+src-y += xen/blkfront.c
+src-y += xen/events.c
+src-y += xen/gntmap.c
+src-y += xen/gnttab.c
+src-y += xen/hypervisor.c
+src-y += xen/kernel.c
+src-y += xen/mm.c
+src-y += xen/netfront.c
+src-$(CONFIG_PCIFRONT) += xen/pcifront.c
+src-y += xen/sched.c
 
 src-y += lib/__errno.c
 src-y += lib/emul.c
@@ -78,11 +78,11 @@ src-y += rumphyper_stubs.c
 
 src-y += rumpkern_demo.c
 
-src-$(CONFIG_XENBUS) += xenbus/xenbus.c
+src-$(CONFIG_XENBUS) += xen/xenbus/xenbus.c
 
-src-y += console/console.c
-src-y += console/xencons_ring.c
-src-y += console/xenbus.c
+src-y += xen/console/console.c
+src-y += xen/console/xencons_ring.c
+src-y += xen/console/xenbus.c
 
 # The common mini-os objects to build.
 APP_OBJS :=
@@ -94,8 +94,8 @@ OBJS+= httpd/dir-index-bozo.o
 default: objs $(TARGET)
 
 objs:
-	mkdir -p $(OBJ_DIR)/lib $(OBJ_DIR)/$(TARGET_ARCH_DIR)
-	mkdir -p $(OBJ_DIR)/console $(OBJ_DIR)/xenbus
+	mkdir -p $(OBJ_DIR)/lib $(OBJ_DIR)/xen/$(TARGET_ARCH_DIR)
+	mkdir -p $(OBJ_DIR)/xen/console $(OBJ_DIR)/xen/xenbus
 
 # Create special architecture specific links. The function arch_links
 # has to be defined in arch.mk (see include above).
@@ -111,7 +111,7 @@ links: $(ARCH_LINKS)
 
 .PHONY: arch_lib
 arch_lib:
-	$(MAKE) --directory=$(TARGET_ARCH_DIR) OBJ_DIR=$(OBJ_DIR)/$(TARGET_ARCH_DIR) || exit 1;
+	$(MAKE) --directory=xen/$(TARGET_ARCH_DIR) OBJ_DIR=$(OBJ_DIR)/xen/$(TARGET_ARCH_DIR) || exit 1;
 
 $(OBJ_DIR)/$(TARGET)_app.o: $(APP_OBJS) app.lds
 	$(LD) -r -d $(LDFLAGS) -\( $^ -\) $(APP_LDLIBS) --undefined main -o $@
@@ -129,13 +129,13 @@ $(TARGET): links $(OBJS) $(APP_O) arch_lib
 .PHONY: clean arch_clean
 
 arch_clean:
-	$(MAKE) --directory=$(TARGET_ARCH_DIR) OBJ_DIR=$(OBJ_DIR)/$(TARGET_ARCH_DIR) clean || exit 1;
+	$(MAKE) --directory=xen/$(TARGET_ARCH_DIR) OBJ_DIR=$(OBJ_DIR)/xen/$(TARGET_ARCH_DIR) clean || exit 1;
 
 clean:	arch_clean
 	for dir in $(addprefix $(OBJ_DIR)/,$(SUBDIRS)); do \
 		rm -f $$dir/*.o; \
 	done
-	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core $(OBJ_DIR)/$(TARGET).elf $(OBJ_DIR)/$(TARGET).raw $(TARGET) $(OBJ_DIR)/$(TARGET).o
+	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core $(OBJ_DIR)/$(TARGET).elf $(OBJ_DIR)/$(TARGET).raw $(TARGET) $(TARGET).o
 	rm -f $(OBJ_DIR)/include/xen $(OBJ_DIR)/include/mini-os/machine
 	rm -f tags TAGS
 

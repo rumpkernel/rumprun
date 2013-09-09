@@ -42,7 +42,7 @@ EXTRA_INC = $(ARCH_INC)
 
 # Include the architecture family's special makerules.
 # This must be before include minios.mk!
-include $(MINI-OS_ROOT)/$(TARGET_ARCH_DIR)/arch.mk
+include $(MINI-OS_ROOT)/xen/$(TARGET_ARCH_DIR)/arch.mk
 
 extra_incl := $(foreach dir,$(EXTRA_INC),-isystem $(MINI-OS_ROOT)/include/$(dir))
 
