@@ -26,12 +26,14 @@ fi
 if [ ! -f rumptools/rumpmake ]; then
 	./buildrump.sh/buildrump.sh -${BUILDXEN_QUIET:-q} ${STDJ} -k \
 	    -s rumpsrc -T rumptools -o rumpobj -V RUMP_KERNEL_IS_LIBC=1 tools
+
+	# FIXME to be able to specify this as part of previous cmdline
+	echo 'CPPFLAGS+=-DMAXPHYS=32768' >> rumptools/mk.conf
 fi
 
 RMAKE=`pwd`/rumptools/rumpmake
 
-# build rump kernel (FIXME: CPPFLAGS hack)
-echo 'CPPFLAGS+=-DMAXPHYS=32768' >> rumptools/mk.conf
+# build rump kernel
 ./buildrump.sh/buildrump.sh -k -s rumpsrc -T rumptools -o rumpobj build install
 
 #
