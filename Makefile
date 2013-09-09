@@ -53,7 +53,7 @@ EXTRA_OBJS =
 TARGET := rump-kernel
 
 # Subdirectories common to mini-os
-SUBDIRS := lib xen
+SUBDIRS := lib xen xen/console xen/xenbus
 
 src-y += xen/blkfront.c
 src-y += xen/events.c
