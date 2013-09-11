@@ -154,7 +154,6 @@ void exit_thread(void)
 {
     unsigned long flags;
     struct thread *thread = current;
-    printk("Thread \"%s\" exited.\n", thread->name);
     local_irq_save(flags);
     /* Remove from the thread list */
     TAILQ_REMOVE(&thread_list, thread, thread_list);
