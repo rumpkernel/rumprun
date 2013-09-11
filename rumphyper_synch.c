@@ -112,8 +112,7 @@ void
 rumpuser_thread_exit(void)
 {
 
-	printk("thread_exit not implemented\n");
-	do_exit();
+	exit_thread();
 }
 
 int
