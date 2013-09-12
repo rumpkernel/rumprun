@@ -96,6 +96,7 @@ static struct {
 	{ RUMPUSER_PARAM_NCPU, "1" },
 	{ RUMPUSER_PARAM_HOSTNAME, "rump4xen" },
 	{ "RUMP_VERBOSE", "1" },
+	{ "RUMP_MEMLIMIT", "8m" },
 	{ NULL, NULL },
 };
 
