@@ -437,6 +437,11 @@ xenbus_msg_reply(int type,
     DEFINE_WAIT(w);
     struct xsd_sockmsg *rep;
 
+    /*
+     * XXX: should use a predicate loop instead of blindly trusting
+     * that $someone didn't wake us up
+     */
+
     id = allocate_xenbus_id();
     add_waiter(w, req_info[id].waitq);
 
