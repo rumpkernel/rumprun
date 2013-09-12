@@ -9,13 +9,7 @@
 struct thread {
     const char *name;
     char *stack;
-#if !defined(__ia64__)
-    /* keep in that order */
-    unsigned long sp;  /* Stack pointer */
-    unsigned long ip;  /* Instruction pointer */
-#else /* !defined(__ia64__) */
-    thread_regs_t regs;
-#endif /* !defined(__ia64__) */
+    struct thread_md md;
     TAILQ_ENTRY(thread) thread_list;
     uint32_t flags;
     s_time_t wakeup_time;

@@ -48,7 +48,7 @@
 void dump_stack(struct thread *thread)
 {
     unsigned long *bottom = (unsigned long *)(thread->stack + STACK_SIZE); 
-    unsigned long *pointer = (unsigned long *)thread->sp;
+    unsigned long *pointer = (unsigned long *)thread->thr_sp;
     int count;
     if(thread == current)
     {
@@ -77,8 +77,8 @@ extern void thread_starter(void);
 /* Pushes the specified value onto the stack of the specified thread */
 static void stack_push(struct thread *thread, unsigned long value)
 {
-    thread->sp -= sizeof(unsigned long);
-    *((unsigned long *)thread->sp) = value;
+    thread->thr_sp -= sizeof(unsigned long);
+    *((unsigned long *)thread->thr_sp) = value;
 }
 
 /* Architecture specific setup of thread creation */
@@ -96,13 +96,13 @@ struct thread* arch_create_thread(const char *name, void (*function)(void *),
             thread->stack);
 #endif
     
-    thread->sp = (unsigned long)thread->stack + STACK_SIZE;
+    thread->thr_sp = (unsigned long)thread->stack + STACK_SIZE;
     /* Save pointer to the thread on the stack, used by current macro */
     *((unsigned long *)thread->stack) = (unsigned long)thread;
     
     stack_push(thread, (unsigned long) function);
     stack_push(thread, (unsigned long) data);
-    thread->ip = (unsigned long) thread_starter;
+    thread->thr_ip = (unsigned long) thread_starter;
     return thread;
 }
 
@@ -113,13 +113,13 @@ void run_idle_thread(void)
     __asm__ __volatile__("mov %0,%%esp\n\t"
                          "push %1\n\t" 
                          "ret"                                            
-                         :"=m" (idle_thread->sp)
-                         :"m" (idle_thread->ip));                          
+                         :"=m" (idle_thread->thr_sp)
+                         :"m" (idle_thread->thr_ip));                          
 #elif defined(__x86_64__)
     __asm__ __volatile__("mov %0,%%rsp\n\t"
                          "push %1\n\t" 
                          "ret"                                            
-                         :"=m" (idle_thread->sp)
-                         :"m" (idle_thread->ip));                                                    
+                         :"=m" (idle_thread->thr_sp)
+                         :"m" (idle_thread->thr_ip));                                                    
 #endif
 }
