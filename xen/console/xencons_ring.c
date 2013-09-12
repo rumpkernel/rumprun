@@ -67,14 +67,17 @@ int xencons_ring_send_no_notify(struct consfront_dev *dev, const char *data, uns
 int xencons_ring_send(struct consfront_dev *dev, const char *data, unsigned len)
 {
 	int sent = 0;
+	int part;
 
-	while (sent < len) {
-		sent += xencons_ring_send_no_notify(dev, data, len);
+	for (sent = 0; sent < len; sent += part) {
+		part = xencons_ring_send_no_notify(dev,
+		    data + sent, len - sent);
 		notify_daemon(dev);
 	}
 
+	ASSERT(sent == len);
 	return sent;
-}	
+}
 
 void console_handle_input(evtchn_port_t port, struct pt_regs *regs, void *data)
 {
