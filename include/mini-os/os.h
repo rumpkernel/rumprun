@@ -1,5 +1,3 @@
-/* XXX: only because I'm too lazy to fix the includers now */
-
 #ifndef _MINIOS_OS_H_
 #define _MINIOS_OS_H_
 
