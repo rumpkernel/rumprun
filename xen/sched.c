@@ -149,24 +149,83 @@ create_thread(const char *name, void (*function)(void *), void *data)
     return thread;
 }
 
+struct join_waiter {
+    struct thread *jw_thread;
+    struct thread *jw_wanted;
+    TAILQ_ENTRY(join_waiter) jw_entries;
+};
+static TAILQ_HEAD(, join_waiter) joinwq = TAILQ_HEAD_INITIALIZER(joinwq);
 
 void exit_thread(void)
 {
     unsigned long flags;
     struct thread *thread = current;
+    struct join_waiter *jw_iter;
+
+    /* if joinable, gate until we are allowed to exit */
     local_irq_save(flags);
+    while (thread->flags & THREAD_MUSTJOIN) {
+        thread->flags |= THREAD_JOINED;
+        local_irq_restore(flags);
+
+        /* see if the joiner is already there */
+        TAILQ_FOREACH(jw_iter, &joinwq, jw_entries) {
+            if (jw_iter->jw_wanted == thread) {
+                wake(jw_iter->jw_thread);
+                break;
+            }
+        }
+        block(thread);
+        schedule();
+        local_irq_save(flags);
+    }
+
+    /* interrupts still disabled ... */
+
     /* Remove from the thread list */
     TAILQ_REMOVE(&thread_list, thread, thread_list);
     clear_runnable(thread);
     /* Put onto exited list */
     TAILQ_INSERT_HEAD(&exited_threads, thread, thread_list);
     local_irq_restore(flags);
+
     /* Schedule will free the resources */
     while(1)
     {
         schedule();
         printk("schedule() returned!  Trying again\n");
     }
+}
+
+/* hmm, all of the interfaces here are namespaced "backwards" ... */
+void join_thread(struct thread *joinable)
+{
+    struct join_waiter jw;
+    struct thread *thread = get_current();
+    unsigned long flags;
+
+    local_irq_save(flags);
+    ASSERT(joinable->flags & THREAD_MUSTJOIN);
+    /* wait for exiting thread to hit thread_exit() */
+    while (!(joinable->flags & THREAD_JOINED)) {
+        local_irq_restore(flags);
+
+        jw.jw_thread = thread;
+        jw.jw_wanted = joinable;
+        TAILQ_INSERT_TAIL(&joinwq, &jw, jw_entries);
+        block(thread);
+        schedule();
+        TAILQ_REMOVE(&joinwq, &jw, jw_entries);
+
+        local_irq_save(flags);
+    }
+
+    /* signal exiting thread that we have seen it and it may now exit */
+    ASSERT(joinable->flags & THREAD_JOINED);
+    joinable->flags &= ~THREAD_MUSTJOIN;
+    local_irq_restore(flags);
+
+    wake(joinable);
 }
 
 void block(struct thread *thread)

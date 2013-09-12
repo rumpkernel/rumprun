@@ -20,7 +20,9 @@ struct thread {
 extern struct thread *idle_thread;
 void idle_thread_fn(void *unused);
 
-#define RUNNABLE_FLAG   0x00000001
+#define RUNNABLE_FLAG	0x00000001
+#define THREAD_MUSTJOIN	0x00000002
+#define THREAD_JOINED	0x00000004
 
 #define is_runnable(_thread)    (_thread->flags & RUNNABLE_FLAG)
 #define set_runnable(_thread)   (_thread->flags |= RUNNABLE_FLAG)
@@ -36,6 +38,7 @@ void init_sched(void);
 void run_idle_thread(void);
 struct thread* create_thread(const char *name, void (*f)(void *), void *data);
 void exit_thread(void) __attribute__((noreturn));
+void join_thread(struct thread *);
 void schedule(void);
 
 #define current get_current()
