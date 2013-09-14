@@ -25,7 +25,7 @@ fi
 # compat code gets really confused  FIXME
 if [ ! -f rumptools/rumpmake ]; then
 	./buildrump.sh/buildrump.sh -${BUILDXEN_QUIET:-q} ${STDJ} -k \
-	    -s rumpsrc -T rumptools -o rumpobj -V RUMP_KERNEL_IS_LIBC=1 tools
+	    -s rumpsrc -T rumptools -o rumpobj -N -V RUMP_KERNEL_IS_LIBC=1 tools
 
 	# FIXME to be able to specify this as part of previous cmdline
 	echo 'CPPFLAGS+=-DMAXPHYS=32768' >> rumptools/mk.conf
