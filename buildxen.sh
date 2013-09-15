@@ -49,6 +49,7 @@ echo '>> Installing headers.  please wait (may take a while) ...'
   # sys/ produces a lot of errors due to missing tools/sources
   # "protect" the user from that spew
   cd rumpsrc/sys
+  ${RMAKE} -k obj >/dev/null 2>&1
   ${RMAKE} -k includes >/dev/null 2>&1
 )
 
