@@ -9,15 +9,10 @@ STDJ='-j4'
 # the buildxen.sh is not as forgiving as I am
 set -e
 
-if [ "$1" = 'checkout' -o ! -f .buildxen-checkoutdone ]; then
-	docheckout=true
-fi
-if ${docheckout:-false} ; then
+if [ "${1}" != 'nocheckout' ]; then
 	git submodule update --init --recursive
 	./buildrump.sh/buildrump.sh -s rumpsrc checkout
 	( cd nblibs ; ln -sf ../rumpsrc/common . )
-
-	touch .buildxen-checkoutdone
 fi
 
 # build tools
