@@ -87,8 +87,8 @@ src-y += xen/console/xenbus.c
 # The common mini-os objects to build.
 APP_OBJS :=
 OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(src-y))
-OBJS+= httpd/bozohttpd.o httpd/main.o httpd/ssl-bozo.o httpd/content-bozo.o
-OBJS+= httpd/dir-index-bozo.o
+HTTPD_OBJS+= httpd/bozohttpd.o httpd/main.o httpd/ssl-bozo.o
+HTTPD_OBJS+= httpd/content-bozo.o httpd/dir-index-bozo.o
 
 .PHONY: default
 default: objs $(TARGET)
@@ -120,8 +120,8 @@ ifneq ($(APP_OBJS),)
 APP_O=$(OBJ_DIR)/$(TARGET)_app.o 
 endif
 
-$(TARGET): links $(OBJS) $(APP_O) arch_lib
-	$(LD) -r $(LDFLAGS) $(HEAD_OBJ) $(APP_O) $(OBJS) $(LDARCHLIB) $(LDLIBS) -o $@.o
+$(TARGET): links $(OBJS) $(HTTPD_OBJS) $(APP_O) arch_lib
+	$(LD) -r $(LDFLAGS) $(HEAD_OBJ) $(APP_O) $(HTTPD_OBJS) $(OBJS) $(LDARCHLIB) $(LDLIBS) -o $@.o
 	$(OBJCOPY) -w -G $(GLOBAL_PREFIX)* -G _start $@.o $@.o
 	$(LD) $(LDFLAGS) $(LDFLAGS_FINAL) $@.o $(EXTRA_OBJS) -o $@
 	#gzip -f -9 -c $@ >$@.gz
