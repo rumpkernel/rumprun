@@ -22,6 +22,10 @@ See http://www.NetBSD.org/docs/rump/ for more information on rump kernels.
 Using / Testing
 ---------------
 
+Short instructions are given below.  See the
+[wiki](https://github.com/anttikantee/rumpuser-xen/wiki) for
+further details.
+
 To build, clone this repository and run the following command.  You
 need Xen headers for a successful build (e.g. on Ubuntu they're in
 the `libxen-dev` package).
@@ -35,30 +39,3 @@ To run, use the standard Xen tools:
 Check out `domain_config` to change which tests/demos are run.
 By default, a httpd will be run.  You will need a Xen network
 setup for it to work.
-
-
-Implementation
---------------
-
-The implementation runs on top of a heavily modified Xen Mini-OS --
-Mini-OS provided most of the functionality outside the scope of rump
-kernels, such as bootstrapping, cooperative scheduling, etc.  See the
-`rumphyper*` files to see the hypercall implementations relevant for
-running rump kernels.
-
-
-File System Images
-------------------
-
-Though a rump kernel does not require a root file system image, some
-applications and library routines expect to be able to access files.
-For example, the `getservent()` call searches `/etc/services`, and
-a web server serving static content typically serves it from a file
-system hierarchy.  To satisfy these demands, we mount file systems in
-the rump kernel file system namespace.  Any file system type, e.g. NFS,
-would do, but it's usually simplest mount a prepopulated image.
-
-We supply these prepopulated images in the `img` subdirectory
-of this repository.  If your host does not support FFS, you
-can still examine and modify the images using the portable
-[fs-utils](https://github.com/stacktic/fs-utils) tool suite.
