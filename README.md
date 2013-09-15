@@ -23,7 +23,7 @@ Using / Testing
 ---------------
 
 Short instructions are given below.  See the
-[wiki](https://github.com/anttikantee/rumpuser-xen/wiki) for
+[wiki](https://github.com/anttikantee/rumpuser-xen/wiki/_pages) for
 further details.
 
 To build, clone this repository and run the following command.  You
