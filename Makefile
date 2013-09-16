@@ -20,7 +20,6 @@ CONFIG_XENBUS ?= y
 CONFIG_PCIFRONT ?= n
 
 # Export config items as compiler directives
-flags-$(CONFIG_PCIFRONT) += -DCONFIG_PCIFRONT
 flags-$(CONFIG_XENBUS) += -DCONFIG_XENBUS
 
 DEF_CFLAGS += $(flags-y)
