@@ -3,17 +3,17 @@
  * Based on blkfront.c.
  */
 
-#include <string.h>
 #include <mini-os/os.h>
-#include <mini-os/lib.h>
 #include <mini-os/xenbus.h>
 #include <mini-os/events.h>
-#include <errno.h>
 #include <mini-os/gnttab.h>
-#include <mini-os/xmalloc.h>
 #include <mini-os/wait.h>
 #include <mini-os/pcifront.h>
 #include <mini-os/sched.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define PCI_DEVFN(slot, func) ((((slot) & 0x1f) << 3) | ((func) & 0x07))
 
