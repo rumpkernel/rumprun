@@ -63,8 +63,8 @@ echo '>> done with headers'
   OBJS=`pwd`/rumpobj/rumpxenif
   cd rumpxenif
   ${RMAKE} MAKEOBJDIR=${OBJS} obj
-  ${RMAKE} MAKEOBJDIR=${OBJS} MKPIC=no dependall
-  ${RMAKE} MAKEOBJDIR=${OBJS} MKPIC=no install
+  ${RMAKE} MAKEOBJDIR=${OBJS} dependall
+  ${RMAKE} MAKEOBJDIR=${OBJS} install
 )
 
 makeuserlib ()
@@ -74,9 +74,9 @@ makeuserlib ()
 	OBJS=`pwd`/rumpobj/lib/$1
 	( cd nblibs/lib/$1
 		${RMAKE} MAKEOBJDIR=${OBJS} obj
-		${RMAKE} MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no MKYP=no \
+		${RMAKE} MKMAN=no MKLINT=no MKPROFILE=no MKYP=no \
 		    NOGCCERROR=1 MAKEOBJDIR=${OBJS} ${STDJ} dependall
-		${RMAKE} MKMAN=no MKLINT=no MKPIC=no MKPROFILE=no MKYP=no \
+		${RMAKE} MKMAN=no MKLINT=no MKPROFILE=no MKYP=no \
 		    MAKEOBJDIR=${OBJS} install
 	)
 }
