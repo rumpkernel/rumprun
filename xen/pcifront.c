@@ -11,6 +11,7 @@
 #include <mini-os/pcifront.h>
 #include <mini-os/sched.h>
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -480,6 +481,9 @@ int pcifront_conf_read(struct pcifront_dev *dev,
 
     if (!dev)
         dev = pcidev;
+    if (!dev)
+        return ENXIO;
+
     if (pcifront_physical_to_virtual(dev, &dom, &bus, &slot, &fun) < 0)
         return XEN_PCI_ERR_dev_not_found;
     memset(&op, 0, sizeof(op));
@@ -510,6 +514,9 @@ int pcifront_conf_write(struct pcifront_dev *dev,
 
     if (!dev)
         dev = pcidev;
+    if (!dev)
+        return ENXIO;
+
     if (pcifront_physical_to_virtual(dev, &dom, &bus, &slot, &fun) < 0)
         return XEN_PCI_ERR_dev_not_found;
     memset(&op, 0, sizeof(op));
