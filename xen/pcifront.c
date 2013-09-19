@@ -154,8 +154,6 @@ struct pcifront_dev *init_pcifront(char *_nodename)
     if (!_nodename && pcidev)
         return pcidev;
 
-    printk("******************* PCIFRONT for %s **********\n\n\n", nodename);
-
     snprintf(path, sizeof(path), "%s/backend-id", nodename);
     dom = xenbus_read_integer(path); 
     if (dom == -1) {
@@ -234,7 +232,7 @@ done:
         goto error;
     }
 
-    printk("backend at %s\n", dev->backend);
+    printk("pcifront: node=%s backend=%s\n", nodename, dev->backend);
 
     {
         char path[strlen(dev->backend) + 1 + 5 + 1];
@@ -263,8 +261,6 @@ done:
         }
     }
     unmask_evtchn(dev->evtchn);
-
-    printk("**************************\n");
 
     if (!_nodename)
         pcidev = dev;

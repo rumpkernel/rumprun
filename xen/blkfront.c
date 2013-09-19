@@ -86,8 +86,6 @@ struct blkfront_dev *init_blkfront(char *_nodename, struct blkfront_info *info)
 
     char path[strlen(nodename) + 1 + 10 + 1];
 
-    printk("******************* BLKFRONT for %s **********\n\n\n", nodename);
-
     dev = malloc(sizeof(*dev));
     memset(dev, 0, sizeof(*dev));
     dev->nodename = strdup(nodename);
@@ -165,7 +163,7 @@ done:
         goto error;
     }
 
-    printk("backend at %s\n", dev->backend);
+    printk("blkfront: node=%s backend=%s\n", nodename, dev->backend);
 
     dev->handle = strtoul(strrchr(nodename, '/')+1, NULL, 10);
 
@@ -218,8 +216,7 @@ done:
     }
     unmask_evtchn(dev->evtchn);
 
-    printk("%u sectors of %u bytes\n", dev->info.sectors, dev->info.sector_size);
-    printk("**************************\n");
+    printk("blkfront: %u sectors\n", dev->info.sectors);
 
     return dev;
 
@@ -240,7 +237,7 @@ void shutdown_blkfront(struct blkfront_dev *dev)
 
     blkfront_sync(dev);
 
-    printk("close blk: backend=%s node=%s\n", dev->backend, dev->nodename);
+    printk("blkfront detached: node=%s\n", dev->nodename);
 
     snprintf(path, sizeof(path), "%s/state", dev->backend);
     snprintf(nodename, sizeof(nodename), "%s/state", dev->nodename);

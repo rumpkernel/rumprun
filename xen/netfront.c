@@ -271,8 +271,6 @@ struct netfront_dev *init_netfront(char *_nodename, void (*thenetif_rx)(struct n
         strncpy(nodename, _nodename, strlen(nodename));
     netfrontends++;
 
-    printk("************************ NETFRONT for %s **********\n\n\n", nodename);
-
     dev = malloc(sizeof(*dev));
     memset(dev, 0, sizeof(*dev));
     dev->nodename = strdup(nodename);
@@ -384,8 +382,8 @@ done:
         goto error;
     }
 
-    printk("backend at %s\n",dev->backend);
-    printk("mac is %s\n",dev->mac);
+    printk("netfront: node=%s backend=%s\n", nodename, dev->backend);
+    printk("netfront: MAC %s\n", dev->mac);
 
     {
         XenbusState state;
@@ -409,8 +407,6 @@ done:
             xenbus_read(XBT_NIL, path, ip);
         }
     }
-
-    printk("**************************\n");
 
     unmask_evtchn(dev->evtchn);
 
