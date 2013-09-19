@@ -58,8 +58,8 @@ ARCH_LIB := lib$(ARCH_LIB_NAME).a
 HEAD_ARCH_OBJ := $(XEN_TARGET_ARCH).o
 HEAD_OBJ := $(OBJ_DIR)/xen/$(TARGET_ARCH_DIR)/$(HEAD_ARCH_OBJ)
 
-$(OBJ_DIR)/%.o: %.c $(HDRS) Makefile $(EXTRA_DEPS)
+$(OBJ_DIR)/%.o: %.c $(HDRS) $(EXTRA_DEPS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/%.o: %.S $(HDRS) Makefile $(EXTRA_DEPS)
+$(OBJ_DIR)/%.o: %.S $(HDRS) $(EXTRA_DEPS)
 	$(CC) $(ASFLAGS) $(CPPFLAGS) -c $< -o $@
