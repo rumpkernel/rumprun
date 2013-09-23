@@ -30,7 +30,7 @@
 #include <mini-os/mm.h>
 #include <mini-os/hypervisor.h>
 
-#include <rumpxenpci/hyper.h>
+#include <rumpxenpci/dev/lib/libpci/hyper.h> /* XXX */
 
 #include <stdlib.h> /* for malloc */
 
