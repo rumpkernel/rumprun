@@ -5,7 +5,7 @@ RUMPTOP=${TOPRUMP}
 
 .PATH:	${RUMPTOP}/../dev/pci
 
-LIB=	rumpdev_pci_if_wm
+LIB=	rumpdev_if_wm_pci
 IOCONF=	IF_WM_PCI.ioconf
 
 SRCS=	if_wm_at_pci.c
