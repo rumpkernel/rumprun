@@ -17,10 +17,11 @@ endif
 # Configuration defaults
 CONFIG_XENBUS ?= y
 
-CONFIG_PCIFRONT ?= n
+CONFIG_PCI ?= y
 
 # Export config items as compiler directives
 flags-$(CONFIG_XENBUS) += -DCONFIG_XENBUS
+flags-$(CONFIG_PCI) += -DCONFIG_PCI
 
 DEF_CFLAGS += $(flags-y)
 
@@ -32,12 +33,16 @@ include minios.mk
 CFLAGS += -Irump/include -nostdinc
 CFLAGS += -DVIRTIF_BASE=xenif -I$(MINI-OS_ROOT)
 
+ifeq ($(CONFIG_PCI),y)
+LIBS_PCI = -lrumpdev_pci -lrumpdev_if_wm_pci -lrumpdev_if_pcn_pci -lrumpdev_phy
+endif
+
 LIBS_FS = -lrumpfs_ffs -lrumpdev_disk -lrumpdev -lrumpvfs
 LIBS_NET = -lrumpnet_config -lrumpdev_bpf -lrumpnet_xenif -lrumpnet_netinet
 LIBS_NET+= -lrumpnet_net -lrumpnet
 
 # Define some default flags for linking.
-LDLIBS_FS = --whole-archive ${LIBS_FS} ${LIBS_NET} -lrump --no-whole-archive
+LDLIBS_FS = --whole-archive ${LIBS_FS} ${LIBS_NET} ${LIBS_PCI} -lrump --no-whole-archive
 LDLIBS = -Lrump/lib ${LDLIBS_FS} -lc
 
 APP_LDLIBS := 
@@ -62,7 +67,7 @@ src-y += xen/hypervisor.c
 src-y += xen/kernel.c
 src-y += xen/mm.c
 src-y += xen/netfront.c
-src-$(CONFIG_PCIFRONT) += xen/pcifront.c
+src-$(CONFIG_PCI) += xen/pcifront.c
 src-y += xen/sched.c
 
 src-y += lib/__errno.c
@@ -72,6 +77,7 @@ src-y += lib/memalloc.c
 
 src-y += rumphyper_base.c
 src-y += rumphyper_net.c
+src-$(CONFIG_PCI) += rumphyper_pci.c
 src-y += rumphyper_synch.c
 src-y += rumphyper_stubs.c
 

@@ -78,6 +78,10 @@ _app_main(void *arg)
 {
     start_info_t *si = arg;
 
+#ifdef CONFIG_PCI
+    init_pcifront(NULL);
+#endif
+
     rump_boot_setsigmodel(RUMP_SIGMODEL_IGNORE);
     rump_init();
 
