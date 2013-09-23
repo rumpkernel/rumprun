@@ -60,7 +60,7 @@ RUMP_COMPONENT(RUMP_COMPONENT_DEV_AFTERMAINBUS)
 	pba.pba_memt = (bus_space_tag_t)1;
 	pba.pba_dmat = (void *)0x20;
 #ifdef _LP64
-	pba.pba_dma64t = (void *)0x40;
+	pba.pba_dmat64 = (void *)0x40;
 #endif
 	pba.pba_flags = PCI_FLAGS_MEM_OKAY | PCI_FLAGS_IO_OKAY |
 	    PCI_FLAGS_MRL_OKAY | PCI_FLAGS_MRM_OKAY | PCI_FLAGS_MWI_OKAY;;
