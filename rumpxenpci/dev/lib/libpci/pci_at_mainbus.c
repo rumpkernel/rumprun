@@ -58,6 +58,10 @@ RUMP_COMPONENT(RUMP_COMPONENT_DEV_AFTERMAINBUS)
 	memset(&pba, 0, sizeof(pba));
 	pba.pba_iot = (bus_space_tag_t)0;
 	pba.pba_memt = (bus_space_tag_t)1;
+	pba.pba_dmat = (void *)0x20;
+#ifdef _LP64
+	pba.pba_dma64t = (void *)0x40;
+#endif
 	pba.pba_flags = PCI_FLAGS_MEM_OKAY | PCI_FLAGS_IO_OKAY |
 	    PCI_FLAGS_MRL_OKAY | PCI_FLAGS_MRM_OKAY | PCI_FLAGS_MWI_OKAY;;
 
