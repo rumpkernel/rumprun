@@ -1,0 +1,8 @@
+Checkpoint of work to support PCI devices.
+
+These bits should eventually live in the NetBSD tree, as there shouldn't
+be anything strictly specific to Xen.
+
+(I haven't committed all the bits yet, so don't expect things to compile.
+However, when I do managed to get everything from my working tree
+committed, things will not only compile, they will also work.)
