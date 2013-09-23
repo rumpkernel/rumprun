@@ -62,6 +62,7 @@ makekernlib ()
 {
 	lib=$1
 	OBJS=`pwd`/rumpobj/$lib
+	mkdir -p ${OBJS}
 	( cd ${lib}
 		${RMAKE} MAKEOBJDIRPREFIX=${OBJS} obj
 		${RMAKE} MAKEOBJDIRPREFIX=${OBJS} dependall
