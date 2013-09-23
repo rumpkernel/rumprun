@@ -61,11 +61,11 @@ echo '>> done with headers'
 makekernlib ()
 {
 	lib=$1
-	OBJS=`pwd`/rumpobj/${lib}
+	OBJS=`pwd`/rumpobj/$lib
 	( cd ${lib}
-		${RMAKE} MAKEOBJDIR=${OBJS} obj
-		${RMAKE} MAKEOBJDIR=${OBJS} dependall
-		${RMAKE} MAKEOBJDIR=${OBJS} install
+		${RMAKE} MAKEOBJDIRPREFIX=${OBJS} obj
+		${RMAKE} MAKEOBJDIRPREFIX=${OBJS} dependall
+		${RMAKE} MAKEOBJDIRPREFIX=${OBJS} install
 	)
 }
 makekernlib rumpxenif
