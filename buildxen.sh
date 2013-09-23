@@ -12,7 +12,11 @@ set -e
 if [ "${1}" != 'nocheckout' ]; then
 	git submodule update --init --recursive
 	./buildrump.sh/buildrump.sh -s rumpsrc checkout
-	( cd nblibs ; ln -sf ../rumpsrc/common . )
+	( cd nblibs
+		ln -sf ../rumpsrc/common
+		ln -sf ../../libexec/ld.elf_so/rtld.h lib/libc
+		ln -sf ../../libexec/ld.elf_so/rtldenv.h lib/libc
+	)
 fi
 
 # build tools
