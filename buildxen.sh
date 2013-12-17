@@ -12,7 +12,11 @@ set -e
 if [ "${1}" != 'nocheckout' ]; then
 	git submodule update --init --recursive
 	./buildrump.sh/buildrump.sh -s rumpsrc checkout
-	( cd nblibs ; ln -sf ../rumpsrc/common . )
+	( cd nblibs
+		ln -sf ../rumpsrc/common
+		ln -sf ../../libexec/ld.elf_so/rtld.h lib/libc
+		ln -sf ../../libexec/ld.elf_so/rtldenv.h lib/libc
+	)
 fi
 
 # build tools
@@ -58,14 +62,19 @@ echo '>> done with headers'
 # build rump kernel
 ./buildrump.sh/buildrump.sh -k -s rumpsrc -T rumptools -o rumpobj build install
 
-# build networking driver
-(
-  OBJS=`pwd`/rumpobj/rumpxenif
-  cd rumpxenif
-  ${RMAKE} MAKEOBJDIR=${OBJS} obj
-  ${RMAKE} MAKEOBJDIR=${OBJS} dependall
-  ${RMAKE} MAKEOBJDIR=${OBJS} install
-)
+makekernlib ()
+{
+	lib=$1
+	OBJS=`pwd`/rumpobj/$lib
+	mkdir -p ${OBJS}
+	( cd ${lib}
+		${RMAKE} MAKEOBJDIRPREFIX=${OBJS} obj
+		${RMAKE} MAKEOBJDIRPREFIX=${OBJS} dependall
+		${RMAKE} MAKEOBJDIRPREFIX=${OBJS} install
+	)
+}
+makekernlib rumpxenif
+makekernlib rumpxenpci
 
 makeuserlib ()
 {
@@ -80,7 +89,6 @@ makeuserlib ()
 		    MAKEOBJDIR=${OBJS} install
 	)
 }
-
 makeuserlib libc
 makeuserlib libm
 

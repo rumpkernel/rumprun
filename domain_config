@@ -6,6 +6,10 @@ name = "rump-kernel"
 disk = [ 'file:img/test.ffs,hda,rw', 'file:img/etc.ffs,hdb,rw' ]
 vif = [ 'mac=b2:11:11:11:11:11' ]
 
+# Specify the PCI device(s) you want to use here (cf. lspci output).
+# Also, you need to "xl pci-assignable-add 00:08.00" etc.
+#pci = [ "0000:00:08.0","0000:00:09.00" ]
+
 # if 1, run fs test
 # if 2, run net test
 # if 4, run httpd
