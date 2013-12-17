@@ -4,6 +4,7 @@ int rumpcomp_pci_confwrite(unsigned, unsigned, unsigned, int, unsigned int);
 
 void *rumpcomp_pci_irq_establish(int, int (*)(void *), void *);
 
+/* XXX: needs work: support boundary-restricted allocations */
 int rumpcomp_pci_dmalloc(size_t, size_t, unsigned long *);
 
 void *rumpcomp_pci_mach_to_virt(unsigned long);
