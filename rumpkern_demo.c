@@ -76,7 +76,7 @@ dofs(void)
 	if ((p = (void *)strchr(buf, '\n')) == NULL)
 		errx(1, "strchr");
 	*p = '\0';
-	printf("Reading first line of README.md:\n\t===\n%s\n\t===\n\n", buf);
+	printf("Reading first line of README.md:\n\t===\n%s\n\t===\n\n", (char *)buf);
 
 #define GARBAGE "   TRASHED!   "
 	/* write some garbage in there.  spot the difference the next time */
@@ -259,7 +259,7 @@ donet(void)
 
 		rv = poll(pfds, maxfd, 1000);
 		if (rv == 0) {
-			printf("still waiting ... %lld\n", NOW());
+			printf("still waiting ... %"PRId64"d\n", NOW());
 			continue;
 		}
 
@@ -314,7 +314,7 @@ dohttpd(void)
 
 	if ((rv = rump_pub_etfs_register(BLKDEV(1),
 	    "blk1", RUMP_ETFS_BLK)) != 0)
-		errx(1, "etfs %d", strerror(rv));
+		errx(1, "etfs %s", strerror(rv));
 
 	mkdir("/etc", 0777);
 	ua.fspec = BLKDEV(1);
