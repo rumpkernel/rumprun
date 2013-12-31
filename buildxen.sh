@@ -22,7 +22,7 @@ fi
 # build tools
 ./buildrump.sh/buildrump.sh -${BUILDXEN_QUIET:-q} ${STDJ} -k \
     -s rumpsrc -T rumptools -o rumpobj -N -V RUMP_KERNEL_IS_LIBC=1 tools
-./buildrump.sh/buildrump.sh -k -s rumpsrc -T rumptools -o rumpobj setupdest
+./buildrump.sh/buildrump.sh -k -V MKPIC=no -s rumpsrc -T rumptools -o rumpobj setupdest
 # FIXME to be able to specify this as part of previous cmdline
 echo 'CPPFLAGS+=-DMAXPHYS=32768' >> rumptools/mk.conf
 
