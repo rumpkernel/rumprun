@@ -5,3 +5,6 @@ before_install:
  - sudo apt-get install libxen-dev -y
 
 script: BUILDXEN_QUIET=qq ./buildxen.sh
+
+notifications:
+  irc: "chat.freenode.net#rumpkernel-builds"
