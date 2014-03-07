@@ -7,4 +7,10 @@ before_install:
 script: BUILDXEN_QUIET=qq ./buildxen.sh
 
 notifications:
-  irc: "chat.freenode.net#rumpkernel-builds"
+  irc:
+    channels:
+      - "chat.freenode.net#rumpkernel-builds"
+    template:
+      - '%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}'
+    skip_join: true
+    use_notice: true
