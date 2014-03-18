@@ -182,20 +182,6 @@ static void update_wallclock(void)
 }
 
 
-int gettimeofday(struct timeval *tv, void *tz)
-{
-    uint64_t nsec = monotonic_clock();
-    nsec += shadow_ts.tv_nsec;
-    
-    
-    tv->tv_sec = shadow_ts.tv_sec;
-    tv->tv_sec += NSEC_TO_SEC(nsec);
-    tv->tv_usec = NSEC_TO_USEC(nsec % 1000000000UL);
-
-    return 0;
-}
-
-
 void block_domain(s_time_t until)
 {
     struct timeval tv;
