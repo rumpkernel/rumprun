@@ -10,9 +10,6 @@
 	printk("STUB ``%s'' called\n", #name);	\
 	return ENOTSUP;}
 
-STUB(__clock_gettime50);
-STUB(__nanosleep50);
-STUB(__setitimer50);
 STUB(__sigaction14);
 STUB(__sigprocmask14);
 STUB(__getrusage50);
