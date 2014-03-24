@@ -16,15 +16,14 @@ not fit into a single-process no-VM model, such as applications using
 `fork()` or `execve()`.  These limitations may sometimes be overcome by
 various forms of emulation.
 
-See http://www.NetBSD.org/docs/rump/ for more information on rump kernels.
+See http://www.rumpkernel.org/ for more information on rump kernels.
 
 
 Using / Testing
 ---------------
 
-Short instructions are given below.  See the
-[wiki](https://github.com/rumpkernel/rumpuser-xen/wiki/_pages) for
-further details.
+Short instructions are given below.  The
+[rumpkernel wiki](http://wiki.rumpkernel.org/) provides further details.
 
 To build, clone this repository and run the following command.  You
 need Xen headers for a successful build (e.g. on Ubuntu they're in
