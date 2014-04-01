@@ -103,7 +103,7 @@ virtif_clone(struct if_clone *ifc, int num)
 	sc->sc_viu = viu;
 
 	ifp = &sc->sc_ec.ec_if;
-	sprintf(ifp->if_xname, "%s%d", VIF_NAME, num);
+	snprintf(ifp->if_xname, sizeof(ifp->if_xname), "%s%d", VIF_NAME, num);
 	ifp->if_softc = sc;
 
 	ifp->if_flags = IFF_BROADCAST | IFF_SIMPLEX | IFF_MULTICAST;
