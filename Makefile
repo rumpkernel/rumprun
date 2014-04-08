@@ -42,7 +42,7 @@ LIBS_NET = -lrumpnet_config -lrumpdev_bpf -lrumpnet_xenif -lrumpnet_netinet
 LIBS_NET+= -lrumpnet_net -lrumpnet
 
 # Define some default flags for linking.
-LDLIBS_FS = --whole-archive ${LIBS_FS} ${LIBS_NET} ${LIBS_PCI} -lrumpkern_time -lrump --no-whole-archive
+LDLIBS_FS = --whole-archive ${LIBS_FS} ${LIBS_NET} ${LIBS_PCI} -lrump --no-whole-archive
 LDLIBS = -Lrump/lib ${LDLIBS_FS} -lc
 
 APP_LDLIBS := 
