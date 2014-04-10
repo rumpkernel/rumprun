@@ -9,24 +9,40 @@ STDJ='-j4'
 # the buildxen.sh is not as forgiving as I am
 set -e
 
-if [ "${1}" != 'nocheckout' ]; then
+LIBLIBS="c crypt ipsec m npf pthread prop rmt util pci y z"
+MORELIBS="external/bsd/flex/lib
+	crypto/external/bsd/openssl/lib/libcrypto
+	crypto/external/bsd/openssl/lib/libdes
+	crypto/external/bsd/openssl/lib/libssl
+	external/bsd/libpcap/lib"
+LIBS=""
+for lib in ${LIBLIBS}; do
+	LIBS="${LIBS} rumpsrc/lib/lib${lib}"
+done
+for lib in ${MORELIBS}; do
+	LIBS="${LIBS} rumpsrc/${lib}"
+done
+
+# ok, urgh, we need just one tree due to how build systems work (or
+# don't work).  So here's what we'll do for now.  Checkout rumpsrc,
+# checkout nbusersrc, and copy nbusersrc over rumpsrc.  Obviously, we cannot
+# update rumpsrc except manually after the copy operation, but that's
+# a price we're just going to be paying for now.
+if [ ! -d rumpsrc ]; then
 	git submodule update --init --recursive
 	./buildrump.sh/buildrump.sh -s rumpsrc checkout
-	( cd nblibs
-		ln -sf ../rumpsrc/common
-		ln -sf ../../libexec/ld.elf_so/rtld.h lib/libc
-		ln -sf ../../libexec/ld.elf_so/rtldenv.h lib/libc
-	)
+	cp -Rp nblibs/* rumpsrc/
 fi
 
 # build tools
 ./buildrump.sh/buildrump.sh -${BUILDXEN_QUIET:-q} ${STDJ} -k \
-    -s rumpsrc -T rumptools -o rumpobj -N -V RUMP_KERNEL_IS_LIBC=1 tools
+    -V MKPIC=no -s rumpsrc -T rumptools -o rumpobj -N -V RUMP_KERNEL_IS_LIBC=1 tools
 ./buildrump.sh/buildrump.sh -k -V MKPIC=no -s rumpsrc -T rumptools -o rumpobj setupdest
 # FIXME to be able to specify this as part of previous cmdline
 echo 'CPPFLAGS+=-DMAXPHYS=32768' >> rumptools/mk.conf
 
 RMAKE=`pwd`/rumptools/rumpmake
+RMAKE_INST=`pwd`/rumptools/_buildrumpsh-rumpmake
 
 #
 # install full set of headers.
@@ -34,11 +50,13 @@ RMAKE=`pwd`/rumptools/rumpmake
 # first, "mtree" (TODO: fetch/use nbmtree)
 INCSDIRS='adosfs altq arpa crypto dev filecorefs fs i386 isofs miscfs
 	msdosfs net net80211 netatalk netbt netinet netinet6 netipsec
-	netisdn netkey netmpls netnatm netsmb nfs ntfs ppath prop
+	netisdn netkey netmpls netnatm netsmb nfs ntfs openssl pcap ppath prop
 	protocols rpc rpcsvc ssp sys ufs uvm x86'
 for dir in ${INCSDIRS}; do
 	mkdir -p rump/include/$dir
 done
+# XXX
+mkdir -p rumpobj/dest.stage/usr/lib/pkgconfig
 
 # then, install
 echo '>> Installing headers.  please wait (may take a while) ...'
@@ -54,13 +72,14 @@ echo '>> Installing headers.  please wait (may take a while) ...'
 ( cd rumpsrc/include && ${RMAKE} -k includes > /dev/null 2>&1)
 
 # other lossage
-( cd nblibs/lib/libc && ${RMAKE} includes >/dev/null 2>&1)
-( cd nblibs/lib/libpthread && ${RMAKE} includes >/dev/null 2>&1)
+for lib in ${LIBS}; do
+	( cd ${lib} && ${RMAKE} includes >/dev/null 2>&1)
+done
 
 echo '>> done with headers'
 
 # build rump kernel
-./buildrump.sh/buildrump.sh -k -s rumpsrc -T rumptools -o rumpobj build install
+./buildrump.sh/buildrump.sh -k -V MKPIC=no -s rumpsrc -T rumptools -o rumpobj build install
 
 makekernlib ()
 {
@@ -78,19 +97,20 @@ makekernlib rumpxenpci
 
 makeuserlib ()
 {
-	lib=$1
 
-	OBJS=`pwd`/rumpobj/lib/$1
-	( cd nblibs/lib/$1
-		${RMAKE} MAKEOBJDIR=${OBJS} obj
+	( cd $1
+		${RMAKE} obj
 		${RMAKE} MKMAN=no MKLINT=no MKPROFILE=no MKYP=no \
-		    NOGCCERROR=1 MAKEOBJDIR=${OBJS} ${STDJ} dependall
-		${RMAKE} MKMAN=no MKLINT=no MKPROFILE=no MKYP=no \
-		    MAKEOBJDIR=${OBJS} install
+		    NOGCCERROR=1 ${STDJ} dependall
+		${RMAKE_INST} MKMAN=no MKLINT=no MKPROFILE=no MKYP=no install
 	)
 }
-makeuserlib libc
-makeuserlib libm
+for lib in ${LIBS}; do
+	makeuserlib ${lib}
+done
+
+./buildrump.sh/buildrump.sh ${BUILD_QUIET} $* \
+    -s rumpsrc -T rumptools -o rumpobj install
 
 [ ! -f img/test.ffs ] && cp img/test_clean.ffs img/test.ffs
 
