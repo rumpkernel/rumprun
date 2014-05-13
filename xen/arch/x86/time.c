@@ -184,8 +184,6 @@ static void update_wallclock(void)
 
 void block_domain(s_time_t until)
 {
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
     ASSERT(irqs_disabled());
     if(monotonic_clock() < until)
     {
