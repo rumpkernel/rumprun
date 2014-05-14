@@ -87,10 +87,12 @@ pci_intr_map(const struct pci_attach_args *pa, pci_intr_handle_t *ih)
 }
 
 const char *
-pci_intr_string(pci_chipset_tag_t pc, pci_intr_handle_t ih)
+pci_intr_string(pci_chipset_tag_t pc, pci_intr_handle_t ih,
+	char *buf, size_t buflen)
 {
 
-	return "kahvitauko nakilla"; /* pausebreak */
+	snprintf(buf, buflen, "pausebreak");
+	return buf;
 }
 
 void *
