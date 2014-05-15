@@ -340,6 +340,11 @@ again:
         message = "writing event-channel";
         goto abort_transaction;
     }
+    err = xenbus_printf(xbt, nodename, "feature-no-csum-offload", "%u", 1);
+    if (err) {
+        message = "writing feature-no-csum-offload";
+        goto abort_transaction;
+    }
 
     err = xenbus_printf(xbt, nodename, "request-rx-copy", "%u", 1);
 
