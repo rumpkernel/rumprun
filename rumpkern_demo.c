@@ -100,7 +100,7 @@ struct conn {
 
 static struct pollfd pfds[MAXCONN];
 static struct conn conns[MAXCONN];
-int maxfd;
+int maxfd, masterfd;
 
 static void
 acceptconn(void)
@@ -109,7 +109,7 @@ acceptconn(void)
 	socklen_t slen = sizeof(sin);
 	int s;
 
-	if ((s = accept(0, (struct sockaddr *)&sin, &slen)) == -1)
+	if ((s = accept(masterfd, (struct sockaddr *)&sin, &slen)) == -1)
 		return;
 
 	/* drop */
@@ -234,19 +234,18 @@ donet(void)
 {
 	uint64_t zombietime;
 	int rv, i;
-	int s;
 
 	setupnet();
-	s = sucketonport(4096);
-	ASSERT(s < MAXCONN);
+	masterfd = sucketonport(4096);
+	ASSERT(masterfd < MAXCONN);
 
 	for (i = 0; i < MAXCONN; i++) {
 		pfds[i].fd = -1;
 		pfds[i].events = POLLIN;
 		conns[i].c_cnt = -1;
 	}
-	pfds[s].fd = s;
-	maxfd = s+1;
+	pfds[masterfd].fd = masterfd;
+	maxfd = masterfd+1;
 
 	printf("WOPR reporting for duty on port 4096\n");
 
@@ -268,12 +267,14 @@ donet(void)
 			reboot(0, 0);
 		}
 
-		if (pfds[0].revents & POLLIN) {
+		if (pfds[masterfd].revents & POLLIN) {
 			acceptconn();
 			rv--;
 		}
 
-		for (i = 1; i < MAXCONN && rv; i++) {
+		for (i = 0; i < MAXCONN && rv; i++) {
+			if (i == masterfd)
+				continue;
 			if (pfds[i].fd != -1 && pfds[i].revents & POLLIN) {
 				readconn(i);
 				rv--;
