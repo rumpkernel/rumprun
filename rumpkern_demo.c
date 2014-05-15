@@ -145,6 +145,7 @@ readconn(int i)
 		close(i);
 		pfds[i].fd = -1;
 		c->c_cnt = -1;
+		return;
 	}
 
 	if ((p = strchr(c->c_buf, '\n')) == NULL) {
