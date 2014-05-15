@@ -179,7 +179,8 @@ processzombies(void)
 	 * completed or not.
 	 */
 	for (i = 1; i < MAXCONN; i++) {
-		if (conns[i].c_cnt != -1 && ++conns[i].c_cnt > 10) {
+		if (conns[i].c_cnt != -1 && ++conns[i].c_cnt > 10
+                    && pfds[i].fd != -1) {
 			close(i);
 		}
 	}
