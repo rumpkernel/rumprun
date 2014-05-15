@@ -1,7 +1,7 @@
 # Useful config stuff
 
 # Where to find xen headers from.  XXX: this can probably be done better
-XEN_HEADERS= /usr/include/xen
+XEN_HEADERS ?= /usr/include/xen
 
 # from Xen/Config.mk
 XEN_COMPILE_ARCH    ?= $(shell uname -m | sed -e s/i.86/x86_32/ \
