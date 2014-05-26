@@ -13,7 +13,7 @@ SRCS=	phy_at_mii.c
 SRCS+= mii.c mii_ethersubr.c mii_physubr.c ukphy.c ukphy_subr.c
 SRCS+= acphy.c amhphy.c atphy.c bmtphy.c brgphy.c ciphy.c dmphy.c etphy.c \
     exphy.c gentbi.c glxtphy.c gphyter.c icsphy.c igphy.c ihphy.c ikphy.c \
-    inphy.c iophy.c lxtphy.c makphy.c mvphy.c nsphy.c nsphyter.c pnaphy.c \
+    inphy.c iophy.c lxtphy.c makphy.c nsphy.c nsphyter.c pnaphy.c \
     qsphy.c rdcphy.c rgephy.c rlphy.c sqphy.c tlphy.c tqphy.c urlphy.c
 
 CPPFLAGS+= -I${RUMPTOP}/librump/rumpkern -I${.CURDIR}/opt
