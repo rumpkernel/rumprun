@@ -80,6 +80,7 @@ src-y += rumphyper_net.c
 src-$(CONFIG_PCI) += rumphyper_pci.c
 src-y += rumphyper_synch.c
 src-y += rumphyper_stubs.c
+src-y += callmain.c
 
 src-y += rumpkern_demo.c
 
