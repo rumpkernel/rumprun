@@ -34,6 +34,8 @@ if [ ! -d rumpsrc ]; then
 	cp -Rp nblibs/* rumpsrc/
 fi
 
+[ "$1" = "justcheckout" ] && { echo ">> $0 done" ; exit 0; }
+
 # build tools
 ./buildrump.sh/buildrump.sh -${BUILDXEN_QUIET:-q} ${STDJ} -k \
     -V MKPIC=no -s rumpsrc -T rumptools -o rumpobj -N \
