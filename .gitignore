@@ -1,0 +1,12 @@
+*~
+*.o
+obj
+
+img/*.ffs
+rump
+rump-kernel
+rumpsrc
+rumpobj
+rumptools
+include/mini-os/machine
+include/xen
