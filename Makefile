@@ -39,7 +39,7 @@ endif
 
 LIBS_FS = -lrumpfs_ffs -lrumpdev_disk -lrumpdev -lrumpvfs
 LIBS_NET = -lrumpnet_config -lrumpdev_bpf -lrumpnet_xenif -lrumpnet_netinet
-LIBS_NET+= -lrumpnet_net -lrumpnet
+LIBS_NET+= -lrumpnet_net -lrumpxen_xendev -lrumpnet
 
 # Define some default flags for linking.
 LDLIBS_FS = --whole-archive ${LIBS_FS} ${LIBS_NET} ${LIBS_PCI} -lrump --no-whole-archive
