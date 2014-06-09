@@ -2,6 +2,8 @@
 #define MINIOS_XENBUS_H__
 
 #include <xen/io/xenbus.h>
+#include <mini-os/sched.h>
+#include <mini-os/waittypes.h>
 #include <mini-os/queue.h>
 
 typedef unsigned long xenbus_transaction_t;
@@ -30,6 +32,7 @@ struct xenbus_event {
 };
 struct xenbus_event_queue {
     MINIOS_STAILQ_HEAD(, xenbus_event) events;
+    struct wait_queue_head waitq;
 };
 
 void xenbus_event_queue_init(struct xenbus_event_queue *queue);
