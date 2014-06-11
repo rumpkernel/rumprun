@@ -49,11 +49,12 @@ static spinlock_t xb_lock = SPIN_LOCK_UNLOCKED; /* protects xenbus req ring */
 DECLARE_WAIT_QUEUE_HEAD(xenbus_watch_queue);
 
 struct xenbus_event_queue xenbus_events;
-static struct watch {
+struct watch {
     char *token;
     struct xenbus_event_queue *events;
-    struct watch *next;
-} *watches;
+    MINIOS_LIST_ENTRY(watch) entry;
+};
+static MINIOS_LIST_HEAD(, watch) watches;
 struct xenbus_req_info 
 {
     int in_use:1;
@@ -248,7 +249,7 @@ static void xenbus_thread_func(void *ign)
 
                 xenstore_buf->rsp_cons += msg.len + sizeof(msg);
 
-                for (watch = watches; watch; watch = watch->next)
+                MINIOS_LIST_FOREACH(watch, &watches, entry)
                     if (!strcmp(watch->token, event->token)) {
                         events = watch->events;
                         break;
@@ -586,8 +587,8 @@ char* xenbus_watch_path_token( xenbus_transaction_t xbt, const char *path, const
 
     watch->token = strdup(token);
     watch->events = events;
-    watch->next = watches;
-    watches = watch;
+
+    MINIOS_LIST_INSERT_HEAD(&watches, watch, entry);
 
     rep = xenbus_msg_reply(XS_WATCH, xbt, req, ARRAY_SIZE(req));
 
@@ -607,7 +608,7 @@ char* xenbus_unwatch_path_token( xenbus_transaction_t xbt, const char *path, con
 	{token, strlen(token) + 1},
     };
 
-    struct watch *watch, **prev;
+    struct watch *watch;
 
     char *msg;
 
@@ -617,10 +618,10 @@ char* xenbus_unwatch_path_token( xenbus_transaction_t xbt, const char *path, con
     if (msg) return msg;
     free(rep);
 
-    for (prev = &watches, watch = *prev; watch; prev = &watch->next, watch = *prev)
+    MINIOS_LIST_FOREACH(watch, &watches, entry)
         if (!strcmp(watch->token, token)) {
             free(watch->token);
-            *prev = watch->next;
+            MINIOS_LIST_REMOVE(watch, entry);
             free(watch);
             break;
         }
