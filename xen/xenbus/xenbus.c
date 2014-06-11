@@ -45,6 +45,7 @@
 
 static struct xenstore_domain_interface *xenstore_buf;
 static DECLARE_WAIT_QUEUE_HEAD(xb_waitq);
+static spinlock_t xb_lock = SPIN_LOCK_UNLOCKED; /* protects xenbus req ring */
 DECLARE_WAIT_QUEUE_HEAD(xenbus_watch_queue);
 
 xenbus_event_queue xenbus_events;
@@ -372,6 +373,8 @@ static void xb_write(int type, int req_id, xenbus_transaction_t trans_id,
     cur_req = &header_req;
 
     BUG_ON(len > XENSTORE_RING_SIZE);
+
+    spin_lock(&xb_lock);
     /* Wait for the ring to drain to the point where we can send the
        message. */
     prod = xenstore_buf->req_prod;
@@ -380,9 +383,11 @@ static void xb_write(int type, int req_id, xenbus_transaction_t trans_id,
         /* Wait for there to be space on the ring */
         DEBUG("prod %d, len %d, cons %d, size %d; waiting.\n",
                 prod, len, xenstore_buf->req_cons, XENSTORE_RING_SIZE);
+        spin_unlock(&xb_lock);
         wait_event(xb_waitq,
                 xenstore_buf->req_prod + len - xenstore_buf->req_cons <=
                 XENSTORE_RING_SIZE);
+        spin_lock(&xb_lock);
         DEBUG("Back from wait.\n");
         prod = xenstore_buf->req_prod;
     }
@@ -419,6 +424,7 @@ static void xb_write(int type, int req_id, xenbus_transaction_t trans_id,
     wmb();
 
     xenstore_buf->req_prod += len;
+    spin_unlock(&xb_lock);
 
     /* Send evtchn to notify remote */
     notify_remote_via_evtchn(start_info.store_evtchn);
