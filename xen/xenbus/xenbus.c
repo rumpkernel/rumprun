@@ -48,17 +48,11 @@ static DECLARE_WAIT_QUEUE_HEAD(xb_waitq);
 static spinlock_t xb_lock = SPIN_LOCK_UNLOCKED; /* protects xenbus req ring */
 
 struct xenbus_event_queue xenbus_default_watch_queue;
-struct watch {
-    char *token;
-    struct xenbus_event_queue *events;
-    MINIOS_LIST_ENTRY(watch) entry;
-};
-static MINIOS_LIST_HEAD(, watch) watches;
+static MINIOS_LIST_HEAD(, xenbus_watch) watches;
 struct xenbus_req_info 
 {
     struct xenbus_event_queue *reply_queue; /* non-0 iff in use */
     struct xenbus_event *for_queue;
-    void *reply;
 };
 
 
@@ -263,7 +257,7 @@ static void xenbus_thread_func(void *ign)
 		struct xenbus_event *event = malloc(sizeof(*event) + msg.len);
                 struct xenbus_event_queue *events = NULL;
 		char *data = (char*)event + sizeof(*event);
-                struct watch *watch;
+                struct xenbus_watch *watch;
 
                 memcpy_from_ring(xenstore_buf->rsp,
 		    data,
@@ -277,6 +271,7 @@ static void xenbus_thread_func(void *ign)
 
                 MINIOS_LIST_FOREACH(watch, &watches, entry)
                     if (!strcmp(watch->token, event->token)) {
+                        event->watch = watch;
                         events = watch->events;
                         break;
                     }
@@ -291,9 +286,10 @@ static void xenbus_thread_func(void *ign)
 
             else
             {
-                req_info[msg.req_id].reply = malloc(sizeof(msg) + msg.len);
+                req_info[msg.req_id].for_queue->reply =
+                    malloc(sizeof(msg) + msg.len);
                 memcpy_from_ring(xenstore_buf->rsp,
-                    req_info[msg.req_id].reply,
+                    req_info[msg.req_id].for_queue->reply,
                     MASK_XENSTORE_IDX(xenstore_buf->rsp_cons),
                     msg.len + sizeof(msg));
                 xenstore_buf->rsp_cons += msg.len + sizeof(msg);
@@ -315,7 +311,7 @@ static spinlock_t req_lock = SPIN_LOCK_UNLOCKED;
 static DECLARE_WAIT_QUEUE_HEAD(req_wq);
 
 /* Release a xenbus identifier */
-static void release_xenbus_id(int id)
+void xenbus_id_release(int id)
 {
     BUG_ON(!req_info[id].reply_queue);
     spin_lock(&req_lock);
@@ -326,10 +322,8 @@ static void release_xenbus_id(int id)
     spin_unlock(&req_lock);
 }
 
-/* Allocate an identifier for a xenbus request.  Blocks if none are
-   available. */
-static int allocate_xenbus_id(struct xenbus_event_queue *reply_queue,
-                              struct xenbus_event *for_queue)
+int xenbus_id_allocate(struct xenbus_event_queue *reply_queue,
+                       struct xenbus_event *for_queue)
 {
     static int probe;
     int o_probe;
@@ -360,6 +354,30 @@ static int allocate_xenbus_id(struct xenbus_event_queue *reply_queue,
     return o_probe;
 }
 
+void xenbus_watch_init(struct xenbus_watch *watch)
+{
+    watch->token = 0;
+}
+
+void xenbus_watch_prepare(struct xenbus_watch *watch)
+{
+    BUG_ON(!watch->events);
+    size_t size = sizeof(void*)*2 + 5;
+    watch->token = malloc(size);
+    int r = snprintf(watch->token,size,"*%p",(void*)watch);
+    BUG_ON(!(r > 0 && r < size));
+    MINIOS_LIST_INSERT_HEAD(&watches, watch, entry);
+}
+
+void xenbus_watch_release(struct xenbus_watch *watch)
+{
+    if (!watch->token)
+        return;
+    MINIOS_LIST_REMOVE(watch, entry);
+    free(watch->token);
+    watch->token = 0;
+}
+
 /* Initialise xenbus. */
 void init_xenbus(void)
 {
@@ -381,11 +399,7 @@ void fini_xenbus(void)
 {
 }
 
-/* Send data to xenbus.  This can block.  All of the requests are seen
-   by xenbus as if sent atomically.  The header is added
-   automatically, using type %type, req_id %req_id, and trans_id
-   %trans_id. */
-static void xb_write(int type, int req_id, xenbus_transaction_t trans_id,
+void xenbus_xb_write(int type, int req_id, xenbus_transaction_t trans_id,
 		     const struct write_req *req, int nr_reqs)
 {
     XENSTORE_RING_IDX prod;
@@ -480,16 +494,16 @@ xenbus_msg_reply(int type,
 
     xenbus_event_queue_init(&queue);
 
-    id = allocate_xenbus_id(&queue,&event_buf);
+    id = xenbus_id_allocate(&queue,&event_buf);
 
-    xb_write(type, id, trans, io, nr_reqs);
+    xenbus_xb_write(type, id, trans, io, nr_reqs);
 
     struct xenbus_event *event = await_event(&queue);
     BUG_ON(event != &event_buf);
 
-    rep = req_info[id].reply;
+    rep = req_info[id].for_queue->reply;
     BUG_ON(rep->req_id != id);
-    release_xenbus_id(id);
+    xenbus_id_release(id);
     return rep;
 }
 
@@ -600,7 +614,7 @@ char* xenbus_watch_path_token( xenbus_transaction_t xbt, const char *path, const
 	{token, strlen(token) + 1},
     };
 
-    struct watch *watch = malloc(sizeof(*watch));
+    struct xenbus_watch *watch = malloc(sizeof(*watch));
 
     char *msg;
 
@@ -630,7 +644,7 @@ char* xenbus_unwatch_path_token( xenbus_transaction_t xbt, const char *path, con
 	{token, strlen(token) + 1},
     };
 
-    struct watch *watch;
+    struct xenbus_watch *watch;
 
     char *msg;
 

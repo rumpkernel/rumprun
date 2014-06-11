@@ -23,11 +23,18 @@ static inline void init_xenbus(void)
    set to a malloc'd copy of the value. */
 char *xenbus_read(xenbus_transaction_t xbt, const char *path, char **value);
 
-/* Watch event queue */
+/* Queue for events (watches or async request replies - see below) */
 struct xenbus_event {
-    /* Keep these two as this for xs.c */
-    char *path;
-    char *token;
+    union {
+        struct {
+            /* must be first, both for the bare minios xs.c, and for
+             * xenbus_wait_for_watch's handling */
+            char *path;
+            char *token;
+        };
+        struct xsd_sockmsg *reply;
+    };
+    struct xenbus_watch *watch;
     MINIOS_STAILQ_ENTRY(xenbus_event) entry;
 };
 struct xenbus_event_queue {
@@ -110,6 +117,65 @@ char* xenbus_printf(xenbus_transaction_t xbt,
 
 /* Utility function to figure out our domain id */
 domid_t xenbus_get_self_id(void);
+
+/*
+ * ----- asynchronous low-level interface -----
+ */
+
+/* Allocate an identifier for a xenbus request.  Blocks if none are
+ * available.  Cannot fail.  On return, we may use the returned value
+ * as the id in a xenbus request.
+ *
+ * for_queue must already be allocated, but may be uninitialised.
+ *
+ * for_queue->watch is not touched by the xenbus machinery for
+ * handling requests/replies but should probably be initialised by the
+ * caller (probably to NULL) because this will help the caller
+ * distinguish the reply from any watch events which might end up in
+ * the same queue.
+ *
+ * reply_queue must exist and have been initialised.
+ *
+ * When the response arrives, the reply message will stored in
+ * for_queue->reply and for_queue will be queued on reply_queue.  The
+ * id must be then explicitly released (or, used again, if desired).
+ * After ->reply is done with the caller must pass it to free().
+ * (Do not use the id for more than one request at a time.) */
+int xenbus_id_allocate(struct xenbus_event_queue *reply_queue,
+                       struct xenbus_event *for_queue);
+void xenbus_id_release(int id);
+
+/* Allocating a token for a watch.
+ *
+ * To use this:
+ *  - Include struct xenbus_watch in your own struct.
+ *  - Set events; then call prepare.  This will set token.
+ *    You may then use token in a WATCH request.
+ *  - You must UNWATCH before you call release.
+ * Do not modify token yourself.
+ * entry is private for the xenbus driver.
+ *
+ * When the watch fires, a new struct xenbus_event will be allocated
+ * and queued on events.  The field xenbus_event->watch will have been
+ * set to watch by the xenbus machinery, and xenbus_event->path will
+ * be the watch path.  After the caller is done with the event,
+ * its pointer should simply be passed to free(). */
+struct xenbus_watch {
+    char *token;
+    struct xenbus_event_queue *events;
+    MINIOS_LIST_ENTRY(xenbus_watch) entry;
+};
+void xenbus_watch_init(struct xenbus_watch *watch); /* makes release a noop */
+void xenbus_watch_prepare(struct xenbus_watch *watch); /* need not be init'd */
+void xenbus_watch_release(struct xenbus_watch *watch); /* idempotent */
+
+
+/* Send data to xenbus.  This can block.  All of the requests are seen
+ * by xenbus as if sent atomically.  The header is added
+ * automatically, using type %type, req_id %req_id, and trans_id
+ * %trans_id. */
+void xenbus_xb_write(int type, int req_id, xenbus_transaction_t trans_id,
+		     const struct write_req *req, int nr_reqs);
 
 #ifdef CONFIG_XENBUS
 /* Reset the XenBus system. */
