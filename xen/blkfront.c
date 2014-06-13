@@ -14,11 +14,9 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <time.h>
 
 /* Note: we generally don't need to disable IRQs since we hardly do anything in
  * the interrupt handler.  */
