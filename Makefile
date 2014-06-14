@@ -141,7 +141,7 @@ clean:	arch_clean
 		rm -f $$dir/*.o; \
 	done
 	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core $(OBJ_DIR)/$(TARGET).elf $(OBJ_DIR)/$(TARGET).raw $(TARGET) $(TARGET).o
-	rm -f $(OBJ_DIR)/include/xen $(OBJ_DIR)/include/mini-os/machine
+	rm -f include/xen include/mini-os/machine
 	rm -f tags TAGS
 
 
