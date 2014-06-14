@@ -144,6 +144,11 @@ clean:	arch_clean
 	rm -f include/xen include/mini-os/machine
 	rm -f tags TAGS
 
+cleanrump: clean
+	rm -rf rump rumpobj rumptools
+
+distcleanrump: cleanrump
+	rm -rf rumpsrc
 
 define all_sources
      ( find . -follow -name SCCS -prune -o -name '*.[chS]' -print )
