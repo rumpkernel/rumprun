@@ -34,7 +34,7 @@ CFLAGS += -Irump/include -nostdinc
 CFLAGS += -DVIRTIF_BASE=xenif -I$(MINI-OS_ROOT)
 
 ifeq ($(CONFIG_PCI),y)
-LIBS_PCI = -lrumpdev_pci -lrumpdev_if_wm_pci -lrumpdev_if_pcn_pci -lrumpdev_phy
+LIBS_PCI = -lrumpdev_pci -lrumpdev_pci_if_wm -lrumpdev_miiphy
 endif
 
 LIBS_FS = -lrumpfs_ffs -lrumpdev_disk -lrumpdev -lrumpvfs
