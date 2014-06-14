@@ -30,8 +30,9 @@
 #include <mini-os/mm.h>
 #include <mini-os/hypervisor.h>
 
-#include <rumpxenpci/dev/lib/libpci/hyper.h> /* XXX */
+#include "rumpsrc/sys/rump/dev/lib/libpci/pci_user.h" /* XXX */
 
+#include <errno.h>
 #include <stdlib.h> /* for malloc */
 
 void *
@@ -72,11 +73,32 @@ hyperhandler(evtchn_port_t prt, struct pt_regs *regs, void *data)
 	ihan->i_handler(ihan->i_data);
 }
 
+/* XXXXX */
+static int myintr;
+static unsigned mycookie;
+
+int
+rumpcomp_pci_irq_map(unsigned bus, unsigned device, unsigned fun,
+	int intrline, unsigned cookie)
+{
+
+	/* XXX */
+	myintr = intrline;
+	mycookie = cookie;
+
+	return 0;
+}
+
 void *
-rumpcomp_pci_irq_establish(int pirq, int (*handler)(void *), void *data)
+rumpcomp_pci_irq_establish(unsigned cookie, int (*handler)(void *), void *data)
 {
 	struct ihandler *ihan;
 	evtchn_port_t prt;
+	int pirq;
+
+	if (cookie != mycookie)
+		return NULL;
+	pirq = myintr;
 
 	ihan = malloc(sizeof(*ihan));
 	if (!ihan)
@@ -92,7 +114,8 @@ rumpcomp_pci_irq_establish(int pirq, int (*handler)(void *), void *data)
 }
 
 int
-rumpcomp_pci_dmalloc(size_t size, size_t align, unsigned long *pap)
+rumpcomp_pci_dmalloc(size_t size, size_t align,
+	unsigned long *pap, unsigned long *vap)
 {
 	unsigned long va;
 	int i;
@@ -101,16 +124,23 @@ rumpcomp_pci_dmalloc(size_t size, size_t align, unsigned long *pap)
 		continue;
 
 	va = alloc_contig_pages(i, 0); /* XXX: MD interface */
+	*vap = (uintptr_t)va;
 	*pap = virt_to_mach(va);
 
 	return 0;
 }
 
-void *
-rumpcomp_pci_mach_to_virt(unsigned long addr)
+int
+rumpcomp_pci_dmamem_map(struct rumpcomp_pci_dmaseg *dss, size_t nseg,
+	size_t totlen, void **vap)
 {
 
-	return mach_to_virt(addr);
+	if (nseg > 1) {
+		return ENOTSUP;
+	}
+	*vap = (void *)dss[0].ds_vacookie;
+
+	return 0;
 }
 
 unsigned long

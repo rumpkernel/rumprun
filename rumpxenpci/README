@@ -1,4 +1,0 @@
-Checkpoint of work to support PCI devices.
-
-These bits should eventually live in the NetBSD tree, as there shouldn't
-be anything strictly specific to Xen.
