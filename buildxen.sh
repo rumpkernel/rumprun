@@ -46,8 +46,10 @@ echo 'CPPFLAGS+=-DMAXPHYS=32768' >> rumptools/mk.conf
 RMAKE=`pwd`/rumptools/rumpmake
 RMAKE_INST=`pwd`/rumptools/_buildrumpsh-rumpmake
 
-#
-# install full set of headers.
+# build rump kernel
+./buildrump.sh/buildrump.sh -k -V MKPIC=no -s rumpsrc -T rumptools -o rumpobj build kernelheaders install
+
+# install full set of userspace
 #
 # first, "mtree" (TODO: fetch/use nbmtree)
 INCSDIRS='adosfs altq arpa crypto dev filecorefs fs i386 isofs miscfs
@@ -60,28 +62,12 @@ done
 # XXX
 mkdir -p rumpobj/dest.stage/usr/lib/pkgconfig
 
-# then, install
-echo '>> Installing headers.  please wait (may take a while) ...'
-(
-  # sys/ produces a lot of errors due to missing tools/sources
-  # "protect" the user from that spew
-  cd rumpsrc/sys
-  ${RMAKE} -k obj >/dev/null 2>&1
-  ${RMAKE} -k includes >/dev/null 2>&1
-)
-
-# rpcgen lossage
-( cd rumpsrc/include && ${RMAKE} -k includes > /dev/null 2>&1)
-
-# other lossage
+echo '>> installing userspace headers'
+( cd rumpsrc/include && ${RMAKE} includes )
 for lib in ${LIBS}; do
-	( cd ${lib} && ${RMAKE} includes >/dev/null 2>&1)
+	( cd ${lib} && ${RMAKE} includes )
 done
-
 echo '>> done with headers'
-
-# build rump kernel
-./buildrump.sh/buildrump.sh -k -V MKPIC=no -s rumpsrc -T rumptools -o rumpobj build install
 
 makekernlib ()
 {
