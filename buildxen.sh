@@ -36,7 +36,7 @@ RUMPMAKE=$(pwd)/rumptools/rumpmake
 # build rump kernel
 ./buildrump.sh/buildrump.sh -k -V MKPIC=no -s rumpsrc -T rumptools -o rumpobj build kernelheaders install
 
-usermtree
+usermtree rump
 userincludes ${RUMPMAKE} rumpsrc ${LIBS}
 
 makekernlib ()
