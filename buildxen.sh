@@ -9,16 +9,12 @@ STDJ='-j4'
 # the buildxen.sh is not as forgiving as I am
 set -e
 
-LIBLIBS="c crypt ipsec m npf pthread prop rmt util pci y z"
 MORELIBS="external/bsd/flex/lib
 	crypto/external/bsd/openssl/lib/libcrypto
 	crypto/external/bsd/openssl/lib/libdes
 	crypto/external/bsd/openssl/lib/libssl
 	external/bsd/libpcap/lib"
-LIBS=""
-for lib in ${LIBLIBS}; do
-	LIBS="${LIBS} rumpsrc/lib/lib${lib}"
-done
+LIBS="rumpsrc/lib/lib*"
 for lib in ${MORELIBS}; do
 	LIBS="${LIBS} rumpsrc/${lib}"
 done
