@@ -8,27 +8,19 @@ STDJ='-j4'
 
 # the buildxen.sh is not as forgiving as I am
 set -e
+. ./buildrump.sh/subr.sh
 
 MORELIBS="external/bsd/flex/lib
 	crypto/external/bsd/openssl/lib/libcrypto
 	crypto/external/bsd/openssl/lib/libdes
 	crypto/external/bsd/openssl/lib/libssl
 	external/bsd/libpcap/lib"
-LIBS="rumpsrc/lib/lib*"
+LIBS="$(echo nblibs/lib/lib* | sed 's/nblibs/rumpsrc/g')"
 for lib in ${MORELIBS}; do
 	LIBS="${LIBS} rumpsrc/${lib}"
 done
 
-# ok, urgh, we need just one tree due to how build systems work (or
-# don't work).  So here's what we'll do for now.  Checkout rumpsrc,
-# checkout nbusersrc, and copy nbusersrc over rumpsrc.  Obviously, we cannot
-# update rumpsrc except manually after the copy operation, but that's
-# a price we're just going to be paying for now.
-if [ ! -d rumpsrc ]; then
-	git submodule update --init --recursive
-	./buildrump.sh/buildrump.sh -s rumpsrc checkout
-	cp -Rp nblibs/* rumpsrc/
-fi
+docheckout rumpsrc nblibs
 
 [ "$1" = "justcheckout" ] && { echo ">> $0 done" ; exit 0; }
 
@@ -39,31 +31,13 @@ fi
 # FIXME to be able to specify this as part of previous cmdline
 echo 'CPPFLAGS+=-DMAXPHYS=32768' >> rumptools/mk.conf
 
-RMAKE=`pwd`/rumptools/rumpmake
-RMAKE_INST=`pwd`/rumptools/_buildrumpsh-rumpmake
+RUMPMAKE=$(pwd)/rumptools/rumpmake
 
 # build rump kernel
 ./buildrump.sh/buildrump.sh -k -V MKPIC=no -s rumpsrc -T rumptools -o rumpobj build kernelheaders install
 
-# install full set of userspace
-#
-# first, "mtree" (TODO: fetch/use nbmtree)
-INCSDIRS='adosfs altq arpa crypto dev filecorefs fs i386 isofs miscfs
-	msdosfs net net80211 netatalk netbt netinet netinet6 netipsec
-	netisdn netkey netmpls netnatm netsmb nfs ntfs openssl pcap ppath prop
-	protocols rpc rpcsvc ssp sys ufs uvm x86'
-for dir in ${INCSDIRS}; do
-	mkdir -p rump/include/$dir
-done
-# XXX
-mkdir -p rumpobj/dest.stage/usr/lib/pkgconfig
-
-echo '>> installing userspace headers'
-( cd rumpsrc/include && ${RMAKE} includes )
-for lib in ${LIBS}; do
-	( cd ${lib} && ${RMAKE} includes )
-done
-echo '>> done with headers'
+usermtree
+userincludes ${RUMPMAKE} rumpsrc ${LIBS}
 
 makekernlib ()
 {
@@ -71,26 +45,16 @@ makekernlib ()
 	OBJS=`pwd`/rumpobj/$lib
 	mkdir -p ${OBJS}
 	( cd ${lib}
-		${RMAKE} MAKEOBJDIRPREFIX=${OBJS} obj
-		${RMAKE} MAKEOBJDIRPREFIX=${OBJS} dependall
-		${RMAKE} MAKEOBJDIRPREFIX=${OBJS} install
+		${RUMPMAKE} MAKEOBJDIRPREFIX=${OBJS} obj
+		${RUMPMAKE} MAKEOBJDIRPREFIX=${OBJS} dependall
+		${RUMPMAKE} MAKEOBJDIRPREFIX=${OBJS} install
 	)
 }
 makekernlib rumpxenif
 makekernlib rumpxenpci
 
-makeuserlib ()
-{
-
-	( cd $1
-		${RMAKE} obj
-		${RMAKE} MKMAN=no MKLINT=no MKPROFILE=no MKYP=no \
-		    NOGCCERROR=1 ${STDJ} dependall
-		${RMAKE_INST} MKMAN=no MKLINT=no MKPROFILE=no MKYP=no install
-	)
-}
 for lib in ${LIBS}; do
-	makeuserlib ${lib}
+	makeuserlib ${RUMPMAKE} ${lib}
 done
 
 ./buildrump.sh/buildrump.sh ${BUILD_QUIET} $* \
