@@ -5,6 +5,7 @@
 #include <mini-os/sched.h>
 #include <mini-os/waittypes.h>
 #include <mini-os/queue.h>
+#include <mini-os/spinlock.h>
 
 typedef unsigned long xenbus_transaction_t;
 #define XBT_NIL ((xenbus_transaction_t)0)
@@ -22,6 +23,12 @@ static inline void init_xenbus(void)
    string on failure and sets *value to NULL.  On success, *value is
    set to a malloc'd copy of the value. */
 char *xenbus_read(xenbus_transaction_t xbt, const char *path, char **value);
+
+/* All accesses to an active xenbus_event_queue must occur with this
+ * lock held.  The public functions here will do that for you, but
+ * your own accesses to the queue (including the contained waitq)
+ * must be protected by the lock. */
+extern spinlock_t xenbus_req_lock;
 
 /* Queue for events (watches or async request replies - see below) */
 struct xenbus_event {

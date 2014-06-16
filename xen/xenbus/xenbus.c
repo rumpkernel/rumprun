@@ -56,6 +56,17 @@ struct xenbus_req_info
 };
 
 
+spinlock_t xenbus_req_lock = SPIN_LOCK_UNLOCKED;
+/*
+ * This lock protects:
+ *    the xenbus request ring
+ *    req_info[]
+ *    all live struct xenbus_event_queue (including xenbus_default_watch_queue)
+ *    nr_live_reqs
+ *    req_wq
+ *    watches
+ */
+
 void xenbus_event_queue_init(struct xenbus_event_queue *queue)
 {
     MINIOS_STAILQ_INIT(&queue->events);
@@ -64,6 +75,7 @@ void xenbus_event_queue_init(struct xenbus_event_queue *queue)
 
 static struct xenbus_event *remove_event(struct xenbus_event_queue *queue)
 {
+    /* Called with lock held */
     struct xenbus_event *event;
 
     event = MINIOS_STAILQ_FIRST(&queue->events);
@@ -78,6 +90,7 @@ static struct xenbus_event *remove_event(struct xenbus_event_queue *queue)
 static void queue_event(struct xenbus_event_queue *queue,
                         struct xenbus_event *event)
 {
+    /* Called with lock held */
     MINIOS_STAILQ_INSERT_TAIL(&queue->events, event, entry);
     wake_up(&queue->waitq);
 }
@@ -86,11 +99,15 @@ static struct xenbus_event *await_event(struct xenbus_event_queue *queue)
 {
     struct xenbus_event *event;
     DEFINE_WAIT(w);
+    spin_lock(&xenbus_req_lock);
     while (!(event = remove_event(queue))) {
         add_waiter(w, queue->waitq);
+        spin_unlock(&xenbus_req_lock);
         schedule();
+        spin_lock(&xenbus_req_lock);
     }
     remove_waiter(w, queue->waitq);
+    spin_unlock(&xenbus_req_lock);
     return event;
 }
 
@@ -269,6 +286,8 @@ static void xenbus_thread_func(void *ign)
 
                 xenstore_buf->rsp_cons += msg.len + sizeof(msg);
 
+                spin_lock(&xenbus_req_lock);
+
                 MINIOS_LIST_FOREACH(watch, &watches, entry)
                     if (!strcmp(watch->token, event->token)) {
                         event->watch = watch;
@@ -282,6 +301,8 @@ static void xenbus_thread_func(void *ign)
                     printk("unexpected watch token %s\n", event->token);
                     free(event);
                 }
+
+                spin_unlock(&xenbus_req_lock);
             }
 
             else
@@ -293,8 +314,10 @@ static void xenbus_thread_func(void *ign)
                     MASK_XENSTORE_IDX(xenstore_buf->rsp_cons),
                     msg.len + sizeof(msg));
                 xenstore_buf->rsp_cons += msg.len + sizeof(msg);
+                spin_lock(&xenbus_req_lock);
                 queue_event(req_info[msg.req_id].reply_queue,
                             req_info[msg.req_id].for_queue);
+                spin_unlock(&xenbus_req_lock);
             }
         }
     }
@@ -307,19 +330,18 @@ static void xenbus_evtchn_handler(evtchn_port_t port, struct pt_regs *regs,
 }
 
 static int nr_live_reqs;
-static spinlock_t req_lock = SPIN_LOCK_UNLOCKED;
 static DECLARE_WAIT_QUEUE_HEAD(req_wq);
 
 /* Release a xenbus identifier */
 void xenbus_id_release(int id)
 {
     BUG_ON(!req_info[id].reply_queue);
-    spin_lock(&req_lock);
+    spin_lock(&xenbus_req_lock);
     req_info[id].reply_queue = 0;
     nr_live_reqs--;
     if (nr_live_reqs == NR_REQS - 1)
         wake_up(&req_wq);
-    spin_unlock(&req_lock);
+    spin_unlock(&xenbus_req_lock);
 }
 
 int xenbus_id_allocate(struct xenbus_event_queue *reply_queue,
@@ -330,10 +352,10 @@ int xenbus_id_allocate(struct xenbus_event_queue *reply_queue,
 
     while (1) 
     {
-        spin_lock(&req_lock);
+        spin_lock(&xenbus_req_lock);
         if (nr_live_reqs < NR_REQS)
             break;
-        spin_unlock(&req_lock);
+        spin_unlock(&xenbus_req_lock);
         wait_event(req_wq, (nr_live_reqs < NR_REQS));
     }
 
@@ -349,7 +371,7 @@ int xenbus_id_allocate(struct xenbus_event_queue *reply_queue,
     req_info[o_probe].reply_queue = reply_queue;
     req_info[o_probe].for_queue = for_queue;
     probe = (o_probe + 1) % NR_REQS;
-    spin_unlock(&req_lock);
+    spin_unlock(&xenbus_req_lock);
 
     return o_probe;
 }
@@ -366,14 +388,18 @@ void xenbus_watch_prepare(struct xenbus_watch *watch)
     watch->token = malloc(size);
     int r = snprintf(watch->token,size,"*%p",(void*)watch);
     BUG_ON(!(r > 0 && r < size));
+    spin_lock(&xenbus_req_lock);
     MINIOS_LIST_INSERT_HEAD(&watches, watch, entry);
+    spin_unlock(&xenbus_req_lock);
 }
 
 void xenbus_watch_release(struct xenbus_watch *watch)
 {
     if (!watch->token)
         return;
+    spin_lock(&xenbus_req_lock);
     MINIOS_LIST_REMOVE(watch, entry);
+    spin_unlock(&xenbus_req_lock);
     free(watch->token);
     watch->token = 0;
 }
@@ -624,7 +650,9 @@ char* xenbus_watch_path_token( xenbus_transaction_t xbt, const char *path, const
     watch->token = strdup(token);
     watch->events = events;
 
+    spin_lock(&xenbus_req_lock);
     MINIOS_LIST_INSERT_HEAD(&watches, watch, entry);
+    spin_unlock(&xenbus_req_lock);
 
     rep = xenbus_msg_reply(XS_WATCH, xbt, req, ARRAY_SIZE(req));
 
@@ -654,6 +682,7 @@ char* xenbus_unwatch_path_token( xenbus_transaction_t xbt, const char *path, con
     if (msg) return msg;
     free(rep);
 
+    spin_lock(&xenbus_req_lock);
     MINIOS_LIST_FOREACH(watch, &watches, entry)
         if (!strcmp(watch->token, token)) {
             free(watch->token);
@@ -661,6 +690,7 @@ char* xenbus_unwatch_path_token( xenbus_transaction_t xbt, const char *path, con
             free(watch);
             break;
         }
+    spin_unlock(&xenbus_req_lock);
 
     return NULL;
 }
