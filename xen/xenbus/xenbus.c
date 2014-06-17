@@ -67,9 +67,15 @@ spinlock_t xenbus_req_lock = SPIN_LOCK_UNLOCKED;
  *    watches
  */
 
+static void queue_wakeup(struct xenbus_event_queue *queue)
+{
+    wake_up(&queue->waitq);
+}
+
 void xenbus_event_queue_init(struct xenbus_event_queue *queue)
 {
     MINIOS_STAILQ_INIT(&queue->events);
+    queue->wakeup = queue_wakeup;
     init_waitqueue_head(&queue->waitq);
 }
 
@@ -92,7 +98,7 @@ static void queue_event(struct xenbus_event_queue *queue,
 {
     /* Called with lock held */
     MINIOS_STAILQ_INSERT_TAIL(&queue->events, event, entry);
-    wake_up(&queue->waitq);
+    queue->wakeup(queue);
 }
 
 static struct xenbus_event *await_event(struct xenbus_event_queue *queue)

@@ -46,6 +46,7 @@ struct xenbus_event {
 };
 struct xenbus_event_queue {
     MINIOS_STAILQ_HEAD(, xenbus_event) events;
+    void (*wakeup)(struct xenbus_event_queue*); /* can be safely ignored */
     struct wait_queue_head waitq;
 };
 
@@ -127,6 +128,20 @@ domid_t xenbus_get_self_id(void);
 
 /*
  * ----- asynchronous low-level interface -----
+ */
+
+/*
+ * Use of queue->wakeup:
+ *
+ * If queue->wakeup is set, it will be called instead of
+ * wake_up(&queue->waitq);
+ *
+ * queue->wakeup is initialised (to a function which just calls
+ * wake_up) by xenbus_event_queue_init.  The user who wants something
+ * different should set ->wakeup after the init, but before the queue
+ * is used for xenbus_id_allocate or xenbus_watch_prepare.
+ *
+ * queue->wakeup() is called with the req_lock held.
  */
 
 /* Allocate an identifier for a xenbus request.  Blocks if none are
