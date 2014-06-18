@@ -36,6 +36,8 @@
 #endif
 #endif
 
+#ifndef __RUMP_KERNEL__
+
 #define L1_FRAME                1
 #define L2_FRAME                2
 #define L3_FRAME                3
@@ -230,5 +232,7 @@ static __inline__ paddr_t machine_to_phys(maddr_t machine)
 
 pgentry_t *need_pgt(unsigned long addr);
 int mfn_is_ram(unsigned long mfn);
+
+#endif /* !__RUMP_KERNEL__ */
 
 #endif /* _ARCH_MM_H_ */

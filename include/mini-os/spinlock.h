@@ -1,7 +1,9 @@
 #ifndef __MINIOS_ASM_SPINLOCK_H
 #define __MINIOS_ASM_SPINLOCK_H
 
+#ifndef __RUMP_KERNEL__
 #include <mini-os/lib.h>
+#endif
 
 /*
  * Your basic SMP spinlocks, allowing only a single CPU anywhere
