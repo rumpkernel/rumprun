@@ -48,10 +48,10 @@ static DECLARE_WAIT_QUEUE_HEAD(xb_waitq);
 static spinlock_t xb_lock = SPIN_LOCK_UNLOCKED; /* protects xenbus req ring */
 DECLARE_WAIT_QUEUE_HEAD(xenbus_watch_queue);
 
-xenbus_event_queue xenbus_events;
+struct xenbus_event_queue xenbus_events;
 static struct watch {
     char *token;
-    xenbus_event_queue *events;
+    struct xenbus_event_queue *events;
     struct watch *next;
 } *watches;
 struct xenbus_req_info 
@@ -60,6 +60,13 @@ struct xenbus_req_info
     struct wait_queue_head waitq;
     void *reply;
 };
+
+
+void xenbus_event_queue_init(struct xenbus_event_queue *queue)
+{
+    MINIOS_STAILQ_INIT(&queue->events);
+}
+
 
 #define NR_REQS 32
 static struct xenbus_req_info req_info[NR_REQS];
@@ -78,22 +85,22 @@ static void memcpy_from_ring(const void *Ring,
     memcpy(dest + c1, ring, c2);
 }
 
-char **xenbus_wait_for_watch_return(xenbus_event_queue *queue)
+char **xenbus_wait_for_watch_return(struct xenbus_event_queue *queue)
 {
     struct xenbus_event *event;
     DEFINE_WAIT(w);
     if (!queue)
         queue = &xenbus_events;
-    while (!(event = *queue)) {
+    while (!(event = MINIOS_STAILQ_FIRST(&queue->events))) {
         add_waiter(w, xenbus_watch_queue);
         schedule();
     }
     remove_waiter(w, xenbus_watch_queue);
-    *queue = event->next;
+    MINIOS_STAILQ_REMOVE_HEAD(&queue->events, entry);
     return &event->path;
 }
 
-void xenbus_wait_for_watch(xenbus_event_queue *queue)
+void xenbus_wait_for_watch(struct xenbus_event_queue *queue)
 {
     char **ret;
     if (!queue)
@@ -105,7 +112,7 @@ void xenbus_wait_for_watch(xenbus_event_queue *queue)
         printk("unexpected path returned by watch\n");
 }
 
-char* xenbus_wait_for_value(const char* path, const char* value, xenbus_event_queue *queue)
+char* xenbus_wait_for_value(const char* path, const char* value, struct xenbus_event_queue *queue)
 {
     if (!queue)
         queue = &xenbus_events;
@@ -168,7 +175,7 @@ exit:
     return msg;
 }
 
-char *xenbus_wait_for_state_change(const char* path, XenbusState *state, xenbus_event_queue *queue)
+char *xenbus_wait_for_state_change(const char* path, XenbusState *state, struct xenbus_event_queue *queue)
 {
     if (!queue)
         queue = &xenbus_events;
@@ -227,7 +234,7 @@ static void xenbus_thread_func(void *ign)
             if(msg.type == XS_WATCH_EVENT)
             {
 		struct xenbus_event *event = malloc(sizeof(*event) + msg.len);
-                xenbus_event_queue *events = NULL;
+                struct xenbus_event_queue *events = NULL;
 		char *data = (char*)event + sizeof(*event);
                 struct watch *watch;
 
@@ -248,8 +255,7 @@ static void xenbus_thread_func(void *ign)
                     }
 
                 if (events) {
-                    event->next = *events;
-                    *events = event;
+                    MINIOS_STAILQ_INSERT_TAIL(&events->events, event, entry);
                     wake_up(&xenbus_watch_queue);
                 } else {
                     printk("unexpected watch token %s\n", event->token);
@@ -332,6 +338,7 @@ void init_xenbus(void)
 {
     int err;
     DEBUG("init_xenbus called.\n");
+    xenbus_event_queue_init(&xenbus_events);
     xenstore_buf = mfn_to_virt(start_info.store_mfn);
     create_thread("xenstore", xenbus_thread_func, NULL);
     DEBUG("buf at %p.\n", xenstore_buf);
@@ -561,7 +568,7 @@ char *xenbus_write(xenbus_transaction_t xbt, const char *path, const char *value
     return NULL;
 }
 
-char* xenbus_watch_path_token( xenbus_transaction_t xbt, const char *path, const char *token, xenbus_event_queue *events)
+char* xenbus_watch_path_token( xenbus_transaction_t xbt, const char *path, const char *token, struct xenbus_event_queue *events)
 {
     struct xsd_sockmsg *rep;
 

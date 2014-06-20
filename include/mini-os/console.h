@@ -56,7 +56,7 @@ struct consfront_dev {
     char *nodename;
     char *backend;
 
-    xenbus_event_queue events;
+    struct xenbus_event_queue events;
 
 };
 

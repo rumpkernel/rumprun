@@ -45,7 +45,7 @@ struct blkfront_dev {
     char *backend;
     struct blkfront_info info;
 
-    xenbus_event_queue events;
+    struct xenbus_event_queue events;
 
 };
 
@@ -101,7 +101,7 @@ struct blkfront_dev *init_blkfront(char *_nodename, struct blkfront_info *info)
 
     dev->ring_ref = gnttab_grant_access(dev->dom,virt_to_mfn(s),0);
 
-    dev->events = NULL;
+    xenbus_event_queue_init(&dev->events);
 
 again:
     err = xenbus_transaction_start(&xbt);

@@ -96,7 +96,7 @@ struct consfront_dev *init_consfront(char *_nodename)
     memset(dev->ring, 0, PAGE_SIZE);
     dev->ring_ref = gnttab_grant_access(dev->dom, virt_to_mfn(dev->ring), 0);
 
-    dev->events = NULL;
+    xenbus_event_queue_init(&dev->events);
 
 again:
     err = xenbus_transaction_start(&xbt);

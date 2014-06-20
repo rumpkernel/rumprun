@@ -51,7 +51,7 @@ struct netfront_dev {
     char *backend;
     char *mac;
 
-    xenbus_event_queue events;
+    struct xenbus_event_queue events;
 
 
     void (*netif_rx)(struct netfront_dev *, unsigned char* data, int len);
@@ -313,7 +313,7 @@ struct netfront_dev *init_netfront(char *_nodename, void (*thenetif_rx)(struct n
 
     dev->netif_rx = thenetif_rx;
 
-    dev->events = NULL;
+    xenbus_event_queue_init(&dev->events);
 
 again:
     err = xenbus_transaction_start(&xbt);

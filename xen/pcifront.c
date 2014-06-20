@@ -31,7 +31,7 @@ struct pcifront_dev {
     char *nodename;
     char *backend;
 
-    xenbus_event_queue events;
+    struct xenbus_event_queue events;
 };
 
 void pcifront_handler(evtchn_port_t port, struct pt_regs *regs, void *data)
@@ -64,7 +64,8 @@ void pcifront_watches(void *opaque)
     char* nodename = opaque ? opaque : "device/pci/0";
     char path[strlen(nodename) + 9];
     char fe_state[strlen(nodename) + 7];
-    xenbus_event_queue events = NULL;
+    struct xenbus_event_queue events;
+    xenbus_event_queue_init(&events);
 
     snprintf(path, sizeof(path), "%s/backend", nodename);
     snprintf(fe_state, sizeof(fe_state), "%s/state", nodename);
@@ -174,7 +175,7 @@ struct pcifront_dev *init_pcifront(char *_nodename)
 
     dev->info_ref = gnttab_grant_access(dev->dom,virt_to_mfn(dev->info),0);
 
-    dev->events = NULL;
+    xenbus_event_queue_init(&dev->events);
 
 again:
     err = xenbus_transaction_start(&xbt);
