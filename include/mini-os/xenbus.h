@@ -44,7 +44,7 @@ char *xenbus_switch_state(xenbus_transaction_t xbt, const char* path, XenbusStat
 
 /* When no token is provided, use a global queue. */
 #define XENBUS_WATCH_PATH_TOKEN "xenbus_watch_path"
-extern struct xenbus_event_queue xenbus_events;
+extern struct xenbus_event_queue xenbus_default_watch_queue;
 #define xenbus_watch_path(xbt, path) xenbus_watch_path_token(xbt, path, XENBUS_WATCH_PATH_TOKEN, NULL)
 #define xenbus_unwatch_path(xbt, path) xenbus_unwatch_path_token(xbt, path, XENBUS_WATCH_PATH_TOKEN)
 

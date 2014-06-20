@@ -48,7 +48,7 @@ static DECLARE_WAIT_QUEUE_HEAD(xb_waitq);
 static spinlock_t xb_lock = SPIN_LOCK_UNLOCKED; /* protects xenbus req ring */
 DECLARE_WAIT_QUEUE_HEAD(xenbus_watch_queue);
 
-struct xenbus_event_queue xenbus_events;
+struct xenbus_event_queue xenbus_default_watch_queue;
 struct watch {
     char *token;
     struct xenbus_event_queue *events;
@@ -91,7 +91,7 @@ char **xenbus_wait_for_watch_return(struct xenbus_event_queue *queue)
     struct xenbus_event *event;
     DEFINE_WAIT(w);
     if (!queue)
-        queue = &xenbus_events;
+        queue = &xenbus_default_watch_queue;
     while (!(event = MINIOS_STAILQ_FIRST(&queue->events))) {
         add_waiter(w, xenbus_watch_queue);
         schedule();
@@ -105,7 +105,7 @@ void xenbus_wait_for_watch(struct xenbus_event_queue *queue)
 {
     char **ret;
     if (!queue)
-        queue = &xenbus_events;
+        queue = &xenbus_default_watch_queue;
     ret = xenbus_wait_for_watch_return(queue);
     if (ret)
         free(ret);
@@ -116,7 +116,7 @@ void xenbus_wait_for_watch(struct xenbus_event_queue *queue)
 char* xenbus_wait_for_value(const char* path, const char* value, struct xenbus_event_queue *queue)
 {
     if (!queue)
-        queue = &xenbus_events;
+        queue = &xenbus_default_watch_queue;
     for(;;)
     {
         char *res, *msg;
@@ -179,7 +179,7 @@ exit:
 char *xenbus_wait_for_state_change(const char* path, XenbusState *state, struct xenbus_event_queue *queue)
 {
     if (!queue)
-        queue = &xenbus_events;
+        queue = &xenbus_default_watch_queue;
     for(;;)
     {
         char *res, *msg;
@@ -339,7 +339,7 @@ void init_xenbus(void)
 {
     int err;
     DEBUG("init_xenbus called.\n");
-    xenbus_event_queue_init(&xenbus_events);
+    xenbus_event_queue_init(&xenbus_default_watch_queue);
     xenstore_buf = mfn_to_virt(start_info.store_mfn);
     create_thread("xenstore", xenbus_thread_func, NULL);
     DEBUG("buf at %p.\n", xenstore_buf);
@@ -583,7 +583,7 @@ char* xenbus_watch_path_token( xenbus_transaction_t xbt, const char *path, const
     char *msg;
 
     if (!events)
-        events = &xenbus_events;
+        events = &xenbus_default_watch_queue;
 
     watch->token = strdup(token);
     watch->events = events;
