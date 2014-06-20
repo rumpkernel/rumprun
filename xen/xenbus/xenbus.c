@@ -539,6 +539,8 @@ xenbus_msg_reply(int type,
     return rep;
 }
 
+void xenbus_free(void *p) { free(p); }
+
 static char *errmsg(struct xsd_sockmsg *rep)
 {
     char *res;

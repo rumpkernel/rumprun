@@ -199,6 +199,11 @@ void xenbus_watch_release(struct xenbus_watch *watch); /* idempotent */
 void xenbus_xb_write(int type, int req_id, xenbus_transaction_t trans_id,
 		     const struct write_req *req, int nr_reqs);
 
+void xenbus_free(void*);
+/* If the caller is in a scope which uses a different malloc arena,
+ * it must use this rather than free() when freeing data received
+ * from xenbus. */
+
 #ifdef CONFIG_XENBUS
 /* Reset the XenBus system. */
 void fini_xenbus(void);
