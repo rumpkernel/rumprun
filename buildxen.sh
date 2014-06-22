@@ -8,6 +8,7 @@ STDJ='-j4'
 
 # the buildxen.sh is not as forgiving as I am
 set -e
+[ ! -f ./buildrump.sh/subr.sh ] && git submodule update --init buildrump.sh
 . ./buildrump.sh/subr.sh
 
 MORELIBS="external/bsd/flex/lib
