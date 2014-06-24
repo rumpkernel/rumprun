@@ -102,7 +102,7 @@ HTTPD_OBJS+= httpd/bozohttpd.o httpd/main.o httpd/ssl-bozo.o
 HTTPD_OBJS+= httpd/content-bozo.o httpd/dir-index-bozo.o
 
 .PHONY: default
-default: objs $(TARGET)
+default: objs app-tools $(TARGET)
 
 objs:
 	mkdir -p $(OBJ_DIR)/lib $(OBJ_DIR)/xen/$(TARGET_ARCH_DIR)
@@ -136,6 +136,38 @@ $(TARGET): links $(OBJS) $(HTTPD_OBJS) $(APP_O) arch_lib
 	$(OBJCOPY) -w -G $(GLOBAL_PREFIX)* -G _start $@.o $@.o
 	$(LD) $(LDFLAGS) $(LDFLAGS_FINAL) $@.o $(EXTRA_OBJS) -o $@
 	#gzip -f -9 -c $@ >$@.gz
+
+
+APP_TOOLS += rumpxen-app-cc specs
+APP_TOOLS += rumpxen-app-configure rumpxen-app-make
+
+.PHONY: app-tools
+app-tools: $(addprefix app-tools/, $(APP_TOOLS))
+
+$(eval \
+APP_TOOLS_LDLIBS := $(patsubst -L%, -L$$(abspath %), $(LDARCHLIB) $(LDLIBS)))
+# We need to expand this twice because the replacement argument to
+# patsubst is normally expanded only once (beforehand), but we want to
+# apply abspath to each individual argument.
+
+APP_TOOLS_OBJS := \
+	$(abspath $(filter-out %/rumpkern_demo.o, $(OBJS))) \
+	$(APP_TOOLS_LDLIBS)
+
+APP_TOOLS_ARCH := $(subst x86_32,i386, \
+                  $(subst x86_64,amd64, \
+                  $(XEN_TARGET_ARCH)))
+
+app-tools/%: app-tools/%.in Makefile Config.mk
+	sed <$< >$@.tmp \
+		-e 's#!ARCH!#$(strip $(APP_TOOLS_ARCH))#;' \
+		-e 's#!BASE!#$(abspath .)#;' \
+		-e 's#!APPTOOLS!#$(abspath app-tools)#;' \
+		-e 's#!OBJS!#$(APP_TOOLS_OBJS)#;' \
+		-e 's#!HEAD_OBJ!#$(abspath $(HEAD_OBJ))#;' \
+		-e 's#!LDSCRIPT!#$(abspath $(LDSCRIPT))#;'
+	if test -x $<; then chmod +x $@.tmp; fi
+	mv -f $@.tmp $@
 
 .PHONY: clean arch_clean
 

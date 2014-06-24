@@ -1,0 +1,20 @@
+%rename cpp_options old_cpp_options
+ 
+*cpp_options:
+-nostdinc -isystem !BASE!/rump/include %(old_cpp_options)
+
+*linker:
+!APPTOOLS!/ld --stunt-intermediate %g.link1 %g.link2 --stunt-final-script !LDSCRIPT!
+
+*link:
+%{m64:-m elf_x86_64} %{m64|mx32:;:-m elf_i386} %{mx32:-m elf32_x86_64}
+
+*endfile:
+!OBJS!
+
+*startfile:
+!HEAD_OBJ!
+
+%rename link_libgcc old_link_libgcc
+
+%rename libgcc old_libgcc

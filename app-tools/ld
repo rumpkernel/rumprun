@@ -1,0 +1,44 @@
+#!/bin/bash
+set -e
+outargs=()
+
+fail () { echo >&2 "stunt ld: $*"; exit 127; }
+
+noshift () { fail "no arg for $a"; }
+
+echo "stunt ld: $*"
+
+while [ $# != 0 ]; do
+	a=$1; shift
+	case "$a" in
+	[^-]*|-L*|-l*|--whole-archive|--no-whole-archive)
+		outargs+=("$a")
+		;;
+	-m)
+		march="$1"; shift || noshift
+		outargs+=("$a" "$march")
+		;;
+	-o)
+        	outfile="$1"; shift || noshift
+        	;;
+	--as-needed|--no-as-needed)
+		;;
+	--stunt-final-script)
+		finallds="$1"; shift || noshift
+		;;
+	--stunt-intermediate)
+        	inter1="$1"; shift || noshift
+        	inter2="$1"; shift || noshift
+        	;;
+	*)
+		fail "unknown option $a"
+		;;
+	esac
+done
+
+if [ x"$outfile" = x ]; then outfile=a.out; fi
+
+set -x
+ld -nostdlib -r "${outargs[@]}" -o "$inter1"
+objcopy -w -G xenos_* -G _start "$inter1" "$inter2"
+ld -m "$march" -T "$finallds" "$inter2" -o "$outfile"
