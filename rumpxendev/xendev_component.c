@@ -120,7 +120,7 @@ RUMP_COMPONENT(RUMP_COMPONENT_DEV)
 
 	err = do_sys_mkdir(DEV_XEN, 0755, UIO_SYSSPACE);
 	if (err && err != EEXIST)
-		panic("xen devsw: mkdir " DEV_XEN " failed: %s", err);
+		panic("xen devsw: mkdir " DEV_XEN " failed: %d", err);
 
         bmaj = cmaj = NODEVMAJOR;
         err = devsw_attach("xen", NULL, &bmaj, &xen_dev_cdevsw, &cmaj);
