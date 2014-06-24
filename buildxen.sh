@@ -40,6 +40,8 @@ RUMPMAKE=$(pwd)/rumptools/rumpmake
 usermtree rump
 userincludes ${RUMPMAKE} rumpsrc ${LIBS}
 
+make links
+
 makekernlib ()
 {
 	lib=$1
