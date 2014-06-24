@@ -163,7 +163,7 @@ endef
 cscope:
 	$(all_sources) > cscope.files
 	cscope -k -b -q
-    
+
 .PHONY: tags
 tags:
 	$(all_sources) | xargs ctags
