@@ -47,7 +47,8 @@ LDLIBS = -Lrump/lib ${LDLIBS_FS} -lpthread -lc
 
 APP_LDLIBS := 
 LDARCHLIB := -L$(OBJ_DIR)/xen/$(TARGET_ARCH_DIR) -l$(ARCH_LIB_NAME)
-LDFLAGS_FINAL := -T xen/$(TARGET_ARCH_DIR)/minios-$(XEN_TARGET_ARCH).lds
+LDSCRIPT := xen/$(TARGET_ARCH_DIR)/minios-$(XEN_TARGET_ARCH).lds
+LDFLAGS_FINAL := -T $(LDSCRIPT)
 
 # Prefix for global API names. All other symbols are localised before
 # linking with EXTRA_OBJS.
