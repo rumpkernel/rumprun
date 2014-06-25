@@ -32,6 +32,7 @@ include minios.mk
 
 CFLAGS += -Irump/include -nostdinc
 CFLAGS += -DVIRTIF_BASE=xenif -I$(MINI-OS_ROOT)
+CFLAGS += -no-integrated-cpp
 
 ifeq ($(CONFIG_PCI),y)
 LIBS_PCI = -lrumpdev_pci -lrumpdev_pci_if_wm -lrumpdev_miiphy
