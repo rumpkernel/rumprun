@@ -43,7 +43,7 @@ LIBS_NET+= -lrumpnet_net -lrumpxen_xendev -lrumpnet
 
 # Define some default flags for linking.
 LDLIBS_FS = --whole-archive ${LIBS_FS} ${LIBS_NET} ${LIBS_PCI} -lrump --no-whole-archive
-LDLIBS = -Lrump/lib ${LDLIBS_FS} -lc
+LDLIBS = -Lrump/lib ${LDLIBS_FS} -lpthread -lc
 
 APP_LDLIBS := 
 LDARCHLIB := -L$(OBJ_DIR)/xen/$(TARGET_ARCH_DIR) -l$(ARCH_LIB_NAME)
@@ -74,15 +74,19 @@ src-y += lib/__errno.c
 src-y += lib/emul.c
 src-y += lib/libc_stubs.c
 src-y += lib/memalloc.c
+src-y += lib/_lwp.c
 
 src-y += rumphyper_base.c
 src-y += rumphyper_net.c
 src-$(CONFIG_PCI) += rumphyper_pci.c
 src-y += rumphyper_synch.c
 src-y += rumphyper_stubs.c
+
 src-y += callmain.c
+src-y += netbsd_init.c
 
 src-y += rumpkern_demo.c
+src-y += pthread_test.c
 
 src-$(CONFIG_XENBUS) += xen/xenbus/xenbus.c
 

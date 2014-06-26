@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -287,7 +288,7 @@ donet(void)
 }
 
 int main(int, char **);
-void
+void *
 wwwbozo(void *arg)
 {
 	char *argv[] = { "bozo", "-X", "/etc" };
@@ -304,6 +305,8 @@ wwwbozo(void *arg)
 
 	/* among other things, will close fd's */
 	rump_pub_lwproc_releaselwp();
+
+	return NULL;
 }
 
 static void
@@ -314,6 +317,7 @@ dohttpd(void)
 	socklen_t slen;
 	int rv, s, sa, count;
 	struct lwp *l;
+	pthread_t pt;
 
 	if ((rv = rump_pub_etfs_register(BLKDEV(1),
 	    "blk1", RUMP_ETFS_BLK)) != 0)
@@ -357,7 +361,7 @@ dohttpd(void)
 		fcntl(3, F_CLOSEM);
 
 		/* 4: create thread */
-		create_thread("wwwbozo", wwwbozo, rump_pub_lwproc_curlwp());
+		pthread_create(&pt, NULL, wwwbozo, rump_pub_lwproc_curlwp());
 
 		/*
 		 * back to handling proc.  yea, this a slightly gray
@@ -372,6 +376,8 @@ dohttpd(void)
 	}
 }
 
+void test_pthread(void);
+
 int
 app_main(start_info_t *si)
 {
@@ -381,7 +387,7 @@ app_main(start_info_t *si)
 
 	if (si->cmd_line[0]) {
 		tests = si->cmd_line[0] - '0';
-		if (tests < 0 || tests > 7)
+		if (tests < 0 || tests > 0xf)
 			tests = 0;
 	}
 
@@ -391,6 +397,8 @@ app_main(start_info_t *si)
 		donet();
 	if (tests & 0x4)
 		dohttpd();
+	if (tests & 0x8)
+		test_pthread();
 
 	return 0;
 }

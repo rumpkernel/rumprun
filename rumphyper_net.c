@@ -159,7 +159,7 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 		goto out;
 	}
 
-	if (create_thread("xenifp", pusher, viu) == NULL) {
+	if (create_thread("xenifp", NULL, pusher, viu, NULL) == NULL) {
 		printk("fatal thread creation failure\n"); /* XXX */
 		do_exit();
 	}

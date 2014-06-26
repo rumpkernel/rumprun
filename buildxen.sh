@@ -32,6 +32,17 @@ docheckout rumpsrc nblibs
 # FIXME to be able to specify this as part of previous cmdline
 echo 'CPPFLAGS+=-DMAXPHYS=32768' >> rumptools/mk.conf
 
+# set some special variables currently required by libpthread.  Doing
+# it this way preserves the ability to compile libpthread during development
+# cycles with just "rumpmake"
+cat >> rumptools/mk.conf << EOF
+.if defined(LIB) && \${LIB} == "pthread"
+PTHREAD_CANCELSTUB=no
+CPPFLAGS+=      -D_PLATFORM_MAKECONTEXT=_lwp_rumpxen_makecontext
+CPPFLAGS+=      -D_PLATFORM_GETTCB=_lwp_rumpxen_gettcb
+.endif  # LIB == pthread
+EOF
+
 RUMPMAKE=$(pwd)/rumptools/rumpmake
 
 # build rump kernel

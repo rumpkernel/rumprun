@@ -13,8 +13,9 @@ vif = [ 'mac=b2:11:11:11:11:11' ]
 # if 1, run fs test
 # if 2, run net test
 # if 4, run httpd
+# if 8, run pthread_test
 # or any bitwise combination thereof
 # note: both "2" and "4" run forever, so "6" is effectively "2"
-extra = "4"
+extra = "8"
 
 on_crash="preserve"

@@ -83,18 +83,23 @@ static void stack_push(struct thread *thread, unsigned long value)
 
 /* Architecture specific setup of thread creation */
 struct thread* arch_create_thread(const char *name, void (*function)(void *),
-                                  void *data)
+                                  void *data, void *stack)
 {
     struct thread *thread;
     
     thread = xmalloc(struct thread);
     /* We can't use lazy allocation here since the trap handler runs on the stack */
-    thread->stack = (char *)alloc_pages(STACK_SIZE_PAGE_ORDER);
-    thread->name = name;
+    if (!stack) {
+        thread->stack = (char *)alloc_pages(STACK_SIZE_PAGE_ORDER);
 #if 0
-    printk("Thread \"%s\": pointer: 0x%lx, stack: 0x%lx\n", name, thread, 
-            thread->stack);
+        printk("Thread \"%s\": pointer: 0x%lx, stack: 0x%lx\n", name, thread, 
+                thread->stack);
 #endif
+    } else {
+	thread->stack = stack;
+	thread->flags |= THREAD_EXTSTACK;
+    }
+    thread->name = name;
     
     thread->thr_sp = (unsigned long)thread->stack + STACK_SIZE;
     /* Save pointer to the thread on the stack, used by current macro */

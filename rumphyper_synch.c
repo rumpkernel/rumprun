@@ -101,7 +101,7 @@ rumpuser_thread_create(void *(*f)(void *), void *arg, const char *thrname,
 {
 	struct thread *thr;
 
-	thr = create_thread(thrname, (void (*)(void *))f, arg);
+	thr = create_thread(thrname, NULL, (void (*)(void *))f, arg, NULL);
 	/*
 	 * XXX: should be supplied as a flag to create_thread() so as to
 	 * _ensure_ it's set before the thread runs (and could exit).

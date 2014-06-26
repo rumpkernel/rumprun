@@ -45,10 +45,7 @@
 #include <xen/features.h>
 #include <xen/version.h>
 
-#include <string.h>
-
-#include <rump/rump.h>
-#include <rump/rump_syscalls.h>
+#include "netbsd_init.h"
 
 uint8_t xen_features[XENFEAT_NR_SUBMAPS * 32];
 
@@ -68,11 +65,6 @@ void setup_xen_features(void)
     }
 }
 
-static char *the_env[1] = { NULL } ;
-extern void *environ;
-void _libc_init(void);
-extern char *__progname;
-
 static void
 _app_main(void *arg)
 {
@@ -82,18 +74,10 @@ _app_main(void *arg)
     init_pcifront(NULL);
 #endif
 
-    rump_boot_setsigmodel(RUMP_SIGMODEL_IGNORE);
-    rump_init();
-
-    environ = the_env;
-    _libc_init();
-
-    /* XXX: we should probably use csu, but this is quicker for now */
-    __progname = "rumpxenstack";
+    _netbsd_init();
 
     app_main(si);
-    rump_sys_reboot(0, 0);
-    /* NOTREACHED */
+    _netbsd_fini(); /* stubbornly execute this anyway */
 }
 
 /*
@@ -147,7 +131,7 @@ void start_kernel(start_info_t *si)
     init_xenbus();
 
     /* Call (possibly overridden) app_main() */
-    create_thread("main", _app_main, &start_info);
+    create_thread("main", NULL, _app_main, &start_info, NULL);
 
     /* Everything initialised, start idle thread */
     run_idle_thread();
