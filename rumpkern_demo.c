@@ -393,12 +393,12 @@ app_main(start_info_t *si)
 
 	if (tests & 0x1)
 		dofs();
+	if (tests & 0x8)
+		test_pthread();
 	if (tests & 0x2)
 		donet();
 	if (tests & 0x4)
 		dohttpd();
-	if (tests & 0x8)
-		test_pthread();
 
 	return 0;
 }
