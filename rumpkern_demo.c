@@ -381,14 +381,12 @@ void test_pthread(void);
 int
 app_main(start_info_t *si)
 {
-	int tests;
+	long tests;
 
 	printf("running demos, command line: %s\n", si->cmd_line);
 
 	if (si->cmd_line[0]) {
-		tests = si->cmd_line[0] - '0';
-		if (tests < 0 || tests > 0xf)
-			tests = 0;
+		tests = strtol((const char *)si->cmd_line, NULL, 16);
 	}
 
 	if (tests & 0x1)
