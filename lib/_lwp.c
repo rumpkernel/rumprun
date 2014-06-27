@@ -1,5 +1,5 @@
 /* 
- * Copyright (c) 2014 Antti Kantee
+ * Copyright (c) 2014 Antti Kantee.  See COPYING.
  */
 
 #include <sys/cdefs.h>
@@ -28,12 +28,6 @@
 #define DPRINTF(x)
 #endif
 
-/*
- * We don't know the size of the host ucontext_t here,
- * so dig into the stetson for the answer.
- */
-#define UCTX_SIZE 1516
-
 struct schedulable {
 	struct tls_tcb scd_tls;
 
@@ -53,8 +47,10 @@ struct schedulable {
 };
 static TAILQ_HEAD(, schedulable) scheds = TAILQ_HEAD_INITIALIZER(scheds);
 
+#define FIRST_LWPID 1
+static int curlwpid = FIRST_LWPID;
 static struct schedulable mainthread = {
-	.scd_lwpid = 1,
+	.scd_lwpid = FIRST_LWPID,
 };
 struct tls_tcb *curtcb = &mainthread.scd_tls;
 
@@ -112,8 +108,7 @@ int
 _lwp_create(const ucontext_t *ucp, unsigned long flags, lwpid_t *lid)
 {
 	struct schedulable *scd = *(struct schedulable **)ucp;
-	static int nextlid = 2;
-	*lid = nextlid++;
+	*lid = ++curlwpid;
 
 	scd->scd_lwpid = *lid;
 	scd->scd_thread = create_thread("lwp", scd,
@@ -148,7 +143,7 @@ _lwp_unpark_all(const lwpid_t *targets, size_t ntargets, const void *hint)
 		return 1024;
 
 	/*
-	 * XXX: this it not 100% correct (unmarking has memory), but good
+	 * XXX: this it not 100% correct (unparking has memory), but good
 	 * enuf for now
 	 */
 	rv = ntargets;
@@ -265,6 +260,7 @@ _lwp_wakeup(lwpid_t lid)
 	return ENODEV;
 }
 
+/* XXX: should call minios */
 int
 _lwp_setname(lwpid_t lid, const char *name)
 {
