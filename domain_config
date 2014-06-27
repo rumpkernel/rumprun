@@ -16,6 +16,6 @@ vif = [ 'mac=b2:11:11:11:11:11' ]
 # if 8, run pthread_test
 # or any bitwise combination thereof
 # note: both "2" and "4" run forever, so "6" is effectively "2"
-extra = "8"
+extra = "4"
 
 on_crash="preserve"
