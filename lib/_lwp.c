@@ -198,14 +198,15 @@ ___lwp_park60(clockid_t clock_id, int flags, const struct timespec *ts,
 		_lwp_unpark(unpark, unparkhint);
 
 	if (ts) {
-		if (clock_id != CLOCK_REALTIME || !(flags & TIMER_ABSTIME)) {
-			printf("only CLOCK_REALTIME + TIMER_ABSTIME work\n");
-			abort();
-		}
-		if (absmsleep(ts->tv_sec*1000 + ts->tv_nsec/(1000*1000))) {
-			rv = ETIMEDOUT;
+		uint32_t msecs = ts->tv_sec*1000 + ts->tv_nsec/(1000*1000);
+		
+		if (flags & TIMER_ABSTIME) {
+			rv = absmsleep(msecs);
 		} else {
-			rv = 0;
+			rv = msleep(msecs);
+		}
+		if (rv) {
+			rv = ETIMEDOUT;
 		}
 	} else {
 		block(mylwp->scd_thread);
