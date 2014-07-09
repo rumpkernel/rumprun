@@ -21,7 +21,9 @@ for lib in ${MORELIBS}; do
 	LIBS="${LIBS} rumpsrc/${lib}"
 done
 
-docheckout rumpsrc nblibs
+if git submodule status rumpsrc | grep -q '^-' ; then
+	git submodule update --init --recursive rumpsrc
+fi
 
 [ "$1" = "justcheckout" ] && { echo ">> $0 done" ; exit 0; }
 
