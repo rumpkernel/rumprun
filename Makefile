@@ -159,11 +159,15 @@ APP_TOOLS_ARCH := $(subst x86_32,i386, \
                   $(subst x86_64,amd64, \
                   $(XEN_TARGET_ARCH)))
 
+APP_TOOLS_CPPFLAGS := $(filter -U%, $(shell \
+	rumptools/rumpmake -f rumptools/mk.conf -V '$${CPPFLAGS}'))
+
 app-tools/%: app-tools/%.in Makefile Config.mk
 	sed <$< >$@.tmp \
 		-e 's#!ARCH!#$(strip $(APP_TOOLS_ARCH))#g;' \
 		-e 's#!BASE!#$(abspath .)#g;' \
 		-e 's#!APPTOOLS!#$(abspath app-tools)#g;' \
+		-e 's#!CPPFLAGS!#$(APP_TOOLS_CPPFLAGS)#g;' \
 		-e 's#!OBJS!#$(APP_TOOLS_OBJS)#g;' \
 		-e 's#!HEAD_OBJ!#$(abspath $(HEAD_OBJ))#g;' \
 		-e 's#!LDSCRIPT!#$(abspath $(LDSCRIPT))#g;'
