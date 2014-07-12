@@ -187,7 +187,6 @@ cleanrump: clean
 	rm -rf rump rumpobj rumptools
 
 distcleanrump: cleanrump
-	rm -rf rumpsrc
 
 define all_sources
      ( find . -follow -name SCCS -prune -o -name '*.[chS]' -print )
