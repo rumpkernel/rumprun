@@ -18,3 +18,5 @@ STUB(__fork);
 STUB(__vfork14);
 STUB(execve);
 STUB(kill);
+STUB(getpriority);
+STUB(setpriority);
