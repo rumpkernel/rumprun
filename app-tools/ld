@@ -12,7 +12,7 @@ unset march
 while [ $# != 0 ]; do
 	a=$1; shift
 	case "$a" in
-	[^-]*|-L*|-l*|-z|--whole-archive|--no-whole-archive)
+	[^-]*|-L*|-l*|--whole-archive|--no-whole-archive)
 		outargs+=("$a")
 		;;
 	-m)
@@ -22,6 +22,9 @@ while [ $# != 0 ]; do
 	-o)
         	outfile="$1"; shift || noshift
         	;;
+	-z)
+		outargs+=("$a" "$1"); shift || noshift
+		;;
 	--as-needed|--no-as-needed)
 		;;
 	--stunt-final-script)
