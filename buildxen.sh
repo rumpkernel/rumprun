@@ -8,24 +8,24 @@ STDJ='-j4'
 
 # the buildxen.sh is not as forgiving as I am
 set -e
+
 [ ! -f ./buildrump.sh/subr.sh ] && git submodule update --init buildrump.sh
 . ./buildrump.sh/subr.sh
+
+if git submodule status rumpsrc | grep -q '^-' ; then
+	git submodule update --init --recursive rumpsrc
+fi
+[ "$1" = "justcheckout" ] && { echo ">> $0 done" ; exit 0; }
 
 MORELIBS="external/bsd/flex/lib
 	crypto/external/bsd/openssl/lib/libcrypto
 	crypto/external/bsd/openssl/lib/libdes
 	crypto/external/bsd/openssl/lib/libssl
 	external/bsd/libpcap/lib"
-LIBS="$(echo nblibs/lib/lib* | sed 's/nblibs/rumpsrc/g')"
+LIBS="rumpsrc/lib/lib*"
 for lib in ${MORELIBS}; do
 	LIBS="${LIBS} rumpsrc/${lib}"
 done
-
-if git submodule status rumpsrc | grep -q '^-' ; then
-	git submodule update --init --recursive rumpsrc
-fi
-
-[ "$1" = "justcheckout" ] && { echo ">> $0 done" ; exit 0; }
 
 # build tools
 ./buildrump.sh/buildrump.sh -${BUILDXEN_QUIET:-q} ${STDJ} -k \
