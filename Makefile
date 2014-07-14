@@ -161,12 +161,12 @@ APP_TOOLS_ARCH := $(subst x86_32,i386, \
 
 app-tools/%: app-tools/%.in Makefile Config.mk
 	sed <$< >$@.tmp \
-		-e 's#!ARCH!#$(strip $(APP_TOOLS_ARCH))#;' \
-		-e 's#!BASE!#$(abspath .)#;' \
-		-e 's#!APPTOOLS!#$(abspath app-tools)#;' \
-		-e 's#!OBJS!#$(APP_TOOLS_OBJS)#;' \
-		-e 's#!HEAD_OBJ!#$(abspath $(HEAD_OBJ))#;' \
-		-e 's#!LDSCRIPT!#$(abspath $(LDSCRIPT))#;'
+		-e 's#!ARCH!#$(strip $(APP_TOOLS_ARCH))#g;' \
+		-e 's#!BASE!#$(abspath .)#g;' \
+		-e 's#!APPTOOLS!#$(abspath app-tools)#g;' \
+		-e 's#!OBJS!#$(APP_TOOLS_OBJS)#g;' \
+		-e 's#!HEAD_OBJ!#$(abspath $(HEAD_OBJ))#g;' \
+		-e 's#!LDSCRIPT!#$(abspath $(LDSCRIPT))#g;'
 	if test -x $<; then chmod +x $@.tmp; fi
 	mv -f $@.tmp $@
 
