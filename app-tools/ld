@@ -12,7 +12,7 @@ unset march
 while [ $# != 0 ]; do
 	a=$1; shift
 	case "$a" in
-	[^-]*|-L*|-l*|--whole-archive|--no-whole-archive)
+	[^-]*|-L*|-l*|--whole-archive|--no-whole-archive|--start-group|--end-group)
 		outargs+=("$a")
 		;;
 	-m)
