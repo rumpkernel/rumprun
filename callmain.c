@@ -82,7 +82,7 @@ int
 __default_app_main(start_info_t *si)
 {
 	char argv0[] = "rumpuser-xen";
-	int nargs;
+	int nargs, r;
 	char **argv;
 
 	parseargs(si->cmd_line, &nargs, 0);
@@ -92,7 +92,10 @@ __default_app_main(start_info_t *si)
 	argv[nargs+1] = 0;
 	argv[nargs+2] = 0;
 
-	return main(nargs+1, argv);
+	fprintf(stderr,"=== calling main() ===\n\n");
+	r = main(nargs+1, argv);
+	fprintf(stderr,"\n=== main() returned %d ===\n", r);
+	return r;
 }
 
 __weak_alias(app_main,__default_app_main)
