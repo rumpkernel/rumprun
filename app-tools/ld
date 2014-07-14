@@ -8,10 +8,11 @@ noshift () { fail "no arg for $a"; }
 
 echo "stunt ld: $*"
 
+unset march
 while [ $# != 0 ]; do
 	a=$1; shift
 	case "$a" in
-	[^-]*|-L*|-l*|--whole-archive|--no-whole-archive)
+	[^-]*|-L*|-l*|-z|--whole-archive|--no-whole-archive)
 		outargs+=("$a")
 		;;
 	-m)
@@ -41,4 +42,4 @@ if [ x"$outfile" = x ]; then outfile=a.out; fi
 set -x
 ld -nostdlib -r "${outargs[@]}" -o "$inter1"
 objcopy -w -G xenos_* -G _start "$inter1" "$inter2"
-ld -m "$march" -T "$finallds" "$inter2" -o "$outfile"
+ld ${march:+-m ${march}} -T "$finallds" "$inter2" -o "$outfile"
