@@ -1,36 +1,34 @@
-#include <mini-os/console.h>
+#include <errno.h>
 
-int ohcrap(void);
-int ohcrap(void) {printk("rumphyper: unimplemented stub\n"); do_exit();}
+int stub_nothing(void); int stub_nothing(void) {return 0;}
 
-int nothing(void); int nothing(void) {return 0;}
-
-#define TIMETOPANIC(name) \
-int name(void) __attribute__((alias("ohcrap")));
+int stub_enotsup(void); int stub_enotsup(void) {return ENOTSUP;}
 
 #define NOTHING(name) \
-int name(void) __attribute__((alias("nothing")));
+int name(void) __attribute__((alias("stub_nothing")));
 
-TIMETOPANIC(rumpuser_anonmmap);
-TIMETOPANIC(rumpuser_unmap);
+#define NOTSUP(name) \
+int name(void) __attribute__((alias("stub_enotsup")));
 
-/* signals AND sp not supported */
-TIMETOPANIC(rumpuser_kill);
+NOTSUP(rumpuser_anonmmap);
+NOTSUP(rumpuser_unmap);
 
-NOTHING(rumpuser_sp_init);
+NOTSUP(rumpuser_kill);
+
+NOTSUP(rumpuser_sp_init);
 NOTHING(rumpuser_sp_fini);
-TIMETOPANIC(rumpuser_sp_raise);
-TIMETOPANIC(rumpuser_sp_copyin);
-TIMETOPANIC(rumpuser_sp_copyout);
-TIMETOPANIC(rumpuser_sp_copyinstr);
-TIMETOPANIC(rumpuser_sp_copyoutstr);
-TIMETOPANIC(rumpuser_sp_anonmmap);
+NOTSUP(rumpuser_sp_raise);
+NOTSUP(rumpuser_sp_copyin);
+NOTSUP(rumpuser_sp_copyout);
+NOTSUP(rumpuser_sp_copyinstr);
+NOTSUP(rumpuser_sp_copyoutstr);
+NOTSUP(rumpuser_sp_anonmmap);
 
 NOTHING(rumpuser_dl_bootstrap);
 NOTHING(rumpuser_dl_globalsym);
 
-NOTHING(rumpuser_daemonize_begin);
-NOTHING(rumpuser_daemonize_done);
+NOTSUP(rumpuser_daemonize_begin);
+NOTSUP(rumpuser_daemonize_done);
 
-TIMETOPANIC(rumpuser_iovread);
-TIMETOPANIC(rumpuser_iovwrite);
+NOTSUP(rumpuser_iovread);
+NOTSUP(rumpuser_iovwrite);
