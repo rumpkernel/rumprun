@@ -25,7 +25,6 @@ NOTSUP(rumpuser_sp_copyoutstr);
 NOTSUP(rumpuser_sp_anonmmap);
 
 NOTHING(rumpuser_dl_bootstrap);
-NOTHING(rumpuser_dl_globalsym);
 
 NOTSUP(rumpuser_daemonize_begin);
 NOTSUP(rumpuser_daemonize_done);
