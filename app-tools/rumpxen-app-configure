@@ -1,0 +1,3 @@
+#!/bin/sh
+# invoke this (for example) as  .../app-configure ./configure --prefix=...
+exec $(dirname $0)/rumpapp-xen-configure "$@"

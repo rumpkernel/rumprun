@@ -1,7 +1,0 @@
-#!/bin/sh
-set -e
-case " $* " in
-*" -v "*)   set -x ;;
-esac
-exec gcc -D__RUMPUSER_XEN__ -D__NetBSD__ -no-integrated-cpp \
- -specs=!APPTOOLS!/specs "$@"

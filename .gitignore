@@ -10,7 +10,7 @@ rumptools
 include/mini-os/machine
 include/xen
 
-app-tools/rumpxen-app-cc
 app-tools/specs
-app-tools/rumpxen-app-configure
-app-tools/rumpxen-app-make
+app-tools/rumpapp-xen-cc
+app-tools/rumpapp-xen-configure
+app-tools/rumpapp-xen-make

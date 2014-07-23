@@ -139,8 +139,8 @@ $(TARGET): links $(OBJS) $(HTTPD_OBJS) $(APP_O) arch_lib
 	#gzip -f -9 -c $@ >$@.gz
 
 
-APP_TOOLS += rumpxen-app-cc specs
-APP_TOOLS += rumpxen-app-configure rumpxen-app-make
+APP_TOOLS += rumpapp-xen-cc specs
+APP_TOOLS += rumpapp-xen-configure rumpapp-xen-make rumpapp-xen-gmake
 
 .PHONY: app-tools
 app-tools: $(addprefix app-tools/, $(APP_TOOLS))
@@ -174,12 +174,15 @@ app-tools/%: app-tools/%.in Makefile Config.mk
 	if test -x $<; then chmod +x $@.tmp; fi
 	mv -f $@.tmp $@
 
-.PHONY: clean arch_clean
+app-tools_clean:
+	rm -f $(addprefix app-tools/, $(APP_TOOLS))
+
+.PHONY: clean arch_clean app-tools_clean
 
 arch_clean:
 	$(MAKE) --directory=xen/$(TARGET_ARCH_DIR) OBJ_DIR=$(OBJ_DIR)/xen/$(TARGET_ARCH_DIR) clean || exit 1;
 
-clean:	arch_clean
+clean:	arch_clean app-tools_clean
 	for dir in $(addprefix $(OBJ_DIR)/,$(SUBDIRS)); do \
 		rm -f $$dir/*.o; \
 	done
