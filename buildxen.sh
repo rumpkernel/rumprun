@@ -39,7 +39,6 @@ echo 'CPPFLAGS+=-DMAXPHYS=32768' >> rumptools/mk.conf
 # cycles with just "rumpmake"
 cat >> rumptools/mk.conf << EOF
 .if defined(LIB) && \${LIB} == "pthread"
-PTHREAD_CANCELSTUB=no
 CPPFLAGS+=      -D_PLATFORM_MAKECONTEXT=_lwp_rumpxen_makecontext
 CPPFLAGS+=      -D_PLATFORM_GETTCB=_lwp_rumpxen_gettcb
 .endif  # LIB == pthread

@@ -330,8 +330,6 @@ __strong_alias(_sys_setcontext,_lwpabort);
 __strong_alias(_lwp_kill,_lwpabort);
 
 __strong_alias(_sys___sigprocmask14,_lwpnullop);
-__strong_alias(_sys___nanosleep50,_lwpnullop);
-__strong_alias(_sys_write,_lwpnullop);
 
 __strong_alias(pthread__cancel_stub_binder,_lwpnullop);
 
