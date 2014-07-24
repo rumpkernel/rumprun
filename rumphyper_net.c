@@ -60,6 +60,10 @@ struct virtif_user {
 	struct onepkt viu_pkts[NBUF];
 };
 
+/* make it easy to not link the networking stack. FIXXXME properly */
+void rump_virtif_stub(void); void rump_virtif_stub(void) {}
+__weak_alias(rump_virtif_pktdeliver,rump_virtif_stub);
+
 /*
  * Ok, based on how (the unmodified) netfront works, we need to
  * consume the data here.  So store it locally (and revisit some day).
