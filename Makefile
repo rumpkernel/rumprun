@@ -140,14 +140,16 @@ $(TARGET): links $(OBJS) $(DEMO_OBJS) $(HTTPD_OBJS) $(APP_O) arch_lib
 	#gzip -f -9 -c $@ >$@.gz
 
 
-APP_TOOLS += rumpapp-xen-cc specs
+APP_TOOLS += rumpapp-xen-cc rumpapp-xen-cc.configure specs specs.configure
 APP_TOOLS += rumpapp-xen-configure rumpapp-xen-make rumpapp-xen-gmake
 
 .PHONY: app-tools
 app-tools: $(addprefix app-tools/, $(APP_TOOLS))
 
-APP_TOOLS_LDLIBS := $(LDARCHLIB) $(LDLIBS)
-APP_TOOLS_LDFLAGS := $(LDFLAGS)
+APP_TOOLS_LDLIBS := $(LDLIBS)
+# XXX: LDARCHLIB isn't really a linker flag, but it needs to
+# be always included anyway
+APP_TOOLS_LDFLAGS := $(LDFLAGS) $(LDARCHLIB)
 APP_TOOLS_OBJS := $(OBJS)
 
 APP_TOOLS_ARCH := $(subst x86_32,i386, \

@@ -1,0 +1,6 @@
+#!/bin/sh
+set -e
+case " $* " in
+*" -v "*)   set -x ;;
+esac
+exec ${RUMP_APPTOOLS_CC:-cc} -no-integrated-cpp -specs=!APPTOOLS!/specs.configure "$@"
