@@ -44,12 +44,14 @@ LIBS_NET+= -lrumpnet_net -lrumpxen_xendev -lrumpnet
 
 # Define some default flags for linking.
 LDLIBS_FS = --whole-archive ${LIBS_FS} ${LIBS_NET} ${LIBS_PCI} -lrump --no-whole-archive
-LDLIBS = -Lrump/lib ${LDLIBS_FS} -lpthread -lc
+LDLIBS := ${LDLIBS_FS} -lpthread -lc
 
 APP_LDLIBS := 
-LDARCHLIB := -L$(OBJ_DIR)/xen/$(TARGET_ARCH_DIR) -l$(ARCH_LIB_NAME)
+LDARCHLIB := -l$(ARCH_LIB_NAME)
 LDSCRIPT := xen/$(TARGET_ARCH_DIR)/minios-$(XEN_TARGET_ARCH).lds
 LDFLAGS_FINAL := -T $(LDSCRIPT)
+
+LDFLAGS := -L$(abspath $(OBJ_DIR)/xen/$(TARGET_ARCH_DIR)) -L$(abspath rump/lib)
 
 # Prefix for global API names. All other symbols are localised before
 # linking with EXTRA_OBJS.
@@ -144,12 +146,8 @@ APP_TOOLS += rumpapp-xen-configure rumpapp-xen-make rumpapp-xen-gmake
 .PHONY: app-tools
 app-tools: $(addprefix app-tools/, $(APP_TOOLS))
 
-$(eval \
-APP_TOOLS_LDLIBS := $(patsubst -L%, -L$$(abspath %), $(LDARCHLIB) $(LDLIBS)))
-# We need to expand this twice because the replacement argument to
-# patsubst is normally expanded only once (beforehand), but we want to
-# apply abspath to each individual argument.
-
+APP_TOOLS_LDLIBS := $(LDARCHLIB) $(LDLIBS)
+APP_TOOLS_LDFLAGS := $(LDFLAGS)
 APP_TOOLS_OBJS := $(OBJS)
 
 APP_TOOLS_ARCH := $(subst x86_32,i386, \
@@ -167,6 +165,7 @@ app-tools/%: app-tools/%.in Makefile Config.mk
 		-e 's#!CPPFLAGS!#$(APP_TOOLS_CPPFLAGS)#g;' \
 		-e 's#!OBJS!#$(APP_TOOLS_OBJS)#g;' \
 		-e 's#!LDLIBS!#$(APP_TOOLS_LDLIBS)#g;' \
+		-e 's#!LDFLAGS!#$(APP_TOOLS_LDFLAGS)#g;' \
 		-e 's#!HEAD_OBJ!#$(abspath $(HEAD_OBJ))#g;' \
 		-e 's#!LDSCRIPT!#$(abspath $(LDSCRIPT))#g;'
 	if test -x $<; then chmod +x $@.tmp; fi
