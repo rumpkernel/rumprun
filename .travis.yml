@@ -4,7 +4,9 @@ before_install:
  - sudo apt-get update -y
  - sudo apt-get install libxen-dev -y
 
-script: BUILDXEN_QUIET=qq ./buildxen.sh
+script:
+  - BUILDXEN_QUIET=qq ./buildxen.sh
+  - ( export PATH="${PATH};$(pwd)/app-tools" ; cd tests/configure && rumpapp-xen-configure ./configure && rumpapp-xen-make )
 
 notifications:
   irc:
