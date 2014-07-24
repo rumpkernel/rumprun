@@ -6,7 +6,7 @@ before_install:
 
 script:
   - BUILDXEN_QUIET=qq ./buildxen.sh
-  - ( export PATH="${PATH};$(pwd)/app-tools" ; cd tests/configure && rumpapp-xen-configure ./configure && rumpapp-xen-make )
+  - ( export PATH="${PATH}:$(pwd)/app-tools" ; cd tests/configure && rumpapp-xen-configure ./configure && rumpapp-xen-make )
 
 notifications:
   irc:
