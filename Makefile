@@ -87,9 +87,6 @@ src-y += rumphyper_stubs.c
 src-y += callmain.c
 src-y += netbsd_init.c
 
-src-y += rumpkern_demo.c
-src-y += pthread_test.c
-
 src-$(CONFIG_XENBUS) += xen/xenbus/xenbus.c
 
 src-y += xen/console/console.c
@@ -101,6 +98,8 @@ APP_OBJS :=
 OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(src-y))
 HTTPD_OBJS+= httpd/bozohttpd.o httpd/main.o httpd/ssl-bozo.o
 HTTPD_OBJS+= httpd/content-bozo.o httpd/dir-index-bozo.o
+
+DEMO_OBJS += $(OBJ_DIR)/rumpkern_demo.o $(OBJ_DIR)/pthread_test.o
 
 .PHONY: default
 default: objs app-tools $(TARGET)
@@ -132,8 +131,8 @@ ifneq ($(APP_OBJS),)
 APP_O=$(OBJ_DIR)/$(TARGET)_app.o 
 endif
 
-$(TARGET): links $(OBJS) $(HTTPD_OBJS) $(APP_O) arch_lib
-	$(LD) -r $(LDFLAGS) $(HEAD_OBJ) $(APP_O) $(HTTPD_OBJS) $(OBJS) $(LDARCHLIB) $(LDLIBS) -o $@.o
+$(TARGET): links $(OBJS) $(DEMO_OBJS) $(HTTPD_OBJS) $(APP_O) arch_lib
+	$(LD) -r $(LDFLAGS) $(HEAD_OBJ) $(APP_O) $(HTTPD_OBJS) $(DEMO_OBJS) $(OBJS) $(LDARCHLIB) $(LDLIBS) -o $@.o
 	$(OBJCOPY) -w -G $(GLOBAL_PREFIX)* -G _start $@.o $@.o
 	$(LD) $(LDFLAGS) $(LDFLAGS_FINAL) $@.o $(EXTRA_OBJS) -o $@
 	#gzip -f -9 -c $@ >$@.gz
@@ -151,9 +150,7 @@ APP_TOOLS_LDLIBS := $(patsubst -L%, -L$$(abspath %), $(LDARCHLIB) $(LDLIBS)))
 # patsubst is normally expanded only once (beforehand), but we want to
 # apply abspath to each individual argument.
 
-APP_TOOLS_OBJS := \
-	$(abspath $(filter-out %/rumpkern_demo.o, $(OBJS))) \
-	$(APP_TOOLS_LDLIBS)
+APP_TOOLS_OBJS := $(OBJS) $(APP_TOOLS_LDLIBS)
 
 APP_TOOLS_ARCH := $(subst x86_32,i386, \
                   $(subst x86_64,amd64, \
