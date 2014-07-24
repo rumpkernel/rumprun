@@ -10,7 +10,7 @@
 %{m64:-m elf_x86_64;mx32:-m elf32_x86_64;m32:-m elf_i386}
 
 *endfile:
-!OBJS!
+!OBJS! !LDLIBS!
 
 *startfile:
 !HEAD_OBJ!

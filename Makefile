@@ -150,7 +150,7 @@ APP_TOOLS_LDLIBS := $(patsubst -L%, -L$$(abspath %), $(LDARCHLIB) $(LDLIBS)))
 # patsubst is normally expanded only once (beforehand), but we want to
 # apply abspath to each individual argument.
 
-APP_TOOLS_OBJS := $(OBJS) $(APP_TOOLS_LDLIBS)
+APP_TOOLS_OBJS := $(OBJS)
 
 APP_TOOLS_ARCH := $(subst x86_32,i386, \
                   $(subst x86_64,amd64, \
@@ -166,6 +166,7 @@ app-tools/%: app-tools/%.in Makefile Config.mk
 		-e 's#!APPTOOLS!#$(abspath app-tools)#g;' \
 		-e 's#!CPPFLAGS!#$(APP_TOOLS_CPPFLAGS)#g;' \
 		-e 's#!OBJS!#$(APP_TOOLS_OBJS)#g;' \
+		-e 's#!LDLIBS!#$(APP_TOOLS_LDLIBS)#g;' \
 		-e 's#!HEAD_OBJ!#$(abspath $(HEAD_OBJ))#g;' \
 		-e 's#!LDSCRIPT!#$(abspath $(LDSCRIPT))#g;'
 	if test -x $<; then chmod +x $@.tmp; fi
