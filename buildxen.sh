@@ -83,3 +83,7 @@ done
 
 # build the domU image
 make
+
+echo
+echo ">> $0 ran successfully"
+exit 0
