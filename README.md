@@ -12,5 +12,5 @@ repo), and run:
 xl create -c domain_config
 ````
 
-See [the wiki](http://wiki.rumpkernel.org/Repo:-rumpuser-xen) for more
+See [the wiki](http://wiki.rumpkernel.org/Repo:-rumprun-xen) for more
 information and instructions.
