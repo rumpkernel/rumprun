@@ -17,7 +17,7 @@ RUMPKERNDIR= /home/pooka/src/buildrump.sh/rump
 CFLAGS=		-std=gnu99 -g -Wall -Werror
 CPPFLAGS=	-Iinclude -I${RUMPKERNDIR}/include -nostdinc
 
-OBJS=		intr.o kernel.o undefs.o memalloc.o sched.o subr.o
+OBJS=		intr.o kernel.o undefs.o memalloc.o sched.o
 OBJS+=		rumpuser.o rumpfiber.o rumppci.o
 OBJS+=		arch/i386/cpu_sched.o arch/i386/machdep.o
 LDSCRIPT=	arch/i386/kern.ldscript
@@ -26,7 +26,7 @@ LIBS_PCINET=	-lrumpdev_bpf -lrumpdev_pci_if_wm -lrumpdev_miiphy -lrumpdev_pci
 LIBS_NETINET=	-lrumpnet_config -lrumpnet_netinet -lrumpnet_net -lrumpnet
 
 ifeq (${RUMPRUN_PRESENT},yes)
-  OBJS+=	libc_errno.o libc_emul.o
+  OBJS+=	libc_errno.o libc_emul.o subr.o
   OBJS+=	app.o
   CPPFLAGS+=	-DRUMPRUN_APP
   LIBS_USER=	-lc
