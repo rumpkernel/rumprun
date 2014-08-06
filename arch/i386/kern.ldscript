@@ -1,0 +1,42 @@
+OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386")
+OUTPUT_ARCH(i386)
+ENTRY(_start32)
+SECTIONS
+{
+	. = 1m;
+	_begin = . ;
+	.text :
+	AT (ADDR(.text) & 0x0fffffff)
+	{
+		*(.multiboot)
+		*(.text)
+		*(.text.*)
+		*(.stub)
+	}
+	_etext = . ;
+
+	.rodata :
+	AT (LOADADDR(.text) + (ADDR(.rodata) - ADDR(.text)))
+	{
+		*(.rodata)
+	}
+
+	_data_start = .;
+	.data :
+	AT (LOADADDR(.text) + (ADDR(.data) - ADDR(.text)))
+	{
+		*(.data)
+	}
+	_edata = . ;
+
+	__bss_start = . ;
+	.bss :
+	AT (LOADADDR(.text) + (ADDR(.bss) - ADDR(.text)))
+	{
+		*(.bss)
+		*(COMMON)
+		*(.bootstack)
+	}
+	_end = . ;
+	PROVIDE (end = .) ;
+}
