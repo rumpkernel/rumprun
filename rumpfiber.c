@@ -56,8 +56,9 @@ rumpuser_init(int version, const struct rumpuser_hyperup *hyp)
 void
 rumpuser_seterrno(int error)
 {
+	int *threrr = bmk_sched_geterrno();
 
-	//errno = error;
+	*threrr = error;
 }
 
 /* thread functions */

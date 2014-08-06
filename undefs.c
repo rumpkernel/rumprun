@@ -37,3 +37,18 @@ NOTHING(rumpuser_sp_fini)
 NOTHING(rumpuser_sp_init)
 NOTHING(rumpuser_sp_raise)
 NOTHING(rumpuser_unmap)
+
+/* libc */
+
+NOTHING(__sigaction14);
+NOTHING(__getrusage50);
+NOTHING(__sigprocmask14);
+NOTHING(_lwp_kill);
+NOTHING(_lwp_self);
+
+NOTHING(__wait450);
+NOTHING(__fork);
+NOTHING(__vfork14);
+NOTHING(kill);
+NOTHING(getpriority);
+NOTHING(setpriority);

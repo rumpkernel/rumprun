@@ -20,8 +20,16 @@ typedef uint64_t	dev_t;
 typedef int		uid_t;
 typedef int		gid_t;
 
+#ifndef NULL
 #define NULL (void *)0
+#endif
+
+#ifndef __dead
 #define __dead
+#endif
+
+#ifndef __printflike
 #define __printflike(a,b)
+#endif
 
 #endif /* _BMK_TYPES_H_ */

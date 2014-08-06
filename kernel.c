@@ -84,7 +84,7 @@ bmk_main(struct multiboot_info *mbi)
 	rump_init();
 	rump_pub_netconfig_dhcp_ipv4_oneshot("wm0");
 
-#if 0
+#ifdef RUMPRUN_APP
 	/* run 'em if you got 'em */
 	bmk_app_main();
 #endif

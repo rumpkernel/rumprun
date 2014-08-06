@@ -90,7 +90,7 @@ struct bmk_thread {
 	int64_t bt_wakeup_time;
 
 	int bt_flags;
-	int bt_threrrno;
+	int bt_errno;
 
 	void *bt_stackbase;
 
@@ -397,6 +397,14 @@ bmk_sched_init_mainthread(void *cookie)
 
 	//current_thread->bt_cookie = cookie;
 	return current_thread;
+}
+
+int *
+bmk_sched_geterrno(void)
+{
+	struct bmk_thread *thread = bmk_sched_current();
+
+	return &thread->bt_errno;
 }
 
 void

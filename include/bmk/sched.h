@@ -26,3 +26,4 @@ void	bmk_cpu_sched_create(struct bmk_thread *,
 void	bmk_cpu_sched_switch(struct bmk_tcb *, struct bmk_tcb *);
 
 struct bmk_thread *bmk_sched_current(void);
+int *bmk_sched_geterrno(void);
