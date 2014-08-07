@@ -80,7 +80,7 @@
 #define THREAD_EXTSTACK	0x08
 #define THREAD_TIMEDOUT 0x10
 
-#define THREAD_STACKSIZE (1<<14)
+#define THREAD_STACKSIZE (1<<16)
 
 struct bmk_thread {
 	char bt_name[NAME_MAXLEN];
