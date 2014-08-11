@@ -4,7 +4,7 @@
 #
 # first run buildrump.sh with:
 #   ./buildrump.sh -s ${APPSTACK_SRC} -V MKPIC=no -V RUMP_KERNEL_IS_LIBC=1 \
-#      -k -N -H kernelheaders fullbuild
+#      -V RUMP_CURLWP=hypercall -k -N -H kernelheaders fullbuild
 
 APPSTACK_SRC= /home/pooka/src/src-netbsd-appstack
 BUILDRUMP_SH= /home/pooka/src/buildrump.sh
