@@ -6,8 +6,8 @@
 #   ./buildrump.sh -s ${APPSTACK_SRC} -V MKPIC=no -V RUMP_KERNEL_IS_LIBC=1 \
 #      -V RUMP_CURLWP=hypercall -k -N -H kernelheaders fullbuild
 
-APPSTACK_SRC= /home/pooka/src/src-netbsd-appstack
-BUILDRUMP_SH= /home/pooka/src/buildrump.sh
+APPSTACK_SRC=/home/pooka/src/src-netbsd-appstack
+BUILDRUMP_SH=/home/pooka/src/buildrump.sh
 
 MORELIBS="external/bsd/flex/lib
         crypto/external/bsd/openssl/lib/libcrypto
