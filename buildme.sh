@@ -3,7 +3,7 @@
 # Script to build "userspace".  Note, not "consumer-grade" yet!
 #
 # first run buildrump.sh with:
-#   ./buildrump.sh -s ${APPSTACK_SRC} -V MKPIC=no -k -N -H fullbuild
+# ./buildrump.sh -s ${APPSTACK_SRC} -V MKPIC=no -k -N -H kernelheaders fullbuild
 
 APPSTACK_SRC= /home/pooka/src/src-netbsd-appstack
 BUILDRUMP_SH= /home/pooka/src/buildrump.sh
