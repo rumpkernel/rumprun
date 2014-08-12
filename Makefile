@@ -22,17 +22,20 @@ OBJS+=		rumpuser.o rumpfiber.o rumppci.o
 OBJS+=		arch/i386/cpu_sched.o arch/i386/machdep.o
 LDSCRIPT=	arch/i386/kern.ldscript
 
+#LIBS_PCINET=	-lrumpdev_bpf -lrumpdev_pci_if_vioif -lrumpdev_miiphy -lrumpdev_pci
 LIBS_PCINET=	-lrumpdev_bpf -lrumpdev_pci_if_wm -lrumpdev_miiphy -lrumpdev_pci
 LIBS_NETINET=	-lrumpnet_config -lrumpnet_netinet -lrumpnet_net -lrumpnet
+LIBS_NETUNIX=	-lrumpnet_local
 
 ifeq (${RUMPRUN_PRESENT},yes)
-  OBJS+=	libc_errno.o libc_emul.o subr.o
+  OBJS+=	libc_errno.o libc_emul.o
   OBJS+=	app.o
   CPPFLAGS+=	-DRUMPRUN_APP
   LIBS_USER=	-lc
 else
   COMPILER_RT=	librt/divdi3.o librt/udivmoddi4.o librt/udivsi3.o
   COMPILER_RT+=	librt/udivdi3.o librt/moddi3.o librt/umoddi3.o
+  OBJS+=	subr.o
 endif
 
 all: ${THEBIN}
