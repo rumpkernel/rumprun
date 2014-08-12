@@ -46,6 +46,44 @@ fillgate(struct gate_descriptor *gd, void *fun)
 	gd->gd_p = 1;
 }
 
+struct segment_descriptor {
+        unsigned sd_lolimit:16;
+        unsigned sd_lobase:24;
+        unsigned sd_type:5;
+        unsigned sd_dpl:2;
+        unsigned sd_p:1;
+        unsigned sd_hilimit:4;
+        unsigned sd_xx:2;
+        unsigned sd_def32:1;
+        unsigned sd_gran:1;
+        unsigned sd_hibase:8;
+} __attribute__((__packed__));
+
+#define SDT_MEMRWA	19	/* memory read write accessed */
+#define SDT_MEMERA	27	/* memory execute read accessed */
+
+static struct segment_descriptor gdt[3];
+
+static void
+fillsegment(struct segment_descriptor *sd, int type)
+{
+
+	sd->sd_lobase = 0;
+	sd->sd_hibase = 0;
+
+	sd->sd_lolimit = 0xffff;
+	sd->sd_hilimit = 0xf;
+
+	sd->sd_type = type;
+
+	/* i was born luckier */
+	sd->sd_dpl = 0;
+	sd->sd_p = 1;
+	sd->sd_xx = 0;
+	sd->sd_def32 = 1;
+	sd->sd_gran = 1;
+}
+
 #define PIC1_CMD	0x20
 #define PIC1_DATA	0x21
 #define PIC2_CMD	0xa0
@@ -91,6 +129,13 @@ bmk_cpu_init(void)
 {
 	struct region_descriptor region;
 	int i;
+
+	fillsegment(&gdt[1], SDT_MEMERA); /* code */
+	fillsegment(&gdt[2], SDT_MEMRWA); /* data */
+
+	region.rd_limit = sizeof(gdt)-1;
+	region.rd_base = (unsigned int)(uintptr_t)(void *)gdt;
+	bmk_cpu_lgdt(&region);
 
 	region.rd_limit = sizeof(idt)-1;
 	region.rd_base = (unsigned int)(uintptr_t)(void *)idt;

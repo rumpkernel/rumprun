@@ -1,5 +1,6 @@
 struct region_descriptor;
 void bmk_cpu_lidt(struct region_descriptor *);
+void bmk_cpu_lgdt(struct region_descriptor *);
 
 static inline uint8_t
 inb(uint16_t port)

@@ -44,6 +44,22 @@ END(_start32)
 nomultimesg:
 	.asciz "not multibooted, halting!"
 
+ENTRY(bmk_cpu_lgdt)
+	movl 4(%esp), %eax
+	lgdt (%eax)
+	movl $0x10, %eax
+	movl %eax, %ds
+	movl %eax, %es
+	movl %eax, %gs
+	movl %eax, %ss
+	movl %eax, %fs
+
+	popl %eax
+	pushl $0x8
+	pushl %eax
+	lret
+END(bmk_cpu_lgdt)
+
 ENTRY(bmk_cpu_lidt)
 	movl 4(%esp), %eax
 	lidt (%eax)
