@@ -110,7 +110,7 @@ initpic(void)
 	outb(PIC2_DATA, 32+8);	/* interrupts start from 40 in IDT */
 	outb(PIC2_DATA, 2);	/* interrupt at irq 2 */
 	outb(PIC2_DATA, ICW4_8086);
-	outb(PIC2_DATA, 0xff & ~(1<<(11-8)));	/* unmask net IRQ */
+	outb(PIC2_DATA, 0xff);	/* all masked for now */
 }
 
 #define TIMER_CNTR	0x40
@@ -158,13 +158,6 @@ bmk_cpu_init(void)
 	 */
 	fillgate(&idt[32], bmk_cpu_isr_clock);
 
-	/*
-	 * map networking interrupt.
-	 * say, how do we know it's 11?
-	 * again, born lucky, makes things so much easier.
-	 */
-	fillgate(&idt[32+11], bmk_cpu_isr_net);
-
 	/* initialize the timer to 100Hz */
 	outb(TIMER_MODE, TIMER_RATEGEN | TIMER_16BIT);
 	outb(TIMER_CNTR, (TIMER_HZ/HZ) & 0xff);
@@ -172,6 +165,23 @@ bmk_cpu_init(void)
 
 	/* aaand we're good to interrupt */
 	spl0();
+}
+
+int
+bmk_cpu_intr_init(int intr)
+{
+
+	/* XXX: too lazy to keep PIC1 state */
+	if (intr < 8)
+		return EGENERIC;
+
+	/* how do we know it's the network interrupt?  weeeeelll */
+	fillgate(&idt[32+intr], bmk_cpu_isr_net);
+
+	/* unmask interrupt in PIC */
+	outb(PIC2_DATA, 0xff & ~(1<<(intr-8)));
+
+	return 0;
 }
 
 void

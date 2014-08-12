@@ -37,10 +37,11 @@ void bmk_app_main(void);
 
 void bmk_cpu_init(void);
 void bmk_cpu_nanohlt(void);
+int bmk_cpu_intr_init(int);
 
 void bmk_isr_clock(void);
 void bmk_isr_net(void);
-int bmk_isr_netinit(int (*)(void *), void *);
+int bmk_isr_netinit(int (*)(void *), void *, int);
 
 #endif /* _LOCORE */
 

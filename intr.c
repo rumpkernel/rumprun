@@ -56,9 +56,12 @@ netisr(void *arg)
 }
 
 int
-bmk_isr_netinit(int (*func)(void *), void *arg)
+bmk_isr_netinit(int (*func)(void *), void *arg, int intr)
 {
+	int error;
 
+	if ((error = bmk_cpu_intr_init(intr)) != 0)
+		return error;
 	netisr_thread = bmk_sched_create("netisr", NULL, 0,
 	    netisr, NULL, NULL, 0);
 	if (!netisr_thread)
