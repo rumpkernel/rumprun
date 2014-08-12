@@ -88,7 +88,7 @@ fillsegment(struct segment_descriptor *sd, int type)
 #define PIC1_DATA	0x21
 #define PIC2_CMD	0xa0
 #define PIC2_DATA	0xa1
-#define ICW1_IC4	0x02	/* we're going to do the fourth write */
+#define ICW1_IC4	0x01	/* we're going to do the fourth write */
 #define ICW1_INIT	0x10
 #define ICW4_8086	0x01	/* use 8086 mode */
 
