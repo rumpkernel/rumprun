@@ -7,20 +7,8 @@ kernels](http://rumpkernel.org/) directly on bare metal.  By default, the
 produced image includes a TCP/IP stack, a driver for the i82540 PCI NIC
 and of course system calls -- enough be able to use TCP/IP via sockets.
 
-Edit the Makefile and compile with:
-
-```
-make
-```
-
-Run for example with:
-
-```
-qemu-system-i386 -s -net nic -net user -kernel rk.bin
-```
-
-(Top tip: `-s` enables the qemu remote debugging service.  You can
-connect to it from `gdb` with `target remote:1234`)
+See the [wiki page](http://wiki.rumpkernel.org/Repo:-rumpuser-baremetal)
+for information on building and running.
 
 Future directions
 -----------------
