@@ -43,7 +43,7 @@ all: ${THEBIN}
 ${THEBIN}: ${THEBIN}.gdb
 	${STRIP} -g -o $@ $<
 
-${THEBIN}.gdb: locore32.o ${OBJS} ${COMPILER_RT} ${LDSCRIPT}
+${THEBIN}.gdb: locore32.o ${OBJS} ${COMPILER_RT} ${LDSCRIPT} Makefile
 	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} locore32.o ${OBJS} -L${RUMPKERNDIR}/lib -Wl,--whole-archive ${LIBS_PCINET} ${LIBS_NETINET} -lrumpdev -lrumpvfs -lrump -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
 
 locore32.o: arch/i386/locore32.S
