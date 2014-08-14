@@ -74,6 +74,11 @@ ENTRY(bmk_cpu_insr)
 	iret
 END(bmk_cpu_insr)
 
+/*
+ * The interrupt handlers don't do the normal accounting for cli-depth,
+ * but it's hopefully a safe bet that since we're here, interrupts were
+ * unmasked, so we can just unmask them before we return.
+ */
 ENTRY(bmk_cpu_isr_clock)
 	cli
 	call bmk_isr_clock

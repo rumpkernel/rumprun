@@ -1,3 +1,8 @@
+#ifndef _BMK_ARCH_I386_MD_H_
+#define _BMK_ARCH_I386_MD_H_
+
+#include <bmk/kernel.h>
+
 struct region_descriptor;
 void bmk_cpu_lidt(struct region_descriptor *);
 void bmk_cpu_lgdt(struct region_descriptor *);
@@ -36,18 +41,24 @@ outl(uint16_t port, uint32_t value)
         __asm__ __volatile__("outl %0, %1" :: "a"(value), "d"(port));
 }
 
+extern int bmk_spldepth;
+
 static inline void
 splhigh(void)
 {
 
 	__asm__ __volatile__("cli");
+	bmk_spldepth++;
 }
 
 static inline void
 spl0(void)
 {
 
-	__asm__ __volatile__("sti");
+	if (bmk_spldepth == 0)
+		panic("out of interrupt depth!");
+	if (--bmk_spldepth == 0)
+		__asm__ __volatile__("sti");
 }
 
 static inline void
@@ -56,3 +67,5 @@ hlt(void)
 
 	__asm__ __volatile__("hlt");
 }
+
+#endif /* _BMK..._H_ */

@@ -1,6 +1,9 @@
 #include <bmk/types.h>
 #include <bmk/kernel.h>
 
+/* enter the kernel with interrupts disabled */
+int bmk_spldepth = 1;
+
 /*
  * i386 MD descriptors, assimilated from NetBSD sys/arch/i386/include/segments.h
  */
