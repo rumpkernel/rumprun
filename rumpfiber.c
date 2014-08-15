@@ -157,7 +157,7 @@ rumpuser_mutex_init(struct rumpuser_mtx **mtxp, int flags)
 	struct rumpuser_mtx *mtx;
 
 	mtx = bmk_xmalloc(sizeof(*mtx));
-	memset(mtx, 0, sizeof(*mtx));
+	bmk_memset(mtx, 0, sizeof(*mtx));
 	mtx->flags = flags;
 	TAILQ_INIT(&mtx->waiters);
 	*mtxp = mtx;
@@ -241,7 +241,7 @@ rumpuser_rw_init(struct rumpuser_rw **rwp)
 	struct rumpuser_rw *rw;
 
 	rw = bmk_xmalloc(sizeof(*rw));
-	memset(rw, 0, sizeof(*rw));
+	bmk_memset(rw, 0, sizeof(*rw));
 	TAILQ_INIT(&rw->rwait);
 	TAILQ_INIT(&rw->wwait);
 
@@ -375,7 +375,7 @@ rumpuser_cv_init(struct rumpuser_cv **cvp)
 	struct rumpuser_cv *cv;
 
 	cv = bmk_xmalloc(sizeof(*cv));
-	memset(cv, 0, sizeof(*cv));
+	bmk_memset(cv, 0, sizeof(*cv));
 	TAILQ_INIT(&cv->waiters);
 	*cvp = cv;
 }

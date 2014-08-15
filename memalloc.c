@@ -340,7 +340,7 @@ calloc(size_t n, size_t size)
 	size_t tot = n * size;
 
 	if ((v = malloc(tot)) != NULL) {
-		memset(v, 0, tot);
+		bmk_memset(v, 0, tot);
 	}
 
 	return v;
@@ -492,7 +492,7 @@ bmk_memrealloc(void *cp, size_t nbytes)
 	if (np == NULL)
 		return NULL;
 
-	memcpy(np, cp, (1<<(size+MINSHIFT)) - (alignpad+sizeof(*op)));
+	bmk_memcpy(np, cp, (1<<(size+MINSHIFT)) - (alignpad+sizeof(*op)));
 	bmk_memfree(cp);
 	return np;
 }

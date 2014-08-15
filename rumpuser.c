@@ -21,9 +21,9 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 {
 	char *res = buf;
 
-	if (strcmp(name, RUMPUSER_PARAM_NCPU) == 0
-	    || strcmp(name, RUMPUSER_PARAM_HOSTNAME) == 0
-	    || strcmp(name, "RUMP_VERBOSE") == 0) {
+	if (bmk_strcmp(name, RUMPUSER_PARAM_NCPU) == 0
+	    || bmk_strcmp(name, RUMPUSER_PARAM_HOSTNAME) == 0
+	    || bmk_strcmp(name, "RUMP_VERBOSE") == 0) {
 		res[0] = '1';
 		res[1] = '\0';
 		return 0;

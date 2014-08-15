@@ -236,7 +236,7 @@ bmk_sched_create(const char *name, void *cookie, int thrflags,
 	void *stack;
 
 	thread = bmk_xmalloc(sizeof(*thread));
-	memset(thread, 0, sizeof(*thread));
+	bmk_memset(thread, 0, sizeof(*thread));
 
 	if (!stack_base) {
 		assert(stack_size == 0);
@@ -256,7 +256,7 @@ bmk_sched_create(const char *name, void *cookie, int thrflags,
 	/* enotyet */
 	//thread->bt_cookie = cookie;
 
-	strncpy(thread->bt_name, name, sizeof(thread->bt_name)-1);
+	bmk_strncpy(thread->bt_name, name, sizeof(thread->bt_name)-1);
 
 	thread->bt_wakeup_time = -1;
 
@@ -376,7 +376,7 @@ bmk_sched_init(void)
 
 	//getcontext(&thread->ctx);
 
-	strncpy(thread->bt_name, "init", sizeof(thread->bt_name)-1);
+	bmk_strncpy(thread->bt_name, "init", sizeof(thread->bt_name)-1);
 	thread->bt_flags = 0;
 	thread->bt_wakeup_time = -1;
 	set_runnable(thread);

@@ -8,7 +8,7 @@
 #include <bmk/string.h>
 
 size_t
-strlen(const char* str)
+bmk_strlen(const char* str)
 {
 	size_t rv = 0;
 
@@ -18,7 +18,7 @@ strlen(const char* str)
 }
 
 int
-strcmp(const char *a, const char *b)
+bmk_strcmp(const char *a, const char *b)
 {
 
 	while (*a && *a++ == *b++) {
@@ -32,7 +32,7 @@ strcmp(const char *a, const char *b)
 }
 
 char *
-strcpy(char *d, const char *s)
+bmk_strcpy(char *d, const char *s)
 {
 	char *orig = d;
 
@@ -42,7 +42,7 @@ strcpy(char *d, const char *s)
 }
 
 char *
-strncpy(char *d, const char *s, size_t n)
+bmk_strncpy(char *d, const char *s, size_t n)
 {
 	char *orig = d;
 
@@ -54,7 +54,7 @@ strncpy(char *d, const char *s, size_t n)
 }
 
 void *
-memset(void *b, int c, size_t n)
+bmk_memset(void *b, int c, size_t n)
 {
 	uint8_t *v = b;
 
@@ -65,7 +65,7 @@ memset(void *b, int c, size_t n)
 }
 
 void *
-memcpy(void *d, const void *src, size_t n)
+bmk_memcpy(void *d, const void *src, size_t n)
 {
 	uint8_t *dp;
 	const uint8_t *sp;
