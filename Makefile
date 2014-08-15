@@ -17,7 +17,7 @@ RUMPKERNDIR= /home/pooka/src/buildrump.sh/rump
 CFLAGS=		-std=gnu99 -g -Wall -Werror
 CPPFLAGS=	-Iinclude -I${RUMPKERNDIR}/include -nostdinc
 
-OBJS=		intr.o kernel.o undefs.o memalloc.o sched.o
+OBJS=		intr.o kernel.o undefs.o memalloc.o sched.o subr.o
 OBJS+=		rumpuser.o rumpfiber.o rumppci.o
 OBJS+=		arch/i386/cpu_sched.o arch/i386/machdep.o
 LDSCRIPT=	arch/i386/kern.ldscript
@@ -35,7 +35,6 @@ ifeq (${RUMPRUN_PRESENT},yes)
 else
   COMPILER_RT=	librt/divdi3.o librt/udivmoddi4.o librt/udivsi3.o
   COMPILER_RT+=	librt/udivdi3.o librt/moddi3.o librt/umoddi3.o
-  OBJS+=	subr.o
 endif
 
 all: ${THEBIN}
