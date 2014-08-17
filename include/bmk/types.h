@@ -3,10 +3,11 @@
 
 #include <arch/i386/types.h>
 
+#include <bmk/bmk_types.h>
+
 /*
  * MI types
  */
-typedef int64_t		bmk_time_t;
 
 typedef unsigned long	u_long;
 typedef unsigned int	u_int;

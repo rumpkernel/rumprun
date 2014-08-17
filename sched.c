@@ -230,7 +230,8 @@ bmk_sched(void)
 void bmk_cpu_sched_bouncer(void);
 struct bmk_thread *
 bmk_sched_create(const char *name, void *cookie, int thrflags,
-	void (*f)(void *), void *data, void *stack_base, size_t stack_size)
+	void (*f)(void *), void *data,
+	void *stack_base, unsigned long stack_size)
 {
 	struct bmk_thread *thread;
 	void *stack;

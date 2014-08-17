@@ -1,4 +1,4 @@
-#include <bmk/types.h>
+#include <bmk/bmk_types.h>
 
 struct bmk_thread;
 struct bmk_tcb;
@@ -7,7 +7,8 @@ void	bmk_sched_init(void);
 void	bmk_sched(void);
 
 struct bmk_thread *bmk_sched_create(const char *, void *, int,
-				    void (*)(void *), void *, void *, size_t);
+				    void (*)(void *), void *,
+				    void *, unsigned long);
 void	bmk_sched_join(struct bmk_thread *);
 void	bmk_sched_exit(void) __attribute__((__noreturn__));
 
