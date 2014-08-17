@@ -11,6 +11,12 @@ AS= ${TOOLDIR}/i486-netbsdelf-as
 CC= ${TOOLDIR}/i486--netbsdelf-gcc
 STRIP= ${TOOLDIR}/i486--netbsdelf-strip
 
+MACHINE:= $(shell ${CC} -dumpmachine | sed 's/i.86/i386/;s/-.*//;')
+
+ifneq (${MACHINE},i386)
+$(error only supported target is 32bit x86)
+endif
+
 # Naturally this has to be an installation compiled for i386
 RUMPKERNDIR= /home/pooka/src/buildrump.sh/rump
 
