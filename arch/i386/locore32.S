@@ -89,14 +89,21 @@ ENTRY(bmk_cpu_isr_clock)
 END(bmk_cpu_isr_clock)
 
 /*
- * note: interrupt is acked on the PIC as part of bmk_isr_net
+ * Macro to define interrupt stub to call C handler.
+ * note: interrupt is acked on the PIC as part of bmk_isr
  */
-ENTRY(bmk_cpu_isr_net)
-	cli
-	call bmk_isr_net
-	sti
-	iret
-END(bmk_cpu_isr_net)
+#define INTRSTUB(intnum)						\
+ENTRY(bmk_cpu_isr_##intnum)						\
+	cli;								\
+	pushl $intnum;							\
+	call bmk_isr;							\
+	popl %eax;							\
+	sti;								\
+	iret;								\
+END(bmk_cpu_isr_##intnum)
+
+INTRSTUB(10)
+INTRSTUB(11)
 
 
 /*

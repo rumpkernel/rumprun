@@ -73,7 +73,7 @@ bmk_isr_netinit(int (*func)(void *), void *arg, int intr)
 }
 
 void
-bmk_isr_net(void)
+bmk_isr(int which)
 {
 
 	/* schedule the interrupt handler */

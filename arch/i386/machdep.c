@@ -31,7 +31,8 @@ void bmk_cpu_insr(void);
 
 /* actual interrupt service routines */
 void bmk_cpu_isr_clock(void);
-void bmk_cpu_isr_net(void);
+void bmk_cpu_isr_10(void);
+void bmk_cpu_isr_11(void);
 
 static void
 fillgate(struct gate_descriptor *gd, void *fun)
@@ -178,8 +179,16 @@ bmk_cpu_intr_init(int intr)
 	if (intr < 8)
 		return EGENERIC;
 
-	/* how do we know it's the network interrupt?  weeeeelll */
-	fillgate(&idt[32+intr], bmk_cpu_isr_net);
+	switch (intr) {
+	case 10:
+		fillgate(&idt[32+10], bmk_cpu_isr_10);
+		break;
+	case 11:
+		fillgate(&idt[32+11], bmk_cpu_isr_11);
+		break;
+	default:
+		return EGENERIC;
+	}
 
 	/* unmask interrupt in PIC */
 	outb(PIC2_DATA, 0xff & ~(1<<(intr-8)));
