@@ -1,4 +1,4 @@
-Rump kernel hypervisor for "bare metal" [![Build Status](https://travis-ci.org/rumpkernel/rumpuser-baremetal.svg?branch=master)](https://travis-ci.org/rumpkernel/rumpuser-baremetal)
+Rump kernels for "bare metal" [![Build Status](https://travis-ci.org/rumpkernel/rumpuser-baremetal.svg?branch=master)](https://travis-ci.org/rumpkernel/rumpuser-baremetal)
 =======================================
 
 This repository contains a simple, and highly experimental, "bare
@@ -6,6 +6,8 @@ metal kernel" and a hypercall implementation which enable running [rump
 kernels](http://rumpkernel.org/) directly on bare metal.  By default, the
 produced image includes a TCP/IP stack, a driver for the i82540 PCI NIC
 and of course system calls -- enough be able to use TCP/IP via sockets.
+
+Testing has been done with QEMU, VirtualBox and a few laptops.
 
 See the [wiki page](http://wiki.rumpkernel.org/Repo:-rumpuser-baremetal)
 for information on building and running.
