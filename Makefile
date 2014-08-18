@@ -6,22 +6,35 @@ RUMPRUN_PRESENT?= no
 # Has to be an i386 target compiler.  Don't care about much else.
 # Easiest way for me to get an i386 target compiler was to let
 # NetBSD's build.sh create it for me.  YMMV.
-TOOLDIR=/home/pooka/src/nbsrc/obj.i386/tooldir.Linux-3.13.0-32-generic-x86_64/bin
-AS= ${TOOLDIR}/i486-netbsdelf-as
-CC= ${TOOLDIR}/i486--netbsdelf-gcc
-STRIP= ${TOOLDIR}/i486--netbsdelf-strip
+#TOOLDIR=/home/pooka/src/nbsrc/obj.i386/tooldir.Linux-3.13.0-32-generic-x86_64/bin
+#AS= ${TOOLDIR}/i486-netbsdelf-as
+#CC= ${TOOLDIR}/i486--netbsdelf-gcc
+#STRIP= ${TOOLDIR}/i486--netbsdelf-strip
+
+CFLAGS+=	-std=gnu99 -g -Wall -Werror
+CPPFLAGS=	-Iinclude -I${RUMPKERNDIR}/include -nostdinc
+STRIP?=		strip
 
 MACHINE:= $(shell ${CC} -dumpmachine | sed 's/i.86/i386/;s/-.*//;')
 
-ifneq (${MACHINE},i386)
+# Check if we're building for a 32bit target.
+# XXX: this is here only to help Travis CI.  The resulting binary will
+# not run if you do not build it with a real toolchain
+supported= false
+ifeq (${MACHINE},i386)
+supported:= true
+endif
+ifeq (${MACHINE},x86_64)
+  ifeq ($(shell ${CC} ${CFLAGS} ${CPPFLAGS} -E -dM - < /dev/null | grep LP64),)
+    supported:= true
+  endif
+endif
+ifneq (${supported},true)
 $(error only supported target is 32bit x86)
 endif
 
 # Naturally this has to be an installation compiled for i386
 RUMPKERNDIR?=	/home/pooka/src/buildrump.sh/rump
-
-CFLAGS=		-std=gnu99 -g -Wall -Werror
-CPPFLAGS=	-Iinclude -I${RUMPKERNDIR}/include -nostdinc
 
 OBJS=		intr.o kernel.o undefs.o memalloc.o sched.o subr.o
 OBJS+=		rumpuser.o rumpfiber.o rumppci.o
