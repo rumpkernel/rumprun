@@ -1,7 +1,7 @@
 THEBIN= rk.bin
 
 # answer "yes" if you have built "userspace"
-RUMPRUN_PRESENT= no
+RUMPRUN_PRESENT?= no
 
 # Has to be an i386 target compiler.  Don't care about much else.
 # Easiest way for me to get an i386 target compiler was to let
@@ -18,7 +18,7 @@ $(error only supported target is 32bit x86)
 endif
 
 # Naturally this has to be an installation compiled for i386
-RUMPKERNDIR= /home/pooka/src/buildrump.sh/rump
+RUMPKERNDIR?=	/home/pooka/src/buildrump.sh/rump
 
 CFLAGS=		-std=gnu99 -g -Wall -Werror
 CPPFLAGS=	-Iinclude -I${RUMPKERNDIR}/include -nostdinc
