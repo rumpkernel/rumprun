@@ -30,12 +30,12 @@ for lib in ${LIBS}; do
         makeuserlib ${RUMPMAKE} ${lib}
 done
 
-APPSTACK_LIBS=`rumpmake -f ${APPSTACK_SRC}/sys/rump/dev/Makefile.rumpdevcomp -V '${RUMPPCIDEVS}'`
+APPSTACK_LIBS=$(${RUMPMAKE} -f ${APPSTACK_SRC}/sys/rump/dev/Makefile.rumpdevcomp -V '${RUMPPCIDEVS}')
 
 for lib in ${APPSTACK_LIBS}; do
 		( cd ${APPSTACK_SRC}/sys/rump/dev/lib/lib${lib}
-			${rumpmake} obj
-			${rumpmake} dependall
-			${rumpmake} install
+			${RUMPMAKE} obj
+			${RUMPMAKE} dependall
+			${RUMPMAKE} install
 		)
 done
