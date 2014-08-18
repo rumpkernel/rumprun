@@ -1,4 +1,4 @@
-Rump kernel hypervisor for "bare metal"
+Rump kernel hypervisor for "bare metal" [![Build Status](https://travis-ci.org/rumpkernel/rumpuser-baremetal.svg?branch=master)](https://travis-ci.org/rumpkernel/rumpuser-baremetal)
 =======================================
 
 This repository contains a simple, and highly experimental, "bare
