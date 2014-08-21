@@ -24,6 +24,7 @@ static int netisr_todo;
 static void
 netisr(void *arg)
 {
+	int rv;
 
         rumpuser__hyp.hyp_schedule();
         rumpuser__hyp.hyp_lwproc_newlwp(0);
@@ -34,18 +35,19 @@ netisr(void *arg)
 			netisr_todo = 0;
 			spl0();
 			rumpuser__hyp.hyp_schedule();
-			netisr_func(netisr_arg);
+			rv = netisr_func(netisr_arg);
 			rumpuser__hyp.hyp_unschedule();
 
 			/*
-			 * ACK the interrupt now that we've
-			 * really processed it
+			 * ACK the interrupt if we've really processed it
 			 */
-			__asm__ __volatile(
-			    "movb $0x20, %%al\n"
-			    "outb %%al, $0xa0\n"
-			    "outb %%al, $0x20\n"
-			    ::: "al");
+			if (rv) {
+				__asm__ __volatile(
+				    "movb $0x20, %%al\n"
+				    "outb %%al, $0xa0\n"
+				    "outb %%al, $0x20\n"
+				    ::: "al");
+			}
 		} else {
 			/* no interrupts left. block until the next one. */
 			bmk_sched_block(netisr_thread);
