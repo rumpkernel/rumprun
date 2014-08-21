@@ -41,6 +41,7 @@ int bmk_cpu_intr_init(int);
 
 void bmk_isr_clock(void);
 void bmk_isr(int);
+int bmk_isr_init(void);
 int bmk_isr_netinit(int (*)(void *), void *, int);
 
 #endif /* _LOCORE */

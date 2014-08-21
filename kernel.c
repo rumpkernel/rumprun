@@ -80,6 +80,7 @@ bmk_main(struct multiboot_info *mbi)
 		return;
 	bmk_cpu_init();
 	bmk_sched_init();
+	bmk_isr_init();
 
 	rump_init();
 	rump_pub_netconfig_dhcp_ipv4_oneshot("wm0");
