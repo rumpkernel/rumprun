@@ -53,6 +53,7 @@ NOTHING(kill);
 NOTHING(getpriority);
 NOTHING(setpriority);
 
+int execve(const char *, char *const[], char *const[]);
 int
 execve(const char *file, char *const argv[], char *const envp[])
 {

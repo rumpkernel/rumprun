@@ -22,6 +22,8 @@
 #include <rump/rump.h>
 #include <rump/netconfig.h>
 
+#include <bmk/app.h>
+
 static int havenet;
 
 /*

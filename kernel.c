@@ -4,6 +4,7 @@
 #include <bmk/memalloc.h>
 #include <bmk/string.h>
 #include <bmk/sched.h>
+#include <bmk/app.h>
 
 static unsigned long kernel_membase;
 static unsigned long kernel_memsize;

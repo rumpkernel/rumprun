@@ -11,7 +11,7 @@ RUMPRUN_PRESENT?= yes
 #CC= ${TOOLDIR}/i486--netbsdelf-gcc
 #STRIP= ${TOOLDIR}/i486--netbsdelf-strip
 
-CFLAGS+=	-std=gnu99 -g -Wall -Werror
+CFLAGS+=	-std=gnu99 -g -Wall -Werror -Wmissing-prototypes
 CPPFLAGS=	-Iinclude -I${RUMPKERNDIR}/include -nostdinc
 STRIP?=		strip
 

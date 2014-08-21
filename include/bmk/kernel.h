@@ -30,10 +30,12 @@ void *bmk_allocpg(size_t);
 	rump_schedule(); rumpns_printf(x, __VA_ARGS__); rump_unschedule(); \
     } while (0);
 
+struct multiboot_info;
+void bmk_init(void);
+void bmk_main(struct multiboot_info *);
+
 void bmk_cons_puts(const char *);
 void bmk_cons_putc(int);
-
-void bmk_app_main(void);
 
 void bmk_cpu_init(void);
 void bmk_cpu_nanohlt(void);
