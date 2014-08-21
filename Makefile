@@ -60,7 +60,7 @@ ALLLIBS=	${LIBS_VIO_NET}					\
 		-lrumpdev -lrumpvfs -lrumpnet -lrump
 
 ifeq (${RUMPRUN_PRESENT},yes)
-  OBJS+=	libc_errno.o libc_emul.o
+  OBJS+=	libc_errno.o libc_emul.o libc_malloc.o
   OBJS+=	app.o
   CPPFLAGS+=	-DBMK_APP
   LIBS_USER=	-lcrypto -lc
