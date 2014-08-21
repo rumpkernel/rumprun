@@ -94,12 +94,20 @@ END(bmk_cpu_isr_clock)
  */
 #define INTRSTUB(intnum)						\
 ENTRY(bmk_cpu_isr_##intnum)						\
-	cli;								\
-	pushl $intnum;							\
-	call bmk_isr;							\
-	popl %eax;							\
-	sti;								\
-	iret;								\
+	cli								;\
+	pushl %eax							;\
+	pushl %ebx							;\
+	pushl %ecx							;\
+	pushl %edx							;\
+	pushl $intnum							;\
+	call bmk_isr							;\
+	addl $4, %esp							;\
+	popl %edx							;\
+	popl %ecx							;\
+	popl %ebx							;\
+	popl %eax							;\
+	sti								;\
+	iret								;\
 END(bmk_cpu_isr_##intnum)
 
 INTRSTUB(10)
