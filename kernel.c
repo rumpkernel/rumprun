@@ -59,14 +59,6 @@ parsemem(uint32_t addr, uint32_t len)
 	return 0;
 }
 
-/*
- * We don't have enough headers available inside bmk, so this is simpler
- * than trying to include rump.h.  Would be possible to include the
- * headers in "userspace", but that loses the demo value here.
- */
-int rump_init(void);
-void rump_pub_netconfig_dhcp_ipv4_oneshot(const char *);
-
 void
 bmk_main(struct multiboot_info *mbi)
 {
@@ -82,10 +74,7 @@ bmk_main(struct multiboot_info *mbi)
 	bmk_sched_init();
 	bmk_isr_init();
 
-	rump_init();
-	rump_pub_netconfig_dhcp_ipv4_oneshot("wm0");
-
-#ifdef RUMPRUN_APP
+#ifdef BMK_APP
 	/* run 'em if you got 'em */
 	bmk_app_main();
 #endif

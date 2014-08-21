@@ -15,6 +15,20 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <rump/rump.h>
+#include <rump/netconfig.h>
+
+/*
+ * boot and configure rump kernel
+ */
+static void
+rumpkern_config(void)
+{
+
+	rump_init();
+	rump_pub_netconfig_dhcp_ipv4_oneshot("wm0");
+}
+
 /*
  * could use DNS via libc resolver, but would require us
  * creating /etc/resolv.conf first0
@@ -28,6 +42,8 @@ bmk_app_main(void)
 	struct sockaddr_in sin;
 	char *p;
 	int s;
+
+	rumpkern_config();
 
 	s = socket(PF_INET, SOCK_STREAM, 0);
 	if (s == -1)

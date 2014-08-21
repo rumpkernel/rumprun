@@ -62,7 +62,7 @@ ALLLIBS=	${LIBS_VIO_NET}					\
 ifeq (${RUMPRUN_PRESENT},yes)
   OBJS+=	libc_errno.o libc_emul.o
   OBJS+=	app.o
-  CPPFLAGS+=	-DRUMPRUN_APP
+  CPPFLAGS+=	-DBMK_APP
   LIBS_USER=	-lc
 else
   COMPILER_RT=	librt/divdi3.o librt/udivmoddi4.o librt/udivsi3.o
