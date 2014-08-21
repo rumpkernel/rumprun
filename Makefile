@@ -11,7 +11,7 @@ RUMPRUN_PRESENT?= yes
 #CC= ${TOOLDIR}/i486--netbsdelf-gcc
 #STRIP= ${TOOLDIR}/i486--netbsdelf-strip
 
-CFLAGS+=	-std=gnu99 -g -Wall -Werror -Wmissing-prototypes
+CFLAGS+=	-std=gnu99 -g -Wall -Werror
 CPPFLAGS=	-Iinclude -I${RUMPKERNDIR}/include -nostdinc
 STRIP?=		strip
 
@@ -64,6 +64,7 @@ ifeq (${RUMPRUN_PRESENT},yes)
   OBJS+=	app.o
   CPPFLAGS+=	-DBMK_APP
   LIBS_USER=	-lcrypto -lc
+  CFLAGS+=	-Wmissing-prototypes
 else
   COMPILER_RT=	librt/divdi3.o librt/udivmoddi4.o librt/udivsi3.o
   COMPILER_RT+=	librt/udivdi3.o librt/moddi3.o librt/umoddi3.o
