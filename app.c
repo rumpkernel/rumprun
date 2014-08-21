@@ -11,12 +11,18 @@
 #include <netinet/in.h>
 
 #include <err.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
+#include <openssl/md5.h>
+
 #include <rump/rump.h>
 #include <rump/netconfig.h>
+
+static int havenet;
 
 /*
  * boot and configure rump kernel
@@ -24,16 +30,18 @@
 static void
 rumpkern_config(void)
 {
+	int rv = 1;
 
 	rump_init();
 
 	/* le hack */
 	if (rump_pub_netconfig_ifup("wm0") == 0)
-		rump_pub_netconfig_dhcp_ipv4_oneshot("wm0");
+		rv = rump_pub_netconfig_dhcp_ipv4_oneshot("wm0");
 	else if (rump_pub_netconfig_ifup("pcn0") == 0)
-		rump_pub_netconfig_dhcp_ipv4_oneshot("pcn0");
+		rv = rump_pub_netconfig_dhcp_ipv4_oneshot("pcn0");
 	else if (rump_pub_netconfig_ifup("vioif0") == 0)
-		rump_pub_netconfig_dhcp_ipv4_oneshot("vioif0");
+		rv = rump_pub_netconfig_dhcp_ipv4_oneshot("vioif0");
+	havenet = rv == 0;
 }
 
 /*
@@ -41,16 +49,13 @@ rumpkern_config(void)
  * creating /etc/resolv.conf first0
  */
 #define DESTHOST "149.20.53.86"
-
-void
-bmk_app_main(void)
+static void
+nettest(void)
 {
 	char buf[512];
 	struct sockaddr_in sin;
 	char *p;
 	int s;
-
-	rumpkern_config();
 
 	s = socket(PF_INET, SOCK_STREAM, 0);
 	if (s == -1)
@@ -79,4 +84,47 @@ bmk_app_main(void)
 
 	printf("got response:\n%s\n", buf);
 	printf("[omitting rest ...]\n");
+}
+
+static void
+disktest(void)
+{
+	char buf[512];
+	unsigned char md5sum[MD5_DIGEST_LENGTH];
+	MD5_CTX md5ctx;
+	int fd, i;
+
+	fd = open("/dev/rld0d", O_RDONLY);
+	/* assume it's not present instead of failing */
+	if (fd == -1 && (errno == ENOENT || errno == ENXIO))
+		return;
+
+	printf("calculating md5sum of /dev/rld0d\n");
+
+	MD5_Init(&md5ctx);
+	while (read(fd, buf, sizeof(buf)) == sizeof(buf))
+		MD5_Update(&md5ctx, buf, sizeof(buf));
+	MD5_Final(md5sum, &md5ctx);
+
+	printf("0x");
+	for (i = 0; i < sizeof(md5sum); i++) {
+		printf("%x", md5sum[i]);
+	}
+	printf("\n");
+}
+
+/*
+ * Just a simple demo and/or test.
+ */
+void
+bmk_app_main(void)
+{
+
+	rumpkern_config();
+
+	if (havenet)
+		nettest();
+	disktest();
+
+	printf("\nTHE END\n");
 }
