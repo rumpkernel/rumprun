@@ -311,42 +311,6 @@ bmk_xmalloc(size_t howmuch)
 	return rv;
 }
 
-#ifndef MEMALLOC_TESTING
-int
-posix_memalign(void **rv, size_t nbytes, size_t align)
-{
-	void *v;
-	int error = 10; /* XXX */
-
-	if ((v = bmk_memalloc(nbytes, align)) != NULL) {
-		*rv = v;
-		error = 0;
-	}
-
-	return error;
-}
-
-void *
-malloc(size_t size)
-{
-
-	return bmk_memalloc(size, 8);
-}
-
-void *
-calloc(size_t n, size_t size)
-{
-	void *v;
-	size_t tot = n * size;
-
-	if ((v = malloc(tot)) != NULL) {
-		bmk_memset(v, 0, tot);
-	}
-
-	return v;
-}
-#endif
-
 static void *
 corealloc(int shift)
 {
@@ -448,15 +412,6 @@ bmk_memfree(void *cp)
 	malloc_unlock();
 }
 
-#ifndef MEMALLOC_TESTING
-void
-free(void *cp)
-{
-
-	bmk_memfree(cp);
-}
-#endif
-
 /*
  * don't do any of "storage compaction" nonsense, "just" the three modes:
  *   + cp == NULL ==> malloc
@@ -496,15 +451,6 @@ bmk_memrealloc(void *cp, size_t nbytes)
 	bmk_memfree(cp);
 	return np;
 }
-
-#ifndef MEMALLOC_TESTING
-void *
-realloc(void *cp, size_t nbytes)
-{
-
-	return bmk_memrealloc(cp, nbytes);
-}
-#endif
 
 #ifdef MSTATS
 /*
