@@ -26,7 +26,14 @@ rumpkern_config(void)
 {
 
 	rump_init();
-	rump_pub_netconfig_dhcp_ipv4_oneshot("wm0");
+
+	/* le hack */
+	if (rump_pub_netconfig_ifup("wm0") == 0)
+		rump_pub_netconfig_dhcp_ipv4_oneshot("wm0");
+	else if (rump_pub_netconfig_ifup("pcn0") == 0)
+		rump_pub_netconfig_dhcp_ipv4_oneshot("pcn0");
+	else if (rump_pub_netconfig_ifup("vioif0") == 0)
+		rump_pub_netconfig_dhcp_ipv4_oneshot("vioif0");
 }
 
 /*
