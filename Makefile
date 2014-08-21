@@ -1,7 +1,7 @@
 THEBIN= rk.bin
 
-# answer "yes" if you have built "userspace"
-RUMPRUN_PRESENT?= no
+# answer "yes" if you have built "userspace" (i.e. you've run buildme.sh)
+RUMPRUN_PRESENT?= yes
 
 # Has to be an i386 target compiler.  Don't care about much else.
 # Easiest way for me to get an i386 target compiler was to let
