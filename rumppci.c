@@ -41,15 +41,14 @@ rumpcomp_pci_confwrite(unsigned bus, unsigned dev, unsigned fun, int reg,
 	return 0;
 }
 
-#define MAXINTR 32
-static int intrs[MAXINTR];
+static int intrs[BMK_MAXINTR];
 
 int
 rumpcomp_pci_irq_map(unsigned bus, unsigned device, unsigned fun,
 	int intrline, unsigned cookie)
 {
 
-	if (cookie > MAXINTR)
+	if (cookie > BMK_MAXINTR)
 		return EGENERIC;
 
 	intrs[cookie] = intrline;

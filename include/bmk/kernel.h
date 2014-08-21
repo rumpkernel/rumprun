@@ -51,5 +51,7 @@ int bmk_isr_netinit(int (*)(void *), void *, int);
 #define EGENERIC	EINVAL
 #define ETIMEDOUT	4
 
+#define BMK_MAXINTR	32
+
 #define ENTRY(x)	.text; .globl x; .type x,@function; x:
 #define END(x)		.size x, . - x
