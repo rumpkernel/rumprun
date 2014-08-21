@@ -59,8 +59,10 @@ void *
 rumpcomp_pci_irq_establish(unsigned cookie, int (*handler)(void *), void *data)
 {
 
-	bmk_isr_netinit(handler, data, intrs[cookie]);
-	return &intrs[cookie];
+	if (bmk_isr_netinit(handler, data, intrs[cookie]))
+		return &intrs[cookie];
+	else
+		return NULL;
 }
 
 /*
