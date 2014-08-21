@@ -1,8 +1,7 @@
-#include <sys/types.h>
-
 #include <stdlib.h>
 
 #include <bmk/memalloc.h>
+#include <bmk/string.h>
 
 int
 posix_memalign(void **rv, size_t nbytes, size_t align)

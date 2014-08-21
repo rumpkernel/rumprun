@@ -1,8 +1,6 @@
 #ifndef _BMK_STRING_H_
 #define _BMK_STRING_H_
 
-#include <bmk/types.h>
-
 void *bmk_memcpy(void *, const void *, size_t);
 void *bmk_memset(void *, int, size_t);
 
