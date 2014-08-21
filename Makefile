@@ -41,10 +41,23 @@ OBJS+=		rumpuser.o rumpfiber.o rumppci.o
 OBJS+=		arch/i386/cpu_sched.o arch/i386/machdep.o
 LDSCRIPT=	arch/i386/kern.ldscript
 
-#LIBS_PCINET=	-lrumpdev_bpf -lrumpdev_pci_if_vioif -lrumpdev_miiphy -lrumpdev_pci
-LIBS_PCINET=	-lrumpdev_bpf -lrumpdev_pci_if_wm -lrumpdev_miiphy -lrumpdev_pci
-LIBS_NETINET=	-lrumpnet_config -lrumpnet_netinet -lrumpnet_net -lrumpnet
+#LIBS_VIO=	-lrumpdev_pci_virtio
+#LIBS_VIO_NET=	-lrumpdev_virtio_if_vioif
+#LIBS_VIO_LD=	-lrumpdev_disk -lrumpdev_virtio_ld
+LIBS_PCI_NET=	-lrumpdev_pci_if_wm -lrumpdev_miiphy
+LIBS_PCI=	-lrumpdev_pci
+LIBS_NETINET=	-lrumpnet_config -lrumpnet_netinet -lrumpnet_net
+LIBS_NETBPF=	-lrumpdev_bpf
 LIBS_NETUNIX=	-lrumpnet_local
+
+ALLLIBS=	${LIBS_VIO_NET}					\
+		${LIBS_VIO_LD}					\
+		${LIBS_VIO}					\
+		${LIBS_PCI_NET}					\
+		${LIBS_PCI}					\
+		${LIBS_NETINET}					\
+		${LIBS_NETBPF}					\
+		-lrumpdev -lrumpvfs -lrumpnet -lrump
 
 ifeq (${RUMPRUN_PRESENT},yes)
   OBJS+=	libc_errno.o libc_emul.o
@@ -62,7 +75,7 @@ ${THEBIN}: ${THEBIN}.gdb
 	${STRIP} -g -o $@ $<
 
 ${THEBIN}.gdb: locore32.o ${OBJS} ${COMPILER_RT} ${LDSCRIPT} Makefile
-	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} locore32.o ${OBJS} -L${RUMPKERNDIR}/lib -Wl,--whole-archive ${LIBS_PCINET} ${LIBS_NETINET} -lrumpdev -lrumpvfs -lrump -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
+	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} locore32.o ${OBJS} -L${RUMPKERNDIR}/lib -Wl,--whole-archive ${ALLLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
 
 locore32.o: arch/i386/locore32.S
 	${CC} ${CFLAGS} -Iinclude -D_LOCORE -c -o locore32.o $<
