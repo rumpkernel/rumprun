@@ -1,13 +1,23 @@
 #include <bmk/kernel.h>
 #include <bmk/sched.h>
+#include <bmk/queue.h>
+#include <bmk/memalloc.h>
 
 #define LIBRUMPUSER
 #include "rumpuser_int.h"
 
-static struct bmk_thread *isr_thread;
-static int (*isr_func[BMK_MAXINTR])(void *);
-static void *isr_arg[BMK_MAXINTR];
+struct intrhand {
+	int (*ih_fun)(void *);
+	void *ih_arg;
+
+	SLIST_ENTRY(intrhand) ih_entries;
+};
+
+SLIST_HEAD(isr_ihead, intrhand);
+static struct isr_ihead isr_ih[BMK_MAXINTR];
 static unsigned int isr_todo;
+
+static struct bmk_thread *isr_thread;
 
 void
 bmk_isr_clock(void)
@@ -36,23 +46,29 @@ isr(void *arg)
 
 			rv = 0;
 			for (i = 0; i < sizeof(isr_todo)*8; i++) {
+				struct intrhand *ih;
+
 				if ((isrcopy & (1<<i)) == 0)
 					continue;
 
 				rumpuser__hyp.hyp_schedule();
-				rv += isr_func[i](isr_arg[i]);
+				SLIST_FOREACH(ih, &isr_ih[i], ih_entries) {
+					if ((rv = ih->ih_fun(ih->ih_arg)) != 0)
+						break;
+				}
 				rumpuser__hyp.hyp_unschedule();
 			}
 
 			/*
 			 * ACK interrupts on PIC
 			 */
-			if (rv) {
-				__asm__ __volatile(
-				    "movb $0x20, %%al\n"
-				    "outb %%al, $0xa0\n"
-				    "outb %%al, $0x20\n"
-				    ::: "al");
+			__asm__ __volatile(
+			    "movb $0x20, %%al\n"
+			    "outb %%al, $0xa0\n"
+			    "outb %%al, $0x20\n"
+			    ::: "al");
+			if (!rv) {
+				bmk_cons_puts("stray interrupt\n");
 			}
 		} else {
 			/* no interrupts left. block until the next one. */
@@ -66,19 +82,23 @@ isr(void *arg)
 int
 bmk_isr_netinit(int (*func)(void *), void *arg, int intr)
 {
+	struct intrhand *ih;
 	int error;
 
 	if (intr > sizeof(isr_todo)*8 || intr > BMK_MAXINTR)
 		return EGENERIC;
 
-	/* TODO: sharing */
-	if (isr_func[intr])
-		return EBUSY;
+	ih = bmk_xmalloc(sizeof(*ih));
+	if (!ih)
+		return ENOMEM;
 
-	if ((error = bmk_cpu_intr_init(intr)) != 0)
+	if ((error = bmk_cpu_intr_init(intr)) != 0) {
+		bmk_memfree(ih);
 		return error;
-	isr_func[intr] = func;
-	isr_arg[intr] = arg;
+	}
+	ih->ih_fun = func;
+	ih->ih_arg = arg;
+	SLIST_INSERT_HEAD(&isr_ih[intr], ih, ih_entries);
 
 	return 0;
 }
@@ -95,6 +115,11 @@ bmk_isr(int which)
 int
 bmk_isr_init(void)
 {
+	int i;
+
+	for (i = 0; i < BMK_MAXINTR; i++) {
+		SLIST_INIT(&isr_ih[i]);
+	}
 
 	isr_thread = bmk_sched_create("netisr", NULL, 0, isr, NULL, NULL, 0);
 	if (!isr_thread)
