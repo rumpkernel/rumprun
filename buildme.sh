@@ -35,7 +35,7 @@ APPSTACK_LIBS=$(${RUMPMAKE} -f ${APPSTACK_SRC}/sys/rump/dev/Makefile.rumpdevcomp
 for lib in ${APPSTACK_LIBS}; do
 		( cd ${APPSTACK_SRC}/sys/rump/dev/lib/lib${lib}
 			${RUMPMAKE} obj
-			${RUMPMAKE} dependall
+			${RUMPMAKE} RUMP_PCI_IOSPACE=yes dependall
 			${RUMPMAKE} install
 		)
 done
