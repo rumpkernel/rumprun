@@ -41,9 +41,9 @@ OBJS+=		rumpuser.o rumpfiber.o rumppci.o
 OBJS+=		arch/i386/cpu_sched.o arch/i386/machdep.o
 LDSCRIPT=	arch/i386/kern.ldscript
 
-#LIBS_VIO=	-lrumpdev_pci_virtio
-#LIBS_VIO_NET=	-lrumpdev_virtio_if_vioif
-#LIBS_VIO_LD=	-lrumpdev_disk -lrumpdev_virtio_ld
+LIBS_VIO=	-lrumpdev_pci_virtio
+LIBS_VIO_NET=	-lrumpdev_virtio_if_vioif
+LIBS_VIO_LD=	-lrumpdev_disk -lrumpdev_virtio_ld
 LIBS_PCI_NET=	-lrumpdev_pci_if_wm -lrumpdev_miiphy
 LIBS_PCI=	-lrumpdev_pci
 LIBS_NETINET=	-lrumpnet_config -lrumpnet_netinet -lrumpnet_net
