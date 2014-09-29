@@ -27,6 +27,7 @@ endif
 ifeq (${MACHINE},x86_64)
   ifeq ($(shell ${CC} ${CFLAGS} ${CPPFLAGS} -E -dM - < /dev/null | grep LP64),)
     supported:= true
+    MACHINE:=i386
   endif
 endif
 ifneq (${supported},true)
@@ -36,10 +37,12 @@ endif
 # Naturally this has to be an installation compiled for i386
 RUMPKERNDIR?=	/home/pooka/src/buildrump.sh/rump
 
+all: ${THEBIN}
+
 OBJS=		intr.o kernel.o undefs.o memalloc.o sched.o subr.o
 OBJS+=		rumpuser.o rumpfiber.o rumppci.o
-OBJS+=		arch/i386/cpu_sched.o arch/i386/machdep.o
-LDSCRIPT=	arch/i386/kern.ldscript
+
+include arch/${MACHINE}/Makefile.inc
 
 LIBS_VIO=	-lrumpdev_pci_virtio
 LIBS_VIO_NET=	-lrumpdev_virtio_if_vioif
@@ -70,16 +73,11 @@ else
   COMPILER_RT+=	librt/udivdi3.o librt/moddi3.o librt/umoddi3.o
 endif
 
-all: ${THEBIN}
-
 ${THEBIN}: ${THEBIN}.gdb
 	${STRIP} -g -o $@ $<
 
-${THEBIN}.gdb: locore32.o ${OBJS} ${COMPILER_RT} ${LDSCRIPT} Makefile
-	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} locore32.o ${OBJS} -L${RUMPKERNDIR}/lib -Wl,--whole-archive ${ALLLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
-
-locore32.o: arch/i386/locore32.S
-	${CC} ${CFLAGS} -Iinclude -D_LOCORE -c -o locore32.o $<
+${THEBIN}.gdb: ${OBJS} ${COMPILER_RT} ${LDSCRIPT} Makefile
+	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} ${OBJS} -L${RUMPKERNDIR}/lib -Wl,--whole-archive ${ALLLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
 
 clean:
-	rm -f locore32.o ${OBJS} ${COMPILER_RT} ${THEBIN} ${THEBIN}.gdb
+	rm -f ${OBJS} ${COMPILER_RT} ${THEBIN} ${THEBIN}.gdb
