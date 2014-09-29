@@ -46,6 +46,8 @@ void bmk_isr(int);
 int bmk_isr_init(void);
 int bmk_isr_netinit(int (*)(void *), void *, int);
 
+extern unsigned long bmk_membase, bmk_memsize;
+
 #endif /* _LOCORE */
 
 #define ENOMEM		1
@@ -58,5 +60,3 @@ int bmk_isr_netinit(int (*)(void *), void *, int);
 
 #define ENTRY(x)	.text; .globl x; .type x,@function; x:
 #define END(x)		.size x, . - x
-
-extern unsigned long bmk_membase, bmk_memsize;
