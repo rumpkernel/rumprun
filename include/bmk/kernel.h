@@ -58,3 +58,5 @@ int bmk_isr_netinit(int (*)(void *), void *, int);
 
 #define ENTRY(x)	.text; .globl x; .type x,@function; x:
 #define END(x)		.size x, . - x
+
+extern unsigned long bmk_membase, bmk_memsize;

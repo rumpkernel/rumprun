@@ -6,8 +6,8 @@
 #include <bmk/sched.h>
 #include <bmk/app.h>
 
-static unsigned long kernel_membase;
-static unsigned long kernel_memsize;
+unsigned long bmk_membase;
+unsigned long bmk_memsize;
 
 /*
  * we don't need freepg
@@ -19,9 +19,9 @@ bmk_allocpg(size_t howmany)
 	static size_t current = 0;
 	unsigned long rv;
 
-	rv = kernel_membase + PAGE_SIZE*current;
+	rv = bmk_membase + PAGE_SIZE*current;
 	current += howmany;
-	if (current*PAGE_SIZE > kernel_memsize)
+	if (current*PAGE_SIZE > bmk_memsize)
 		return NULL;
 
 	return (void *)rv;
@@ -54,8 +54,8 @@ parsemem(uint32_t addr, uint32_t len)
 	osend = round_page((unsigned long)_end);
 	ossize = osend - osbegin;
 
-	kernel_membase = mbm->addr + ossize;
-	kernel_memsize = memsize - ossize;
+	bmk_membase = mbm->addr + ossize;
+	bmk_memsize = memsize - ossize;
 
 	return 0;
 }

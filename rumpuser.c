@@ -16,19 +16,53 @@ rumpuser_putchar(int c)
 	bmk_cons_putc(c);
 }
 
+/* reserve 1MB for bmk */
+#define BMK_MEMRESERVE (1024*1024)
+
 int
 rumpuser_getparam(const char *name, void *buf, size_t buflen)
 {
-	char *res = buf;
+	int rv = 0;
+
+	if (buflen <= 1)
+		return 1;
 
 	if (bmk_strcmp(name, RUMPUSER_PARAM_NCPU) == 0
-	    || bmk_strcmp(name, RUMPUSER_PARAM_HOSTNAME) == 0
 	    || bmk_strcmp(name, "RUMP_VERBOSE") == 0) {
-		res[0] = '1';
-		res[1] = '\0';
-		return 0;
+		bmk_strncpy(buf, "1", buflen-1);
+
+	} else if (bmk_strcmp(name, RUMPUSER_PARAM_HOSTNAME) == 0) {
+		bmk_strncpy(buf, "rump-baremetal", buflen-1);
+
+	/* for memlimit, we have to implement int -> string ... */
+	} else if (bmk_strcmp(name, "RUMP_MEMLIMIT") == 0) {
+		unsigned long memsize;
+		char tmp[64];
+		char *res = buf;
+		unsigned i, j;
+
+		assert(bmk_memsize > BMK_MEMRESERVE);
+		memsize = bmk_memsize - BMK_MEMRESERVE;
+
+		for (i = 0; memsize > 0; i++) {
+			assert(i < sizeof(tmp)-1);
+			tmp[i] = (memsize % 10) + '0';
+			memsize = memsize / 10;
+		}
+		if (i >= buflen) {
+			rv = 1;
+		} else {
+			res[i] = '\0';
+			for (j = i; i > 0; i--) {
+				res[j-i] = tmp[i-1];
+			}
+		}
+
+	} else {
+		rv = 1;
 	}
-	return 1;
+
+	return rv;
 }
 
 int
