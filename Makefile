@@ -25,16 +25,16 @@ ifeq (${MACHINE},i386)
 supported:= true
 endif
 ifeq (${MACHINE},x86_64)
-  ifeq ($(shell ${CC} ${CFLAGS} ${CPPFLAGS} -E -dM - < /dev/null | grep LP64),)
-    supported:= true
-    MACHINE:=i386
-  endif
+  supported:= true
+  MACHINE:=i386
+  CFLAGS=-m32
+  LDFLAGS=-m32
 endif
 ifneq (${supported},true)
 $(error only supported target is 32bit x86)
 endif
 
-# Naturally this has to be an installation compiled for i386
+# Naturally this has to be an installation compiled for $MACHINE
 RUMPKERNDIR?=	/home/pooka/src/buildrump.sh/rump
 
 all: ${THEBIN}
@@ -77,7 +77,7 @@ ${THEBIN}: ${THEBIN}.gdb
 	${STRIP} -g -o $@ $<
 
 ${THEBIN}.gdb: ${OBJS} ${COMPILER_RT} ${LDSCRIPT} Makefile
-	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} ${OBJS} -L${RUMPKERNDIR}/lib -Wl,--whole-archive ${ALLLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
+	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} ${LDFLAGS} ${OBJS} -L${RUMPKERNDIR}/lib -Wl,--whole-archive ${ALLLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
 
 clean:
 	rm -f ${OBJS} ${COMPILER_RT} ${THEBIN} ${THEBIN}.gdb

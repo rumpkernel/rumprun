@@ -12,6 +12,7 @@ SECTIONS
 		*(.text)
 		*(.text.*)
 		*(.stub)
+		*(.note*)
 	}
 	_etext = . ;
 
