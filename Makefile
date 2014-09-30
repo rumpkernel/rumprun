@@ -3,23 +3,15 @@ THEBIN= rk.bin
 # answer "yes" if you have built "userspace" (i.e. you've run buildme.sh)
 RUMPRUN_PRESENT?= yes
 
-# Has to be an i386 target compiler.  Don't care about much else.
-# Easiest way for me to get an i386 target compiler was to let
-# NetBSD's build.sh create it for me.  YMMV.
-#TOOLDIR=/home/pooka/src/nbsrc/obj.i386/tooldir.Linux-3.13.0-32-generic-x86_64/bin
-#AS= ${TOOLDIR}/i486-netbsdelf-as
-#CC= ${TOOLDIR}/i486--netbsdelf-gcc
-#STRIP= ${TOOLDIR}/i486--netbsdelf-strip
-
 CFLAGS+=	-std=gnu99 -g -Wall -Werror
 CPPFLAGS=	-Iinclude -I${RUMPKERNDIR}/include -nostdinc
 STRIP?=		strip
 
 MACHINE:= $(shell ${CC} -dumpmachine | sed 's/i.86/i386/;s/-.*//;')
 
-# Check if we're building for a 32bit target.
-# XXX: this is here only to help Travis CI.  The resulting binary will
-# not run if you do not build it with a real toolchain
+# Check if we're building for a supported target. For the time being,
+# we build x86_64 in 32bit mode, because someone was lazy and did
+# not write the 64bit bootstrap.
 supported= false
 ifeq (${MACHINE},i386)
 supported:= true
@@ -31,7 +23,7 @@ ifeq (${MACHINE},x86_64)
   LDFLAGS=-m32
 endif
 ifneq (${supported},true)
-$(error only supported target is 32bit x86)
+$(error only supported target is x86)
 endif
 
 # Naturally this has to be an installation compiled for $MACHINE
