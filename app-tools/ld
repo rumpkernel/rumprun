@@ -34,6 +34,11 @@ while [ $# != 0 ]; do
         	inter1="$1"; shift || noshift
         	inter2="$1"; shift || noshift
         	;;
+	-plugin|-plugin-opt)
+		shift || noshift
+		;;
+	-plugin-opt=*)
+		;;
 	*)
 		fail "unknown option $a"
 		;;
