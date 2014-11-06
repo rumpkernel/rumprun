@@ -39,6 +39,7 @@ include arch/${MACHINE}/Makefile.inc
 LIBS_VIO=	-lrumpdev_pci_virtio
 LIBS_VIO_NET=	-lrumpdev_virtio_if_vioif
 LIBS_VIO_LD=	-lrumpdev_disk -lrumpdev_virtio_ld
+LIBS_VIO_RND=	-lrumpdev_virtio_viornd
 LIBS_PCI_NET=	-lrumpdev_pci_if_wm -lrumpdev_miiphy
 LIBS_PCI=	-lrumpdev_pci
 LIBS_NETINET=	-lrumpnet_config -lrumpnet_netinet -lrumpnet_net
@@ -47,6 +48,7 @@ LIBS_NETUNIX=	-lrumpnet_local
 
 ALLLIBS=	${LIBS_VIO_NET}					\
 		${LIBS_VIO_LD}					\
+		${LIBS_VIO_RND}					\
 		${LIBS_VIO}					\
 		${LIBS_PCI_NET}					\
 		${LIBS_PCI}					\
