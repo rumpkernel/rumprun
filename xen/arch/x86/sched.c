@@ -72,7 +72,7 @@ void dump_stack(struct thread *thread)
 
 /* Gets run when a new thread is scheduled the first time ever, 
    defined in x86_[32/64].S */
-extern void thread_starter(void);
+extern void _minios_entry_thread_starter(void);
 
 /* Pushes the specified value onto the stack of the specified thread */
 static void stack_push(struct thread *thread, unsigned long value)
@@ -107,7 +107,7 @@ struct thread* arch_create_thread(const char *name, void (*function)(void *),
     
     stack_push(thread, (unsigned long) function);
     stack_push(thread, (unsigned long) data);
-    thread->thr_ip = (unsigned long) thread_starter;
+    thread->thr_ip = (unsigned long) _minios_entry_thread_starter;
     return thread;
 }
 

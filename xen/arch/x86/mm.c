@@ -282,7 +282,7 @@ static void build_pagetable(unsigned long *start_pfn, unsigned long *max_pfn)
 /*
  * Mark portion of the address space read only.
  */
-extern struct shared_info shared_info;
+extern struct shared_info _minios_shared_info;
 static void set_readonly(void *text, void *etext)
 {
     unsigned long start_address =
@@ -319,7 +319,7 @@ static void set_readonly(void *text, void *etext)
 
         offset = l1_table_offset(start_address);
 
-        if ( start_address != (unsigned long)&shared_info )
+        if ( start_address != (unsigned long)&_minios_shared_info )
         {
             mmu_updates[count].ptr = 
                 ((pgentry_t)mfn << PAGE_SHIFT) + sizeof(pgentry_t) * offset;

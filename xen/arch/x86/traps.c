@@ -13,24 +13,24 @@
  * These are assembler stubs in entry.S.
  * They are the actual entry points for virtual exceptions.
  */
-void divide_error(void);
-void debug(void);
-void int3(void);
-void overflow(void);
-void bounds(void);
-void invalid_op(void);
-void device_not_available(void);
-void coprocessor_segment_overrun(void);
-void invalid_TSS(void);
-void segment_not_present(void);
-void stack_segment(void);
-void general_protection(void);
-void page_fault(void);
-void coprocessor_error(void);
-void simd_coprocessor_error(void);
-void alignment_check(void);
-void spurious_interrupt_bug(void);
-void machine_check(void);
+void _minios_entry_divide_error(void);
+void _minios_entry_debug(void);
+void _minios_entry_int3(void);
+void _minios_entry_overflow(void);
+void _minios_entry_bounds(void);
+void _minios_entry_invalid_op(void);
+void _minios_entry_device_not_available(void);
+void _minios_entry_coprocessor_segment_overrun(void);
+void _minios_entry_invalid_TSS(void);
+void _minios_entry_segment_not_present(void);
+void _minios_entry_stack_segment(void);
+void _minios_entry_general_protection(void);
+void _minios_entry_page_fault(void);
+void _minios_entry_coprocessor_error(void);
+void _minios_entry_simd_coprocessor_error(void);
+void _minios_entry_alignment_check(void);
+void _minios_entry_spurious_interrupt_bug(void);
+void _minios_entry_machine_check(void);
 
 
 void dump_regs(struct pt_regs *regs)
@@ -303,23 +303,23 @@ void do_spurious_interrupt_bug(struct pt_regs * regs)
  * can trap to that vector using a software-interrupt instruction (INT).
  */
 static trap_info_t trap_table[] = {
-    {  0, 0, __KERNEL_CS, (unsigned long)divide_error                },
-    {  1, 0, __KERNEL_CS, (unsigned long)debug                       },
-    {  3, 3, __KERNEL_CS, (unsigned long)int3                        },
-    {  4, 3, __KERNEL_CS, (unsigned long)overflow                    },
-    {  5, 3, __KERNEL_CS, (unsigned long)bounds                      },
-    {  6, 0, __KERNEL_CS, (unsigned long)invalid_op                  },
-    {  7, 0, __KERNEL_CS, (unsigned long)device_not_available        },
-    {  9, 0, __KERNEL_CS, (unsigned long)coprocessor_segment_overrun },
-    { 10, 0, __KERNEL_CS, (unsigned long)invalid_TSS                 },
-    { 11, 0, __KERNEL_CS, (unsigned long)segment_not_present         },
-    { 12, 0, __KERNEL_CS, (unsigned long)stack_segment               },
-    { 13, 0, __KERNEL_CS, (unsigned long)general_protection          },
-    { 14, 0, __KERNEL_CS, (unsigned long)page_fault                  },
-    { 15, 0, __KERNEL_CS, (unsigned long)spurious_interrupt_bug      },
-    { 16, 0, __KERNEL_CS, (unsigned long)coprocessor_error           },
-    { 17, 0, __KERNEL_CS, (unsigned long)alignment_check             },
-    { 19, 0, __KERNEL_CS, (unsigned long)simd_coprocessor_error      },
+    {  0, 0, __KERNEL_CS, (unsigned long)_minios_entry_divide_error                },
+    {  1, 0, __KERNEL_CS, (unsigned long)_minios_entry_debug                       },
+    {  3, 3, __KERNEL_CS, (unsigned long)_minios_entry_int3                        },
+    {  4, 3, __KERNEL_CS, (unsigned long)_minios_entry_overflow                    },
+    {  5, 3, __KERNEL_CS, (unsigned long)_minios_entry_bounds                      },
+    {  6, 0, __KERNEL_CS, (unsigned long)_minios_entry_invalid_op                  },
+    {  7, 0, __KERNEL_CS, (unsigned long)_minios_entry_device_not_available        },
+    {  9, 0, __KERNEL_CS, (unsigned long)_minios_entry_coprocessor_segment_overrun },
+    { 10, 0, __KERNEL_CS, (unsigned long)_minios_entry_invalid_TSS                 },
+    { 11, 0, __KERNEL_CS, (unsigned long)_minios_entry_segment_not_present         },
+    { 12, 0, __KERNEL_CS, (unsigned long)_minios_entry_stack_segment               },
+    { 13, 0, __KERNEL_CS, (unsigned long)_minios_entry_general_protection          },
+    { 14, 0, __KERNEL_CS, (unsigned long)_minios_entry_page_fault                  },
+    { 15, 0, __KERNEL_CS, (unsigned long)_minios_entry_spurious_interrupt_bug      },
+    { 16, 0, __KERNEL_CS, (unsigned long)_minios_entry_coprocessor_error           },
+    { 17, 0, __KERNEL_CS, (unsigned long)_minios_entry_alignment_check             },
+    { 19, 0, __KERNEL_CS, (unsigned long)_minios_entry_simd_coprocessor_error      },
     {  0, 0,           0, 0                           }
 };
     
