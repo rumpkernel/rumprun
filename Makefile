@@ -98,13 +98,9 @@ src-y += xen/console/xenbus.c
 # The common mini-os objects to build.
 APP_OBJS :=
 OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(src-y))
-HTTPD_OBJS+= httpd/bozohttpd.o httpd/main.o httpd/ssl-bozo.o
-HTTPD_OBJS+= httpd/content-bozo.o httpd/dir-index-bozo.o
-
-DEMO_OBJS += $(OBJ_DIR)/rumpkern_demo.o $(OBJ_DIR)/pthread_test.o
 
 .PHONY: default
-default: objs app-tools $(TARGET)
+default: objs app-tools $(TARGET) tests/hello/hello
 
 objs:
 	mkdir -p $(OBJ_DIR)/lib $(OBJ_DIR)/xen/$(TARGET_ARCH_DIR)
@@ -133,11 +129,12 @@ ifneq ($(APP_OBJS),)
 APP_O=$(OBJ_DIR)/$(TARGET)_app.o 
 endif
 
-$(TARGET): links $(OBJS) $(DEMO_OBJS) $(HTTPD_OBJS) $(APP_O) arch_lib
-	$(LD) -r $(LDFLAGS) $(HEAD_OBJ) $(APP_O) $(HTTPD_OBJS) $(DEMO_OBJS) $(OBJS) $(LDARCHLIB) $(LDLIBS) -o $@.o
-	$(OBJCOPY) -w -G $(GLOBAL_PREFIX)* -G _start $@.o $@.o
-	$(LD) $(LDFLAGS) $(LDFLAGS_FINAL) $@.o $(EXTRA_OBJS) -o $@
-	#gzip -f -9 -c $@ >$@.gz
+.PHONY: $(TARGET)
+$(TARGET): links $(OBJS) $(APP_O) arch_lib
+#	$(LD) -r $(LDFLAGS) $(HEAD_OBJ) $(APP_O) $(OBJS) $(LDARCHLIB) $(LDLIBS) -o $@.o
+#	$(OBJCOPY) -w -G $(GLOBAL_PREFIX)* -G _start $@.o $@.o
+#	$(LD) $(LDFLAGS) $(LDFLAGS_FINAL) $@.o $(EXTRA_OBJS) -o $@
+#	gzip -f -9 -c $@ >$@.gz
 
 
 APP_TOOLS += rumpapp-xen-cc rumpapp-xen-cc.configure specs specs.configure
@@ -176,6 +173,9 @@ app-tools/%: app-tools/%.in Makefile Config.mk
 app-tools_clean:
 	rm -f $(addprefix app-tools/, $(APP_TOOLS))
 
+tests/hello/hello: tests/hello/hello.c
+	app-tools/rumpapp-xen-cc -o $@ $<
+
 .PHONY: clean arch_clean app-tools_clean
 
 arch_clean:
@@ -188,6 +188,7 @@ clean:	arch_clean app-tools_clean
 	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core $(OBJ_DIR)/$(TARGET).elf $(OBJ_DIR)/$(TARGET).raw $(TARGET) $(TARGET).o
 	rm -f include/xen include/mini-os/machine
 	rm -f tags TAGS
+	rm -f tests/hello/hello
 
 cleanrump: clean
 	rm -rf rump rumpobj rumptools
