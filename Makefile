@@ -27,7 +27,7 @@ $(error only supported target is x86)
 endif
 
 # Naturally this has to be an installation compiled for $MACHINE
-RUMPKERNDIR?=	/home/pooka/src/buildrump.sh/rump
+RUMPKERNDIR?=	${BUILDRUMP_SH}/rump
 
 all: ${THEBIN}
 

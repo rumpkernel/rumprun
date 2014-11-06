@@ -11,7 +11,6 @@ script:
   - ( cd src-netbsd && git checkout appstack-src )
   - ( cd buildrump.sh && ./buildrump.sh -s ../src-netbsd -qq -V MKPIC=no -V RUMP_KERNEL_IS_LIBC=1 -V RUMP_CURLWP=hypercall -k -N -H -F ACLFLAGS=-m32 kernelheaders fullbuild )
   - APPSTACK_SRC=$(pwd)/src-netbsd BUILDRUMP_SH=$(pwd)/buildrump.sh sh buildme.sh
-  - CFLAGS=-m32 RUMPKERNDIR=$(pwd)/buildrump.sh/rump make
   - size rk.bin rk.bin.gdb
 
 notifications:

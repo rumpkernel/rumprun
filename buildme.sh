@@ -45,3 +45,6 @@ for lib in ${APPSTACK_LIBS}; do
 			${RUMPMAKE} install
 		)
 done
+
+export BUILDRUMP_SH
+make
