@@ -52,10 +52,10 @@ LDFLAGS_FINAL := -T $(LDSCRIPT)
 
 LDFLAGS := -L$(abspath $(OBJ_DIR)/xen/$(TARGET_ARCH_DIR)) -L$(abspath rump/lib)
 
-# Prefix for global API names. All other symbols are localised before
-# linking with EXTRA_OBJS.
-GLOBAL_PREFIX := xenos_
-EXTRA_OBJS =
+# Prefixes for global API names. All other symbols in mini-os are localised
+# before linking with rumprun applications.
+GLOBAL_PREFIXES := _minios_ minios_ HYPERVISOR_ blkfront_ netfront_ pcifront_ xenbus_
+GLOBAL_PREFIXES := $(patsubst %,-G %*, $(GLOBAL_PREFIXES))
 
 TARGET := minios.o
 
@@ -121,9 +121,8 @@ arch_lib:
 	$(MAKE) --directory=xen/$(TARGET_ARCH_DIR) OBJ_DIR=$(OBJ_DIR)/xen/$(TARGET_ARCH_DIR) || exit 1;
 
 minios.o: links $(OBJS) arch_lib
-	$(LD) -r $(LDFLAGS) $(HEAD_OBJ) $(OBJS) $(LDARCHLIB) $(LDLIBS) -o $@
-#	$(OBJCOPY) -w -G $(GLOBAL_PREFIX)* -G _start $@ $@
-#	$(LD) $(LDFLAGS) $(LDFLAGS_FINAL) $@.o $(EXTRA_OBJS) -o $@
+	$(LD) -r $(LDFLAGS) $(OBJS) $(LDARCHLIB) $(LDLIBS) -o $@
+	$(OBJCOPY) -w $(GLOBAL_PREFIXES) -G _start $@ $@
 
 rumprun.o: $(RUMP_OBJS)
 	$(LD) -r $(LDFLAGS) $(RUMP_OBJS) -o $@
@@ -138,7 +137,7 @@ APP_TOOLS_LDLIBS := $(RUMP_LDLIBS)
 # XXX: LDARCHLIB isn't really a linker flag, but it needs to
 # be always included anyway
 APP_TOOLS_LDFLAGS := $(LDFLAGS) $(LDARCHLIB)
-APP_TOOLS_OBJS := $(abspath rumprun.o)
+APP_TOOLS_OBJS := $(abspath minios.o rumprun.o)
 
 APP_TOOLS_ARCH := $(subst x86_32,i386, \
                   $(subst x86_64,amd64, \
@@ -156,7 +155,7 @@ app-tools/%: app-tools/%.in Makefile Config.mk
 		-e 's#!OBJS!#$(APP_TOOLS_OBJS)#g;' \
 		-e 's#!LDLIBS!#$(APP_TOOLS_LDLIBS)#g;' \
 		-e 's#!LDFLAGS!#$(APP_TOOLS_LDFLAGS)#g;' \
-		-e 's#!HEAD_OBJ!#$(abspath minios.o)#g;' \
+		-e 's#!HEAD_OBJ!#$(abspath $(HEAD_OBJ))#g;' \
 		-e 's#!LDSCRIPT!#$(abspath $(LDSCRIPT))#g;'
 	if test -x $<; then chmod +x $@.tmp; fi
 	mv -f $@.tmp $@
