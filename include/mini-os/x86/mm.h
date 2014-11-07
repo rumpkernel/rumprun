@@ -165,10 +165,10 @@ typedef unsigned long paddr_t;
 typedef unsigned long maddr_t;
 #endif
 
-extern unsigned long *phys_to_machine_mapping;
+extern unsigned long *_minios_phys_to_machine_mapping;
 extern char _text, _etext, _erodata, _edata, _end;
-extern unsigned long mfn_zero;
-#define pfn_to_mfn(_pfn) (phys_to_machine_mapping[(_pfn)])
+extern unsigned long _minios_mfn_zero;
+#define pfn_to_mfn(_pfn) (_minios_phys_to_machine_mapping[(_pfn)])
 static __inline__ maddr_t phys_to_machine(paddr_t phys)
 {
 	maddr_t machine = pfn_to_mfn(phys >> PAGE_SHIFT);

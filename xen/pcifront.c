@@ -36,7 +36,7 @@ struct pcifront_dev {
 
 void pcifront_handler(evtchn_port_t port, struct pt_regs *regs, void *data)
 {
-    wake_up(&pcifront_queue);
+    minios_wake_up(&pcifront_queue);
 }
 
 static void free_pcifront(struct pcifront_dev *dev)
@@ -44,12 +44,12 @@ static void free_pcifront(struct pcifront_dev *dev)
     if (!dev)
         dev = pcidev;
 
-    mask_evtchn(dev->evtchn);
+    minios_mask_evtchn(dev->evtchn);
 
     gnttab_end_access(dev->info_ref);
-    free_page(dev->info);
+    minios_free_page(dev->info);
 
-    unbind_evtchn(dev->evtchn);
+    minios_unbind_evtchn(dev->evtchn);
 
     free(dev->backend);
     free(dev->nodename);
@@ -71,14 +71,14 @@ void pcifront_watches(void *opaque)
     snprintf(fe_state, sizeof(fe_state), "%s/state", nodename);
 
     while (1) {
-        printk("pcifront_watches: waiting for backend path to appear %s\n", path);
+        minios_printk("pcifront_watches: waiting for backend path to appear %s\n", path);
         xenbus_watch_path_token(XBT_NIL, path, path, &events);
         while ((err = xenbus_read(XBT_NIL, path, &be_path)) != NULL) {
             free(err);
             xenbus_wait_for_watch(&events);
         }
         xenbus_unwatch_path_token(XBT_NIL, path, path);
-        printk("pcifront_watches: waiting for backend to get into the right state %s\n", be_path);
+        minios_printk("pcifront_watches: waiting for backend to get into the right state %s\n", be_path);
         be_state = (char *) malloc(strlen(be_path) +  7);
         snprintf(be_state, strlen(be_path) +  7, "%s/state", be_path);
         xenbus_watch_path_token(XBT_NIL, be_state, be_state, &events);
@@ -95,15 +95,15 @@ void pcifront_watches(void *opaque)
         }
         xenbus_watch_path_token(XBT_NIL, be_state, be_state, &events);
         state = XenbusStateConnected;
-        printk("pcifront_watches: waiting for backend events %s\n", be_state);
+        minios_printk("pcifront_watches: waiting for backend events %s\n", be_state);
         while ((err = xenbus_wait_for_state_change(be_state, &state, &events)) == NULL &&
                (err = xenbus_read(XBT_NIL, pcidev->backend, &msg)) == NULL) {
             free(msg);
-            printk("pcifront_watches: backend state changed: %s %d\n", be_state, state);
+            minios_printk("pcifront_watches: backend state changed: %s %d\n", be_state, state);
             if (state == XenbusStateReconfiguring) {
-                printk("pcifront_watches: writing %s %d\n", fe_state, XenbusStateReconfiguring);
+                minios_printk("pcifront_watches: writing %s %d\n", fe_state, XenbusStateReconfiguring);
                 if ((err = xenbus_switch_state(XBT_NIL, fe_state, XenbusStateReconfiguring)) != NULL) {
-                    printk("pcifront_watches: error changing state to %d: %s\n",
+                    minios_printk("pcifront_watches: error changing state to %d: %s\n",
                             XenbusStateReconfiguring, err);
                     if (!strcmp(err, "ENOENT")) {
                         xenbus_write(XBT_NIL, fe_state, "7");
@@ -111,10 +111,10 @@ void pcifront_watches(void *opaque)
                     }
                 }
             } else if (state == XenbusStateReconfigured) {
-                printk("pcifront_watches: writing %s %d\n", fe_state, XenbusStateConnected);
-                printk("pcifront_watches: changing state to %d\n", XenbusStateConnected);
+                minios_printk("pcifront_watches: writing %s %d\n", fe_state, XenbusStateConnected);
+                minios_printk("pcifront_watches: changing state to %d\n", XenbusStateConnected);
                 if ((err = xenbus_switch_state(XBT_NIL, fe_state, XenbusStateConnected)) != NULL) {
-                    printk("pcifront_watches: error changing state to %d: %s\n",
+                    minios_printk("pcifront_watches: error changing state to %d: %s\n",
                             XenbusStateConnected, err);
                     if (!strcmp(err, "ENOENT")) {
                         xenbus_write(XBT_NIL, fe_state, "4");
@@ -125,9 +125,9 @@ void pcifront_watches(void *opaque)
                 break;
         }
         if (err)
-            printk("pcifront_watches: done waiting err=%s\n", err);
+            minios_printk("pcifront_watches: done waiting err=%s\n", err);
         else
-            printk("pcifront_watches: done waiting\n");
+            minios_printk("pcifront_watches: done waiting\n");
         xenbus_unwatch_path_token(XBT_NIL, be_state, be_state);
         shutdown_pcifront(pcidev);
         free(be_state);
@@ -159,7 +159,7 @@ struct pcifront_dev *init_pcifront(char *_nodename)
     snprintf(path, sizeof(path), "%s/backend-id", nodename);
     dom = xenbus_read_integer(path); 
     if (dom == -1) {
-        printk("no backend\n");
+        minios_printk("no backend\n");
         return NULL;
     }
 
@@ -168,9 +168,9 @@ struct pcifront_dev *init_pcifront(char *_nodename)
     dev->nodename = strdup(nodename);
     dev->dom = dom;
 
-    evtchn_alloc_unbound(dev->dom, pcifront_handler, dev, &dev->evtchn);
+    minios_evtchn_alloc_unbound(dev->dom, pcifront_handler, dev, &dev->evtchn);
 
-    dev->info = (struct xen_pci_sharedinfo*) alloc_page();
+    dev->info = (struct xen_pci_sharedinfo*) minios_alloc_page();
     memset(dev->info,0,PAGE_SIZE);
 
     dev->info_ref = gnttab_grant_access(dev->dom,virt_to_mfn(dev->info),0);
@@ -180,7 +180,7 @@ struct pcifront_dev *init_pcifront(char *_nodename)
 again:
     err = xenbus_transaction_start(&xbt);
     if (err) {
-        printk("starting transaction\n");
+        minios_printk("starting transaction\n");
         free(err);
     }
 
@@ -214,7 +214,7 @@ again:
     if (err) free(err);
     if (retry) {
             goto again;
-        printk("completing transaction\n");
+        minios_printk("completing transaction\n");
     }
 
     goto done;
@@ -222,7 +222,7 @@ again:
 abort_transaction:
     free(err);
     err = xenbus_transaction_end(xbt, 1, &retry);
-    printk("Abort transaction %s\n", message);
+    minios_printk("Abort transaction %s\n", message);
     goto error;
 
 done:
@@ -230,11 +230,11 @@ done:
     snprintf(path, sizeof(path), "%s/backend", nodename);
     msg = xenbus_read(XBT_NIL, path, &dev->backend);
     if (msg) {
-        printk("Error %s when reading the backend path %s\n", msg, path);
+        minios_printk("Error %s when reading the backend path %s\n", msg, path);
         goto error;
     }
 
-    printk("pcifront: node=%s backend=%s\n", nodename, dev->backend);
+    minios_printk("pcifront: node=%s backend=%s\n", nodename, dev->backend);
 
     {
         char path[strlen(dev->backend) + 1 + 5 + 1];
@@ -249,7 +249,7 @@ done:
         while (err == NULL && state < XenbusStateConnected)
             err = xenbus_wait_for_state_change(path, &state, &dev->events);
         if (state != XenbusStateConnected) {
-            printk("backend not avalable, state=%d\n", state);
+            minios_printk("backend not avalable, state=%d\n", state);
             xenbus_unwatch_path_token(XBT_NIL, path, path);
             goto error;
         }
@@ -257,12 +257,12 @@ done:
         snprintf(frontpath, sizeof(frontpath), "%s/state", nodename);
         if ((err = xenbus_switch_state(XBT_NIL, frontpath, XenbusStateConnected))
             != NULL) {
-            printk("error switching state %s\n", err);
+            minios_printk("error switching state %s\n", err);
             xenbus_unwatch_path_token(XBT_NIL, path, path);
             goto error;
         }
     }
-    unmask_evtchn(dev->evtchn);
+    minios_unmask_evtchn(dev->evtchn);
 
     if (!_nodename)
         pcidev = dev;
@@ -287,22 +287,22 @@ parsepciaddr(const char *s, unsigned int *domain, unsigned int *bus,
 
     *domain = strtoul(s, &ep, 16);
     if (*ep != ':') {
-        printk("\"%s\" does not look like a PCI device address\n", s);
+        minios_printk("\"%s\" does not look like a PCI device address\n", s);
         return 0;
     }
     *bus = strtoul(ep+1, &ep, 16);
     if (*ep != ':') {
-        printk("\"%s\" does not look like a PCI device address\n", s);
+        minios_printk("\"%s\" does not look like a PCI device address\n", s);
         return 0;
     }
     *slot = strtoul(ep+1, &ep, 16);
     if (*ep != '.') {
-        printk("\"%s\" does not look like a PCI device address\n", s);
+        minios_printk("\"%s\" does not look like a PCI device address\n", s);
         return 0;
     }
     *fun = strtoul(ep+1, &ep, 16);
     if (*ep != '\0') {
-        printk("\"%s\" does not look like a PCI device address\n", s);
+        minios_printk("\"%s\" does not look like a PCI device address\n", s);
         return 0;
     }
 
@@ -320,7 +320,7 @@ void pcifront_scan(struct pcifront_dev *dev, void (*func)(unsigned int domain, u
     if (!dev)
         dev = pcidev;
     if (!dev) {
-	printk("pcifront_scan: device or bus\n");
+	minios_printk("pcifront_scan: device or bus\n");
 	return;
     }
 
@@ -333,7 +333,7 @@ void pcifront_scan(struct pcifront_dev *dev, void (*func)(unsigned int domain, u
         snprintf(path, len, "%s/dev-%d", dev->backend, i);
         msg = xenbus_read(XBT_NIL, path, &s);
         if (msg) {
-            printk("Error %s when reading the PCI root name at %s\n", msg, path);
+            minios_printk("Error %s when reading the PCI root name at %s\n", msg, path);
             continue;
         }
 
@@ -358,12 +358,12 @@ void shutdown_pcifront(struct pcifront_dev *dev)
     char path[strlen(dev->backend) + 1 + 5 + 1];
     char nodename[strlen(dev->nodename) + 1 + 5 + 1];
 
-    printk("close pci: backend at %s\n",dev->backend);
+    minios_printk("close pci: backend at %s\n",dev->backend);
 
     snprintf(path, sizeof(path), "%s/state", dev->backend);
     snprintf(nodename, sizeof(nodename), "%s/state", dev->nodename);
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateClosing)) != NULL) {
-        printk("shutdown_pcifront: error changing state to %d: %s\n",
+        minios_printk("shutdown_pcifront: error changing state to %d: %s\n",
                 XenbusStateClosing, err);
         goto close_pcifront;
     }
@@ -373,7 +373,7 @@ void shutdown_pcifront(struct pcifront_dev *dev)
     if (err) free(err);
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateClosed)) != NULL) {
-        printk("shutdown_pcifront: error changing state to %d: %s\n",
+        minios_printk("shutdown_pcifront: error changing state to %d: %s\n",
                 XenbusStateClosed, err);
         goto close_pcifront;
     }
@@ -384,7 +384,7 @@ void shutdown_pcifront(struct pcifront_dev *dev)
     }
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateInitialising)) != NULL) {
-        printk("shutdown_pcifront: error changing state to %d: %s\n",
+        minios_printk("shutdown_pcifront: error changing state to %d: %s\n",
                 XenbusStateInitialising, err);
         goto close_pcifront;
     }
@@ -428,7 +428,7 @@ int pcifront_physical_to_virtual (struct pcifront_dev *dev,
         snprintf(path, sizeof(path), "%s/dev-%d", dev->backend, i);
         msg = xenbus_read(XBT_NIL, path, &s);
         if (msg) {
-            printk("Error %s when reading the PCI root name at %s\n", msg, path);
+            minios_printk("Error %s when reading the PCI root name at %s\n", msg, path);
             continue;
         }
 
@@ -441,7 +441,7 @@ int pcifront_physical_to_virtual (struct pcifront_dev *dev,
             snprintf(path, sizeof(path), "%s/vdev-%d", dev->backend, i);
             msg = xenbus_read(XBT_NIL, path, &s);
             if (msg) {
-                printk("Error %s when reading the PCI root name at %s\n", msg, path);
+                minios_printk("Error %s when reading the PCI root name at %s\n", msg, path);
                 continue;
             }
 
@@ -466,7 +466,7 @@ void pcifront_op(struct pcifront_dev *dev, struct xen_pci_op *op)
     set_bit(_XEN_PCIF_active, (void*) &dev->info->flags);
     notify_remote_via_evtchn(dev->evtchn);
 
-    wait_event(pcifront_queue, !test_bit(_XEN_PCIF_active, (void*) &dev->info->flags));
+    minios_wait_event(pcifront_queue, !test_bit(_XEN_PCIF_active, (void*) &dev->info->flags));
 
     /* Make sure flag is read before info */
     rmb();

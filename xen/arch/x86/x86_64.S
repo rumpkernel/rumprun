@@ -24,10 +24,10 @@ _start:
         movq stack_start(%rip),%rsp
         andq $(~(__STACK_SIZE-1)), %rsp
         movq %rsi,%rdi
-        call start_kernel
+        call _minios_start_kernel
 
 stack_start:
-        .quad stack+(2*__STACK_SIZE)
+        .quad _minios_stack+(2*__STACK_SIZE)
 
         /* Unpleasant -- the PTE that maps this page is actually overwritten */
         /* to map the real shared-info page! :-)                             */
@@ -67,7 +67,7 @@ NMI_MASK = 0x80000000
 	testl $NMI_MASK,2*8(%rsp)
 	jnz   2f
 
-	testb $1,(xen_features+XENFEAT_supervisor_mode_kernel)
+	testb $1,(_minios_xen_features+XENFEAT_supervisor_mode_kernel)
 	jnz   1f
 
 	/* Direct iret to kernel space. Correct CS and SS. */
@@ -151,7 +151,7 @@ hypervisor_callback2:
         incl %gs:0
         cmovzq %rax,%rsp
         pushq %rdi
-        call do_hypervisor_callback 
+        call _minios_do_hypervisor_callback 
         popq %rsp
         decl %gs:0
         jmp error_exit
@@ -290,7 +290,7 @@ ENTRY(thread_starter)
         pushq $0
         xorq %rbp,%rbp
         call *%rbx
-        call exit_thread 
+        call minios_exit_thread 
         
 
 ENTRY(arch_switch_threads)

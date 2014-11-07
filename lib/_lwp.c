@@ -111,7 +111,7 @@ _lwp_create(const ucontext_t *ucp, unsigned long flags, lwpid_t *lid)
 	*lid = ++curlwpid;
 
 	scd->scd_lwpid = *lid;
-	scd->scd_thread = create_thread("lwp", scd,
+	scd->scd_thread = minios_create_thread("lwp", scd,
 	    scd->scd_start, scd->scd_arg, scd->scd_stack);
 	if (scd->scd_thread == NULL)
 		return EBUSY; /* ??? */
@@ -130,7 +130,7 @@ _lwp_unpark(lwpid_t lid, const void *hint)
 		return -1;
 	}
 
-	wake(scd->scd_thread);
+	minios_wake(scd->scd_thread);
 	return 0;
 }
 
@@ -182,8 +182,8 @@ void
 _lwp_rumpxen_scheduler_init(void)
 {
 
-	set_sched_hook(schedhook);
-	mainthread.scd_thread = init_mainlwp(&mainthread.scd_tls);
+	minios_set_sched_hook(schedhook);
+	mainthread.scd_thread = minios_init_mainlwp(&mainthread.scd_tls);
 	TAILQ_INSERT_TAIL(&scheds, &mainthread, entries);
 }
 
@@ -201,16 +201,16 @@ ___lwp_park60(clockid_t clock_id, int flags, const struct timespec *ts,
 		uint32_t msecs = ts->tv_sec*1000 + ts->tv_nsec/(1000*1000);
 		
 		if (flags & TIMER_ABSTIME) {
-			rv = absmsleep(msecs);
+			rv = minios_absmsleep(msecs);
 		} else {
-			rv = msleep(msecs);
+			rv = minios_msleep(msecs);
 		}
 		if (rv) {
 			rv = ETIMEDOUT;
 		}
 	} else {
-		block(mylwp->scd_thread);
-		schedule();
+		minios_block(mylwp->scd_thread);
+		minios_schedule();
 		rv = 0;
 	}
 
@@ -228,7 +228,7 @@ _lwp_exit(void)
 
 	scd->scd_lwpctl.lc_curcpu = LWPCTL_CPU_EXITED;
 	TAILQ_REMOVE(&scheds, scd, entries);
-	exit_thread();
+	minios_exit_thread();
 }
 
 void
@@ -237,7 +237,7 @@ _lwp_continue(lwpid_t lid)
 	struct schedulable *scd;
 
 	if ((scd = lwpid2scd(lid)) != NULL)
-		wake(scd->scd_thread);
+		minios_wake(scd->scd_thread);
 }
 
 void
@@ -246,7 +246,7 @@ _lwp_suspend(lwpid_t lid)
 	struct schedulable *scd;
 
 	if ((scd = lwpid2scd(lid)) != NULL)
-		block(scd->scd_thread);
+		minios_block(scd->scd_thread);
 }
 
 int
@@ -257,7 +257,7 @@ _lwp_wakeup(lwpid_t lid)
 	if ((scd = lwpid2scd(lid)) == NULL)
 		return ESRCH;
 
-	wake(scd->scd_thread);
+	minios_wake(scd->scd_thread);
 	return ENODEV;
 }
 
@@ -302,7 +302,7 @@ void
 _sched_yield(void)
 {
 
-	schedule();
+	minios_schedule();
 }
 __weak_alias(sched_yield,_sched_yield);
 __strong_alias(_sys_sched_yield,_sched_yield);

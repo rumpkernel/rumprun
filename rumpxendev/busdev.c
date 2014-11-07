@@ -628,17 +628,17 @@ next_event_msg(struct xenbus_dev_data *d, struct file *fp, int *err_r,
 
 		DPRINTF(("/dev/xen/xenbus: about to block err_r=%p\n", err_r));
 
-		add_waiter(w, d->replies.waitq);
+		minios_add_waiter(w, d->replies.waitq);
 		spin_unlock(&xenbus_req_lock);
 		mutex_exit(&d->lock);
 		rumpkern_unsched(&nlocks, 0);
 
-		schedule();
+		minios_schedule();
 
 		rumpkern_sched(nlocks, 0);
 		mutex_enter(&d->lock);
 		spin_lock(&xenbus_req_lock);
-		remove_waiter(w, d->replies.waitq);
+		minios_remove_waiter(w, d->replies.waitq);
 	}
 	struct xenbus_event *event = STAILQ_FIRST(&d->replies.events);
 	STAILQ_REMOVE_HEAD(&d->replies.events, entry);
@@ -741,7 +741,7 @@ xenbus_dev_xb_wakeup(struct xenbus_event_queue *queue)
 	DPRINTF(("/dev/xen/xenbus: wakeup\n"));
 	struct xenbus_dev_data *d =
 		container_of(queue, struct xenbus_dev_data, replies);
-	wake_up(&d->replies.waitq);
+	minios_wake_up(&d->replies.waitq);
 	selnotify(&d->selinfo, RBITS, NOTE_SUBMIT);
 }
 
@@ -756,7 +756,7 @@ xenbus_dev_restart(file_t *fp)
 	spin_lock(&xenbus_req_lock);
 
 	d->want_restart |= 1;
-	wake_up(&d->replies.waitq);
+	minios_wake_up(&d->replies.waitq);
 
 	spin_unlock(&xenbus_req_lock);
 	mutex_exit(&d->lock);

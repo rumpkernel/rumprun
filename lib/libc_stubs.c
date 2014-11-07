@@ -7,7 +7,7 @@
 	static int done = 0;			\
 	errno = ENOTSUP;			\
 	if (done) return ENOTSUP; done = 1;	\
-	printk("STUB ``%s'' called\n", #name);	\
+	minios_printk("STUB ``%s'' called\n", #name);	\
 	return ENOTSUP;}
 
 STUB(__sigaction14);

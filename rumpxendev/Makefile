@@ -10,7 +10,7 @@ CPPFLAGS+=	-I${RUMPTOP}/librump/rumpvfs
 CPPFLAGS+=	-I${.CURDIR}
 CPPFLAGS+=	-I${.CURDIR}/../include -D__RUMP_KERNEL__ -I${.CURDIR}/..
 
-RUMP_SYM_NORENAME=xenbus_|HYPERVISOR_|wake$$|block$$|schedule$$|force_evtchn
+RUMP_SYM_NORENAME=xenbus_|HYPERVISOR_|minios_
 
 .include "${RUMPTOP}/Makefile.rump"
 .include <bsd.lib.mk>

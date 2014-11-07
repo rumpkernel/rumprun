@@ -121,13 +121,13 @@ struct consfront_dev *xencons_ring_init(void)
 	dev->evtchn = start_info.console.domU.evtchn;
 	dev->ring = (struct xencons_interface *) mfn_to_virt(start_info.console.domU.mfn);
 
-	err = bind_evtchn(dev->evtchn, console_handle_input, dev);
+	err = minios_bind_evtchn(dev->evtchn, console_handle_input, dev);
 	if (err <= 0) {
-		printk("XEN console request chn bind failed %i\n", err);
+		minios_printk("XEN console request chn bind failed %i\n", err);
                 free(dev);
 		return NULL;
 	}
-        unmask_evtchn(dev->evtchn);
+        minios_unmask_evtchn(dev->evtchn);
 
 	/* In case we have in-flight data after save/restore... */
 	notify_daemon(dev);

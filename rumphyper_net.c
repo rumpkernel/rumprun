@@ -83,7 +83,7 @@ myrecv(struct netfront_dev *dev, unsigned char *data, int dlen)
 	}
 
 	if (dlen > MAXPKT) {
-		printk("myrecv: pkt len %d too big\n", dlen);
+		minios_printk("myrecv: pkt len %d too big\n", dlen);
 		return;
 	}
 
@@ -92,7 +92,7 @@ myrecv(struct netfront_dev *dev, unsigned char *data, int dlen)
 	viu->viu_write = nextw;
 
 	if (viu->viu_rcvr)
-		wake(viu->viu_rcvr);
+		minios_wake(viu->viu_rcvr);
 }
 
 static void
@@ -117,9 +117,9 @@ pusher(void *arg)
 	for (;;) {
 		while (viu->viu_read == viu->viu_write) {
 			viu->viu_rcvr = me;
-			block(viu->viu_rcvr);
+			minios_block(viu->viu_rcvr);
 			local_irq_restore(flags);
-			schedule();
+			minios_schedule();
 			local_irq_save(flags);
 			viu->viu_rcvr = NULL;
 		}
@@ -156,16 +156,16 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 	memset(viu, 0, sizeof(*viu));
 	viu->viu_vifsc = vif_sc;
 
-	viu->viu_dev = init_netfront(NULL, myrecv, enaddr, NULL, viu);
+	viu->viu_dev = netfront_init(NULL, myrecv, enaddr, NULL, viu);
 	if (!viu->viu_dev) {
 		rv = EINVAL; /* ? */
 		free(viu);
 		goto out;
 	}
 
-	if (create_thread("xenifp", NULL, pusher, viu, NULL) == NULL) {
-		printk("fatal thread creation failure\n"); /* XXX */
-		do_exit();
+	if (minios_create_thread("xenifp", NULL, pusher, viu, NULL) == NULL) {
+		minios_printk("fatal thread creation failure\n"); /* XXX */
+		minios_do_exit();
 	}
 
 	rv = 0;

@@ -64,7 +64,7 @@ gntmap_find_free_entry(struct gntmap *map)
     }
 
 #ifdef GNTMAP_DEBUG
-    printk("gntmap_find_free_entry(map=%p): all %d entries full\n",
+    minios_printk("gntmap_find_free_entry(map=%p): all %d entries full\n",
            map, map->nentries);
 #endif
     return NULL;
@@ -86,7 +86,7 @@ int
 gntmap_set_max_grants(struct gntmap *map, int count)
 {
 #ifdef GNTMAP_DEBUG
-    printk("gntmap_set_max_grants(map=%p, count=%d)\n", map, count);
+    minios_printk("gntmap_set_max_grants(map=%p, count=%d)\n", map, count);
 #endif
 
     if (map->nentries != 0)
@@ -120,7 +120,7 @@ _gntmap_map_grant_ref(struct gntmap_entry *entry,
 
     rc = HYPERVISOR_grant_table_op(GNTTABOP_map_grant_ref, &op, 1);
     if (rc != 0 || op.status != GNTST_okay) {
-        printk("GNTTABOP_map_grant_ref failed: "
+        minios_printk("GNTTABOP_map_grant_ref failed: "
                "returned %d, status %" PRId16 "\n",
                rc, op.status);
         return rc != 0 ? rc : op.status;
@@ -143,7 +143,7 @@ _gntmap_unmap_grant_ref(struct gntmap_entry *entry)
 
     rc = HYPERVISOR_grant_table_op(GNTTABOP_unmap_grant_ref, &op, 1);
     if (rc != 0 || op.status != GNTST_okay) {
-        printk("GNTTABOP_unmap_grant_ref failed: "
+        minios_printk("GNTTABOP_unmap_grant_ref failed: "
                "returned %d, status %" PRId16 "\n",
                rc, op.status);
         return rc != 0 ? rc : op.status;
@@ -160,14 +160,14 @@ gntmap_munmap(struct gntmap *map, unsigned long start_address, int count)
     struct gntmap_entry *ent;
 
 #ifdef GNTMAP_DEBUG
-    printk("gntmap_munmap(map=%p, start_address=%lx, count=%d)\n",
+    minios_printk("gntmap_munmap(map=%p, start_address=%lx, count=%d)\n",
            map, start_address, count);
 #endif
 
     for (i = 0; i < count; i++) {
         ent = gntmap_find_entry(map, start_address + PAGE_SIZE * i);
         if (ent == NULL) {
-            printk("gntmap: tried to munmap unknown page\n");
+            minios_printk("gntmap: tried to munmap unknown page\n");
             return -EINVAL;
         }
 
@@ -192,7 +192,7 @@ gntmap_map_grant_refs(struct gntmap *map,
     int i;
 
 #ifdef GNTMAP_DEBUG
-    printk("gntmap_map_grant_refs(map=%p, count=%" PRIu32 ", "
+    minios_printk("gntmap_map_grant_refs(map=%p, count=%" PRIu32 ", "
            "domids=%p [%" PRIu32 "...], domids_stride=%d, "
            "refs=%p [%" PRIu32 "...], writable=%d)\n",
            map, count,
@@ -227,7 +227,7 @@ void
 gntmap_init(struct gntmap *map)
 {
 #ifdef GNTMAP_DEBUG
-    printk("gntmap_init(map=%p)\n", map);
+    minios_printk("gntmap_init(map=%p)\n", map);
 #endif
     map->nentries = 0;
     map->entries = NULL;
@@ -240,7 +240,7 @@ gntmap_fini(struct gntmap *map)
     int i;
 
 #ifdef GNTMAP_DEBUG
-    printk("gntmap_fini(map=%p)\n", map);
+    minios_printk("gntmap_fini(map=%p)\n", map);
 #endif
 
     for (i = 0; i < map->nentries; i++) {

@@ -40,13 +40,13 @@ shared_info_t *HYPERVISOR_shared_info;
  * This structure contains start-of-day info, such as pagetable base pointer,
  * address of the shared_info structure, and things like that.
  */
-union start_info_union start_info_union;
+union start_info_union _minios_start_info_union;
 
 /*
  * Just allocate the kernel stack here. SS:ESP is set up to point here
  * in head.S.
  */
-char stack[2*STACK_SIZE];
+char _minios_stack[2*STACK_SIZE];
 
 extern char _minios_shared_info[PAGE_SIZE];
 
@@ -69,8 +69,8 @@ shared_info_t *map_shared_info(unsigned long pa)
 	if ( (rc = HYPERVISOR_update_va_mapping(
               (unsigned long)_minios_shared_info, __pte(pa | 7), UVMF_INVLPG)) )
 	{
-		printk("Failed to map shared_info!! rc=%d\n", rc);
-		do_exit();
+		minios_printk("Failed to map shared_info!! rc=%d\n", rc);
+		minios_do_exit();
 	}
 	return (shared_info_t *)_minios_shared_info;
 }
@@ -84,7 +84,7 @@ arch_init(start_info_t *si)
 	memcpy(&start_info, si, sizeof(*si));
 
 	/* set up minimal memory infos */
-	phys_to_machine_mapping = (unsigned long *)start_info.mfn_list;
+	_minios_phys_to_machine_mapping = (unsigned long *)start_info.mfn_list;
 
 	/* Grab the shared_info pointer and put it in a safe place. */
 	HYPERVISOR_shared_info = map_shared_info(start_info.shared_info);
@@ -115,7 +115,8 @@ arch_fini(void)
 void
 arch_print_info(void)
 {
-	printk("  stack:      %p-%p\n", stack, stack + sizeof(stack));
+	minios_printk("  stack:      %p-%p\n", _minios_stack,
+                _minios_stack + sizeof(_minios_stack));
 }
 
 

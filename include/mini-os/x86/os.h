@@ -75,7 +75,7 @@ do {									\
 	_vcpu->evtchn_upcall_mask = 0;					\
 	barrier(); /* unmask then check (avoid races) */		\
 	if ( unlikely(_vcpu->evtchn_upcall_pending) )			\
-		force_evtchn_callback();				\
+		minios_force_evtchn_callback();				\
 } while (0)
 
 #define __save_flags(x)							\
@@ -93,7 +93,7 @@ do {									\
 	if ((_vcpu->evtchn_upcall_mask = (x)) == 0) {			\
 		barrier(); /* unmask then check (avoid races) */	\
 		if ( unlikely(_vcpu->evtchn_upcall_pending) )		\
-			force_evtchn_callback();			\
+			minios_force_evtchn_callback();			\
 	}\
 } while (0)
 

@@ -40,19 +40,19 @@ struct thread* arch_create_thread(const char *name, void (*function)(void *),
 
 void init_sched(void);
 void run_idle_thread(void);
-struct thread* create_thread(const char *name, void *cookie,
+struct thread* minios_create_thread(const char *name, void *cookie,
 			     void (*f)(void *), void *data, void *stack);
-void exit_thread(void) __attribute__((noreturn));
-void join_thread(struct thread *);
-void set_sched_hook(void (*hook)(void *, void *));
-struct thread *init_mainlwp(void *cookie);
-void schedule(void);
+void minios_exit_thread(void) __attribute__((noreturn));
+void minios_join_thread(struct thread *);
+void minios_set_sched_hook(void (*hook)(void *, void *));
+struct thread *minios_init_mainlwp(void *cookie);
+void minios_schedule(void);
 
 #define current get_current()
 
-void wake(struct thread *thread);
-void block(struct thread *thread);
-int msleep(uint32_t millisecs);
-int absmsleep(uint32_t millisecs);
+void minios_wake(struct thread *thread);
+void minios_block(struct thread *thread);
+int minios_msleep(uint32_t millisecs);
+int minios_absmsleep(uint32_t millisecs);
 
 #endif /* __MINIOS_SCHED_H__ */

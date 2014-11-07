@@ -63,7 +63,7 @@ struct consfront_dev {
 
 
 void print(int direct, const char *fmt, va_list args);
-void printk(const char *fmt, ...);
+void minios_printk(const char *fmt, ...);
 void xprintk(const char *fmt, ...);
 void panic(const char *fmt, ...);
 
@@ -73,7 +73,7 @@ void xencons_rx(char *buf, unsigned len, struct pt_regs *regs);
 void xencons_tx(void);
 
 void init_console(void);
-void console_print(struct consfront_dev *dev, char *data, int length);
+void minios_console_print(struct consfront_dev *dev, char *data, int length);
 void fini_console(struct consfront_dev *dev);
 
 /* Low level functions defined in xencons_ring.c */

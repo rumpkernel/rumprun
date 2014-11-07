@@ -32,16 +32,16 @@ union start_info_union
     start_info_t start_info;
     char padding[512];
 };
-extern union start_info_union start_info_union;
-#define start_info (start_info_union.start_info)
+extern union start_info_union _minios_start_info_union;
+#define start_info (_minios_start_info_union.start_info)
 
 /* hypervisor.c */
-void force_evtchn_callback(void);
-void do_hypervisor_callback(struct pt_regs *regs);
-void mask_evtchn(uint32_t port);
-void unmask_evtchn(uint32_t port);
-void clear_evtchn(uint32_t port);
+void minios_force_evtchn_callback(void);
+void minios_do_hypervisor_callback(struct pt_regs *regs);
+void minios_mask_evtchn(uint32_t port);
+void minios_unmask_evtchn(uint32_t port);
+void minios_clear_evtchn(uint32_t port);
 
-extern int in_callback;
+extern int _minios_in_hypervisor_callback;
 
 #endif /* __MINIOS_HYPERVISOR_H__ */

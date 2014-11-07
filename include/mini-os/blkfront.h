@@ -29,7 +29,7 @@ struct blkfront_info
     int barrier;
     int flush;
 };
-struct blkfront_dev *init_blkfront(char *nodename, struct blkfront_info *info);
+struct blkfront_dev *blkfront_init(char *nodename, struct blkfront_info *info);
 void blkfront_aio(struct blkfront_aiocb *aiocbp, int write);
 #define blkfront_aio_read(aiocbp) blkfront_aio(aiocbp, 0)
 #define blkfront_aio_write(aiocbp) blkfront_aio(aiocbp, 1)
@@ -39,7 +39,7 @@ void blkfront_io(struct blkfront_aiocb *aiocbp, int write);
 void blkfront_aio_push_operation(struct blkfront_aiocb *aiocbp, uint8_t op);
 int blkfront_aio_poll(struct blkfront_dev *dev);
 void blkfront_sync(struct blkfront_dev *dev);
-void shutdown_blkfront(struct blkfront_dev *dev);
+void blkfront_shutdown(struct blkfront_dev *dev);
 
 extern struct wait_queue_head blkfront_queue;
 

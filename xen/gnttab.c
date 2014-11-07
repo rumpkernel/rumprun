@@ -111,7 +111,7 @@ gnttab_end_access(grant_ref_t ref)
     nflags = gnttab_table[ref].flags;
     do {
         if ((flags = nflags) & (GTF_reading|GTF_writing)) {
-            printk("WARNING: g.e. still in use! (%x)\n", flags);
+            minios_printk("WARNING: g.e. still in use! (%x)\n", flags);
             return 0;
         }
     } while ((nflags = synch_cmpxchg(&gnttab_table[ref].flags, flags, 0)) !=
@@ -131,7 +131,7 @@ gnttab_end_transfer(grant_ref_t ref)
 
     while (!((flags = gnttab_table[ref].flags) & GTF_transfer_committed)) {
         if (synch_cmpxchg(&gnttab_table[ref].flags, flags, 0) == flags) {
-            printk("Release unused transfer grant.\n");
+            minios_printk("Release unused transfer grant.\n");
             put_free_entry(ref);
             return 0;
         }
@@ -157,7 +157,7 @@ gnttab_alloc_and_grant(void **map)
     unsigned long mfn;
     grant_ref_t gref;
 
-    *map = (void *)alloc_page();
+    *map = (void *)minios_alloc_page();
     mfn = virt_to_mfn(*map);
     gref = gnttab_grant_access(0, mfn, 0);
     return gref;
@@ -194,7 +194,7 @@ init_gnttab(void)
 
     HYPERVISOR_grant_table_op(GNTTABOP_setup_table, &setup, 1);
     gnttab_table = map_frames(frames, NR_GRANT_FRAMES);
-    printk("gnttab_table mapped at %p.\n", gnttab_table);
+    minios_printk("gnttab_table mapped at %p.\n", gnttab_table);
 }
 
 void

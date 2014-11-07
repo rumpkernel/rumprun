@@ -60,14 +60,14 @@ void dump_stack(struct thread *thread)
             : "=r"(pointer));
 #endif
     }
-    printk("The stack for \"%s\"\n", thread->name);
+    minios_printk("The stack for \"%s\"\n", thread->name);
     for(count = 0; count < 25 && pointer < bottom; count ++)
     {
-        printk("[0x%lx] 0x%lx\n", pointer, *pointer);
+        minios_printk("[0x%lx] 0x%lx\n", pointer, *pointer);
         pointer++;
     }
     
-    if(pointer < bottom) printk(" ... continues.\n");
+    if(pointer < bottom) minios_printk(" ... continues.\n");
 }
 
 /* Gets run when a new thread is scheduled the first time ever, 
@@ -90,9 +90,9 @@ struct thread* arch_create_thread(const char *name, void (*function)(void *),
     thread = xmalloc(struct thread);
     /* We can't use lazy allocation here since the trap handler runs on the stack */
     if (!stack) {
-        thread->stack = (char *)alloc_pages(STACK_SIZE_PAGE_ORDER);
+        thread->stack = (char *)minios_alloc_pages(STACK_SIZE_PAGE_ORDER);
 #if 0
-        printk("Thread \"%s\": pointer: 0x%lx, stack: 0x%lx\n", name, thread, 
+        minios_printk("Thread \"%s\": pointer: 0x%lx, stack: 0x%lx\n", name, thread, 
                 thread->stack);
 #endif
     } else {

@@ -34,9 +34,9 @@
     ((sh)->evtchn_pending[idx] &                \
      ~(sh)->evtchn_mask[idx])
 
-int in_callback;
+int _minios_in_hypervisor_callback;
 
-void do_hypervisor_callback(struct pt_regs *regs)
+void _minios_do_hypervisor_callback(struct pt_regs *regs)
 {
     unsigned long  l1, l2, l1i, l2i;
     unsigned int   port;
@@ -44,7 +44,7 @@ void do_hypervisor_callback(struct pt_regs *regs)
     shared_info_t *s = HYPERVISOR_shared_info;
     vcpu_info_t   *vcpu_info = &s->vcpu_info[cpu];
 
-    in_callback = 1;
+    _minios_in_hypervisor_callback = 1;
    
     vcpu_info->evtchn_upcall_pending = 0;
     /* NB x86. No need for a barrier here -- XCHG is a barrier on x86. */
@@ -68,10 +68,10 @@ void do_hypervisor_callback(struct pt_regs *regs)
         }
     }
 
-    in_callback = 0;
+    _minios_in_hypervisor_callback = 0;
 }
 
-void force_evtchn_callback(void)
+void minios_force_evtchn_callback(void)
 {
     int save;
     vcpu_info_t *vcpu;
@@ -81,20 +81,20 @@ void force_evtchn_callback(void)
     while (vcpu->evtchn_upcall_pending) {
         vcpu->evtchn_upcall_mask = 1;
         barrier();
-        do_hypervisor_callback(NULL);
+        _minios_do_hypervisor_callback(NULL);
         barrier();
         vcpu->evtchn_upcall_mask = save;
         barrier();
     };
 }
 
-inline void mask_evtchn(uint32_t port)
+inline void minios_mask_evtchn(uint32_t port)
 {
     shared_info_t *s = HYPERVISOR_shared_info;
     synch_set_bit(port, &s->evtchn_mask[0]);
 }
 
-inline void unmask_evtchn(uint32_t port)
+inline void minios_unmask_evtchn(uint32_t port)
 {
     shared_info_t *s = HYPERVISOR_shared_info;
     vcpu_info_t *vcpu_info = &s->vcpu_info[smp_processor_id()];
@@ -111,11 +111,11 @@ inline void unmask_evtchn(uint32_t port)
     {
         vcpu_info->evtchn_upcall_pending = 1;
         if ( !vcpu_info->evtchn_upcall_mask )
-            force_evtchn_callback();
+            minios_force_evtchn_callback();
     }
 }
 
-inline void clear_evtchn(uint32_t port)
+inline void minios_clear_evtchn(uint32_t port)
 {
     shared_info_t *s = HYPERVISOR_shared_info;
     synch_clear_bit(port, &s->evtchn_pending[0]);
