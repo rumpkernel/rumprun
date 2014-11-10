@@ -57,8 +57,6 @@ LDFLAGS := -L$(abspath $(OBJ_DIR)/xen/$(TARGET_ARCH_DIR)) -L$(abspath rump/lib)
 GLOBAL_PREFIXES := _minios_ minios_ HYPERVISOR_ blkfront_ netfront_ pcifront_ xenbus_
 GLOBAL_PREFIXES := $(patsubst %,-G %*, $(GLOBAL_PREFIXES))
 
-TARGET := minios.o
-
 # Subdirectories common to mini-os
 SUBDIRS := lib xen xen/console xen/xenbus
 
@@ -98,7 +96,7 @@ OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(src-y))
 RUMP_OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(rump-src-y))
 
 .PHONY: default
-default: objs app-tools minios.o rumprun.o tests/hello/hello
+default: objs app-tools minios.o rumprun.o tests/hello/hello rump-kernel
 
 objs:
 	mkdir -p $(OBJ_DIR)/lib $(OBJ_DIR)/xen/$(TARGET_ARCH_DIR)
@@ -166,6 +164,15 @@ app-tools_clean:
 tests/hello/hello: tests/hello/hello.c app-tools minios.o rumprun.o
 	app-tools/rumpapp-xen-cc -o $@ $<
 
+# This is the "old" rumprun-xen demo, migrated to app-tools. Do not remove this
+# demo from the build without prior coordination, Xen oss-test CI relies on it.
+.PHONY: httpd
+httpd:
+	app-tools/rumpapp-xen-make -C httpd -f Makefile.boot
+
+rump-kernel: rumpkern_demo.c pthread_test.c httpd
+	app-tools/rumpapp-xen-cc -o $@ rumpkern_demo.c pthread_test.c httpd/*.o
+
 .PHONY: clean arch_clean app-tools_clean
 
 arch_clean:
@@ -175,10 +182,11 @@ clean:	arch_clean app-tools_clean
 	for dir in $(addprefix $(OBJ_DIR)/,$(SUBDIRS)); do \
 		rm -f $$dir/*.o; \
 	done
-	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core minios.o rumprun.o
+	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core minios.o rumprun.o rump-kernel
 	rm -f include/xen include/mini-os/machine
 	rm -f tags TAGS
 	rm -f tests/hello/hello
+	make -C httpd -f Makefile.boot clean
 
 cleanrump: clean
 	rm -rf rump rumpobj rumptools
