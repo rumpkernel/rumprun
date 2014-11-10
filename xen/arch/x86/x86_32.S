@@ -13,33 +13,35 @@
 	.byte	0
 .text
 
-.globl _start, shared_info, hypercall_page
+#define ENTRY(name) \
+        .globl _minios_entry_##name; \
+        _minios_entry_##name:
+
+.globl _start, _minios_shared_info, _minios_hypercall_page
                         
 _start:
         cld
         lss stack_start,%esp
         andl $(~(__STACK_SIZE-1)), %esp
         push %esi 
-        call start_kernel
+        call _minios_start_kernel
 
 stack_start:
-	.long stack+(2*__STACK_SIZE), __KERNEL_SS
+	.long _minios_stack+(2*__STACK_SIZE), __KERNEL_SS
 
         /* Unpleasant -- the PTE that maps this page is actually overwritten */
         /* to map the real shared-info page! :-)                             */
         .org 0x1000
-shared_info:
+_minios_shared_info:
         .org 0x2000
 
-hypercall_page:
+_minios_hypercall_page:
         .org 0x3000
 
 ES		= 0x20
 ORIG_EAX	= 0x24
 EIP		= 0x28
 CS		= 0x2C
-
-#define ENTRY(X) .globl X ; X :
 
 #define SAVE_ALL \
 	cld; \
@@ -124,7 +126,7 @@ ENTRY(hypervisor_callback)
         jb   critical_region_fixup
 11:     push %esp
         xorl %ebp,%ebp
-        call do_hypervisor_callback
+        call _minios_do_hypervisor_callback
         add  $4,%esp
         movl HYPERVISOR_shared_info,%esi
         xorl %eax,%eax
@@ -283,9 +285,9 @@ ENTRY(thread_starter)
     xorl %ebp,%ebp
     pushl %eax
     call *%ebx
-    call exit_thread 
+    call minios_exit_thread
     
-ENTRY(__arch_switch_threads)
+ENTRY(arch_switch_threads)
     movl 4(%esp), %ecx		/* prev */
     movl 8(%esp), %edx		/* next */
     pushl %ebp
