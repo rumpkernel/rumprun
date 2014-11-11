@@ -45,14 +45,14 @@
 
 #ifdef MM_DEBUG
 #define DEBUG(_f, _a...) \
-    printk("MINI_OS(file=mm.c, line=%d) " _f "\n", __LINE__, ## _a)
+    minios_printk("MINI_OS(file=mm.c, line=%d) " _f "\n", __LINE__, ## _a)
 #else
 #define DEBUG(_f, _a...)    ((void)0)
 #endif
 
-unsigned long *phys_to_machine_mapping;
-unsigned long mfn_zero;
-extern char stack[];
+unsigned long *_minios_phys_to_machine_mapping;
+unsigned long _minios_mfn_zero;
+extern char _minios_stack[];
 extern void page_walk(unsigned long va);
 
 /*
@@ -95,8 +95,8 @@ static void new_pt_frame(unsigned long *pt_pfn, unsigned long prev_l_mfn,
         break;
 #endif
     default:
-        printk("new_pt_frame() called with invalid level number %d\n", level);
-        do_exit();
+        minios_printk("new_pt_frame() called with invalid level number %d\n", level);
+        minios_do_exit();
         break;
     }
 
@@ -113,9 +113,9 @@ static void new_pt_frame(unsigned long *pt_pfn, unsigned long prev_l_mfn,
     
     if ( (rc = HYPERVISOR_mmu_update(mmu_updates, 1, NULL, DOMID_SELF)) < 0 )
     {
-        printk("ERROR: PTE for new page table page could not be updated\n");
-        printk("       mmu_update failed with rc=%d\n", rc);
-        do_exit();
+        minios_printk("ERROR: PTE for new page table page could not be updated\n");
+        minios_printk("       mmu_update failed with rc=%d\n", rc);
+        minios_do_exit();
     }
 
     /* Hook the new page table page into the hierarchy */
@@ -125,8 +125,8 @@ static void new_pt_frame(unsigned long *pt_pfn, unsigned long prev_l_mfn,
 
     if ( (rc = HYPERVISOR_mmu_update(mmu_updates, 1, NULL, DOMID_SELF)) < 0 ) 
     {
-        printk("ERROR: mmu_update failed with rc=%d\n", rc);
-        do_exit();
+        minios_printk("ERROR: mmu_update failed with rc=%d\n", rc);
+        minios_do_exit();
     }
 
     *pt_pfn += 1;
@@ -182,7 +182,7 @@ static int need_pt_frame(unsigned long va, int level)
         if ( level == L1_FRAME )
             return 1;
 
-    printk("ERROR: Unknown frame level %d, hypervisor %llx,%llx\n", 
+    minios_printk("ERROR: Unknown frame level %d, hypervisor %llx,%llx\n", 
            level, hyp_virt_start, hyp_virt_end);
     return -1;
 }
@@ -206,12 +206,12 @@ static void build_pagetable(unsigned long *start_pfn, unsigned long *max_pfn)
 
     if ( *max_pfn >= virt_to_pfn(HYPERVISOR_VIRT_START) )
     {
-        printk("WARNING: Mini-OS trying to use Xen virtual space. "
+        minios_printk("WARNING: Mini-OS trying to use Xen virtual space. "
                "Truncating memory from %dMB to ",
                ((unsigned long)pfn_to_virt(*max_pfn) -
                 (unsigned long)&_text)>>20);
         *max_pfn = virt_to_pfn(HYPERVISOR_VIRT_START - PAGE_SIZE);
-        printk("%dMB\n",
+        minios_printk("%dMB\n",
                ((unsigned long)pfn_to_virt(*max_pfn) - 
                 (unsigned long)&_text)>>20);
     }
@@ -220,7 +220,7 @@ static void build_pagetable(unsigned long *start_pfn, unsigned long *max_pfn)
     end_address = (unsigned long)pfn_to_virt(*max_pfn);
 
     /* We worked out the virtual memory range to map, now mapping loop */
-    printk("Mapping memory range 0x%lx - 0x%lx\n", start_address, end_address);
+    minios_printk("Mapping memory range 0x%lx - 0x%lx\n", start_address, end_address);
 
     while ( start_address < end_address )
     {
@@ -267,9 +267,9 @@ static void build_pagetable(unsigned long *start_pfn, unsigned long *max_pfn)
             rc = HYPERVISOR_mmu_update(mmu_updates, count, NULL, DOMID_SELF);
             if ( rc < 0 )
             {
-                printk("ERROR: build_pagetable(): PTE could not be updated\n");
-                printk("       mmu_update failed with rc=%d\n", rc);
-                do_exit();
+                minios_printk("ERROR: build_pagetable(): PTE could not be updated\n");
+                minios_printk("       mmu_update failed with rc=%d\n", rc);
+                minios_do_exit();
             }
             count = 0;
         }
@@ -282,7 +282,7 @@ static void build_pagetable(unsigned long *start_pfn, unsigned long *max_pfn)
 /*
  * Mark portion of the address space read only.
  */
-extern struct shared_info shared_info;
+extern struct shared_info _minios_shared_info;
 static void set_readonly(void *text, void *etext)
 {
     unsigned long start_address =
@@ -295,7 +295,7 @@ static void set_readonly(void *text, void *etext)
     int count = 0;
     int rc;
 
-    printk("setting %p-%p readonly\n", text, etext);
+    minios_printk("setting %p-%p readonly\n", text, etext);
 
     while ( start_address + PAGE_SIZE <= end_address )
     {
@@ -319,7 +319,7 @@ static void set_readonly(void *text, void *etext)
 
         offset = l1_table_offset(start_address);
 
-        if ( start_address != (unsigned long)&shared_info )
+        if ( start_address != (unsigned long)&_minios_shared_info )
         {
             mmu_updates[count].ptr = 
                 ((pgentry_t)mfn << PAGE_SHIFT) + sizeof(pgentry_t) * offset;
@@ -327,7 +327,7 @@ static void set_readonly(void *text, void *etext)
             count++;
         }
         else
-            printk("skipped %p\n", start_address);
+            minios_printk("skipped %p\n", start_address);
 
         start_address += PAGE_SIZE;
 
@@ -337,8 +337,8 @@ static void set_readonly(void *text, void *etext)
             rc = HYPERVISOR_mmu_update(mmu_updates, count, NULL, DOMID_SELF);
             if ( rc < 0 )
             {
-                printk("ERROR: set_readonly(): PTE could not be updated\n");
-                do_exit();
+                minios_printk("ERROR: set_readonly(): PTE could not be updated\n");
+                minios_do_exit();
             }
             count = 0;
         }
@@ -370,21 +370,21 @@ int mem_test(unsigned long *start_va, unsigned long *end_va, int verbose)
     /* write values and print page walks */
     if ( verbose && (((unsigned long)start_va) & 0xfffff) )
     {
-        printk("MemTest Start: 0x%lx\n", start_va);
+        minios_printk("MemTest Start: 0x%lx\n", start_va);
         page_walk((unsigned long)start_va);
     }
     for ( pointer = start_va; pointer < end_va; pointer++ )
     {
         if ( verbose && !(((unsigned long)pointer) & 0xfffff) )
         {
-            printk("Writing to %lx\n", pointer);
+            minios_printk("Writing to %lx\n", pointer);
             page_walk((unsigned long)pointer);
         }
         *pointer = (unsigned long)pointer & ~mask;
     }
     if ( verbose && (((unsigned long)end_va) & 0xfffff) )
     {
-        printk("MemTest End: %lx\n", end_va-1);
+        minios_printk("MemTest End: %lx\n", end_va-1);
         page_walk((unsigned long)end_va-1);
     }
  
@@ -393,13 +393,13 @@ int mem_test(unsigned long *start_va, unsigned long *end_va, int verbose)
     {
         if ( ((unsigned long)pointer & ~mask) != *pointer )
         {
-            printk("Read error at 0x%lx. Read: 0x%lx, should read 0x%lx\n",
+            minios_printk("Read error at 0x%lx. Read: 0x%lx, should read 0x%lx\n",
                    (unsigned long)pointer, *pointer, 
                    ((unsigned long)pointer & ~mask));
             error_count++;
             if ( error_count >= MEM_TEST_MAX_ERRORS )
             {
-                printk("mem_test: too many errors\n");
+                minios_printk("mem_test: too many errors\n");
                 return -1;
             }
         }
@@ -460,7 +460,7 @@ pgentry_t *need_pgt(unsigned long va)
     offset = l4_table_offset(va);
     if ( !(tab[offset] & _PAGE_PRESENT) )
     {
-        pt_pfn = virt_to_pfn(alloc_page());
+        pt_pfn = virt_to_pfn(minios_alloc_page());
         new_pt_frame(&pt_pfn, pt_mfn, offset, L3_FRAME);
     }
     ASSERT(tab[offset] & _PAGE_PRESENT);
@@ -470,7 +470,7 @@ pgentry_t *need_pgt(unsigned long va)
     offset = l3_table_offset(va);
     if ( !(tab[offset] & _PAGE_PRESENT) ) 
     {
-        pt_pfn = virt_to_pfn(alloc_page());
+        pt_pfn = virt_to_pfn(minios_alloc_page());
         new_pt_frame(&pt_pfn, pt_mfn, offset, L2_FRAME);
     }
     ASSERT(tab[offset] & _PAGE_PRESENT);
@@ -479,7 +479,7 @@ pgentry_t *need_pgt(unsigned long va)
     offset = l2_table_offset(va);
     if ( !(tab[offset] & _PAGE_PRESENT) )
     {
-        pt_pfn = virt_to_pfn(alloc_page());
+        pt_pfn = virt_to_pfn(minios_alloc_page());
         new_pt_frame(&pt_pfn, pt_mfn, offset, L1_FRAME);
     }
     ASSERT(tab[offset] & _PAGE_PRESENT);
@@ -508,7 +508,7 @@ void arch_init_demand_mapping_area(unsigned long cur_pfn)
 
     demand_map_area_start = (unsigned long) pfn_to_virt(cur_pfn);
     cur_pfn += DEMAND_MAP_PAGES;
-    printk("Demand map pfns at %lx-%lx.\n", 
+    minios_printk("Demand map pfns at %lx-%lx.\n", 
            demand_map_area_start, pfn_to_virt(cur_pfn));
 
 }
@@ -541,7 +541,7 @@ unsigned long allocate_ondemand(unsigned long n, unsigned long alignment)
     }
     if ( y != n )
     {
-        printk("Failed to find %ld frames!\n", n);
+        minios_printk("Failed to find %ld frames!\n", n);
         return 0;
     }
     return demand_map_area_start + x * PAGE_SIZE;
@@ -564,7 +564,7 @@ void do_map_frames(unsigned long va,
 
     if ( !mfns ) 
     {
-        printk("do_map_frames: no mfns supplied\n");
+        minios_printk("do_map_frames: no mfns supplied\n");
         return;
     }
     DEBUG("va=%p n=0x%lx, mfns[0]=0x%lx stride=0x%lx incr=0x%lx prot=0x%lx\n",
@@ -604,9 +604,9 @@ void do_map_frames(unsigned long va,
                 if (err)
                     err[done * stride] = rc;
                 else {
-                    printk("Map %ld (%lx, ...) at %p failed: %d.\n",
+                    minios_printk("Map %ld (%lx, ...) at %p failed: %d.\n",
                            todo, mfns[done * stride] + done * incr, va, rc);
-                    do_exit();
+                    minios_do_exit();
                 }
             }
         }
@@ -670,7 +670,7 @@ int unmap_frames(unsigned long va, unsigned long num_frames)
         ret = HYPERVISOR_multicall(call, n);
         if ( ret )
         {
-            printk("update_va_mapping hypercall failed with rc=%d.\n", ret);
+            minios_printk("update_va_mapping hypercall failed with rc=%d.\n", ret);
             return -ret;
         }
 
@@ -678,7 +678,7 @@ int unmap_frames(unsigned long va, unsigned long num_frames)
         {
             if ( call[i].result ) 
             {
-                printk("update_va_mapping failed for with rc=%d.\n", ret);
+                minios_printk("update_va_mapping failed for with rc=%d.\n", ret);
                 return -(call[i].result);
             }
         }
@@ -728,16 +728,16 @@ unsigned long alloc_contig_pages(int order, unsigned int addr_bits)
 
     if ( order > MAX_CONTIG_ORDER )
     {
-        printk("alloc_contig_pages: order too large 0x%x > 0x%x\n",
+        minios_printk("alloc_contig_pages: order too large 0x%x > 0x%x\n",
                order, MAX_CONTIG_ORDER);
         return 0;
     }
 
     /* Allocate some potentially discontiguous pages */
-    in_va = alloc_pages(order);
+    in_va = minios_alloc_pages(order);
     if ( !in_va )
     {
-        printk("alloc_contig_pages: could not get enough pages (order=0x%x\n",
+        minios_printk("alloc_contig_pages: could not get enough pages (order=0x%x\n",
                order);
         return 0;
     }
@@ -755,7 +755,7 @@ unsigned long alloc_contig_pages(int order, unsigned int addr_bits)
         in_frames[i] = virt_to_mfn(va);
 
         /* update P2M mapping */
-        phys_to_machine_mapping[virt_to_pfn(va)] = INVALID_P2M_ENTRY;
+        _minios_phys_to_machine_mapping[virt_to_pfn(va)] = INVALID_P2M_ENTRY;
 
         /* build multi call */
         call[i].op = __HYPERVISOR_update_va_mapping;
@@ -770,7 +770,7 @@ unsigned long alloc_contig_pages(int order, unsigned int addr_bits)
     ret = HYPERVISOR_multicall(call, i);
     if ( ret )
     {
-        printk("Odd, update_va_mapping hypercall failed with rc=%d.\n", ret);
+        minios_printk("Odd, update_va_mapping hypercall failed with rc=%d.\n", ret);
         return 0;
     }
 
@@ -778,7 +778,7 @@ unsigned long alloc_contig_pages(int order, unsigned int addr_bits)
     out_frames = virt_to_pfn(in_va); /* PFNs to populate */
     ret = HYPERVISOR_memory_op(XENMEM_exchange, &exchange);
     if ( ret ) {
-        printk("mem exchanged order=0x%x failed with rc=%d, nr_exchanged=%d\n", 
+        minios_printk("mem exchanged order=0x%x failed with rc=%d, nr_exchanged=%d\n", 
                order, ret, exchange.nr_exchanged);
         /* we still need to return the allocated pages above to the pool
          * ie. map them back into the 1:1 mapping etc. so we continue but 
@@ -799,7 +799,7 @@ unsigned long alloc_contig_pages(int order, unsigned int addr_bits)
         pte = __pte(mfn << PAGE_SHIFT | L1_PROT);
 
         /* update P2M mapping */
-        phys_to_machine_mapping[virt_to_pfn(va)] = mfn;
+        _minios_phys_to_machine_mapping[virt_to_pfn(va)] = mfn;
 
         /* build multi call */
         call[i].op = __HYPERVISOR_update_va_mapping;
@@ -815,14 +815,14 @@ unsigned long alloc_contig_pages(int order, unsigned int addr_bits)
     ret = HYPERVISOR_multicall(call, i);
     if ( ret )
     {
-        printk("update_va_mapping hypercall no. 2 failed with rc=%d.\n", ret);
+        minios_printk("update_va_mapping hypercall no. 2 failed with rc=%d.\n", ret);
         return 0;
     }
 
     if ( !exch_success )
     {
         /* since the exchanged failed we just free the pages as well */
-        free_pages((void *) in_va, order);
+        minios_free_pages((void *) in_va, order);
         return 0;
     }
     
@@ -851,9 +851,9 @@ static void clear_bootstrap(void)
 
     /* Use first page as the CoW zero page */
     memset(&_text, 0, PAGE_SIZE);
-    mfn_zero = virt_to_mfn((unsigned long) &_text);
+    _minios_mfn_zero = virt_to_mfn((unsigned long) &_text);
     if ( (rc = HYPERVISOR_update_va_mapping(0, nullpte, UVMF_INVLPG)) )
-        printk("Unable to unmap NULL page. rc=%d\n", rc);
+        minios_printk("Unable to unmap NULL page. rc=%d\n", rc);
 }
 
 void arch_init_p2m(unsigned long max_pfn)
@@ -877,22 +877,22 @@ void arch_init_p2m(unsigned long max_pfn)
     unsigned long *l1_list = NULL, *l2_list = NULL, *l3_list;
     unsigned long pfn;
     
-    l3_list = (unsigned long *)alloc_page(); 
+    l3_list = (unsigned long *)minios_alloc_page(); 
     for ( pfn=0; pfn<max_pfn; pfn++ )
     {
         if ( !(pfn % (L1_P2M_ENTRIES * L2_P2M_ENTRIES)) )
         {
-            l2_list = (unsigned long*)alloc_page();
+            l2_list = (unsigned long*)minios_alloc_page();
             if ( (pfn >> L3_P2M_SHIFT) > 0 )
             {
-                printk("Error: Too many pfns.\n");
-                do_exit();
+                minios_printk("Error: Too many pfns.\n");
+                minios_do_exit();
             }
             l3_list[(pfn >> L2_P2M_SHIFT)] = virt_to_mfn(l2_list);  
         }
         if ( !(pfn % (L1_P2M_ENTRIES)) )
         {
-            l1_list = (unsigned long*)alloc_page();
+            l1_list = (unsigned long*)minios_alloc_page();
             l2_list[(pfn >> L1_P2M_SHIFT) & L2_P2M_MASK] = 
                 virt_to_mfn(l1_list); 
         }
@@ -908,12 +908,12 @@ void arch_init_mm(unsigned long* start_pfn_p, unsigned long* max_pfn_p)
 {
     unsigned long start_pfn, max_pfn;
 
-    printk("      _text: %p(VA)\n", &_text);
-    printk("     _etext: %p(VA)\n", &_etext);
-    printk("   _erodata: %p(VA)\n", &_erodata);
-    printk("     _edata: %p(VA)\n", &_edata);
-    printk("stack start: %p(VA)\n", stack);
-    printk("       _end: %p(VA)\n", &_end);
+    minios_printk("      _text: %p(VA)\n", &_text);
+    minios_printk("     _etext: %p(VA)\n", &_etext);
+    minios_printk("   _erodata: %p(VA)\n", &_erodata);
+    minios_printk("     _edata: %p(VA)\n", &_edata);
+    minios_printk("stack start: %p(VA)\n", _minios_stack);
+    minios_printk("       _end: %p(VA)\n", &_end);
 
     /* First page follows page table pages and 3 more pages (store page etc) */
     start_pfn = PFN_UP(to_phys(start_info.pt_base)) + 
@@ -929,8 +929,8 @@ void arch_init_mm(unsigned long* start_pfn_p, unsigned long* max_pfn_p)
     }
 #endif
 
-    printk("  start_pfn: %lx\n", start_pfn);
-    printk("    max_pfn: %lx\n", max_pfn);
+    minios_printk("  start_pfn: %lx\n", start_pfn);
+    minios_printk("    max_pfn: %lx\n", max_pfn);
 
     build_pagetable(&start_pfn, &max_pfn);
     clear_bootstrap();

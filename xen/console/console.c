@@ -64,10 +64,10 @@ void xencons_rx(char *buf, unsigned len, struct pt_regs *regs)
     {
         /* Just repeat what's written */
         buf[len] = '\0';
-        printk("%s", buf);
+        minios_printk("%s", buf);
         
         if(buf[len-1] == '\r')
-            printk("\nNo console input handler.\n");
+            minios_printk("\nNo console input handler.\n");
     }
 }
 
@@ -77,7 +77,7 @@ void xencons_tx(void)
 }
 
 
-void console_print(struct consfront_dev *dev, char *data, int length)
+void minios_console_print(struct consfront_dev *dev, char *data, int length)
 {
     char *curr_char, saved_char;
     char copied_str[length+1];
@@ -138,11 +138,11 @@ void print(int direct, const char *fmt, va_list args)
 #endif    
             (void)HYPERVISOR_console_io(CONSOLEIO_write, strlen(buf), buf);
         
-        console_print(NULL, buf, strlen(buf));
+        minios_console_print(NULL, buf, strlen(buf));
     }
 }
 
-void printk(const char *fmt, ...)
+void minios_printk(const char *fmt, ...)
 {
     va_list       args;
     va_start(args, fmt);
@@ -159,9 +159,9 @@ void xprintk(const char *fmt, ...)
 }
 void init_console(void)
 {   
-    printk("Initialising console ... ");
+    minios_printk("Initialising console ... ");
     xencons_ring_init();    
     console_initialised = 1;
     /* This is also required to notify the daemon */
-    printk("done.\n");
+    minios_printk("done.\n");
 }

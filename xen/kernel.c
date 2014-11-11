@@ -47,7 +47,7 @@
 
 #include "netbsd_init.h"
 
-uint8_t xen_features[XENFEAT_NR_SUBMAPS * 32];
+uint8_t _minios_xen_features[XENFEAT_NR_SUBMAPS * 32];
 
 void setup_xen_features(void)
 {
@@ -61,7 +61,7 @@ void setup_xen_features(void)
             break;
         
         for (j=0; j<32; j++)
-            xen_features[i*32+j] = !!(fi.submap & 1<<j);
+            _minios_xen_features[i*32+j] = !!(fi.submap & 1<<j);
     }
 }
 
@@ -83,23 +83,23 @@ _app_main(void *arg)
 /*
  * INITIAL C ENTRY POINT.
  */
-void start_kernel(start_info_t *si)
+void _minios_start_kernel(start_info_t *si)
 {
 
     arch_init(si);
     trap_init();
 
     /* print out some useful information  */
-    printk("  start_info: %p(VA)\n", si);
-    printk("    nr_pages: 0x%lx\n", si->nr_pages);
-    printk("  shared_inf: 0x%08lx(MA)\n", si->shared_info);
-    printk("     pt_base: %p(VA)\n", (void *)si->pt_base); 
-    printk("nr_pt_frames: 0x%lx\n", si->nr_pt_frames);
-    printk("    mfn_list: %p(VA)\n", (void *)si->mfn_list); 
-    printk("   mod_start: 0x%lx(VA)\n", si->mod_start);
-    printk("     mod_len: %lu\n", si->mod_len); 
-    printk("       flags: 0x%x\n", (unsigned int)si->flags);
-    printk("    cmd_line: %s\n",  
+    minios_printk("  start_info: %p(VA)\n", si);
+    minios_printk("    nr_pages: 0x%lx\n", si->nr_pages);
+    minios_printk("  shared_inf: 0x%08lx(MA)\n", si->shared_info);
+    minios_printk("     pt_base: %p(VA)\n", (void *)si->pt_base); 
+    minios_printk("nr_pt_frames: 0x%lx\n", si->nr_pt_frames);
+    minios_printk("    mfn_list: %p(VA)\n", (void *)si->mfn_list); 
+    minios_printk("   mod_start: 0x%lx(VA)\n", si->mod_start);
+    minios_printk("     mod_len: %lu\n", si->mod_len); 
+    minios_printk("       flags: 0x%x\n", (unsigned int)si->flags);
+    minios_printk("    cmd_line: %s\n",  
            si->cmd_line ? (const char *)si->cmd_line : "NULL");
 
     /* Set up events. */
@@ -131,7 +131,7 @@ void start_kernel(start_info_t *si)
     init_xenbus();
 
     /* Call (possibly overridden) app_main() */
-    create_thread("main", NULL, _app_main, &start_info, NULL);
+    minios_create_thread("main", NULL, _app_main, &start_info, NULL);
 
     /* Everything initialised, start idle thread */
     run_idle_thread();
@@ -172,9 +172,9 @@ void stop_kernel(void)
  * Of course, minimal OS doesn't have applications :-)
  */
 
-void do_exit(void)
+void minios_do_exit(void)
 {
-    printk("Do_exit called!\n");
+    minios_printk("Do_exit called!\n");
     stack_walk();
     for( ;; )
     {

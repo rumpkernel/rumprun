@@ -11,6 +11,11 @@ include/mini-os/machine
 include/xen
 
 app-tools/specs
+app-tools/specs.configure
 app-tools/rumpapp-xen-cc
+app-tools/rumpapp-xen-cc.configure
 app-tools/rumpapp-xen-configure
+app-tools/rumpapp-xen-gmake
 app-tools/rumpapp-xen-make
+
+tests/hello/hello

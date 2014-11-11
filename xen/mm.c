@@ -46,7 +46,7 @@
 
 #ifdef MM_DEBUG
 #define DEBUG(_f, _a...) \
-    printk("MINI_OS(file=mm.c, line=%d) " _f "\n", __LINE__, ## _a)
+    minios_printk("MINI_OS(file=mm.c, line=%d) " _f "\n", __LINE__, ## _a)
 #else
 #define DEBUG(_f, _a...)    ((void)0)
 #endif
@@ -152,10 +152,10 @@ USED static void print_allocation(void *start, int nr_pages)
     unsigned long pfn_start = virt_to_pfn(start);
     int count;
     for(count = 0; count < nr_pages; count++)
-        if(allocated_in_map(pfn_start + count)) printk("1");
-        else printk("0");
+        if(allocated_in_map(pfn_start + count)) minios_printk("1");
+        else minios_printk("0");
         
-    printk("\n");        
+    minios_printk("\n");        
 }
 
 /*
@@ -190,7 +190,7 @@ USED static void print_chunks(void *start, int nr_pages)
         }
     }
     chunks[nr_pages] = '\0';
-    printk("%s\n", chunks);
+    minios_printk("%s\n", chunks);
 }
 #endif
 
@@ -257,7 +257,7 @@ static void init_page_allocator(unsigned long min, unsigned long max)
 
 
 /* Allocate 2^@order contiguous pages. Returns a VIRTUAL address. */
-unsigned long alloc_pages(int order)
+unsigned long minios_alloc_pages(int order)
 {
     int i;
     chunk_head_t *alloc_ch, *spare_ch;
@@ -302,12 +302,12 @@ unsigned long alloc_pages(int order)
 
  no_memory:
 
-    printk("Cannot handle page request order %d!\n", order);
+    minios_printk("Cannot handle page request order %d!\n", order);
 
     return 0;
 }
 
-void free_pages(void *pointer, int order)
+void minios_free_pages(void *pointer, int order)
 {
     chunk_head_t *freed_ch, *to_merge_ch;
     chunk_tail_t *freed_ct;
@@ -384,17 +384,17 @@ void init_mm(void)
 
     unsigned long start_pfn, max_pfn;
 
-    printk("MM: Init\n");
+    minios_printk("MM: Init\n");
 
     arch_init_mm(&start_pfn, &max_pfn);
     /*
      * now we can initialise the page allocator
      */
-    printk("MM: Initialise page allocator for %lx(%lx)-%lx(%lx)\n",
+    minios_printk("MM: Initialise page allocator for %lx(%lx)-%lx(%lx)\n",
            (u_long)to_virt(PFN_PHYS(start_pfn)), PFN_PHYS(start_pfn), 
            (u_long)to_virt(PFN_PHYS(max_pfn)), PFN_PHYS(max_pfn));
     init_page_allocator(PFN_PHYS(start_pfn), PFN_PHYS(max_pfn));
-    printk("MM: done\n");
+    minios_printk("MM: done\n");
 
     arch_init_p2m(max_pfn);
     

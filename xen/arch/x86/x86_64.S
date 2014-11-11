@@ -12,8 +12,11 @@
 	.byte	0
 .text
 
-#define ENTRY(X) .globl X ; X :
-.globl _start, shared_info, hypercall_page
+#define ENTRY(name) \
+        .globl _minios_entry_##name; \
+        _minios_entry_##name:
+
+.globl _start, _minios_shared_info, _minios_hypercall_page
 
 
 _start:
@@ -21,18 +24,18 @@ _start:
         movq stack_start(%rip),%rsp
         andq $(~(__STACK_SIZE-1)), %rsp
         movq %rsi,%rdi
-        call start_kernel
+        call _minios_start_kernel
 
 stack_start:
-        .quad stack+(2*__STACK_SIZE)
+        .quad _minios_stack+(2*__STACK_SIZE)
 
         /* Unpleasant -- the PTE that maps this page is actually overwritten */
         /* to map the real shared-info page! :-)                             */
         .org 0x1000
-shared_info:
+_minios_shared_info:
         .org 0x2000
 
-hypercall_page:
+_minios_hypercall_page:
         .org 0x3000
 
 
@@ -64,7 +67,7 @@ NMI_MASK = 0x80000000
 	testl $NMI_MASK,2*8(%rsp)
 	jnz   2f
 
-	testb $1,(xen_features+XENFEAT_supervisor_mode_kernel)
+	testb $1,(_minios_xen_features+XENFEAT_supervisor_mode_kernel)
 	jnz   1f
 
 	/* Direct iret to kernel space. Correct CS and SS. */
@@ -75,14 +78,14 @@ NMI_MASK = 0x80000000
 2:	/* Slow iret via hypervisor. */
 	andl  $~NMI_MASK, 16(%rsp)
 	pushq $\flag
-	jmp  hypercall_page + (__HYPERVISOR_iret * 32)
+	jmp  _minios_hypercall_page + (__HYPERVISOR_iret * 32)
 .endm
 
 /*
- * Exception entry point. This expects an error code/orig_rax on the stack
- * and the exception handler in %rax.	
+ * Common code to all exception entry points. This expects an error
+ * code/orig_rax on the stack and the exception handler in %rax.	
  */ 		  				
-ENTRY(error_entry)
+error_common:
 	/* rdi slot contains rax, oldrax contains error code */
 	cld	
 	subq  $14*8,%rsp
@@ -110,24 +113,17 @@ error_call_handler:
 	call *%rax
 	jmp error_exit
 
-.macro zeroentry sym
-    movq (%rsp),%rcx
-    movq 8(%rsp),%r11
-    addq $0x10,%rsp /* skip rcx and r11 */
-	pushq $0	/* push error code/oldrax */ 
-	pushq %rax	/* push real oldrax to the rdi slot */ 
-	leaq  \sym(%rip),%rax
-	jmp error_entry
-.endm	
-
-.macro errorentry sym
+.macro errorentry sym has_error_code:req
         movq (%rsp),%rcx
         movq 8(%rsp),%r11
-        addq $0x10,%rsp /* rsp points to the error code */
-	pushq %rax
+        addq $0x10,%rsp /* skip rcx and r11 */
+        .if !\has_error_code
+	pushq $0	/* push error code/oldrax */
+        .endif
+	pushq %rax	/* push real oldrax to the rdi slot */ 
 	leaq  \sym(%rip),%rax
-	jmp error_entry
-.endm
+	jmp error_common
+.endm	
 
 #define XEN_GET_VCPU_INFO(reg)	movq HYPERVISOR_shared_info,reg
 #define XEN_PUT_VCPU_INFO(reg)
@@ -147,15 +143,15 @@ error_call_handler:
 
 
 ENTRY(hypervisor_callback)
-    zeroentry hypervisor_callback2
+    errorentry hypervisor_callback2 0
 
-ENTRY(hypervisor_callback2)
+hypervisor_callback2:
         movq %rdi, %rsp 
 11:     movq %gs:8,%rax
         incl %gs:0
         cmovzq %rax,%rsp
         pushq %rdi
-        call do_hypervisor_callback 
+        call _minios_do_hypervisor_callback 
         popq %rsp
         decl %gs:0
         jmp error_exit
@@ -218,71 +214,71 @@ ENTRY(failsafe_callback)
 
 
 ENTRY(coprocessor_error)
-        zeroentry do_coprocessor_error
+        errorentry do_coprocessor_error 0
 
 
 ENTRY(simd_coprocessor_error)
-        zeroentry do_simd_coprocessor_error
+        errorentry do_simd_coprocessor_error 0
 
 
 ENTRY(device_not_available)
-        zeroentry do_device_not_available
+        errorentry do_device_not_available 0
 
 
 ENTRY(debug)
-        zeroentry do_debug
+        errorentry do_debug 0
 
 
 ENTRY(int3)
-        zeroentry do_int3
+        errorentry do_int3 0
 
 ENTRY(overflow)
-        zeroentry do_overflow
+        errorentry do_overflow 0
 
 
 ENTRY(bounds)
-        zeroentry do_bounds
+        errorentry do_bounds 0
     
     
 ENTRY(invalid_op)
-        zeroentry do_invalid_op
+        errorentry do_invalid_op 0
 
 
 ENTRY(coprocessor_segment_overrun)
-        zeroentry do_coprocessor_segment_overrun
+        errorentry do_coprocessor_segment_overrun 0
 
 
 ENTRY(invalid_TSS)
-        errorentry do_invalid_TSS
+        errorentry do_invalid_TSS 1
 
 
 ENTRY(segment_not_present)
-        errorentry do_segment_not_present
+        errorentry do_segment_not_present 1
 
 
 /* runs on exception stack */
 ENTRY(stack_segment)
-        errorentry do_stack_segment
+        errorentry do_stack_segment 1
                     
 
 ENTRY(general_protection)
-        errorentry do_general_protection
+        errorentry do_general_protection 1
 
 
 ENTRY(alignment_check)
-        errorentry do_alignment_check
+        errorentry do_alignment_check 1
 
 
 ENTRY(divide_error)
-        zeroentry do_divide_error
+        errorentry do_divide_error 0
 
 
 ENTRY(spurious_interrupt_bug)
-        zeroentry do_spurious_interrupt_bug
+        errorentry do_spurious_interrupt_bug 0
             
 
 ENTRY(page_fault)
-        errorentry do_page_fault
+        errorentry do_page_fault 1
 
 
 
@@ -294,10 +290,10 @@ ENTRY(thread_starter)
         pushq $0
         xorq %rbp,%rbp
         call *%rbx
-        call exit_thread 
+        call minios_exit_thread 
         
 
-ENTRY(__arch_switch_threads)
+ENTRY(arch_switch_threads)
 	pushq %rbp
 	pushq %rbx
 	pushq %r12

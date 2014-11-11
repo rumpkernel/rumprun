@@ -342,7 +342,7 @@ corealloc(int shift)
 #ifdef MEMALLOC_TESTING
 	v = malloc((1<<shift) * pagesz);
 #else
-	v = (void *)alloc_pages(shift);
+	v = (void *)minios_alloc_pages(shift);
 #endif
 
 	return v;

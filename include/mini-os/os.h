@@ -20,7 +20,7 @@
 
 #define USED    __attribute__ ((used))
 
-#define BUG do_exit
+#define BUG minios_do_exit
 
 #include <mini-os/machine/os.h>
 

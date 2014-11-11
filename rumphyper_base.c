@@ -50,7 +50,7 @@ rumpuser_init(int version, const struct rumpuser_hyperup *hyp)
 {
 
 	if (version != RUMPHYPER_MYVERSION) {
-		printk("Unsupported hypercall versions requested, %d vs %d\n",
+		minios_printk("Unsupported hypercall versions requested, %d vs %d\n",
 		    version, RUMPHYPER_MYVERSION);
 		return 1;
 	}
@@ -68,7 +68,7 @@ rumpuser_putchar(int ch)
 {
 	char c = (char)ch;
 
-	console_print(NULL, &c, 1);
+	minios_console_print(NULL, &c, 1);
 }
 
 void
@@ -77,16 +77,16 @@ rumpuser_dprintf(const char *fmt, ...)
 	char *buf;
 	va_list va;
 
-	buf = (void *)alloc_pages(0);
+	buf = (void *)minios_alloc_pages(0);
 	if (!buf)
 		return;
 
 	va_start(va, fmt);
 	vsnprintf(buf, PAGE_SIZE, fmt, va);
 	va_end(va);
-	console_print(NULL, buf, strlen(buf));
+	minios_console_print(NULL, buf, strlen(buf));
 
-	free_pages(buf, 0);
+	minios_free_pages(buf, 0);
 }
 
 static struct {
@@ -143,13 +143,13 @@ rumpuser_clock_sleep(int enum_rumpclock, int64_t sec, long nsec)
 	switch (rclk) {
 	case RUMPUSER_CLOCK_RELWALL:
 		msec = sec * 1000 + nsec / (1000*1000UL);
-		msleep(msec);
+		minios_msleep(msec);
 		break;
 	case RUMPUSER_CLOCK_ABSMONO:
 		thread = get_current();
 		thread->wakeup_time = sec * (1000*1000*1000ULL) + nsec;
 		clear_runnable(thread);
-		schedule();
+		minios_schedule();
 		break;
 	}
 	rumpkern_sched(nlocks, NULL);
@@ -180,7 +180,7 @@ rumpuser_malloc(size_t len, int alignment, void **retval)
 	 */
 	if (len == PAGE_SIZE) {
 		ASSERT(alignment <= PAGE_SIZE);
-		*retval = (void *)alloc_page();
+		*retval = (void *)minios_alloc_page();
 	} else {
 		*retval = memalloc(len, alignment);
 	}
@@ -195,7 +195,7 @@ rumpuser_free(void *buf, size_t buflen)
 {
 
 	if (buflen == PAGE_SIZE)
-		free_page(buf);
+		minios_free_page(buf);
 	else
 		memfree(buf);
 }
@@ -217,7 +217,7 @@ void
 rumpuser_exit(int value)
 {
 
-	do_exit();
+	minios_do_exit();
 }
 
 #define NBLKDEV 10
@@ -242,7 +242,7 @@ devopen(int num)
 	snprintf(buf, sizeof(buf), "device/vbd/%d", devnum);
 
 	rumpkern_unsched(&nlocks, NULL);
-	blkdevs[num] = init_blkfront(buf, &blkinfos[num]);
+	blkdevs[num] = blkfront_init(buf, &blkinfos[num]);
 	rumpkern_sched(nlocks, NULL);
 
 	if (blkdevs[num] != NULL) {
@@ -307,7 +307,7 @@ rumpuser_close(int fd)
 		
 		/* not sure if this appropriately prevents races either ... */
 		blkdevs[rfd] = NULL;
-		shutdown_blkfront(toclose);
+		blkfront_shutdown(toclose);
 	}
 
 	return 0;
@@ -389,9 +389,9 @@ biothread(void *arg)
 			}
 			if (did)
 				break;
-			add_waiter(w, blkfront_queue);
+			minios_add_waiter(w, blkfront_queue);
 			local_irq_restore(flags);
-			schedule();
+			minios_schedule();
 			local_irq_save(flags);
 		}
 		local_irq_restore(flags);
@@ -415,7 +415,7 @@ rumpuser_bio(int fd, int op, void *data, size_t dlen, int64_t off,
 		if (!bio_inited) {
 			bio_inited = 1;
 			rumpuser_mutex_exit(bio_mtx);
-			create_thread("biopoll", NULL,
+			minios_create_thread("biopoll", NULL,
 			    biothread, NULL, NULL);
 		} else {
 			rumpuser_mutex_exit(bio_mtx);

@@ -59,10 +59,10 @@ wait(struct waithead *wh, uint64_t nsec)
 	w.who = get_current();
 	TAILQ_INSERT_TAIL(wh, &w, entries);
 	w.onlist = 1;
-	block(w.who);
+	minios_block(w.who);
 	if (nsec)
 		w.who->wakeup_time = NOW() + nsec;
-	schedule();
+	minios_schedule();
 
 	/* woken up by timeout? */
 	if (w.onlist)
@@ -79,7 +79,7 @@ wakeup_one(struct waithead *wh)
 	if ((w = TAILQ_FIRST(wh)) != NULL) {
 		TAILQ_REMOVE(wh, w, entries);
 		w->onlist = 0;
-		wake(w->who);
+		minios_wake(w->who);
 	}
 }
 
@@ -91,7 +91,7 @@ wakeup_all(struct waithead *wh)
 	while ((w = TAILQ_FIRST(wh)) != NULL) {
 		TAILQ_REMOVE(wh, w, entries);
 		w->onlist = 0;
-		wake(w->who);
+		minios_wake(w->who);
 	}
 }
 
@@ -101,7 +101,7 @@ rumpuser_thread_create(void *(*f)(void *), void *arg, const char *thrname,
 {
 	struct thread *thr;
 
-	thr = create_thread(thrname, NULL, (void (*)(void *))f, arg, NULL);
+	thr = minios_create_thread(thrname, NULL, (void (*)(void *))f, arg, NULL);
 	/*
 	 * XXX: should be supplied as a flag to create_thread() so as to
 	 * _ensure_ it's set before the thread runs (and could exit).
@@ -121,14 +121,14 @@ void
 rumpuser_thread_exit(void)
 {
 
-	exit_thread();
+	minios_exit_thread();
 }
 
 int
 rumpuser_thread_join(void *p)
 {
 
-	join_thread(p);
+	minios_join_thread(p);
 	return 0;
 }
 
@@ -172,7 +172,7 @@ rumpuser_mutex_enter_nowrap(struct rumpuser_mtx *mtx)
 	rv = rumpuser_mutex_tryenter(mtx);
 	/* one VCPU supported, no preemption => must succeed */
 	if (rv != 0) {
-		printk("no voi ei\n");
+		minios_printk("no voi ei\n");
 	}
 }
 

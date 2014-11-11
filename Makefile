@@ -35,30 +35,27 @@ CFLAGS += -DVIRTIF_BASE=xenif -I$(MINI-OS_ROOT)
 CFLAGS += -no-integrated-cpp
 
 ifeq ($(CONFIG_PCI),y)
-LIBS_PCI = -lrumpdev_pci -lrumpdev_pci_if_wm -lrumpdev_miiphy
+RUMP_LIBS_PCI = -lrumpdev_pci -lrumpdev_pci_if_wm -lrumpdev_miiphy
 endif
 
-LIBS_FS = -lrumpfs_ffs -lrumpdev_disk -lrumpdev -lrumpvfs
-LIBS_NET = -lrumpnet_config -lrumpdev_bpf -lrumpnet_xenif -lrumpnet_netinet
-LIBS_NET+= -lrumpnet_net -lrumpxen_xendev -lrumpnet
+RUMP_LIBS_FS = -lrumpfs_ffs -lrumpdev_disk -lrumpdev -lrumpvfs
+RUMP_LIBS_NET = -lrumpnet_config -lrumpdev_bpf -lrumpnet_xenif -lrumpnet_netinet
+RUMP_LIBS_NET+= -lrumpnet_net -lrumpxen_xendev -lrumpnet
 
 # Define some default flags for linking.
-LDLIBS_FS = --whole-archive ${LIBS_FS} ${LIBS_NET} ${LIBS_PCI} -lrump --no-whole-archive
-LDLIBS := ${LDLIBS_FS} -lpthread -lc
+RUMP_LDLIBS = --whole-archive ${RUMP_LIBS_FS} ${RUMP_LIBS_NET} ${RUMP_LIBS_PCI} -lrump --no-whole-archive
+RUMP_LDLIBS := ${RUMP_LDLIBS} -lpthread -lc
 
-APP_LDLIBS := 
 LDARCHLIB := -l$(ARCH_LIB_NAME)
 LDSCRIPT := xen/$(TARGET_ARCH_DIR)/minios-$(XEN_TARGET_ARCH).lds
 LDFLAGS_FINAL := -T $(LDSCRIPT)
 
 LDFLAGS := -L$(abspath $(OBJ_DIR)/xen/$(TARGET_ARCH_DIR)) -L$(abspath rump/lib)
 
-# Prefix for global API names. All other symbols are localised before
-# linking with EXTRA_OBJS.
-GLOBAL_PREFIX := xenos_
-EXTRA_OBJS =
-
-TARGET := rump-kernel
+# Prefixes for global API names. All other symbols in mini-os are localised
+# before linking with rumprun applications.
+GLOBAL_PREFIXES := _minios_ minios_ HYPERVISOR_ blkfront_ netfront_ pcifront_ xenbus_
+GLOBAL_PREFIXES := $(patsubst %,-G %*, $(GLOBAL_PREFIXES))
 
 # Subdirectories common to mini-os
 SUBDIRS := lib xen xen/console xen/xenbus
@@ -73,38 +70,33 @@ src-y += xen/mm.c
 src-y += xen/netfront.c
 src-$(CONFIG_PCI) += xen/pcifront.c
 src-y += xen/sched.c
-
-src-y += lib/__errno.c
-src-y += lib/emul.c
-src-y += lib/libc_stubs.c
-src-y += lib/memalloc.c
-src-y += lib/_lwp.c
-
-src-y += rumphyper_base.c
-src-y += rumphyper_net.c
-src-$(CONFIG_PCI) += rumphyper_pci.c
-src-y += rumphyper_synch.c
-src-y += rumphyper_stubs.c
-
-src-y += callmain.c
-src-y += netbsd_init.c
-
 src-$(CONFIG_XENBUS) += xen/xenbus/xenbus.c
-
 src-y += xen/console/console.c
 src-y += xen/console/xencons_ring.c
 src-y += xen/console/xenbus.c
 
-# The common mini-os objects to build.
-APP_OBJS :=
-OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(src-y))
-HTTPD_OBJS+= httpd/bozohttpd.o httpd/main.o httpd/ssl-bozo.o
-HTTPD_OBJS+= httpd/content-bozo.o httpd/dir-index-bozo.o
+rump-src-y += lib/__errno.c
+rump-src-y += lib/emul.c
+rump-src-y += lib/libc_stubs.c
+rump-src-y += lib/memalloc.c
+rump-src-y += lib/_lwp.c
 
-DEMO_OBJS += $(OBJ_DIR)/rumpkern_demo.o $(OBJ_DIR)/pthread_test.o
+rump-src-y += rumphyper_base.c
+rump-src-y += rumphyper_net.c
+rump-src-$(CONFIG_PCI) += rumphyper_pci.c
+rump-src-y += rumphyper_synch.c
+rump-src-y += rumphyper_stubs.c
+
+rump-src-y += callmain.c
+rump-src-y += netbsd_init.c
+
+# The common mini-os objects to build.
+OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(src-y))
+# Rump kernel middleware objects to build.
+RUMP_OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(rump-src-y))
 
 .PHONY: default
-default: objs app-tools $(TARGET)
+default: objs app-tools minios.o rumprun.o tests/hello/hello rump-kernel
 
 objs:
 	mkdir -p $(OBJ_DIR)/lib $(OBJ_DIR)/xen/$(TARGET_ARCH_DIR)
@@ -126,19 +118,12 @@ links: $(ARCH_LINKS)
 arch_lib:
 	$(MAKE) --directory=xen/$(TARGET_ARCH_DIR) OBJ_DIR=$(OBJ_DIR)/xen/$(TARGET_ARCH_DIR) || exit 1;
 
-$(OBJ_DIR)/$(TARGET)_app.o: $(APP_OBJS) app.lds
-	$(LD) -r -d $(LDFLAGS) -\( $^ -\) $(APP_LDLIBS) --undefined main -o $@
+minios.o: links $(OBJS) arch_lib
+	$(LD) -r $(LDFLAGS) $(OBJS) $(LDARCHLIB) $(LDLIBS) -o $@
+	$(OBJCOPY) -w $(GLOBAL_PREFIXES) -G _start $@ $@
 
-ifneq ($(APP_OBJS),)
-APP_O=$(OBJ_DIR)/$(TARGET)_app.o 
-endif
-
-$(TARGET): links $(OBJS) $(DEMO_OBJS) $(HTTPD_OBJS) $(APP_O) arch_lib
-	$(LD) -r $(LDFLAGS) $(HEAD_OBJ) $(APP_O) $(HTTPD_OBJS) $(DEMO_OBJS) $(OBJS) $(LDARCHLIB) $(LDLIBS) -o $@.o
-	$(OBJCOPY) -w -G $(GLOBAL_PREFIX)* -G _start $@.o $@.o
-	$(LD) $(LDFLAGS) $(LDFLAGS_FINAL) $@.o $(EXTRA_OBJS) -o $@
-	#gzip -f -9 -c $@ >$@.gz
-
+rumprun.o: $(RUMP_OBJS)
+	$(LD) -r $(LDFLAGS) $(RUMP_OBJS) -o $@
 
 APP_TOOLS += rumpapp-xen-cc rumpapp-xen-cc.configure specs specs.configure
 APP_TOOLS += rumpapp-xen-configure rumpapp-xen-make rumpapp-xen-gmake
@@ -146,11 +131,11 @@ APP_TOOLS += rumpapp-xen-configure rumpapp-xen-make rumpapp-xen-gmake
 .PHONY: app-tools
 app-tools: $(addprefix app-tools/, $(APP_TOOLS))
 
-APP_TOOLS_LDLIBS := $(LDLIBS)
+APP_TOOLS_LDLIBS := $(RUMP_LDLIBS)
 # XXX: LDARCHLIB isn't really a linker flag, but it needs to
 # be always included anyway
 APP_TOOLS_LDFLAGS := $(LDFLAGS) $(LDARCHLIB)
-APP_TOOLS_OBJS := $(OBJS)
+APP_TOOLS_OBJS := $(abspath minios.o rumprun.o)
 
 APP_TOOLS_ARCH := $(subst x86_32,i386, \
                   $(subst x86_64,amd64, \
@@ -176,6 +161,18 @@ app-tools/%: app-tools/%.in Makefile Config.mk
 app-tools_clean:
 	rm -f $(addprefix app-tools/, $(APP_TOOLS))
 
+tests/hello/hello: tests/hello/hello.c app-tools minios.o rumprun.o
+	app-tools/rumpapp-xen-cc -o $@ $<
+
+# This is the "old" rumprun-xen demo, migrated to app-tools. Do not remove this
+# demo from the build without prior coordination, Xen oss-test CI relies on it.
+.PHONY: httpd
+httpd:
+	app-tools/rumpapp-xen-make -C httpd -f Makefile.boot
+
+rump-kernel: rumpkern_demo.c pthread_test.c httpd
+	app-tools/rumpapp-xen-cc -o $@ rumpkern_demo.c pthread_test.c httpd/*.o
+
 .PHONY: clean arch_clean app-tools_clean
 
 arch_clean:
@@ -185,9 +182,11 @@ clean:	arch_clean app-tools_clean
 	for dir in $(addprefix $(OBJ_DIR)/,$(SUBDIRS)); do \
 		rm -f $$dir/*.o; \
 	done
-	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core $(OBJ_DIR)/$(TARGET).elf $(OBJ_DIR)/$(TARGET).raw $(TARGET) $(TARGET).o
+	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core minios.o rumprun.o rump-kernel
 	rm -f include/xen include/mini-os/machine
 	rm -f tags TAGS
+	rm -f tests/hello/hello
+	make -C httpd -f Makefile.boot clean
 
 cleanrump: clean
 	rm -rf rump rumpobj rumptools

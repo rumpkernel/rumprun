@@ -106,8 +106,8 @@ rumpcomp_pci_irq_establish(unsigned cookie, int (*handler)(void *), void *data)
 	ihan->i_handler = handler;
 	ihan->i_data = data;
 
-	prt = bind_pirq(pirq, 1, hyperhandler, ihan);
-	unmask_evtchn(prt);
+	prt = minios_bind_pirq(pirq, 1, hyperhandler, ihan);
+	minios_unmask_evtchn(prt);
 	ihan->i_prt = prt;
 
 	return ihan;

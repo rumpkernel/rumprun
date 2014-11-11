@@ -43,7 +43,7 @@ struct rw_semaphore {
 static inline void init_SEMAPHORE(struct semaphore *sem, int count)
 {
   sem->count = count;
-  init_waitqueue_head(&sem->wait);
+  minios_init_waitqueue_head(&sem->wait);
 }
 
 #define init_MUTEX(sem) init_SEMAPHORE(sem, 1)
@@ -65,7 +65,7 @@ static void inline down(struct semaphore *sem)
 {
     unsigned long flags;
     while (1) {
-        wait_event(sem->wait, sem->count > 0);
+        minios_wait_event(sem->wait, sem->count > 0);
         local_irq_save(flags);
         if (sem->count > 0)
             break;
@@ -80,7 +80,7 @@ static void inline up(struct semaphore *sem)
     unsigned long flags;
     local_irq_save(flags);
     sem->count++;
-    wake_up(&sem->wait);
+    minios_wake_up(&sem->wait);
     local_irq_restore(flags);
 }
 

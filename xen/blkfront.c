@@ -51,25 +51,25 @@ struct blkfront_dev {
 
 void blkfront_handler(evtchn_port_t port, struct pt_regs *regs, void *data)
 {
-    wake_up(&blkfront_queue);
+    minios_wake_up(&blkfront_queue);
 }
 
 static void free_blkfront(struct blkfront_dev *dev)
 {
-    mask_evtchn(dev->evtchn);
+    minios_mask_evtchn(dev->evtchn);
 
     free(dev->backend);
 
     gnttab_end_access(dev->ring_ref);
-    free_page(dev->ring.sring);
+    minios_free_page(dev->ring.sring);
 
-    unbind_evtchn(dev->evtchn);
+    minios_unbind_evtchn(dev->evtchn);
 
     free(dev->nodename);
     free(dev);
 }
 
-struct blkfront_dev *init_blkfront(char *_nodename, struct blkfront_info *info)
+struct blkfront_dev *blkfront_init(char *_nodename, struct blkfront_info *info)
 {
     xenbus_transaction_t xbt;
     char* err;
@@ -90,9 +90,9 @@ struct blkfront_dev *init_blkfront(char *_nodename, struct blkfront_info *info)
 
     snprintf(path, sizeof(path), "%s/backend-id", nodename);
     dev->dom = xenbus_read_integer(path); 
-    evtchn_alloc_unbound(dev->dom, blkfront_handler, dev, &dev->evtchn);
+    minios_evtchn_alloc_unbound(dev->dom, blkfront_handler, dev, &dev->evtchn);
 
-    s = (struct blkif_sring*) alloc_page();
+    s = (struct blkif_sring*) minios_alloc_page();
     memset(s,0,PAGE_SIZE);
 
 
@@ -106,7 +106,7 @@ struct blkfront_dev *init_blkfront(char *_nodename, struct blkfront_info *info)
 again:
     err = xenbus_transaction_start(&xbt);
     if (err) {
-        printk("starting transaction\n");
+        minios_printk("starting transaction\n");
         free(err);
     }
 
@@ -141,7 +141,7 @@ again:
     if (err) free(err);
     if (retry) {
             goto again;
-        printk("completing transaction\n");
+        minios_printk("completing transaction\n");
     }
 
     goto done;
@@ -149,7 +149,7 @@ again:
 abort_transaction:
     free(err);
     err = xenbus_transaction_end(xbt, 1, &retry);
-    printk("Abort transaction %s\n", message);
+    minios_printk("Abort transaction %s\n", message);
     goto error;
 
 done:
@@ -157,11 +157,11 @@ done:
     snprintf(path, sizeof(path), "%s/backend", nodename);
     msg = xenbus_read(XBT_NIL, path, &dev->backend);
     if (msg) {
-        printk("Error %s when reading the backend path %s\n", msg, path);
+        minios_printk("Error %s when reading the backend path %s\n", msg, path);
         goto error;
     }
 
-    printk("blkfront: node=%s backend=%s\n", nodename, dev->backend);
+    minios_printk("blkfront: node=%s backend=%s\n", nodename, dev->backend);
 
     dev->handle = strtoul(strrchr(nodename, '/')+1, NULL, 10);
 
@@ -171,7 +171,7 @@ done:
         snprintf(path, sizeof(path), "%s/mode", dev->backend);
         msg = xenbus_read(XBT_NIL, path, &c);
         if (msg) {
-            printk("Error %s when reading the mode\n", msg);
+            minios_printk("Error %s when reading the mode\n", msg);
             goto error;
         }
         if (*c == 'w')
@@ -189,7 +189,7 @@ done:
         while (msg == NULL && state < XenbusStateConnected)
             msg = xenbus_wait_for_state_change(path, &state, &dev->events);
         if (msg != NULL || state != XenbusStateConnected) {
-            printk("backend not available, state=%d\n", state);
+            minios_printk("backend not available, state=%d\n", state);
             xenbus_unwatch_path_token(XBT_NIL, path, path);
             goto error;
         }
@@ -212,9 +212,9 @@ done:
 
         *info = dev->info;
     }
-    unmask_evtchn(dev->evtchn);
+    minios_unmask_evtchn(dev->evtchn);
 
-    printk("blkfront: %u sectors\n", dev->info.sectors);
+    minios_printk("blkfront: %u sectors\n", dev->info.sectors);
 
     return dev;
 
@@ -225,7 +225,7 @@ error:
     return NULL;
 }
 
-void shutdown_blkfront(struct blkfront_dev *dev)
+void blkfront_shutdown(struct blkfront_dev *dev)
 {
     char* err = NULL;
     XenbusState state;
@@ -235,13 +235,13 @@ void shutdown_blkfront(struct blkfront_dev *dev)
 
     blkfront_sync(dev);
 
-    printk("blkfront detached: node=%s\n", dev->nodename);
+    minios_printk("blkfront detached: node=%s\n", dev->nodename);
 
     snprintf(path, sizeof(path), "%s/state", dev->backend);
     snprintf(nodename, sizeof(nodename), "%s/state", dev->nodename);
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateClosing)) != NULL) {
-        printk("shutdown_blkfront: error changing state to %d: %s\n",
+        minios_printk("shutdown_blkfront: error changing state to %d: %s\n",
                 XenbusStateClosing, err);
         goto close;
     }
@@ -251,7 +251,7 @@ void shutdown_blkfront(struct blkfront_dev *dev)
     if (err) free(err);
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateClosed)) != NULL) {
-        printk("shutdown_blkfront: error changing state to %d: %s\n",
+        minios_printk("shutdown_blkfront: error changing state to %d: %s\n",
                 XenbusStateClosed, err);
         goto close;
     }
@@ -262,7 +262,7 @@ void shutdown_blkfront(struct blkfront_dev *dev)
     }
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateInitialising)) != NULL) {
-        printk("shutdown_blkfront: error changing state to %d: %s\n",
+        minios_printk("shutdown_blkfront: error changing state to %d: %s\n",
                 XenbusStateInitialising, err);
         goto close;
     }
@@ -296,12 +296,12 @@ static void blkfront_wait_slot(struct blkfront_dev *dev)
 	    if (!RING_FULL(&dev->ring))
 		break;
 	    /* Really no slot, go to sleep. */
-	    add_waiter(w, blkfront_queue);
+	    minios_add_waiter(w, blkfront_queue);
 	    local_irq_restore(flags);
-	    schedule();
+	    minios_schedule();
 	    local_irq_save(flags);
 	}
-	remove_waiter(w, blkfront_queue);
+	minios_remove_waiter(w, blkfront_queue);
 	local_irq_restore(flags);
     }
 }
@@ -387,12 +387,12 @@ void blkfront_io(struct blkfront_aiocb *aiocbp, int write)
 	if (aiocbp->data)
 	    break;
 
-	add_waiter(w, blkfront_queue);
+	minios_add_waiter(w, blkfront_queue);
 	local_irq_restore(flags);
-	schedule();
+	minios_schedule();
 	local_irq_save(flags);
     }
-    remove_waiter(w, blkfront_queue);
+    minios_remove_waiter(w, blkfront_queue);
     local_irq_restore(flags);
 }
 
@@ -443,12 +443,12 @@ void blkfront_sync(struct blkfront_dev *dev)
 	if (RING_FREE_REQUESTS(&dev->ring) == RING_SIZE(&dev->ring))
 	    break;
 
-	add_waiter(w, blkfront_queue);
+	minios_add_waiter(w, blkfront_queue);
 	local_irq_restore(flags);
-	schedule();
+	minios_schedule();
 	local_irq_save(flags);
     }
-    remove_waiter(w, blkfront_queue);
+    minios_remove_waiter(w, blkfront_queue);
     local_irq_restore(flags);
 }
 
@@ -478,7 +478,7 @@ moretodo:
         status = rsp->status;
 
         if (status != BLKIF_RSP_OKAY)
-            printk("block error %d for op %d\n", status, rsp->operation);
+            minios_printk("block error %d for op %d\n", status, rsp->operation);
 
         switch (rsp->operation) {
         case BLKIF_OP_READ:
@@ -497,7 +497,7 @@ moretodo:
             break;
 
         default:
-            printk("unrecognized block operation %d response\n", rsp->operation);
+            minios_printk("unrecognized block operation %d response\n", rsp->operation);
         }
 
         dev->ring.rsp_cons = ++cons;

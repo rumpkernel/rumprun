@@ -48,7 +48,7 @@ static void *__do_ioremap(unsigned long phys_addr, unsigned long size,
     {
         if ( mfn_is_ram(mfn) )
         {
-            printk("ioremap: mfn 0x%ulx is RAM\n", mfn);
+            minios_printk("ioremap: mfn 0x%ulx is RAM\n", mfn);
             goto mfn_invalid;
         }
     }   

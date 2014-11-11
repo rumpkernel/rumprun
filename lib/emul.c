@@ -78,5 +78,5 @@ void __dead
 _exit(int eval)
 {
 
-	do_exit();
+	minios_do_exit();
 }

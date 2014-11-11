@@ -38,7 +38,7 @@
 
 #ifdef XENBUS_DEBUG
 #define DEBUG(_f, _a...) \
-    printk("MINI_OS(file=xenbus.c, line=%d) " _f , __LINE__, ## _a)
+    minios_printk("MINI_OS(file=xenbus.c, line=%d) " _f , __LINE__, ## _a)
 #else
 #define DEBUG(_f, _a...)    ((void)0)
 #endif
@@ -69,14 +69,14 @@ spinlock_t xenbus_req_lock = SPIN_LOCK_UNLOCKED;
 
 static void queue_wakeup(struct xenbus_event_queue *queue)
 {
-    wake_up(&queue->waitq);
+    minios_wake_up(&queue->waitq);
 }
 
 void xenbus_event_queue_init(struct xenbus_event_queue *queue)
 {
     MINIOS_STAILQ_INIT(&queue->events);
     queue->wakeup = queue_wakeup;
-    init_waitqueue_head(&queue->waitq);
+    minios_init_waitqueue_head(&queue->waitq);
 }
 
 static struct xenbus_event *remove_event(struct xenbus_event_queue *queue)
@@ -107,12 +107,12 @@ static struct xenbus_event *await_event(struct xenbus_event_queue *queue)
     DEFINE_WAIT(w);
     spin_lock(&xenbus_req_lock);
     while (!(event = remove_event(queue))) {
-        add_waiter(w, queue->waitq);
+        minios_add_waiter(w, queue->waitq);
         spin_unlock(&xenbus_req_lock);
-        schedule();
+        minios_schedule();
         spin_lock(&xenbus_req_lock);
     }
-    remove_waiter(w, queue->waitq);
+    minios_remove_waiter(w, queue->waitq);
     spin_unlock(&xenbus_req_lock);
     return event;
 }
@@ -153,7 +153,7 @@ void xenbus_wait_for_watch(struct xenbus_event_queue *queue)
     if (ret)
         free(ret);
     else
-        printk("unexpected path returned by watch\n");
+        minios_printk("unexpected path returned by watch\n");
 }
 
 char* xenbus_wait_for_value(const char* path, const char* value, struct xenbus_event_queue *queue)
@@ -252,7 +252,7 @@ static void xenbus_thread_func(void *ign)
 
     for (;;) 
     {
-        wait_event(xb_waitq, prod != xenstore_buf->rsp_prod);
+        minios_wait_event(xb_waitq, prod != xenstore_buf->rsp_prod);
         while (1) 
         {
             prod = xenstore_buf->rsp_prod;
@@ -304,7 +304,7 @@ static void xenbus_thread_func(void *ign)
                 if (events) {
                     queue_event(events, event);
                 } else {
-                    printk("unexpected watch token %s\n", event->token);
+                    minios_printk("unexpected watch token %s\n", event->token);
                     free(event);
                 }
 
@@ -332,7 +332,7 @@ static void xenbus_thread_func(void *ign)
 static void xenbus_evtchn_handler(evtchn_port_t port, struct pt_regs *regs,
 				  void *ign)
 {
-    wake_up(&xb_waitq);
+    minios_wake_up(&xb_waitq);
 }
 
 static int nr_live_reqs;
@@ -346,7 +346,7 @@ void xenbus_id_release(int id)
     req_info[id].reply_queue = 0;
     nr_live_reqs--;
     if (nr_live_reqs == NR_REQS - 1)
-        wake_up(&req_wq);
+        minios_wake_up(&req_wq);
     spin_unlock(&xenbus_req_lock);
 }
 
@@ -362,7 +362,7 @@ int xenbus_id_allocate(struct xenbus_event_queue *reply_queue,
         if (nr_live_reqs < NR_REQS)
             break;
         spin_unlock(&xenbus_req_lock);
-        wait_event(req_wq, (nr_live_reqs < NR_REQS));
+        minios_wait_event(req_wq, (nr_live_reqs < NR_REQS));
     }
 
     o_probe = probe;
@@ -417,13 +417,13 @@ void init_xenbus(void)
     DEBUG("init_xenbus called.\n");
     xenbus_event_queue_init(&xenbus_default_watch_queue);
     xenstore_buf = mfn_to_virt(start_info.store_mfn);
-    create_thread("xenstore", NULL, xenbus_thread_func, NULL, NULL);
+    minios_create_thread("xenstore", NULL, xenbus_thread_func, NULL, NULL);
     DEBUG("buf at %p.\n", xenstore_buf);
-    err = bind_evtchn(start_info.store_evtchn,
+    err = minios_bind_evtchn(start_info.store_evtchn,
 		      xenbus_evtchn_handler,
               NULL);
-    unmask_evtchn(start_info.store_evtchn);
-    printk("xenbus initialised on irq %d mfn %#lx\n",
+    minios_unmask_evtchn(start_info.store_evtchn);
+    minios_printk("xenbus initialised on irq %d mfn %#lx\n",
 	   err, start_info.store_mfn);
 }
 
@@ -464,7 +464,7 @@ void xenbus_xb_write(int type, int req_id, xenbus_transaction_t trans_id,
         DEBUG("prod %d, len %d, cons %d, size %d; waiting.\n",
                 prod, len, xenstore_buf->req_cons, XENSTORE_RING_SIZE);
         spin_unlock(&xb_lock);
-        wait_event(xb_waitq,
+        minios_wait_event(xb_waitq,
                 xenstore_buf->req_prod + len - xenstore_buf->req_cons <=
                 XENSTORE_RING_SIZE);
         spin_lock(&xb_lock);
@@ -569,7 +569,7 @@ static void xenbus_debug_msg(const char *msg)
     struct xsd_sockmsg *reply;
 
     reply = xenbus_msg_reply(XS_DEBUG, 0, req, ARRAY_SIZE(req));
-    printk("Got a reply, type %d, id %d, len %d.\n",
+    minios_printk("Got a reply, type %d, id %d, len %d.\n",
             reply->type, reply->req_id, reply->len);
 }
 
@@ -808,7 +808,7 @@ int xenbus_read_integer(const char *path)
 
     res = xenbus_read(XBT_NIL, path, &buf);
     if (res) {
-	printk("Failed to read %s.\n", path);
+	minios_printk("Failed to read %s.\n", path);
 	free(res);
 	return -1;
     }
@@ -850,16 +850,16 @@ static void do_ls_test(const char *pre)
     char **dirs, *msg;
     int x;
 
-    printk("ls %s...\n", pre);
+    minios_printk("ls %s...\n", pre);
     msg = xenbus_ls(XBT_NIL, pre, &dirs);
     if (msg) {
-	printk("Error in xenbus ls: %s\n", msg);
+	minios_printk("Error in xenbus ls: %s\n", msg);
 	free(msg);
 	return;
     }
     for (x = 0; dirs[x]; x++) 
     {
-        printk("ls %s[%d] -> %s\n", pre, x, dirs[x]);
+        minios_printk("ls %s[%d] -> %s\n", pre, x, dirs[x]);
         free(dirs[x]);
     }
     free(dirs);
@@ -868,68 +868,68 @@ static void do_ls_test(const char *pre)
 static void do_read_test(const char *path)
 {
     char *res, *msg;
-    printk("Read %s...\n", path);
+    minios_printk("Read %s...\n", path);
     msg = xenbus_read(XBT_NIL, path, &res);
     if (msg) {
-	printk("Error in xenbus read: %s\n", msg);
+	minios_printk("Error in xenbus read: %s\n", msg);
 	free(msg);
 	return;
     }
-    printk("Read %s -> %s.\n", path, res);
+    minios_printk("Read %s -> %s.\n", path, res);
     free(res);
 }
 
 static void do_write_test(const char *path, const char *val)
 {
     char *msg;
-    printk("Write %s to %s...\n", val, path);
+    minios_printk("Write %s to %s...\n", val, path);
     msg = xenbus_write(XBT_NIL, path, val);
     if (msg) {
-	printk("Result %s\n", msg);
+	minios_printk("Result %s\n", msg);
 	free(msg);
     } else {
-	printk("Success.\n");
+	minios_printk("Success.\n");
     }
 }
 
 static void do_rm_test(const char *path)
 {
     char *msg;
-    printk("rm %s...\n", path);
+    minios_printk("rm %s...\n", path);
     msg = xenbus_rm(XBT_NIL, path);
     if (msg) {
-	printk("Result %s\n", msg);
+	minios_printk("Result %s\n", msg);
 	free(msg);
     } else {
-	printk("Success.\n");
+	minios_printk("Success.\n");
     }
 }
 
 /* Simple testing thing */
 void test_xenbus(void)
 {
-    printk("Doing xenbus test.\n");
+    minios_printk("Doing xenbus test.\n");
     xenbus_debug_msg("Testing xenbus...\n");
 
-    printk("Doing ls test.\n");
+    minios_printk("Doing ls test.\n");
     do_ls_test("device");
     do_ls_test("device/vif");
     do_ls_test("device/vif/0");
 
-    printk("Doing read test.\n");
+    minios_printk("Doing read test.\n");
     do_read_test("device/vif/0/mac");
     do_read_test("device/vif/0/backend");
 
-    printk("Doing write test.\n");
+    minios_printk("Doing write test.\n");
     do_write_test("device/vif/0/flibble", "flobble");
     do_read_test("device/vif/0/flibble");
     do_write_test("device/vif/0/flibble", "widget");
     do_read_test("device/vif/0/flibble");
 
-    printk("Doing rm test.\n");
+    minios_printk("Doing rm test.\n");
     do_rm_test("device/vif/0/flibble");
     do_read_test("device/vif/0/flibble");
-    printk("(Should have said ENOENT)\n");
+    minios_printk("(Should have said ENOENT)\n");
 }
 
 /*

@@ -23,8 +23,8 @@ struct thread_md {
 #define thr_sp md.thrmd_sp
 #define thr_ip md.thrmd_ip
 
-extern void __arch_switch_threads(unsigned long *prevctx, unsigned long *nextctx);
+extern void _minios_entry_arch_switch_threads(unsigned long *prevctx, unsigned long *nextctx);
 
-#define arch_switch_threads(prev,next) __arch_switch_threads(&(prev)->thr_sp, &(next)->thr_sp)
+#define arch_switch_threads(prev,next) _minios_entry_arch_switch_threads(&(prev)->thr_sp, &(next)->thr_sp)
 
 #endif /* __ARCH_SCHED_H__ */

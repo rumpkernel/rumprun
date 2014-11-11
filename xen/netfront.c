@@ -102,7 +102,7 @@ moretodo:
 
         if (rx->flags & NETRXF_extra_info)
         {
-            printk("+++++++++++++++++++++ we have extras!\n");
+            minios_printk("+++++++++++++++++++++ we have extras!\n");
             continue;
         }
 
@@ -173,7 +173,7 @@ void network_tx_buf_gc(struct netfront_dev *dev)
                 continue;
 
             if (txrsp->status == NETIF_RSP_ERROR)
-                printk("packet error\n");
+                minios_printk("packet error\n");
 
             id  = txrsp->id;
             BUG_ON(id >= NET_TX_RING_SIZE);
@@ -224,7 +224,7 @@ static void free_netfront(struct netfront_dev *dev)
     for(i=0;i<NET_TX_RING_SIZE;i++)
 	down(&dev->tx_sem);
 
-    mask_evtchn(dev->evtchn);
+    minios_mask_evtchn(dev->evtchn);
 
     free(dev->mac);
     free(dev->backend);
@@ -232,25 +232,25 @@ static void free_netfront(struct netfront_dev *dev)
     gnttab_end_access(dev->rx_ring_ref);
     gnttab_end_access(dev->tx_ring_ref);
 
-    free_page(dev->rx.sring);
-    free_page(dev->tx.sring);
+    minios_free_page(dev->rx.sring);
+    minios_free_page(dev->tx.sring);
 
-    unbind_evtchn(dev->evtchn);
+    minios_unbind_evtchn(dev->evtchn);
 
     for(i=0;i<NET_RX_RING_SIZE;i++) {
 	gnttab_end_access(dev->rx_buffers[i].gref);
-	free_page(dev->rx_buffers[i].page);
+	minios_free_page(dev->rx_buffers[i].page);
     }
 
     for(i=0;i<NET_TX_RING_SIZE;i++)
 	if (dev->tx_buffers[i].page)
-	    free_page(dev->tx_buffers[i].page);
+	    minios_free_page(dev->tx_buffers[i].page);
 
     free(dev->nodename);
     free(dev);
 }
 
-struct netfront_dev *init_netfront(char *_nodename, void (*thenetif_rx)(struct netfront_dev *, unsigned char* data, int len), unsigned char rawmac[6], char **ip, void *priv)
+struct netfront_dev *netfront_init(char *_nodename, void (*thenetif_rx)(struct netfront_dev *, unsigned char* data, int len), unsigned char rawmac[6], char **ip, void *priv)
 {
     xenbus_transaction_t xbt;
     char* err;
@@ -276,8 +276,8 @@ struct netfront_dev *init_netfront(char *_nodename, void (*thenetif_rx)(struct n
     dev->nodename = strdup(nodename);
     dev->netfront_priv = priv;
 
-    printk("net TX ring size %d\n", NET_TX_RING_SIZE);
-    printk("net RX ring size %d\n", NET_RX_RING_SIZE);
+    minios_printk("net TX ring size %d\n", NET_TX_RING_SIZE);
+    minios_printk("net RX ring size %d\n", NET_RX_RING_SIZE);
     init_SEMAPHORE(&dev->tx_sem, NET_TX_RING_SIZE);
     for(i=0;i<NET_TX_RING_SIZE;i++)
     {
@@ -288,15 +288,15 @@ struct netfront_dev *init_netfront(char *_nodename, void (*thenetif_rx)(struct n
     for(i=0;i<NET_RX_RING_SIZE;i++)
     {
 	/* TODO: that's a lot of memory */
-        dev->rx_buffers[i].page = (char*)alloc_page();
+        dev->rx_buffers[i].page = (char*)minios_alloc_page();
     }
 
     snprintf(path, sizeof(path), "%s/backend-id", nodename);
     dev->dom = xenbus_read_integer(path);
-        evtchn_alloc_unbound(dev->dom, netfront_handler, dev, &dev->evtchn);
+        minios_evtchn_alloc_unbound(dev->dom, netfront_handler, dev, &dev->evtchn);
 
-    txs = (struct netif_tx_sring *) alloc_page();
-    rxs = (struct netif_rx_sring *) alloc_page();
+    txs = (struct netif_tx_sring *) minios_alloc_page();
+    rxs = (struct netif_rx_sring *) minios_alloc_page();
     memset(txs,0,PAGE_SIZE);
     memset(rxs,0,PAGE_SIZE);
 
@@ -318,7 +318,7 @@ struct netfront_dev *init_netfront(char *_nodename, void (*thenetif_rx)(struct n
 again:
     err = xenbus_transaction_start(&xbt);
     if (err) {
-        printk("starting transaction\n");
+        minios_printk("starting transaction\n");
         free(err);
     }
 
@@ -364,7 +364,7 @@ again:
     if (err) free(err);
     if (retry) {
             goto again;
-        printk("completing transaction\n");
+        minios_printk("completing transaction\n");
     }
 
     goto done;
@@ -372,7 +372,7 @@ again:
 abort_transaction:
     free(err);
     err = xenbus_transaction_end(xbt, 1, &retry);
-    printk("Abort transaction %s\n", message);
+    minios_printk("Abort transaction %s\n", message);
     goto error;
 
 done:
@@ -383,12 +383,12 @@ done:
     msg = xenbus_read(XBT_NIL, path, &dev->mac);
 
     if ((dev->backend == NULL) || (dev->mac == NULL)) {
-        printk("%s: backend/mac failed\n", __func__);
+        minios_printk("%s: backend/mac failed\n", __func__);
         goto error;
     }
 
-    printk("netfront: node=%s backend=%s\n", nodename, dev->backend);
-    printk("netfront: MAC %s\n", dev->mac);
+    minios_printk("netfront: node=%s backend=%s\n", nodename, dev->backend);
+    minios_printk("netfront: MAC %s\n", dev->mac);
 
     {
         XenbusState state;
@@ -402,7 +402,7 @@ done:
         while (err == NULL && state < XenbusStateConnected)
             err = xenbus_wait_for_state_change(path, &state, &dev->events);
         if (state != XenbusStateConnected) {
-            printk("backend not avalable, state=%d\n", state);
+            minios_printk("backend not avalable, state=%d\n", state);
             xenbus_unwatch_path_token(XBT_NIL, path, path);
             goto error;
         }
@@ -413,7 +413,7 @@ done:
         }
     }
 
-    unmask_evtchn(dev->evtchn);
+    minios_unmask_evtchn(dev->evtchn);
 
     if (rawmac) {
 	char *p;
@@ -424,8 +424,8 @@ done:
 
 	    v = strtoul(p, &ep, 16);
 	    if (v > 255 || (*ep && *ep != ':')) {
-		printk("invalid mac string %s\n", dev->mac);
-		do_exit();
+		minios_printk("invalid mac string %s\n", dev->mac);
+		minios_do_exit();
 	    }
 	    rawmac[i] = v;
 	    p = ep+1;
@@ -441,7 +441,7 @@ error:
 }
 
 
-void shutdown_netfront(struct netfront_dev *dev)
+void netfront_shutdown(struct netfront_dev *dev)
 {
     char* err = NULL;
     XenbusState state;
@@ -449,13 +449,13 @@ void shutdown_netfront(struct netfront_dev *dev)
     char path[strlen(dev->backend) + 1 + 5 + 1];
     char nodename[strlen(dev->nodename) + 1 + 5 + 1];
 
-    printk("close network: backend at %s\n",dev->backend);
+    minios_printk("close network: backend at %s\n",dev->backend);
 
     snprintf(path, sizeof(path), "%s/state", dev->backend);
     snprintf(nodename, sizeof(nodename), "%s/state", dev->nodename);
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateClosing)) != NULL) {
-        printk("shutdown_netfront: error changing state to %d: %s\n",
+        minios_printk("shutdown_netfront: error changing state to %d: %s\n",
                 XenbusStateClosing, err);
         goto close;
     }
@@ -465,7 +465,7 @@ void shutdown_netfront(struct netfront_dev *dev)
     if (err) free(err);
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateClosed)) != NULL) {
-        printk("shutdown_netfront: error changing state to %d: %s\n",
+        minios_printk("shutdown_netfront: error changing state to %d: %s\n",
                 XenbusStateClosed, err);
         goto close;
     }
@@ -476,7 +476,7 @@ void shutdown_netfront(struct netfront_dev *dev)
     }
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateInitialising)) != NULL) {
-        printk("shutdown_netfront: error changing state to %d: %s\n",
+        minios_printk("shutdown_netfront: error changing state to %d: %s\n",
                 XenbusStateInitialising, err);
         goto close;
     }
@@ -555,7 +555,7 @@ void netfront_xmit(struct netfront_dev *dev, unsigned char* data,int len)
     buf = &dev->tx_buffers[id];
     page = buf->page;
     if (!page)
-	page = buf->page = (char*) alloc_page();
+	page = buf->page = (char*) minios_alloc_page();
 
     i = dev->tx.req_prod_pvt;
     tx = RING_GET_REQUEST(&dev->tx, i);
