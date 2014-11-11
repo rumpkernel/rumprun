@@ -20,7 +20,7 @@ ifeq (${MACHINE},x86_64)
   supported:= true
   MACHINE:=i386
   CFLAGS+=-m32
-  LDFLAGS=-m32
+  LDFLAGS+=-m32
 endif
 ifneq (${supported},true)
 $(error only supported target is x86)
