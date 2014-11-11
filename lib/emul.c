@@ -77,6 +77,6 @@ munmap(void *addr, size_t len)
 void __dead
 _exit(int eval)
 {
-
-	minios_do_exit();
+	minios_stop_kernel();
+	minios_do_halt(MINIOS_HALT_POWEROFF);
 }

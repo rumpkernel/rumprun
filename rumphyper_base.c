@@ -216,8 +216,8 @@ rumpuser_getrandom(void *buf, size_t buflen, int flags, size_t *retp)
 void
 rumpuser_exit(int value)
 {
-
-	minios_do_exit();
+	minios_stop_kernel();
+	minios_do_halt(MINIOS_HALT_POWEROFF);
 }
 
 #define NBLKDEV 10

@@ -137,7 +137,7 @@ void _minios_start_kernel(start_info_t *si)
     run_idle_thread();
 }
 
-void stop_kernel(void)
+void minios_stop_kernel(void)
 {
     /* TODO: fs import */
 
@@ -163,6 +163,22 @@ void stop_kernel(void)
 
     /* Reset arch details */
     arch_fini();
+}
+
+/*
+ * minios_do_halt: Called by "application" code to halt the Xen domain.
+ */
+
+void minios_do_halt(int reason)
+{
+    minios_printk("minios: halting, reason=%d\n", reason);
+    for( ;; )
+    {
+        struct sched_shutdown sched_shutdown = {
+            .reason = (reason == MINIOS_HALT_POWEROFF) ?
+                SHUTDOWN_poweroff : SHUTDOWN_crash };
+        HYPERVISOR_sched_op(SCHEDOP_shutdown, &sched_shutdown);
+    }
 }
 
 /*
