@@ -47,10 +47,14 @@
 #include "rumpconfig.h"
 
 static int
-xs_read_netconfig(const char *if_index, char **type, char **method)
+xs_read_netconfig(const char *if_index, char **type, char **method, char **addr,
+		char **mask, char **gw)
 {
 	char *if_type = NULL;
 	char *if_method = NULL;
+	char *if_addr = NULL;
+	char *if_mask = NULL;
+	char *if_gw = NULL;
 	char buf[128];
 	char *xberr = NULL;
 	xenbus_transaction_t txn;
@@ -70,13 +74,6 @@ xs_read_netconfig(const char *if_index, char **type, char **method)
 		xenbus_transaction_end(txn, 0, &xbretry);
 		return 1;
 	}
-	if (strcmp(if_type, "inet") != 0) {
-		warnx("rumprun_config: xenif%s: unknown type '%s'",
-			if_index, if_type);
-		xenbus_transaction_end(txn, 0, &xbretry);
-		free(if_type);
-		return 1;
-	}
 	snprintf(buf, sizeof buf, "rumprun/net/%s/method", if_index);
 	xberr = xenbus_read(txn, buf, &if_method);
 	if (xberr) {
@@ -86,12 +83,32 @@ xs_read_netconfig(const char *if_index, char **type, char **method)
 		free(if_type);
 		return 1;
 	}
-	if (strcmp(if_method, "dhcp") != 0) {
-		warnx("rumprun_config: xenif%s: unknown method '%s'",
-			if_index, if_method);
+	/* The following parameters are dependent on the type/method. */
+	snprintf(buf, sizeof buf, "rumprun/net/%s/addr", if_index);
+	xberr = xenbus_read(txn, buf, &if_addr);
+	if (xberr && strcmp(xberr, "ENOENT") != 0) {
+		warnx("rumprun_config: xenif%s: read %s failed: %s",
+			if_index, buf, xberr);
 		xenbus_transaction_end(txn, 0, &xbretry);
 		free(if_type);
-		free(if_method);
+		return 1;
+	}
+	snprintf(buf, sizeof buf, "rumprun/net/%s/netmask", if_index);
+	xberr = xenbus_read(txn, buf, &if_mask);
+	if (xberr && strcmp(xberr, "ENOENT") != 0) {
+		warnx("rumprun_config: xenif%s: read %s failed: %s",
+			if_index, buf, xberr);
+		xenbus_transaction_end(txn, 0, &xbretry);
+		free(if_type);
+		return 1;
+	}
+	snprintf(buf, sizeof buf, "rumprun/net/%s/gw", if_index);
+	xberr = xenbus_read(txn, buf, &if_gw);
+	if (xberr && strcmp(xberr, "ENOENT") != 0) {
+		warnx("rumprun_config: xenif%s: read %s failed: %s",
+			if_index, buf, xberr);
+		xenbus_transaction_end(txn, 0, &xbretry);
+		free(if_type);
 		return 1;
 	}
 	xberr = xenbus_transaction_end(txn, 0, &xbretry);
@@ -104,6 +121,9 @@ xs_read_netconfig(const char *if_index, char **type, char **method)
 	}
 	*type = if_type;
 	*method = if_method;
+	*addr = if_addr;
+	*mask = if_mask;
+	*gw = if_gw;
 	return 0;
 }
 
@@ -112,55 +132,124 @@ rumprun_config_net(const char *if_index)
 {
 	char *if_type = NULL;
 	char *if_method = NULL;
+	char *if_addr = NULL;
+	char *if_mask = NULL;
+	char *if_gw = NULL;
 	char buf[128];
 	int rv;
 	
-	rv = xs_read_netconfig(if_index, &if_type, &if_method);
+	rv = xs_read_netconfig(if_index, &if_type, &if_method, &if_addr,
+		&if_mask, &if_gw);
 	if (rv != 0)
 		return;
 	
-	printf("rumprun_config: configuring xenif%s as %s with %s\n",
-		if_index, if_type, if_method);
+	printf("rumprun_config: configuring xenif%s as %s with %s %s\n",
+		if_index, if_type, if_method, if_addr ? if_addr : "");
 	snprintf(buf, sizeof buf, "xenif%s", if_index);
 	if ((rv = rump_pub_netconfig_ifcreate(buf)) != 0) {
-		warnx("rumprun_config: creating %s failed: %d\n", buf, rv);
+		warnx("rumprun_config: %s: ifcreate failed: %s\n", buf,
+			strerror(rv));
 		goto out;
 	}
-	if ((rv = rump_pub_netconfig_dhcp_ipv4_oneshot(buf)) != 0) {
-		printf("rumprun_config: dhcp for %s failed: %d\n", buf, rv);
-		goto out;
+	if (strcmp(if_type, "inet") == 0 &&
+	    strcmp(if_method, "dhcp") == 0) {
+		if ((rv = rump_pub_netconfig_dhcp_ipv4_oneshot(buf)) != 0) {
+			warnx("rumprun_config: %s: dhcp_ipv4 failed: %s\n", buf,
+				strerror(rv));
+			goto out;
+		}
+	}
+	else if (strcmp(if_type, "inet") == 0 &&
+		 strcmp(if_method, "static") == 0) {
+		if (if_addr == NULL || if_mask == NULL) {
+			warnx("rumprun_config: %s: missing if_addr/mask\n");
+			goto out;
+		}
+		if ((rv = rump_pub_netconfig_ipv4_ifaddr(buf, if_addr,
+			if_mask)) != 0) {
+			warnx("rumprun_config: %s: ipv4_ifaddr failed: %s\n",
+				buf, strerror(rv));
+			goto out;
+		}
+		if (if_gw &&
+			(rv = rump_pub_netconfig_ipv4_gw(if_gw)) != 0) {
+			warnx("rumprun_config: %s: ipv4_gw failed: %s\n",
+				buf, strerror(rv));
+			goto out;
+		}
+	}
+	else {
+		warnx("rumprun_config: %s: unknown type/method %s/%s\n",
+			buf, if_type, if_method);
 	}
 
 out:
 	free(if_type);
 	free(if_method);
+	if (if_addr)
+		free(if_addr);
+	if (if_mask)
+		free(if_mask);
+	if (if_gw)
+		free(if_gw);
 }
 
 static void
 rumprun_deconfig_net(const char *if_index)
 {
+#if 1
+	/* TODO According to pwwka this is not fully implemented yet */
+	printf("rumprun_deconfig: (not yet) deconfiguring xenif%s\n", if_index);
+#else
 	char *if_type = NULL;
 	char *if_method = NULL;
+	char *if_addr = NULL;
+	char *if_mask = NULL;
+	char *if_gw = NULL;
+	char buf[128];
 	int rv;
 
-	rv = xs_read_netconfig(if_index, &if_type, &if_method);
+	rv = xs_read_netconfig(if_index, &if_type, &if_method, &if_addr,
+		&if_mask, &if_gw);
 	if (rv != 0)
 		return;
 
-	printf("rumprun_config: (not yet) deconfiguring xenif%s\n", if_index);
-#if 0 /* XXX causes dhcpcd from brlib to fall over */	
-	snprintf(buf, sizeof buf, "xenif%s", if_index);
-	if ((rv = rump_pub_netconfig_ifdown(buf)) != 0) {
-		warnx("rumprun_config: ifdown %s failed: %d\n", buf, rv);
-		return;
+	if (strcmp(if_type, "inet") == 0 &&
+	    strcmp(if_method, "dhcp") == 0) {
+		/* TODO: need an interface into brlib dhcp to allow us to
+		 * destroy the interface. */
+	        printf("rumprun_deconfig: not deconfiguring xenif%s (uses dhcp)\n",
+			if_index);
 	}
-	if ((rv = rump_pub_netconfig_ifdestroy(buf)) != 0) {
-		printf("rumprun_config: ifdestroy %s failed: %d\n", buf, rv);
-		return;
+	else if (strcmp(if_type, "inet") == 0 &&
+		 strcmp(if_method, "static") == 0) {
+		snprintf(buf, sizeof buf, "xenif%s", if_index);
+		if ((rv = rump_pub_netconfig_ifdown(buf)) != 0) {
+			warnx("rumprun_deconfig: %s: ifdown failed: %s\n", buf,
+				strerror(rv));
+			goto out;
+		}
+		if ((rv = rump_pub_netconfig_ifdestroy(buf)) != 0) {
+			printf("rumprun_deconfig: %s: ifdestroy failed: %s\n",
+				buf, strerror(rv));
+			goto out;
+		}
 	}
-#endif
+	else {
+		warnx("rumprun_config: %s: unknown type/method %s/%s\n",
+			buf, if_type, if_method);
+	}
+
+out:
 	free(if_type);
 	free(if_method);
+	if (if_addr)
+		free(if_addr);
+	if (if_mask)
+		free(if_mask);
+	if (if_gw)
+		free(if_gw);
+#endif
 }
 
 static int
