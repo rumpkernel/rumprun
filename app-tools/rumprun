@@ -41,10 +41,10 @@ usage: rumprun STACK [ -ipd ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] [ -n NETSPEC
     args will be passed to the application command line
     -N NAME sets the domain's name to NAME, default is rumprun-APP
     -M MEM sets the domain's memory to MEM, default is 16
-    -b BLKSPEC configures a block device as hostpath:mountpoint
+    -b BLKSPEC configures a block device as hostpath,mountpoint
     -n NETSPEC configures a network interface, using one of:
-       inet:dhcp - IPv4 with DHCP
-       inet:static:ADDR/MASK[:GATEWAY] - IPv4 with static IP
+       inet,dhcp - IPv4 with DHCP
+       inet,static,ADDR/MASK[,GATEWAY] - IPv4 with static IP
     -i attaches to domain console on startup
     -p creates the domain but leaves it paused
     -d destroys the domain on poweroff
@@ -82,10 +82,10 @@ cidr2mask()
 }
 
 parse_netspec() {
-	# Call ourselves recursively to split $@ on :
-	if [ "$IFS" != ":" ]; then
+	# Call ourselves recursively to split $@ on ,
+	if [ "$IFS" != "," ]; then
 		OLDIFS=$IFS
-		IFS=: parse_netspec "$@"
+		IFS=, parse_netspec "$@"
 		return $?
 	else
 		set -- $1
@@ -137,15 +137,15 @@ run_xen() {
 	opt_name=
 	while getopts "n:b:pidN:M:" opt; do
 		case "$opt" in
-			# -n: NETSPEC: type:method
+			# -n: NETSPEC
 			n)
 				parse_netspec "${OPTARG}" || usage
 				nindex=$(expr $nindex + 1)
 				;;
-			# -b: BLKSPEC: hostpath:mountpoint
+			# -b: BLKSPEC: hostpath,mountpoint
 			b)
-				image=${OPTARG%:*}
-				mountpoint=${OPTARG#*:}
+				image=${OPTARG%,*}
+				mountpoint=${OPTARG#*,}
 				[ -n "$image" ] || usage
 				[ -n "$mountpoint" ] || usage
 				[ -f "$image" ] || err File $image does not exist
