@@ -25,21 +25,17 @@
 #
 
 #
-# xr: rumprun-xen stack "driver" script for running application stacks
+# rumprun-xen: "driver" script for running rumprun-xen application stacks
 #
 
 err() {
-	echo xr: error: "$@" 1>&2
+	echo rumprun-xen: error: "$@" 1>&2
 	exit 1
 }
 
 usage() {
 	cat <<EOM
-usage: xr COMMAND [ args ]
-
-  supported COMMANDs:
-
-  run [ -ipd ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] [ -n NETSPEC ] [ -- ] APP [ args ]
+usage: rumprun-xen [ -ipd ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] [ -n NETSPEC ] [ -- ] APP [ args ]
     APP is the rumprun-xen application to start
     args will be passed to the application command line
     -N NAME sets the domain's name to NAME, default is rumprun-APP
@@ -122,8 +118,8 @@ parse_netspec() {
 	return 0
 }
 
-# xr run: Generate configuration and run application stack.
-xr_run() {
+# run: Generate configuration and run application stack.
+run() {
 	conf=/tmp/xr.conf.$$
 	xenstore=/tmp/xr.store.$$
 	>${conf}
@@ -231,21 +227,11 @@ EOM
 	fi
 }
 
-if [ $# -lt 2 ]; then
+if [ $# -lt 1 ]; then
 	usage
 fi
 if [ $(id -u) -ne 0 ]; then
 	err Must be root
 fi
 
-cmd="$1"
-shift
-case "$cmd" in
-	run)
-		xr_run "$@"
-		;;
-	*)
-		usage
-		;;
-esac
-
+run "$@"
