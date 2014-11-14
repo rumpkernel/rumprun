@@ -39,9 +39,11 @@ usage: xr COMMAND [ args ]
 
   supported COMMANDs:
 
-  run [ -ipd ] [ -b BLKSPEC ] [ -n NETSPEC ] [ -- ] APP [ args ]
+  run [ -ipd ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] [ -n NETSPEC ] [ -- ] APP [ args ]
     APP is the rumprun-xen application to start
     args will be passed to the application command line
+    -N NAME sets the domain's name to NAME, default is rumprun-APP
+    -M MEM sets the domain's memory to MEM, default is 16
     -b BLKSPEC configures a block device as hostpath:mountpoint
     -n NETSPEC configures a network interface, using one of:
        inet:dhcp - IPv4 with DHCP
@@ -134,7 +136,9 @@ xr_run() {
 	opt_pause=
 	opt_interactive=
 	opt_destroy='on_poweroff="preserve"'
-	while getopts "n:b:pid" opt; do
+	opt_mem=16
+	opt_name=
+	while getopts "n:b:pidN:M:" opt; do
 		case "$opt" in
 			# -n: NETSPEC: type:method
 			n)
@@ -170,6 +174,14 @@ xr_run() {
 			d)
 				opt_destroy='on_poweroff="destroy"'
 				;;
+			# -N: Override domain name.
+			N)
+				opt_name=${OPTARG}
+				;;
+			# -M: Set domain memory.
+			M)
+				opt_mem=${OPTARG}
+				;;
 			*)
 				usage
 				;;
@@ -183,7 +195,7 @@ xr_run() {
 	# Remaining arguments belong to the application.
 	shift $((OPTIND-1))
 	[ "$1" = "--" ] && shift
-	name=rumprun-$(basename $1)
+	name=${opt_name:-rumprun-$(basename $1)}
 	app=$(realpath $1)
 	shift
 	# Generate xl configuration file.
@@ -191,7 +203,7 @@ xr_run() {
 kernel="${app}"
 name="${name}"
 vcpus=1
-memory=16
+memory=${opt_mem}
 on_crash="preserve"
 ${opt_destroy}
 extra="$@"
