@@ -53,10 +53,12 @@ struct onepkt {
 struct virtif_user {
 	struct netfront_dev *viu_dev;
 	struct thread *viu_rcvr;
+	struct thread *viu_thr;
 	struct virtif_sc *viu_vifsc;
 
 	int viu_read;
 	int viu_write;
+	int viu_dying;
 	struct onepkt viu_pkts[NBUF];
 };
 
@@ -114,7 +116,8 @@ pusher(void *arg)
 	me = get_current();
 
 	local_irq_save(flags);
-	for (;;) {
+ again:
+	while (!viu->viu_dying) {
 		while (viu->viu_read == viu->viu_write) {
 			viu->viu_rcvr = me;
 			minios_block(viu->viu_rcvr);
@@ -122,6 +125,7 @@ pusher(void *arg)
 			minios_schedule();
 			local_irq_save(flags);
 			viu->viu_rcvr = NULL;
+			goto again;
 		}
 		*mypkt = viu->viu_pkts[viu->viu_read];
 		local_irq_restore(flags);
@@ -163,10 +167,12 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 		goto out;
 	}
 
-	if (minios_create_thread("xenifp", NULL, pusher, viu, NULL) == NULL) {
+	viu->viu_thr = minios_create_thread("xenifp", NULL, pusher, viu, NULL);
+	if (viu->viu_thr == NULL) {
 		minios_printk("fatal thread creation failure\n"); /* XXX */
 		minios_do_exit();
 	}
+	viu->viu_thr->flags |= THREAD_MUSTJOIN;
 
 	rv = 0;
 
@@ -217,12 +223,18 @@ void
 VIFHYPER_DYING(struct virtif_user *viu)
 {
 
-	/* the train is always leavin' */
+	viu->viu_dying = 1;
+	if (viu->viu_rcvr)
+		minios_wake(viu->viu_rcvr);
 }
 
 void
 VIFHYPER_DESTROY(struct virtif_user *viu)
 {
 
-	/* always leaves at 3:09 */
+	ASSERT(viu->viu_dying == 1);
+
+	minios_join_thread(viu->viu_thr);
+	netfront_shutdown(viu->viu_dev);
+	free(viu);
 }
