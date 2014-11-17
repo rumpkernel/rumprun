@@ -3,7 +3,10 @@ THEBIN= rk.bin
 # answer "yes" if you have built "userspace" (i.e. you've run buildme.sh)
 RUMPRUN_PRESENT?= yes
 
-CFLAGS+=	-std=gnu99 -g -Wall -Werror
+CFLAGS+=	-std=gnu99 -g -Wall
+ifndef NOGCCERROR
+CFLAGS+=	-Werror
+endif
 CPPFLAGS=	-Iinclude -I${RUMPKERNDIR}/include -nostdinc
 STRIP?=		strip
 
