@@ -76,5 +76,16 @@ ${THEBIN}: ${THEBIN}.gdb
 ${THEBIN}.gdb: ${OBJS} ${COMPILER_RT} ${LDSCRIPT} Makefile
 	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} ${LDFLAGS} ${OBJS} -L${RUMPKERNDIR}/lib -Wl,--whole-archive ${ALLLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
 
+iso/boot/grub/grub.cfg:
+	mkdir -p iso/boot/grub
+	printf "menuentry "rumpkernel" {\n\tmultiboot /boot/${THEBIN}\n}\n" > $@
+
+${THEBIN}.iso: ${THEBIN} iso/boot/grub/grub.cfg
+	ln -f ${THEBIN} iso/boot/
+	grub-mkrescue -o $@ iso
+
+iso: ${THEBIN}.iso
+
 clean:
-	rm -f ${OBJS} ${COMPILER_RT} ${THEBIN} ${THEBIN}.gdb
+	rm -f ${OBJS} ${COMPILER_RT} ${THEBIN} ${THEBIN}.gdb \
+	    iso/boot/${THEBIN} iso/boot/grub/grub.cfg
