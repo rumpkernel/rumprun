@@ -132,3 +132,13 @@ rumpuser_clock_sleep(int enum_rumpclock, int64_t sec, long nsec)
 
 	return 0;
 }
+
+/*
+ * currently, supports only printing fmt.  better than nothing ...
+ */
+void
+rumpuser_dprintf(const char *fmt, ...)
+{
+
+	bmk_cons_puts(fmt);
+}

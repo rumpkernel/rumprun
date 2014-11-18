@@ -17,7 +17,6 @@ REALNOTHING(rumpuser_dl_bootstrap)
 
 NOTHING(rumpuser_daemonize_begin)
 NOTHING(rumpuser_daemonize_done)
-NOTHING(rumpuser_dprintf)
 NOTHING(rumpuser_exit)
 NOTHING(rumpuser_kill)
 
