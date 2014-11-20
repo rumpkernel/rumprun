@@ -192,6 +192,7 @@ run_xen() {
 	# Remaining arguments belong to the application.
 	shift $((OPTIND-1))
 	[ "$1" = "--" ] && shift
+	[ $# -lt 1 ] && usage
 	name=${opt_name:-rumprun-$(basename $1)}
 	app=$(realpath $1)
 	shift
