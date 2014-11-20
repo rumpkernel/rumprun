@@ -5,8 +5,7 @@ This repository contains supports for running rump kernels on top of the
 Xen hypervisor and enables running off-the-shelf POSIX applications as
 standalone Xen guests.
 
-To build, install Xen headers, edit `domain_config` (top level in this
-repo), and run:
+To build, install Xen headers and run:
 ````
 ./buildxen.sh
 ````
