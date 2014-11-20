@@ -19,3 +19,4 @@ app-tools/rumpapp-xen-gmake
 app-tools/rumpapp-xen-make
 
 tests/hello/hello
+tests/wopr/wopr

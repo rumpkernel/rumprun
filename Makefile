@@ -97,7 +97,7 @@ OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(src-y))
 RUMP_OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(rump-src-y))
 
 .PHONY: default
-default: objs app-tools minios.o rumprun.o tests/hello/hello rump-kernel
+default: objs app-tools minios.o rumprun.o tests rump-kernel
 
 objs:
 	mkdir -p $(OBJ_DIR)/lib $(OBJ_DIR)/xen/$(TARGET_ARCH_DIR)
@@ -145,6 +145,8 @@ APP_TOOLS_ARCH := $(subst x86_32,i386, \
 APP_TOOLS_CPPFLAGS := $(filter -U%, $(shell \
 	rumptools/rumpmake -f rumptools/mk.conf -V '$${CPPFLAGS}'))
 
+APP_TOOLS_MAKE := $(abspath app-tools/rumpapp-xen-make)
+
 app-tools/%: app-tools/%.in Makefile Config.mk
 	sed <$< >$@.tmp \
 		-e 's#!ARCH!#$(strip $(APP_TOOLS_ARCH))#g;' \
@@ -162,14 +164,17 @@ app-tools/%: app-tools/%.in Makefile Config.mk
 app-tools_clean:
 	rm -f $(addprefix app-tools/, $(APP_TOOLS))
 
-tests/hello/hello: tests/hello/hello.c app-tools minios.o rumprun.o
-	app-tools/rumpapp-xen-cc -o $@ $<
+# New demos each have their own Makefile under tests/ and are built using
+# app-tools.
+.PHONY: tests
+tests:
+	$(APP_TOOLS_MAKE) -C tests
 
 # This is the "old" rumprun-xen demo, migrated to app-tools. Do not remove this
 # demo from the build without prior coordination, Xen oss-test CI relies on it.
 .PHONY: httpd
 httpd:
-	app-tools/rumpapp-xen-make -C httpd -f Makefile.boot
+	$(APP_TOOLS_MAKE) -C httpd -f Makefile.boot
 
 rump-kernel: rumpkern_demo.c pthread_test.c httpd
 	app-tools/rumpapp-xen-cc -o $@ rumpkern_demo.c pthread_test.c httpd/*.o
@@ -186,8 +191,8 @@ clean:	arch_clean app-tools_clean
 	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core minios.o rumprun.o rump-kernel
 	rm -f include/xen include/mini-os/machine
 	rm -f tags TAGS
-	rm -f tests/hello/hello
-	make -C httpd -f Makefile.boot clean
+	$(MAKE) -C httpd -f Makefile.boot clean
+	$(MAKE) -C tests clean
 
 cleanrump: clean
 	rm -rf rump rumpobj rumptools
