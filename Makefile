@@ -38,7 +38,7 @@ ifeq ($(CONFIG_PCI),y)
 RUMP_LIBS_PCI = -lrumpdev_pci -lrumpdev_pci_if_wm -lrumpdev_miiphy
 endif
 
-RUMP_LIBS_FS = -lrumpfs_ffs -lrumpdev_disk -lrumpdev -lrumpvfs
+RUMP_LIBS_FS = -lrumpfs_ffs -lrumpfs_cd9660 -lrumpdev_disk -lrumpdev -lrumpvfs
 RUMP_LIBS_NET = -lrumpnet_config -lrumpdev_bpf -lrumpnet_xenif -lrumpnet_netinet
 RUMP_LIBS_NET+= -lrumpnet_net -lrumpxen_xendev -lrumpnet
 
@@ -89,6 +89,7 @@ rump-src-y += rumphyper_stubs.c
 
 rump-src-y += callmain.c
 rump-src-y += netbsd_init.c
+rump-src-y += rumpconfig.c
 
 # The common mini-os objects to build.
 OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(src-y))

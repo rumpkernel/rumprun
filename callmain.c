@@ -29,6 +29,8 @@
 
 #include <xen/xen.h>
 
+#include "rumpconfig.h"
+
 extern int main(int argc, char **argv);
 
 static void parseargs(void *cmdline, int *nargs, char **outarray) {
@@ -92,9 +94,11 @@ __default_app_main(start_info_t *si)
 	argv[nargs+1] = 0;
 	argv[nargs+2] = 0;
 
+	_rumprun_config();
 	fprintf(stderr,"=== calling main() ===\n\n");
 	r = main(nargs+1, argv);
 	fprintf(stderr,"\n=== main() returned %d ===\n", r);
+	_rumprun_deconfig();
 	return r;
 }
 

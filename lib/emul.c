@@ -20,6 +20,9 @@
 #include <mini-os/os.h> /* for PAGE_SIZE */
 #include <mini-os/kernel.h>
 
+#include "netbsd_init.h"
+#include "rumpconfig.h"
+
 void *
 mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 {
@@ -77,6 +80,10 @@ munmap(void *addr, size_t len)
 void __dead
 _exit(int eval)
 {
+	/* XXX this duplicates _app_main / callmain cleanup */
+	minios_printk("\n=== _exit(%d) called ===\n", eval);
+	_rumprun_deconfig();
+	_netbsd_fini();
 	minios_stop_kernel();
 	minios_do_halt(MINIOS_HALT_POWEROFF);
 }
