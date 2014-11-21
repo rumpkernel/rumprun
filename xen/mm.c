@@ -376,8 +376,11 @@ int free_physical_pages(xen_pfn_t *mfns, int n)
 }
 #endif
 
-
-
+static uint64_t memsize = 0;
+uint64_t minios_get_memsize(void)
+{
+    return memsize;
+}
 
 void init_mm(void)
 {
@@ -395,6 +398,7 @@ void init_mm(void)
            (u_long)to_virt(PFN_PHYS(max_pfn)), PFN_PHYS(max_pfn));
     init_page_allocator(PFN_PHYS(start_pfn), PFN_PHYS(max_pfn));
     minios_printk("MM: done\n");
+    memsize = PFN_PHYS(max_pfn) - PFN_PHYS(start_pfn);
 
     arch_init_p2m(max_pfn);
     

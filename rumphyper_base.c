@@ -29,6 +29,7 @@
 #include <xen/io/console.h>
 #include <mini-os/xmalloc.h>
 #include <mini-os/blkfront.h>
+#include <mini-os/mm.h>
 
 #include <errno.h>
 #include <fcntl.h>
@@ -89,34 +90,58 @@ rumpuser_dprintf(const char *fmt, ...)
 	minios_free_pages(buf, 0);
 }
 
-static struct {
-	const char *name;
-	const char *value;
-} envtab[] = {
-	{ RUMPUSER_PARAM_NCPU, "1" },
-	{ RUMPUSER_PARAM_HOSTNAME, "rump4xen" },
-	{ "RUMP_VERBOSE", "1" },
-	{ "RUMP_MEMLIMIT", "8m" },
-	{ NULL, NULL },
-};
-
 int
-rumpuser_getparam(const char *name, void *buf, size_t blen)
+rumpuser_getparam(const char *name, void *buf, size_t buflen)
 {
-	int i;
+	int rv = 0;
 
-	for (i = 0; envtab[i].name; i++) {
-		if (strcmp(name, envtab[i].name) == 0) {
-			if (blen < strlen(envtab[i].value)+1) {
+	if (buflen <= 1)
+		return EINVAL;
+
+	if (strcmp(name, RUMPUSER_PARAM_NCPU) == 0
+	    || strcmp(name, "RUMP_VERBOSE") == 0) {
+		strncpy(buf, "1", buflen-1);
+
+	} else if (strcmp(name, RUMPUSER_PARAM_HOSTNAME) == 0) {
+		strncpy(buf, "rump-xen", buflen-1);
+
+	/* for memlimit, we have to implement int -> string ... */
+	} else if (strcmp(name, "RUMP_MEMLIMIT") == 0) {
+		uint64_t memsize;
+		char tmp[64];
+		char *res = buf;
+		unsigned i, j;
+
+		/* use up to 50% memory for rump kernel */
+		memsize = minios_get_memsize() / 2;
+		if (memsize < (8 * 1024 * 1024)) {
+			minios_printk("rumphyper: warning: low on physical "
+				      "memory (%llu bytes), "
+				      "suggest increasing domU allocation\n",
+				      memsize);
+			memsize = 8 * 1024 * 1024;
+		}
+
+		for (i = 0; memsize > 0; i++) {
+			if (i >= sizeof(tmp)-1)
 				return E2BIG;
-			} else {
-				strcpy(buf, envtab[i].value);
-				return 0;
+			tmp[i] = (memsize % 10) + '0';
+			memsize = memsize / 10;
+		}
+		if (i >= buflen) {
+			rv = 1;
+		} else {
+			res[i] = '\0';
+			for (j = i; i > 0; i--) {
+				res[j-i] = tmp[i-1];
 			}
 		}
+
+	} else {
+		rv = ENOENT;
 	}
 
-        return ENOENT;
+	return rv;
 }
 
 /* Use same values both for absolute and relative clock. */
