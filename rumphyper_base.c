@@ -33,6 +33,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -116,7 +117,7 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 		memsize = minios_get_memsize() / 2;
 		if (memsize < (8 * 1024 * 1024)) {
 			minios_printk("rumphyper: warning: low on physical "
-				      "memory (%llu bytes), "
+				      "memory (%"PRIu64" bytes), "
 				      "suggest increasing domU allocation\n",
 				      memsize);
 			memsize = 8 * 1024 * 1024;
