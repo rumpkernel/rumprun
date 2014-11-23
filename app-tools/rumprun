@@ -152,7 +152,7 @@ run_xen() {
 				fstype=$(detect_fstype $image)
 				[ $? -ne 0 ] && err File $image: unknown fstype
 				vdev=hd$(echo $bindex | tr '[0-9]' '[a-j]')
-				conf_disk="${conf_disk}'file:$image,$vdev,rw',"
+				conf_disk="${conf_disk}'file:$image,$vdev,w',"
 				echo blk/${bindex}/type etfs >>${xenstore}
 				echo blk/${bindex}/fstype $fstype >>${xenstore}
 				echo blk/${bindex}/mountpoint $mountpoint\
