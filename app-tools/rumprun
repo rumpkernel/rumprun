@@ -56,21 +56,26 @@ EOM
 
 # Detect the filesystem type of the image at $1.
 detect_fstype() {
-	ftype=$(file -b $1)
-	case $ftype in
-		"Unix Fast File system"*)
-			echo ffs
-			return 0
-			;;
-		"ISO 9660"*)
-			echo cd9660
-			return 0
-			;;
-		*)
-			echo unknown
-			return 1
-			;;
-	esac
+	(
+		eval $(blkid -o export $1)
+		if [ $? -ne 0 ]; then
+			TYPE=unknown
+		fi
+		case ${TYPE} in
+			ufs)
+				echo ffs
+				return 0
+				;;
+			iso9660)
+				echo cd9660
+				return 0
+				;;
+			*)
+				echo unknown
+				return 1
+				;;
+		esac
+	)
 }
 
 cidr2mask()
