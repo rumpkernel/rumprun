@@ -194,7 +194,7 @@ run_xen() {
 	[ "$1" = "--" ] && shift
 	[ $# -lt 1 ] && usage
 	name=${opt_name:-rumprun-$(basename $1)}
-	app=$(realpath $1)
+	app=$(readlink -f $1)
 	shift
 	# Generate xl configuration file.
 	cat <<EOM >/tmp/xr.conf.$$
