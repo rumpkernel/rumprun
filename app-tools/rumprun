@@ -145,6 +145,7 @@ run_xen() {
 			# -b: BLKSPEC: hostpath,mountpoint
 			b)
 				image=${OPTARG%,*}
+				image=$(readlink -f ${image})
 				mountpoint=${OPTARG#*,}
 				[ -n "$image" ] || usage
 				[ -n "$mountpoint" ] || usage
