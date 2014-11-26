@@ -162,7 +162,8 @@ rumprun_config_net(const char *if_index)
 	else if (strcmp(if_type, "inet") == 0 &&
 		 strcmp(if_method, "static") == 0) {
 		if (if_addr == NULL || if_mask == NULL) {
-			warnx("rumprun_config: %s: missing if_addr/mask\n");
+			warnx("rumprun_config: %s: missing if_addr/mask\n",
+			    buf);
 			goto out;
 		}
 		if ((rv = rump_pub_netconfig_ipv4_ifaddr(buf, if_addr,
