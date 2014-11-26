@@ -176,8 +176,9 @@ tests:
 httpd:
 	$(APP_TOOLS_MAKE) -C httpd -f Makefile.boot
 
-rump-kernel: rumpkern_demo.c pthread_test.c httpd
-	app-tools/rumpapp-xen-cc -o $@ rumpkern_demo.c pthread_test.c httpd/*.o
+STDTESTS=tests/libstdtests/rumpkern_demo.c tests/libstdtests/pthread_test.c
+rump-kernel: ${STDTESTS} httpd
+	app-tools/rumpapp-xen-cc -o $@ ${STDTESTS} httpd/*.o
 
 .PHONY: clean arch_clean app-tools_clean
 
