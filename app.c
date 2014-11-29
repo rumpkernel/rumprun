@@ -98,8 +98,10 @@ disktest(void)
 
 	fd = open("/dev/rld0d", O_RDONLY);
 	/* assume it's not present instead of failing */
-	if (fd == -1 && (errno == ENOENT || errno == ENXIO))
+	if (fd == -1 && (errno == ENOENT || errno == ENXIO)) {
+		printf("no disk device available.  skipping test\n");
 		return;
+	}
 
 	printf("calculating md5sum of /dev/rld0d\n");
 
