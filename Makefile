@@ -1,4 +1,5 @@
 THEBIN= rk.bin
+THEISO=	$(basename ${THEBIN}).iso
 
 # answer "yes" if you have built "userspace" (i.e. you've run buildme.sh)
 RUMPRUN_PRESENT?= yes
@@ -80,12 +81,12 @@ iso/boot/grub/grub.cfg:
 	mkdir -p iso/boot/grub
 	printf "menuentry "rumpkernel" {\n\tmultiboot /boot/${THEBIN}\n}\n" > $@
 
-${THEBIN}.iso: ${THEBIN} iso/boot/grub/grub.cfg
+${THEISO}: ${THEBIN} iso/boot/grub/grub.cfg
 	ln -f ${THEBIN} iso/boot/
 	grub-mkrescue -o $@ iso
 
-iso: ${THEBIN}.iso
+iso: ${THEISO}
 
 clean:
 	rm -f ${OBJS} ${COMPILER_RT} ${THEBIN} ${THEBIN}.gdb \
-	    iso/boot/${THEBIN} iso/boot/grub/grub.cfg
+	    iso/boot/${THEBIN} ${THEISO} iso/boot/grub/grub.cfg
