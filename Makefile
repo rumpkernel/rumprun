@@ -77,6 +77,8 @@ else
   COMPILER_RT+=	librt/udivdi3.o librt/moddi3.o librt/umoddi3.o
 endif
 
+.PHONY:	clean cleandir
+
 ${THEBIN}: ${THEBIN}.gdb
 	${STRIP} -g -o $@ $<
 
@@ -96,3 +98,5 @@ iso: ${THEISO}
 clean:
 	rm -f ${OBJS} ${COMPILER_RT} ${THEBIN} ${THEBIN}.gdb \
 	    iso/boot/${THEBIN} ${THEISO} iso/boot/grub/grub.cfg
+
+cleandir: clean
