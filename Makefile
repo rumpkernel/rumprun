@@ -49,7 +49,7 @@ LIBS_PCI_NET=	-lrumpdev_pci_if_wm -lrumpdev_miiphy
 #LIBS_AUDIO_EAP=-lrumpdev_pci_eap
 #LIBS_AUDIO_HDA=-lrumpdev_pci_hdaudio -lrumpdev_hdaudio_hdafg
 LIBS_PCI=	-lrumpdev_pci
-LIBS_NETINET=	-lrumpnet_config -lrumpnet_netinet -lrumpnet_net
+LIBS_NETINET=	-lrumpnet_config -lrumpnet_netinet -lrumpnet_net -lrumpnet
 LIBS_NETBPF=	-lrumpdev_bpf
 LIBS_NETUNIX=	-lrumpnet_local
 
@@ -64,7 +64,7 @@ ALLLIBS=	${LIBS_VIO_NET}					\
 		${LIBS_PCI}					\
 		${LIBS_NETINET}					\
 		${LIBS_NETBPF}					\
-		-lrumpdev -lrumpvfs -lrumpnet -lrump
+		-lrumpdev -lrumpvfs -lrump
 
 ifeq (${RUMPRUN_PRESENT},yes)
   OBJS+=	libc_errno.o libc_emul.o libc_malloc.o
