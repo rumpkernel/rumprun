@@ -4,7 +4,7 @@ THEISO=	$(basename ${THEBIN}).iso
 # answer "yes" if you have built "userspace" (i.e. you've run buildme.sh)
 RUMPRUN_PRESENT?= yes
 
-CFLAGS+=	-std=gnu99 -g -Wall
+CFLAGS+=	-std=gnu99 -g -Wall -O2
 ifndef NOGCCERROR
 CFLAGS+=	-Werror
 endif
