@@ -12,9 +12,13 @@ rv=1
 
 # poll for results
 for x in seq 5 ; do
+	echo 'polling ...'
 	res=$(sed q disk.img)
 	if [ "${res}" = "OK" ]; then
 		emusum=$(sed -n '2{p;q;}' disk.img)
+		echo res ok
+		echo sum1: ${sum}
+		echo sum2: ${emusum}
 		if [ "${sum}" = "${emusum}" ]; then
 			rv=0
 		fi
