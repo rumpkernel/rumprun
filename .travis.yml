@@ -4,6 +4,8 @@ compiler:
   - gcc
 
 before_script:
+  - sudo apt-get update -y
+  - sudo apt-get install qemu-system-x86 -y
   - git clone https://github.com/rumpkernel/buildrump.sh
   - git clone https://github.com/rumpkernel/src-netbsd
 
