@@ -30,7 +30,7 @@ done
 # build tools
 ./buildrump.sh/buildrump.sh -${BUILDXEN_QUIET:-q} ${STDJ} -k \
     -V MKPIC=no -s rumpsrc -T rumptools -o rumpobj -N \
-    -V RUMP_CURLWP=hypercall -V RUMP_KERNEL_IS_LIBC=1 tools
+    -V RUMP_KERNEL_IS_LIBC=1 tools
 # FIXME to be able to specify this as part of previous cmdline
 echo 'CPPFLAGS+=-DMAXPHYS=32768' >> rumptools/mk.conf
 
