@@ -4,7 +4,7 @@
 #
 # first run buildrump.sh with:
 #   ./buildrump.sh -s ${APPSTACK_SRC} -V MKPIC=no -V RUMP_KERNEL_IS_LIBC=1 \
-#      -V RUMP_CURLWP=hypercall -k -N kernelheaders fullbuild
+#      -k -N kernelheaders fullbuild
 #
 # NOTE: if you're building on x86_64, add -F ACLFLAGS=-m32 to the above
 # see also .travis.yml for more "documentation"
