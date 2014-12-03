@@ -42,6 +42,7 @@ NOTHING(rumpuser_unmap)
 REALNOTHING(__sigaction14);
 NOTHING(__getrusage50);
 REALNOTHING(__sigprocmask14);
+REALNOTHING(sigqueueinfo);
 NOTHING(_lwp_kill);
 NOTHING(_lwp_self);
 
