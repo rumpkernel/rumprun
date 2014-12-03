@@ -211,7 +211,7 @@ bmk_cpu_intr_ack(void)
 }
 
 bmk_time_t
-bmk_clock_now(void)
+bmk_cpu_clock_now(void)
 {
 	uint64_t val;
 	unsigned long eax, edx;
