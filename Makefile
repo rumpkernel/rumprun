@@ -20,6 +20,11 @@ supported= false
 ifeq (${MACHINE},i386)
 supported:= true
 endif
+ifeq (${MACHINE},arm)
+ifdef IWANTARM
+supported:= true
+endif
+endif
 ifeq (${MACHINE},x86_64)
   supported:= true
   MACHINE:=i386
