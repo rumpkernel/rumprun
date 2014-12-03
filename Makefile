@@ -17,12 +17,14 @@ MACHINE:= $(shell ${CC} -dumpmachine | sed 's/i.86/i386/;s/-.*//;')
 # we build x86_64 in 32bit mode, because someone was lazy and did
 # not write the 64bit bootstrap.
 supported= false
+HASPCI= y
 ifeq (${MACHINE},i386)
 supported:= true
 endif
 ifeq (${MACHINE},arm)
 ifdef IWANTARM
 supported:= true
+HASPCI:= n
 endif
 endif
 ifeq (${MACHINE},x86_64)
@@ -40,8 +42,11 @@ RUMPKERNDIR?=	${BUILDRUMP_SH}/rump
 
 all: include/machine ${THEBIN}
 
-OBJS=		intr.o kernel.o undefs.o memalloc.o sched.o subr.o
-OBJS+=		rumpuser.o rumpfiber.o rumppci.o
+OBJS-y=			intr.o kernel.o undefs.o memalloc.o sched.o subr.o
+OBJS-y+=		rumpuser.o rumpfiber.o
+OBJS-${CONFIG_PCI}+=	rumppci.o
+
+OBJS= ${OBJS-y}
 
 include arch/${MACHINE}/Makefile.inc
 
