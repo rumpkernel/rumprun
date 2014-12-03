@@ -44,7 +44,7 @@ all: include/bmk/machine ${THEBIN}
 
 OBJS-y=			intr.o kernel.o undefs.o memalloc.o sched.o subr.o
 OBJS-y+=		rumpuser.o rumpfiber.o
-OBJS-${CONFIG_PCI}+=	rumppci.o
+OBJS-${HASPCI}+=	rumppci.o
 
 OBJS= ${OBJS-y}
 
