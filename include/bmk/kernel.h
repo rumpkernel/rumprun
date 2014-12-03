@@ -1,4 +1,4 @@
-#include <machine/md.h>
+#include <bmk/machine/md.h>
 
 #ifndef _LOCORE
 

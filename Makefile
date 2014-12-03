@@ -40,7 +40,7 @@ endif
 # Naturally this has to be an installation compiled for $MACHINE
 RUMPKERNDIR?=	${BUILDRUMP_SH}/rump
 
-all: include/machine ${THEBIN}
+all: include/bmk/machine ${THEBIN}
 
 OBJS-y=			intr.o kernel.o undefs.o memalloc.o sched.o subr.o
 OBJS-y+=		rumpuser.o rumpfiber.o
@@ -91,8 +91,8 @@ endif
 
 .PHONY:	clean cleandir
 
-include/machine:
-	ln -s arch/${MACHINE} include/machine
+include/bmk/machine:
+	ln -s ../arch/${MACHINE} include/bmk/machine
 
 ${THEBIN}: ${THEBIN}.gdb
 	${STRIP} -g -o $@ $<
@@ -113,6 +113,6 @@ iso: ${THEISO}
 clean:
 	rm -f ${OBJS} ${COMPILER_RT} ${THEBIN} ${THEBIN}.gdb \
 	    iso/boot/${THEBIN} ${THEISO} iso/boot/grub/grub.cfg \
-	    include/machine
+	    include/bmk/machine
 
 cleandir: clean
