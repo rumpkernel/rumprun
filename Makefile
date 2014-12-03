@@ -27,7 +27,7 @@ ifeq (${MACHINE},x86_64)
   LDFLAGS+=-m32
 endif
 ifneq (${supported},true)
-$(error only supported target is x86)
+$(error only supported target is x86, you have ${MACHINE})
 endif
 
 # Naturally this has to be an installation compiled for $MACHINE
