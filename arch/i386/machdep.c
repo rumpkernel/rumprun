@@ -210,6 +210,20 @@ bmk_cpu_intr_ack(void)
 	    ::: "al");
 }
 
+bmk_time_t
+bmk_clock_now(void)
+{
+	uint64_t val;
+	unsigned long eax, edx;
+
+	/* um um um */
+	__asm__ __volatile__("rdtsc" : "=a"(eax), "=d"(edx));
+	val = ((uint64_t)edx<<32)|(eax);
+
+	/* just approximate that 1 cycle = 1ns.  "good enuf" for now */
+	return val;
+}
+
 void
 bmk_cpu_nanohlt(void)
 {

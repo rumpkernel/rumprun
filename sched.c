@@ -151,20 +151,6 @@ stackfree(void *stack)
 	bmk_memfree(stack);
 }
 
-bmk_time_t
-bmk_clock_now(void)
-{
-	uint64_t val;
-	unsigned long eax, edx;
-
-	/* um um um */
-	__asm__ __volatile__("rdtsc" : "=a"(eax), "=d"(edx));
-	val = ((uint64_t)edx<<32)|(eax);
-
-	/* just approximate that 1 cycle = 1ns.  "good enuf" for now */
-	return val;
-}
-
 static void
 sched_switch(struct bmk_thread *prev, struct bmk_thread *next)
 {
@@ -185,7 +171,7 @@ bmk_sched(void)
 
 	/* could do time management a bit better here */
 	do {
-		tm = bmk_clock_now();
+		tm = bmk_cpu_clock_now();
 		next = NULL;
 		TAILQ_FOREACH_SAFE(thread, &threads, bt_entries, tmp) {
 			if (!is_runnable(thread)
