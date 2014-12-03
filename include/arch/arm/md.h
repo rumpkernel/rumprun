@@ -3,6 +3,10 @@
 
 #include <bmk/kernel.h>
 
+#define ENTRY(x)        .text; .globl x; .type x,%function; x:
+#define END(x)          .size x, . - x
+
+#ifndef _LOCORE
 static inline void
 splhigh(void)
 {
@@ -23,5 +27,6 @@ hlt(void)
 
 	/* XXX TODO */
 }
+#endif
 
 #endif /* _BMK..._H_ */

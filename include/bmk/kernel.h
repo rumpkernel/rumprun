@@ -1,8 +1,8 @@
+#include <machine/md.h>
+
 #ifndef _LOCORE
 
 #include <bmk/types.h>
-
-#include <machine/md.h>
 
 #define MEMSTART 0x100000
 #define PAGE_SIZE 0x1000
@@ -60,6 +60,3 @@ extern unsigned long bmk_membase, bmk_memsize;
 #define ETIMEDOUT	4
 
 #define BMK_MAXINTR	32
-
-#define ENTRY(x)	.text; .globl x; .type x,@function; x:
-#define END(x)		.size x, . - x

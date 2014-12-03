@@ -3,6 +3,10 @@
 
 #include <bmk/kernel.h>
 
+#define ENTRY(x)        .text; .globl x; .type x,@function; x:
+#define END(x)          .size x, . - x
+
+#ifndef _LOCORE
 struct region_descriptor;
 void bmk_cpu_lidt(struct region_descriptor *);
 void bmk_cpu_lgdt(struct region_descriptor *);
@@ -67,5 +71,6 @@ hlt(void)
 
 	__asm__ __volatile__("hlt");
 }
+#endif /* !_LOCORE */
 
 #endif /* _BMK..._H_ */
