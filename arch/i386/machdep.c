@@ -197,6 +197,20 @@ bmk_cpu_intr_init(int intr)
 }
 
 void
+bmk_cpu_intr_ack(void)
+{
+
+	/*
+	 * ACK interrupts on PIC
+	 */
+	__asm__ __volatile(
+	    "movb $0x20, %%al\n"
+	    "outb %%al, $0xa0\n"
+	    "outb %%al, $0x20\n"
+	    ::: "al");
+}
+
+void
 bmk_cpu_nanohlt(void)
 {
 
