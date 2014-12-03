@@ -2,7 +2,7 @@
 
 #include <bmk/types.h>
 
-#include <arch/i386/md.h>
+#include <machine/md.h>
 
 #define MEMSTART 0x100000
 #define PAGE_SIZE 0x1000
@@ -40,6 +40,7 @@ void bmk_cons_putc(int);
 void bmk_cpu_init(void);
 void bmk_cpu_nanohlt(void);
 int bmk_cpu_intr_init(int);
+void bmk_cpu_intr_ack(void);
 
 void bmk_isr_clock(void);
 void bmk_isr(int);

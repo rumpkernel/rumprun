@@ -1,7 +1,7 @@
 #ifndef _BMK_TYPES_H_
 #define _BMK_TYPES_H_
 
-#include <arch/i386/types.h>
+#include <machine/types.h>
 
 #include <bmk/bmk_types.h>
 
