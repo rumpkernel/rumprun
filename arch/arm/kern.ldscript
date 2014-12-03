@@ -1,5 +1,5 @@
 OUTPUT_ARCH(arm)
-ENTRY(_start32)
+ENTRY(_start)
 SECTIONS
 {
 	. = 1m;
