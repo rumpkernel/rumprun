@@ -78,9 +78,6 @@ done
 
 [ ! -f img/test.ffs ] && cp img/test_clean.ffs img/test.ffs
 
-# build httpd objects
-( cd httpd && make -f Makefile.boot )
-
 # build the domU image
 make
 
