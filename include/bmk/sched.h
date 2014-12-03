@@ -15,7 +15,7 @@ void	bmk_sched_exit(void) __attribute__((__noreturn__));
 void	bmk_sched_block(struct bmk_thread *);
 void	bmk_sched_wake(struct bmk_thread *);
 void	bmk_sched_setwakeup(struct bmk_thread *, bmk_time_t);
-bmk_time_t bmk_clock_now(void);
+bmk_time_t bmk_cpu_clock_now(void);
 
 void	bmk_sched_nanosleep(bmk_time_t);
 
