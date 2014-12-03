@@ -50,6 +50,7 @@ OBJS= ${OBJS-y}
 
 include arch/${MACHINE}/Makefile.inc
 
+ifeq (${HASPCI},y)
 LIBS_VIO=	-lrumpdev_pci_virtio
 LIBS_VIO_NET=	-lrumpdev_virtio_if_vioif
 LIBS_VIO_LD=	-lrumpdev_disk -lrumpdev_virtio_ld
@@ -59,6 +60,7 @@ LIBS_PCI_NET=	-lrumpdev_pci_if_wm -lrumpdev_miiphy
 #LIBS_AUDIO_EAP=-lrumpdev_pci_eap
 #LIBS_AUDIO_HDA=-lrumpdev_pci_hdaudio -lrumpdev_hdaudio_hdafg
 LIBS_PCI=	-lrumpdev_pci
+endif
 LIBS_NETINET=	-lrumpnet_config -lrumpnet_netinet -lrumpnet_net -lrumpnet
 LIBS_NETBPF=	-lrumpdev_bpf
 LIBS_NETUNIX=	-lrumpnet_local
