@@ -15,6 +15,8 @@ set -e
 : ${APPSTACK_SRC:=/home/pooka/src/src-netbsd-appstack}
 : ${BUILDRUMP_SH:=/home/pooka/src/buildrump.sh}
 
+STDJ=-j4
+
 MORELIBS="external/bsd/flex/lib
         crypto/external/bsd/openssl/lib/libcrypto
         crypto/external/bsd/openssl/lib/libdes
