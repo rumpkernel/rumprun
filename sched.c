@@ -325,7 +325,7 @@ bmk_sched_nanosleep(bmk_time_t nsec)
 	struct bmk_thread *thread = bmk_sched_current();
 	uint64_t now;
 
-	now = bmk_clock_now();
+	now = bmk_cpu_clock_now();
 	thread->bt_wakeup_time = now + nsec;
 	clear_runnable(thread);
 	bmk_sched();

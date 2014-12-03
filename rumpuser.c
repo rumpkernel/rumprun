@@ -114,7 +114,7 @@ rumpuser_clock_gettime(int enum_rumpclock, int64_t *sec, long *nsec)
 {
 	bmk_time_t now;
 
-	now = bmk_clock_now();
+	now = bmk_cpu_clock_now();
 	*sec  = now / (1000*1000*1000ULL);
 	*nsec = now % (1000*1000*1000ULL);
 
