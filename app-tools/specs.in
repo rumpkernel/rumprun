@@ -4,7 +4,7 @@
 -nostdinc -isystem !BASE!/rump/include -isystem !BASE!/include %(old_cpp_options) !CPPFLAGS! -D__RUMPUSER_XEN__ -D__RUMPAPP__ -D__NetBSD__
 
 *linker:
-!APPTOOLS!/ld --stunt-intermediate %g.link1 %g.link2 --stunt-final-script !LDSCRIPT!
+!APPTOOLS!/ld --stunt-intermediate %g.link1 --stunt-final-script !LDSCRIPT!
 
 *link:
 %{m64:-m elf_x86_64;mx32:-m elf32_x86_64;m32:-m elf_i386}

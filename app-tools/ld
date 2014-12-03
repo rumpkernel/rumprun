@@ -32,7 +32,6 @@ while [ $# != 0 ]; do
 		;;
 	--stunt-intermediate)
         	inter1="$1"; shift || noshift
-        	inter2="$1"; shift || noshift
         	;;
 	-plugin|-plugin-opt)
 		shift || noshift
@@ -49,5 +48,4 @@ if [ x"$outfile" = x ]; then outfile=a.out; fi
 
 set -x
 ld -nostdlib -r "${outargs[@]}" -o "$inter1"
-objcopy -w -G xenos_* -G _start "$inter1" "$inter2"
-ld ${march:+-m ${march}} -T "$finallds" "$inter2" -o "$outfile"
+ld ${march:+-m ${march}} -T "$finallds" "$inter1" -o "$outfile"
