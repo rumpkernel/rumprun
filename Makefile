@@ -2,6 +2,11 @@ THEBIN= rk.bin
 THEISO=	$(basename ${THEBIN}).iso
 
 # answer "yes" if you have built "userspace" (i.e. you've run buildme.sh)
+#
+# Note, RUMPRUN_PRESENT=no will work only on x86.  On e.g. ARM, we depend
+# on libc to provide toolchain helpers.  They could probably be provided
+# similar to how we provide librt for x86, but not sure it's worth
+# the bother ...
 RUMPRUN_PRESENT?= yes
 
 CFLAGS+=	-std=gnu99 -g -Wall -O2
