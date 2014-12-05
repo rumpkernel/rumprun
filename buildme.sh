@@ -15,9 +15,6 @@ set -e
 : ${APPSTACK_SRC:=/home/pooka/src/src-netbsd-appstack}
 : ${BUILDRUMP_SH:=/home/pooka/src/buildrump.sh}
 
-MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
-[ -z "${MACHINE}" ] && { echo 'could not figure out target machine'; exit 1; }
-
 STDJ=-j4
 
 MORELIBS="external/bsd/flex/lib
@@ -31,6 +28,9 @@ for lib in ${MORELIBS}; do
 done
 
 RUMPMAKE=${BUILDRUMP_SH}/obj/tooldir/rumpmake
+
+MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
+[ -z "${MACHINE}" ] && { echo 'could not figure out target machine'; exit 1; }
 
 . ${BUILDRUMP_SH}/subr.sh
 
