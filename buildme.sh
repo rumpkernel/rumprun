@@ -15,6 +15,9 @@ set -e
 : ${APPSTACK_SRC:=/home/pooka/src/src-netbsd-appstack}
 : ${BUILDRUMP_SH:=/home/pooka/src/buildrump.sh}
 
+MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
+[ -z "${MACHINE}" ] && { echo 'could not figure out target machine'; exit 1; }
+
 STDJ=-j4
 
 MORELIBS="external/bsd/flex/lib
@@ -35,11 +38,14 @@ usermtree ${BUILDRUMP_SH}/rump
 userincludes ${RUMPMAKE} ${APPSTACK_SRC} ${LIBS}
 
 for lib in ${LIBS}; do
-        makeuserlib ${RUMPMAKE} ${lib}
+	unset extraarg
+	# force not building c++ unwinding for arm
+	[ "$(basename ${lib})" = "libc" -a "${MACHINE}" = "arm" ] \
+	    && extraarg='HAVE_LIBGCC_EH=yes'
+        makeuserlib ${RUMPMAKE} ${lib} ${extraarg}
 done
 
 # build PCI drivers only on x86 (needs MD support)
-MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
 [ "${MACHINE}" = 'amd64' -o "${MACHINE}" = 'i386' ] && \
     APPSTACK_LIBS=$(${RUMPMAKE} \
       -f ${APPSTACK_SRC}/sys/rump/dev/Makefile.rumpdevcomp -V '${RUMPPCIDEVS}')
