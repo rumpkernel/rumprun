@@ -46,4 +46,4 @@ include $(MINI-OS_ROOT)/xen/$(TARGET_ARCH_DIR)/arch.mk
 
 extra_incl := $(foreach dir,$(EXTRA_INC),-isystem $(MINI-OS_ROOT)/include/$(dir))
 
-DEF_CPPFLAGS += -isystem $(MINI-OS_ROOT)/include
+DEF_CPPFLAGS += -isystem $(MINI-OS_ROOT)/xen/include

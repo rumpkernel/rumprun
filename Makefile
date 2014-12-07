@@ -112,8 +112,8 @@ endif
 
 .PHONY: links
 links: $(ARCH_LINKS)
-	[ -e include/xen ] || ln -sf $(XEN_HEADERS) include/xen
-	[ -e include/mini-os/machine ] || ln -sf $(TARGET_ARCH_FAM) include/mini-os/machine
+	[ -e xen/include/xen ] || ln -sf $(XEN_HEADERS) xen/include/xen
+	[ -e xen/include/mini-os/machine ] || ln -sf $(TARGET_ARCH_FAM) xen/include/mini-os/machine
 
 .PHONY: arch_lib
 arch_lib:
@@ -190,7 +190,7 @@ clean:	arch_clean app-tools_clean
 		rm -f $$dir/*.o; \
 	done
 	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core minios.o rumprun.o rump-kernel
-	rm -f include/xen include/mini-os/machine
+	rm -f xen/include/xen xen/include/mini-os/machine
 	rm -f tags TAGS
 	$(MAKE) -C httpd -f Makefile.boot clean
 	$(MAKE) -C tests clean
