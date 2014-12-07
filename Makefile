@@ -94,7 +94,7 @@ else
   COMPILER_RT+=	librt/udivdi3.o librt/moddi3.o librt/umoddi3.o
 endif
 
-.PHONY:	clean cleandir
+.PHONY:	clean cleandir test
 
 include/bmk/machine:
 	ln -s ../arch/${MACHINE} include/bmk/machine
@@ -121,3 +121,6 @@ clean:
 	    include/bmk/machine
 
 cleandir: clean
+
+test:
+	./tests/checksum/test.sh
