@@ -122,5 +122,5 @@ clean:
 
 cleandir: clean
 
-test:
+test: all
 	./tests/checksum/test.sh
