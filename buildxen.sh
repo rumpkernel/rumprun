@@ -17,16 +17,6 @@ if git submodule status rumpsrc | grep -q '^-' ; then
 fi
 [ "$1" = "justcheckout" ] && { echo ">> $0 done" ; exit 0; }
 
-MORELIBS="external/bsd/flex/lib
-	crypto/external/bsd/openssl/lib/libcrypto
-	crypto/external/bsd/openssl/lib/libdes
-	crypto/external/bsd/openssl/lib/libssl
-	external/bsd/libpcap/lib"
-LIBS="rumpsrc/lib/lib*"
-for lib in ${MORELIBS}; do
-	LIBS="${LIBS} rumpsrc/${lib}"
-done
-
 # build tools
 ./buildrump.sh/buildrump.sh -${BUILDXEN_QUIET:-q} ${STDJ} -k \
     -V MKPIC=no -s rumpsrc -T rumptools -o rumpobj -N \
@@ -49,6 +39,7 @@ RUMPMAKE=$(pwd)/rumptools/rumpmake
 # build rump kernel
 ./buildrump.sh/buildrump.sh -k -V MKPIC=no -s rumpsrc -T rumptools -o rumpobj build kernelheaders install
 
+LIBS="$(stdlibs rumpsrc)"
 usermtree rump
 userincludes ${RUMPMAKE} rumpsrc ${LIBS}
 
