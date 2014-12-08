@@ -17,16 +17,6 @@ set -e
 
 STDJ=-j4
 
-MORELIBS="external/bsd/flex/lib
-        crypto/external/bsd/openssl/lib/libcrypto
-        crypto/external/bsd/openssl/lib/libdes
-        crypto/external/bsd/openssl/lib/libssl
-        external/bsd/libpcap/lib"
-LIBS="${APPSTACK_SRC}/lib/lib*"
-for lib in ${MORELIBS}; do
-        LIBS="${LIBS} ${APPSTACK_SRC}/${lib}"
-done
-
 RUMPMAKE=${BUILDRUMP_SH}/obj/tooldir/rumpmake
 
 MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
@@ -34,6 +24,7 @@ MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
 
 . ${BUILDRUMP_SH}/subr.sh
 
+LIBS="$(stdlibs ${APPSTACK_SRC})"
 usermtree ${BUILDRUMP_SH}/rump
 userincludes ${RUMPMAKE} ${APPSTACK_SRC} ${LIBS}
 
