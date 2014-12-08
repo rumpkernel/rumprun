@@ -47,6 +47,8 @@ REALNOTHING(rasctl);
 NOTHING(_lwp_kill);
 NOTHING(_lwp_self);
 
+NOTHING(__libc_static_tls_setup);
+
 NOTHING(__wait450);
 NOTHING(__fork);
 NOTHING(__vfork14);
