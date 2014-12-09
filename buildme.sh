@@ -27,14 +27,14 @@ MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
 
 LIBS="$(stdlibs ${APPSTACK_SRC})"
 usermtree ${BUILDRUMP_SH}/rump
-userincludes ${RUMPMAKE} ${APPSTACK_SRC} ${LIBS}
+userincludes ${APPSTACK_SRC} ${LIBS}
 
 for lib in ${LIBS}; do
 	unset extraarg
 	# force not building c++ unwinding for arm
 	[ "$(basename ${lib})" = "libc" -a "${MACHINE}" = "arm" ] \
 	    && extraarg='HAVE_LIBGCC_EH=yes'
-        makeuserlib ${RUMPMAKE} ${lib} ${extraarg}
+        makeuserlib ${lib} ${extraarg}
 done
 
 # build PCI drivers only on x86 (needs MD support)
