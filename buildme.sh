@@ -13,8 +13,9 @@
 set -e
 
 : ${BUILDRUMP_SH:=/home/pooka/src/buildrump.sh}
-[ -z "${APPSTACK_SRC}" ] \
-    || { echo '>> ERROR: setting $APPSTACK_SRC is no longer allowed' ; exit 1; }
+. ${BUILDRUMP_SH}/subr.sh
+
+[ -z "${APPSTACK_SRC}" ] || die 'setting $APPSTACK_SRC is no longer allowed'
 
 STDJ=-j4
 
@@ -22,9 +23,7 @@ RUMPMAKE=${BUILDRUMP_SH}/obj/tooldir/rumpmake
 APPSTACK_SRC=$(${RUMPMAKE} -f /dev/null -V '${NETBSDSRCDIR}')
 
 MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
-[ -z "${MACHINE}" ] && { echo 'could not figure out target machine'; exit 1; }
-
-. ${BUILDRUMP_SH}/subr.sh
+[ -z "${MACHINE}" ] && die could not figure out target machine
 
 LIBS="$(stdlibs ${APPSTACK_SRC})"
 usermtree ${BUILDRUMP_SH}/rump
