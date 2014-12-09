@@ -41,7 +41,7 @@ RUMPMAKE=$(pwd)/rumptools/rumpmake
 
 LIBS="$(stdlibs rumpsrc)"
 usermtree rump
-userincludes ${RUMPMAKE} rumpsrc ${LIBS}
+userincludes rumpsrc ${LIBS}
 
 make links
 
@@ -61,7 +61,7 @@ makekernlib rumpxenpci
 makekernlib rumpxendev
 
 for lib in ${LIBS}; do
-	makeuserlib ${RUMPMAKE} ${lib}
+	makeuserlib ${lib}
 done
 
 ./buildrump.sh/buildrump.sh ${BUILD_QUIET} $* \
