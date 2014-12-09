@@ -12,12 +12,14 @@
 
 set -e
 
-: ${APPSTACK_SRC:=/home/pooka/src/src-netbsd-appstack}
 : ${BUILDRUMP_SH:=/home/pooka/src/buildrump.sh}
+[ -z "${APPSTACK_SRC}" ] \
+    || { echo '>> ERROR: setting $APPSTACK_SRC is no longer allowed' ; exit 1; }
 
 STDJ=-j4
 
 RUMPMAKE=${BUILDRUMP_SH}/obj/tooldir/rumpmake
+APPSTACK_SRC=$(${RUMPMAKE} -f /dev/null -V '${NETBSDSRCDIR}')
 
 MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
 [ -z "${MACHINE}" ] && { echo 'could not figure out target machine'; exit 1; }
