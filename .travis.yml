@@ -17,6 +17,7 @@ script:
   - make clean
   - make RUMPRUN_PRESENT=no
   - size rk.bin rk.bin.gdb
+  - make RUMPRUN_PRESENT=no clean
   - make
   - size rk.bin rk.bin.gdb
   - make test
