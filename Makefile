@@ -9,7 +9,8 @@ THEISO=	$(basename ${THEBIN}).iso
 # the bother ...
 RUMPRUN_PRESENT?= yes
 
-CFLAGS+=	-std=gnu99 -g -Wall -O2
+CFLAGS+=	-std=gnu99 -g -O2
+CFLAGS+=	-Wall -Wmissing-prototypes -Wstrict-prototypes
 ifndef NOGCCERROR
 CFLAGS+=	-Werror
 endif
@@ -88,7 +89,6 @@ ifeq (${RUMPRUN_PRESENT},yes)
   OBJS+=	app.o
   CPPFLAGS+=	-DBMK_APP
   LIBS_USER=	-lcrypto -lc
-  CFLAGS+=	-Wmissing-prototypes
 else
   COMPILER_RT=	librt/divdi3.o librt/udivmoddi4.o librt/udivsi3.o
   COMPILER_RT+=	librt/udivdi3.o librt/moddi3.o librt/umoddi3.o
