@@ -55,9 +55,14 @@ COMPILER_RT_ABI si_int __paritysi2(si_int a);
 COMPILER_RT_ABI si_int __paritydi2(di_int a);
 
 COMPILER_RT_ABI di_int __divdi3(di_int a, di_int b);
+COMPILER_RT_ABI du_int __udivdi3(du_int a, du_int b);
 COMPILER_RT_ABI si_int __divsi3(si_int a, si_int b);
 COMPILER_RT_ABI su_int __udivsi3(su_int n, su_int d);
 
+COMPILER_RT_ABI di_int __moddi3(di_int a, di_int b);
+COMPILER_RT_ABI du_int __umoddi3(du_int a, du_int b);
+
+COMPILER_RT_ABI su_int __udivmodsi4(su_int a, su_int b, su_int* rem);
 COMPILER_RT_ABI su_int __udivmodsi4(su_int a, su_int b, su_int* rem);
 COMPILER_RT_ABI du_int __udivmoddi4(du_int a, du_int b, du_int* rem);
 #ifdef CRT_HAS_128BIT
