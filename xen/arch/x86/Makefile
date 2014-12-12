@@ -3,7 +3,7 @@
 # It's is used for x86_32, x86_32y and x86_64
 #
 
-MINI-OS_ROOT=../../..
+MINI-OS_ROOT=../..
 export MINI-OS_ROOT
 
 include $(MINI-OS_ROOT)/Config.mk
@@ -13,7 +13,8 @@ include $(MINI-OS_ROOT)/Config.mk
 include arch.mk
 include $(MINI-OS_ROOT)/minios.mk
 
-CFLAGS+= -I$(MINI-OS_ROOT)/rump/include -nostdinc
+# TODO: Import rump CPPFLAGS / include directories from top-level Makefile
+CFLAGS+= -isystem $(MINI-OS_ROOT)/../rump/include -nostdinc
 
 # Sources here are all *.c *.S without $(XEN_TARGET_ARCH).S
 # This is handled in $(HEAD_ARCH_OBJ)

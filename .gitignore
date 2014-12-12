@@ -7,8 +7,8 @@ rump
 rump-kernel
 rumpobj
 rumptools
-include/mini-os/machine
-include/xen
+xen/include/mini-os/machine
+xen/include/xen
 
 app-tools/specs
 app-tools/specs.configure
