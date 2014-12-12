@@ -150,7 +150,7 @@ static void get_time_values_from_xen(void)
  *		Note: This function is required to return accurate
  *		time even in the absence of multiple timer ticks.
  */
-uint64_t monotonic_clock(void)
+uint64_t minios_monotonic_clock(void)
 {
 	uint64_t time;
 	uint32_t local_time_version;
@@ -185,7 +185,7 @@ static void update_wallclock(void)
 void block_domain(s_time_t until)
 {
     ASSERT(irqs_disabled());
-    if(monotonic_clock() < until)
+    if(minios_monotonic_clock() < until)
     {
         HYPERVISOR_set_timer_op(until);
         HYPERVISOR_sched_op(SCHEDOP_block, 0);
