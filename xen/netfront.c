@@ -81,50 +81,37 @@ static inline int xennet_rxidx(RING_IDX idx)
 void network_rx(struct netfront_dev *dev)
 {
     RING_IDX rp,cons,req_prod;
-    struct netif_rx_response *rx;
-    int nr_consumed, some, more, i, notify;
+    int nr_consumed, more, i, notify;
 
-
+    nr_consumed = 0;
 moretodo:
     rp = dev->rx.sring->rsp_prod;
     rmb(); /* Ensure we see queued responses up to 'rp'. */
-    cons = dev->rx.rsp_cons;
 
-    for (nr_consumed = 0, some = 0;
-         (cons != rp) && !some;
-         nr_consumed++, cons++)
+    for (cons = dev->rx.rsp_cons; cons != rp; nr_consumed++, cons++)
     {
         struct net_buffer* buf;
         unsigned char* page;
         int id;
 
-        rx = RING_GET_RESPONSE(&dev->rx, cons);
-
-        if (rx->flags & NETRXF_extra_info)
-        {
-            minios_printk("+++++++++++++++++++++ we have extras!\n");
-            continue;
-        }
-
-
-        if (rx->status == NETIF_RSP_NULL) continue;
+        struct netif_rx_response *rx = RING_GET_RESPONSE(&dev->rx, cons);
 
         id = rx->id;
-        BUG_ON(id >= NET_TX_RING_SIZE);
+        BUG_ON(id >= NET_RX_RING_SIZE);
 
         buf = &dev->rx_buffers[id];
         page = (unsigned char*)buf->page;
         gnttab_end_access(buf->gref);
 
-        if(rx->status>0)
+        if (rx->status > NETIF_RSP_NULL)
         {
-		dev->netif_rx(dev, page+rx->offset,rx->status);
+		dev->netif_rx(dev, page+rx->offset, rx->status);
         }
     }
     dev->rx.rsp_cons=cons;
 
     RING_FINAL_CHECK_FOR_RESPONSES(&dev->rx,more);
-    if(more && !some) goto moretodo;
+    if(more) goto moretodo;
 
     req_prod = dev->rx.req_prod_pvt;
 
