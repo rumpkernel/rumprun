@@ -43,7 +43,7 @@ LIBS="$(stdlibs rumpsrc)"
 usermtree rump
 userincludes rumpsrc ${LIBS}
 
-make links
+make -C xen links
 
 makekernlib ()
 {
