@@ -71,25 +71,25 @@ _lwp_ctl(int ctl, struct lwpctl **data)
 	return 0;
 }
 
-void _lwp_rumpxen_makecontext(ucontext_t *, void (*)(void *),
-    void *, void *, void *, size_t);
 void
-_lwp_rumpxen_makecontext(ucontext_t *nbuctx, void (*start)(void *),
-    void *arg, void *private, void *stack_base, size_t stack_size)
+rumprunxen_makelwp(void (*start)(void *), void *arg, void *private,
+	void *stack_base, size_t stack_size, unsigned long flag, lwpid_t *lid)
 {
 	struct schedulable *scd = private;
 	unsigned long thestack = (unsigned long)stack_base;
-
-	scd->scd_start = start;
-	scd->scd_arg = arg;
+	scd->scd_lwpid = ++curlwpid;
 
 	/* XXX: stack_base is not guaranteed to be aligned */
 	thestack = (thestack & ~(STACK_SIZE-1)) + STACK_SIZE;
-	scd->scd_stack = (void *)thestack;
 	assert(stack_size == 2*STACK_SIZE);
 
-	/* thread uctx -> schedulable mapping this way */
-	*(struct schedulable **)nbuctx = scd;
+	scd->scd_thread = minios_create_thread("lwp", scd,
+	    start, arg, (void *)thestack);
+	if (scd->scd_thread == NULL)
+		return EBUSY; /* ??? */
+	*lid = scd->scd_lwpid;
+	TAILQ_INSERT_TAIL(&scheds, scd, entries);
+	return 0;
 }
 
 static struct schedulable *
@@ -102,22 +102,6 @@ lwpid2scd(lwpid_t lid)
 			return scd;
 	}
 	return NULL;
-}
-
-int
-_lwp_create(const ucontext_t *ucp, unsigned long flags, lwpid_t *lid)
-{
-	struct schedulable *scd = *(struct schedulable **)ucp;
-	*lid = ++curlwpid;
-
-	scd->scd_lwpid = *lid;
-	scd->scd_thread = minios_create_thread("lwp", scd,
-	    scd->scd_start, scd->scd_arg, scd->scd_stack);
-	if (scd->scd_thread == NULL)
-		return EBUSY; /* ??? */
-	TAILQ_INSERT_TAIL(&scheds, scd, entries);
-
-	return 0;
 }
 
 int

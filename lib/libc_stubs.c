@@ -11,6 +11,7 @@
 	return ENOTSUP;}
 
 STUB(__sigaction14);
+STUB(__sigaction_sigtramp);
 STUB(__getrusage50);
 
 STUB(__wait450);

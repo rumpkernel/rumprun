@@ -70,6 +70,13 @@ mprotect(void *addr, size_t len, int prot)
 }
 
 int
+minherit(void *addr, size_t len, int inherit)
+{
+	/* nothing to inherit */
+	return 0;
+}
+
+int
 munmap(void *addr, size_t len)
 {
 

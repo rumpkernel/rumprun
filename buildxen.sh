@@ -21,16 +21,15 @@ fi
 ./buildrump.sh/buildrump.sh -${BUILDXEN_QUIET:-q} ${STDJ} -k \
     -V MKPIC=no -s rumpsrc -T rumptools -o rumpobj -N \
     -V RUMP_KERNEL_IS_LIBC=1 tools
-# FIXME to be able to specify this as part of previous cmdline
-echo 'CPPFLAGS+=-DMAXPHYS=32768' >> rumptools/mk.conf
 
-# set some special variables currently required by libpthread.  Doing
-# it this way preserves the ability to compile libpthread during development
-# cycles with just "rumpmake"
+# set some special variables.
 cat >> rumptools/mk.conf << EOF
+# maxphys = 32k is a Xen limitation (64k - overhead)
+CPPFLAGS+=-DMAXPHYS=32768
 .if defined(LIB) && \${LIB} == "pthread"
-CPPFLAGS+=      -D_PLATFORM_MAKECONTEXT=_lwp_rumpxen_makecontext
-CPPFLAGS+=      -D_PLATFORM_GETTCB=_lwp_rumpxen_gettcb
+.PATH:	$(pwd)
+PTHREAD_MAKELWP=pthread_makelwp_rumprunxen.c
+CPPFLAGS+=      -D_PTHREAD_GETTCB_EXT=_lwp_rumpxen_gettcb
 .endif  # LIB == pthread
 EOF
 
