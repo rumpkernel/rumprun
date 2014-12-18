@@ -60,19 +60,19 @@ mfn_invalid:
     return NULL;
 }
 
-void *ioremap(unsigned long phys_addr, unsigned long size)
+void *minios_ioremap(unsigned long phys_addr, unsigned long size)
 {
     return __do_ioremap(phys_addr, size, IO_PROT);
 }
 
-void *ioremap_nocache(unsigned long phys_addr, unsigned long size)
+void *minios_ioremap_nocache(unsigned long phys_addr, unsigned long size)
 {
     return __do_ioremap(phys_addr, size, IO_PROT_NOCACHE);
 }
 
 /* Un-map the io-remapped region. Currently no list of existing mappings is
  * maintained, so the caller has to supply the size */
-void iounmap(void *virt_addr, unsigned long size)
+void minios_iounmap(void *virt_addr, unsigned long size)
 {   
     unsigned long num_pages;
     unsigned long va = (unsigned long)virt_addr;

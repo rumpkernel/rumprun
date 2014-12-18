@@ -701,7 +701,7 @@ int unmap_frames(unsigned long va, unsigned long num_frames)
  * based on Linux function xen_create_contiguous_region()
  */
 #define MAX_CONTIG_ORDER 9 /* 2MB */
-unsigned long alloc_contig_pages(int order, unsigned int addr_bits)
+unsigned long minios_alloc_contig_pages(int order, unsigned int addr_bits)
 {
     unsigned long in_va, va;
     unsigned long in_frames[1UL << order], out_frames, mfn;

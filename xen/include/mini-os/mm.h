@@ -72,7 +72,7 @@ void do_map_frames(unsigned long addr,
         const unsigned long *f, unsigned long n, unsigned long stride,
 	unsigned long increment, domid_t id, int *err, unsigned long prot);
 int unmap_frames(unsigned long va, unsigned long num_frames);
-unsigned long alloc_contig_pages(int order, unsigned int addr_bits);
+unsigned long minios_alloc_contig_pages(int order, unsigned int addr_bits);
 
 int free_physical_pages(xen_pfn_t *mfns, int n);
 void fini_mm(void);

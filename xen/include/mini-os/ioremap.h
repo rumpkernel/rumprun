@@ -24,9 +24,9 @@
 #ifndef _MINIOS_IOREMAP_H_
 #define _MINIOS_IOREMAP_H_
 
-void *ioremap(unsigned long phys_addr, unsigned long size);
-void *ioremap_nocache(unsigned long phys_addr, unsigned long size);
-void iounmap(void *virt_addr, unsigned long size);
+void *minios_ioremap(unsigned long phys_addr, unsigned long size);
+void *minios_ioremap_nocache(unsigned long phys_addr, unsigned long size);
+void minios_iounmap(void *virt_addr, unsigned long size);
 
 #endif /* _MINIOS_IOREMAP_H_ */
 
