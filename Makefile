@@ -24,9 +24,7 @@ ifeq ($(TARGET_ARCH),x86_64)
 CFLAGS += -m64 -mno-red-zone -fno-reorder-blocks -fno-asynchronous-unwind-tables
 endif
 
-# TODO: This was never actually enabled in previous builds(?) and needs more
-# symbols from Mini-OS.
-# RUMP_LIBS_PCI = -lrumpdev_pci -lrumpdev_pci_if_wm -lrumpdev_miiphy
+RUMP_LIBS_PCI = -lrumpdev_pci -lrumpdev_pci_if_wm -lrumpdev_miiphy
 RUMP_LIBS_FS = -lrumpfs_ffs -lrumpfs_cd9660 -lrumpdev_disk -lrumpdev -lrumpvfs
 RUMP_LIBS_NET = -lrumpnet_config -lrumpdev_bpf -lrumpnet_xenif -lrumpnet_netinet
 RUMP_LIBS_NET+= -lrumpnet_net -lrumpxen_xendev -lrumpnet
@@ -45,8 +43,7 @@ rump-src-y += lib/_lwp.c
 
 rump-src-y += rumphyper_base.c
 rump-src-y += rumphyper_net.c
-# TODO: See above.
-# rump-src-y += rumphyper_pci.c
+rump-src-y += rumphyper_pci.c
 rump-src-y += rumphyper_synch.c
 rump-src-y += rumphyper_stubs.c
 

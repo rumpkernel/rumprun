@@ -39,7 +39,7 @@ void *
 rumpcomp_pci_map(unsigned long addr, unsigned long len)
 {
 
-	return ioremap_nocache(addr, len);
+	return minios_ioremap_nocache(addr, len);
 }
 
 int
@@ -123,7 +123,7 @@ rumpcomp_pci_dmalloc(size_t size, size_t align,
 	for (i = 0; size >> (i + PAGE_SHIFT); i++)
 		continue;
 
-	va = alloc_contig_pages(i, 0); /* XXX: MD interface */
+	va = minios_alloc_contig_pages(i, 0); /* XXX: MD interface */
 	*vap = (uintptr_t)va;
 	*pap = virt_to_mach(va);
 
