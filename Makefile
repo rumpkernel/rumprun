@@ -14,7 +14,7 @@ CFLAGS+=	-Wall -Wmissing-prototypes -Wstrict-prototypes
 ifndef NOGCCERROR
 CFLAGS+=	-Werror
 endif
-CPPFLAGS=	-Iinclude -I${RUMPKERNDIR}/include -nostdinc
+CPPFLAGS=	-Iinclude -Irump/include -nostdinc
 STRIP?=		strip
 
 MACHINE:= $(shell ${CC} -dumpmachine | sed 's/i.86/i386/;s/-.*//;')
@@ -42,9 +42,6 @@ endif
 ifneq (${supported},true)
 $(error only supported target is x86, you have ${MACHINE})
 endif
-
-# Naturally this has to be an installation compiled for $MACHINE
-RUMPKERNDIR?=	${BUILDRUMP_SH}/rump
 
 all: include/bmk/machine ${THEBIN}
 
@@ -104,7 +101,7 @@ ${THEBIN}: ${THEBIN}.gdb
 	${STRIP} -g -o $@ $<
 
 ${THEBIN}.gdb: ${OBJS} ${COMPILER_RT} ${LDSCRIPT} Makefile
-	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} ${LDFLAGS} ${OBJS} -L${RUMPKERNDIR}/lib -Wl,--whole-archive ${ALLLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
+	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} ${LDFLAGS} ${OBJS} -Lrump/lib -Wl,--whole-archive ${ALLLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
 
 iso/boot/grub/grub.cfg:
 	mkdir -p iso/boot/grub
@@ -122,6 +119,11 @@ clean:
 	    include/bmk/machine
 
 cleandir: clean
+
+cleanrump: clean
+	rm -rf rump rumpobj rumptools
+
+distcleanrump: cleanrump
 
 test: all
 	./tests/checksum/test.sh
