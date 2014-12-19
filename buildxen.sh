@@ -78,9 +78,6 @@ for lib in ${LIBS}; do
 	makeuserlib ${lib}
 done
 
-./buildrump.sh/buildrump.sh ${BUILDXEN_QUIET} $* \
-    -s ${RUMPSRC} -T rumptools -o rumpobj install
-
 [ ! -f img/test.ffs ] && cp img/test_clean.ffs img/test.ffs
 
 # build the domU image
