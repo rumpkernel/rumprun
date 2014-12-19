@@ -6,14 +6,10 @@ compiler:
 before_script:
   - sudo apt-get update -y
   - sudo apt-get install qemu-kvm -y
-  - git clone https://github.com/rumpkernel/buildrump.sh
-  - git clone https://github.com/rumpkernel/src-netbsd
+  - git submodule update --init --recursive
 
 script:
-  - ( cd src-netbsd && git checkout appstack-src )
-  - ( cd buildrump.sh && ./buildrump.sh -s ../src-netbsd -qq -V MKPIC=no -V RUMP_KERNEL_IS_LIBC=1 -V RUMP_CURLWP=hypercall -k -N -F ACLFLAGS=-m32 kernelheaders fullbuild )
-  - export BUILDRUMP_SH=$(pwd)/buildrump.sh
-  - sh buildme.sh
+  - ./buildme.sh -qq -- -F ACLFLAGS=-m32
   - make clean
   - make RUMPRUN_PRESENT=no
   - size rk.bin rk.bin.gdb
