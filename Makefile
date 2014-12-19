@@ -58,7 +58,7 @@ $(OBJ_DIR)/%.o: %.c $(HDRS) $(EXTRA_DEPS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 .PHONY: default
-default: prepare mini-os rumprun app-tools tests rump-kernel
+default: prepare mini-os rumprun app-tools tests rump-kernel img/test.ffs
 
 .PHONY: prepare
 prepare:
@@ -122,6 +122,9 @@ httpd:
 STDTESTS=tests/libstdtests/rumpkern_demo.c tests/libstdtests/pthread_test.c
 rump-kernel: ${STDTESTS} httpd
 	app-tools/rumpapp-xen-cc -o $@ ${STDTESTS} httpd/*.o
+
+img/test.ffs:
+	cp img/test_clean.ffs img/test.ffs
 
 .PHONY: clean arch_clean app-tools_clean
 

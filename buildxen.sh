@@ -78,8 +78,6 @@ for lib in ${LIBS}; do
 	makeuserlib ${lib}
 done
 
-[ ! -f img/test.ffs ] && cp img/test_clean.ffs img/test.ffs
-
 # build the domU image
 make
 
