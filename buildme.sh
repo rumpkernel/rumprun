@@ -38,17 +38,8 @@ for lib in ${LIBS}; do
 done
 
 # build PCI drivers only on x86 (needs MD support)
-[ "${MACHINE}" = 'amd64' -o "${MACHINE}" = 'i386' ] && \
-    APPSTACK_LIBS=$(${RUMPMAKE} \
-      -f ${APPSTACK_SRC}/sys/rump/dev/Makefile.rumpdevcomp -V '${RUMPPCIDEVS}')
-
-for lib in ${APPSTACK_LIBS}; do
-		( cd ${APPSTACK_SRC}/sys/rump/dev/lib/lib${lib}
-			${RUMPMAKE} obj
-			${RUMPMAKE} RUMP_PCI_IOSPACE=yes dependall
-			${RUMPMAKE} install
-		)
-done
+[ "${MACHINE}" = 'amd64' -o "${MACHINE}" = 'i386' ] \
+    && makepci ${APPSTACK_SRC} RUMP_PCI_IOSPACE=yes
 
 export BUILDRUMP_SH
 make
