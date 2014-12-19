@@ -53,7 +53,7 @@ RUMPMAKE=$(pwd)/rumptools/rumpmake
 # build rump kernel
 ./buildrump.sh/buildrump.sh ${BUILDXEN_QUIET} ${STDJ} -k \
     -V MKPIC=no -s ${RUMPSRC} -T rumptools -o rumpobj -N \
-    -V RUPM_KERNEL_IS_LIBC=1 "$@" build kernelheaders install
+    -V RUMP_KERNEL_IS_LIBC=1 "$@" build kernelheaders install
 
 LIBS="$(stdlibs ${RUMPSRC})"
 usermtree rump
