@@ -7,10 +7,13 @@
 STDJ='-j4'
 RUMPSRC=rumpsrc
 
-while getopts '?s:' opt; do
+while getopts '?qs:' opt; do
 	case "$opt" in
 	's')
 		RUMPSRC=${OPTARG}
+		;;
+	'q')
+		BUILDXEN_QUIET=${BUILDXEN_QUIET:=-}q
 		;;
 	'?')
 		exit 1
@@ -30,7 +33,7 @@ fi
 [ "$1" = "justcheckout" ] && { echo ">> $0 done" ; exit 0; }
 
 # build tools
-./buildrump.sh/buildrump.sh -${BUILDXEN_QUIET:-q} ${STDJ} -k \
+./buildrump.sh/buildrump.sh ${BUILDXEN_QUIET} ${STDJ} -k \
     -V MKPIC=no -s ${RUMPSRC} -T rumptools -o rumpobj -N \
     -V RUMP_KERNEL_IS_LIBC=1 tools
 
@@ -75,7 +78,7 @@ for lib in ${LIBS}; do
 	makeuserlib ${lib}
 done
 
-./buildrump.sh/buildrump.sh ${BUILD_QUIET} $* \
+./buildrump.sh/buildrump.sh ${BUILDXEN_QUIET} $* \
     -s ${RUMPSRC} -T rumptools -o rumpobj install
 
 [ ! -f img/test.ffs ] && cp img/test_clean.ffs img/test.ffs
