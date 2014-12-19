@@ -30,7 +30,7 @@
 #include <mini-os/mm.h>
 #include <mini-os/hypervisor.h>
 
-#include "rumpsrc/sys/rump/dev/lib/libpci/pci_user.h" /* XXX */
+#include "pci_user.h"
 
 #include <errno.h>
 #include <stdlib.h> /* for malloc */
