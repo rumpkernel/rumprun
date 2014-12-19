@@ -56,8 +56,8 @@ makekernlib ()
 	)
 }
 makekernlib rumpxenif
-makekernlib rumpxenpci
 makekernlib rumpxendev
+makepci rumpsrc
 
 for lib in ${LIBS}; do
 	makeuserlib ${lib}
