@@ -57,7 +57,11 @@ LIBS="$(stdlibs ${RUMPSRC})"
 usermtree rump
 userincludes ${RUMPSRC} ${LIBS}
 
-make -C xen links
+for lib in ${LIBS}; do
+	makeuserlib ${lib}
+done
+
+makepci ${RUMPSRC}
 
 makekernlib ()
 {
@@ -70,13 +74,9 @@ makekernlib ()
 		${RUMPMAKE} MAKEOBJDIRPREFIX=${OBJS} install
 	)
 }
+make -C xen links
 makekernlib rumpxenif
 makekernlib rumpxendev
-makepci ${RUMPSRC}
-
-for lib in ${LIBS}; do
-	makeuserlib ${lib}
-done
 
 # build the domU image
 make
