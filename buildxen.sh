@@ -49,6 +49,8 @@ CPPFLAGS+=      -D_PTHREAD_GETTCB_EXT=_lwp_rumpxen_gettcb
 EOF
 
 RUMPMAKE=$(pwd)/rumptools/rumpmake
+MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
+[ -z "${MACHINE}" ] && die could not figure out target machine
 
 # build rump kernel
 ./buildrump.sh/buildrump.sh ${BUILDXEN_QUIET} ${STDJ} -k \
