@@ -71,7 +71,7 @@ _lwp_ctl(int ctl, struct lwpctl **data)
 	return 0;
 }
 
-void
+int
 rumprunxen_makelwp(void (*start)(void *), void *arg, void *private,
 	void *stack_base, size_t stack_size, unsigned long flag, lwpid_t *lid)
 {
