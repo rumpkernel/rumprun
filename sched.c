@@ -94,11 +94,8 @@ struct bmk_thread {
 
 	void *bt_stackbase;
 
-	/* context is saved here during context switch */
-	struct bmk_tcb {
-		void *btcb_sp;
-		void *btcb_ip;
-	} bt_tcb;
+	/* MD thread control block */
+	struct bmk_tcb bt_tcb;
 
 	TAILQ_ENTRY(bmk_thread) bt_entries;
 };
