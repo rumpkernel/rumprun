@@ -36,11 +36,6 @@ struct schedulable {
 
 	char *scd_name;
 
-	void (*scd_start)(void *);
-	void *scd_arg;
-
-	void *scd_stack;
-
 	struct lwpctl scd_lwpctl;
 
 	TAILQ_ENTRY(schedulable) entries;
