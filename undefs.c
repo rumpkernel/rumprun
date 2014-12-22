@@ -41,13 +41,13 @@ NOTHING(rumpuser_unmap)
 
 REALNOTHING(__sigaction14);
 NOTHING(__getrusage50);
-REALNOTHING(__sigprocmask14);
+//REALNOTHING(__sigprocmask14);
 REALNOTHING(sigqueueinfo);
-REALNOTHING(rasctl);
+//REALNOTHING(rasctl);
 NOTHING(_lwp_kill);
-NOTHING(_lwp_self);
+//NOTHING(_lwp_self);
 
-NOTHING(__libc_static_tls_setup);
+//NOTHING(__libc_static_tls_setup);
 
 NOTHING(__wait450);
 NOTHING(__fork);

@@ -82,10 +82,10 @@ ALLLIBS=	${LIBS_VIO_NET}					\
 		-lrumpdev -lrumpvfs -lrump
 
 ifeq (${RUMPRUN_PRESENT},yes)
-  OBJS+=	libc_errno.o libc_emul.o libc_malloc.o
+  OBJS+=	libc_errno.o libc_emul.o libc_malloc.o netbsd_init.o
   OBJS+=	app.o
   CPPFLAGS+=	-DBMK_APP
-  LIBS_USER=	-lcrypto -lc
+  LIBS_USER=	-lcrypto -lpthread -lc
 else
   COMPILER_RT=	librt/divdi3.o librt/udivmoddi4.o librt/udivsi3.o
   COMPILER_RT+=	librt/udivdi3.o librt/moddi3.o librt/umoddi3.o

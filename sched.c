@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2007-2013 Antti Kantee.  All Rights Reserved.
+ * Copyright (c) 2007-2014 Antti Kantee.  All Rights Reserved.
  * Copyright (c) 2014 Justin Cormack.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,8 +80,6 @@
 #define THREAD_EXTSTACK	0x08
 #define THREAD_TIMEDOUT 0x10
 
-#define THREAD_STACKSIZE (1<<16)
-
 struct bmk_thread {
 	char bt_name[NAME_MAXLEN];
 
@@ -93,6 +91,8 @@ struct bmk_thread {
 	int bt_errno;
 
 	void *bt_stackbase;
+
+	void *bt_cookie;
 
 	/* MD thread control block */
 	struct bmk_tcb bt_tcb;
@@ -138,7 +138,7 @@ static void *
 stackalloc(void)
 {
 
-	return bmk_xmalloc(THREAD_STACKSIZE);
+	return bmk_xmalloc(BMK_THREAD_STACKSIZE);
 }
 
 static void
@@ -152,6 +152,8 @@ static void
 sched_switch(struct bmk_thread *prev, struct bmk_thread *next)
 {
 
+	if (scheduler_hook)
+		scheduler_hook(prev->bt_cookie, next->bt_cookie);
 	current_thread = next;
 	bmk_cpu_sched_switch(&prev->bt_tcb, &next->bt_tcb);
 }
@@ -224,7 +226,7 @@ bmk_sched_create(const char *name, void *cookie, int thrflags,
 
 	if (!stack_base) {
 		assert(stack_size == 0);
-		stack_size = THREAD_STACKSIZE;
+		stack_size = BMK_THREAD_STACKSIZE;
 		stack_base = stackalloc();
 	} else {
 		thread->bt_flags = THREAD_EXTSTACK;
@@ -237,8 +239,7 @@ bmk_sched_create(const char *name, void *cookie, int thrflags,
 	thread->bt_tcb.btcb_sp = stack;
 	thread->bt_tcb.btcb_ip = bmk_cpu_sched_bouncer;
 	
-	/* enotyet */
-	//thread->bt_cookie = cookie;
+	thread->bt_cookie = cookie;
 
 	bmk_strncpy(thread->bt_name, name, sizeof(thread->bt_name)-1);
 
@@ -316,16 +317,22 @@ bmk_sched_join(struct bmk_thread *joinable)
 	bmk_sched_wake(joinable);
 }
 
-void
+int
 bmk_sched_nanosleep(bmk_time_t nsec)
 {
 	struct bmk_thread *thread = bmk_sched_current();
 	uint64_t now;
+	int rv;
 
+	thread->bt_flags &= ~THREAD_TIMEDOUT;
 	now = bmk_cpu_clock_now();
 	thread->bt_wakeup_time = now + nsec;
 	clear_runnable(thread);
 	bmk_sched();
+
+	rv = !!(thread->bt_flags & THREAD_TIMEDOUT);
+	thread->bt_flags &= ~THREAD_TIMEDOUT;
+	return rv;
 }
 
 void
@@ -358,8 +365,6 @@ bmk_sched_init(void)
 {
 	struct bmk_thread *thread = &init_thread;
 
-	//getcontext(&thread->ctx);
-
 	bmk_strncpy(thread->bt_name, "init", sizeof(thread->bt_name)-1);
 	thread->bt_flags = 0;
 	thread->bt_wakeup_time = -1;
@@ -379,7 +384,7 @@ struct bmk_thread *
 bmk_sched_init_mainthread(void *cookie)
 {
 
-	//current_thread->bt_cookie = cookie;
+	current_thread->bt_cookie = cookie;
 	return current_thread;
 }
 

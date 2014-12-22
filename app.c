@@ -24,6 +24,8 @@
 
 #include <bmk/app.h>
 
+#include "netbsd_init.h"
+
 static int havenet;
 
 /*
@@ -143,6 +145,7 @@ bmk_app_main(void)
 {
 
 	rumpkern_config();
+	_netbsd_init();
 
 	if (havenet)
 		nettest();
