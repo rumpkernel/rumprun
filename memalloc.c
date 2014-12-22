@@ -121,6 +121,7 @@ union	overhead {
  */
 #define MINSHIFT 5
 #define	NBUCKETS 30
+#define MINALIGN 16
 static	union overhead *nextf[NBUCKETS];
 
 static	long pagesz;			/* page size */
@@ -228,8 +229,8 @@ bmk_memalloc(size_t nbytes, size_t align)
 
 	if (align & (align-1))
 		return NULL;
-	if (align < sizeof(void *))
-		align = sizeof(void *);
+	if (align < MINALIGN)
+		align = MINALIGN;
 	
 	/* need at least this many bytes plus header to satisfy alignment */
 	allocbytes = nbytes + ((sizeof(*op) + (align-1)) & ~(align-1));
@@ -427,7 +428,7 @@ bmk_memrealloc(void *cp, size_t nbytes)
 	void *np;
 
 	if (cp == NULL)
-		return bmk_memalloc(nbytes, 8);
+		return bmk_memalloc(nbytes, MINALIGN);
 
 	if (nbytes == 0) {
 		bmk_memfree(cp);
