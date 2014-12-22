@@ -11,7 +11,10 @@ unsigned long bmk_memsize;
 
 /*
  * we don't need freepg
- * (for the humour impaired: it was a joke, on the TODO)
+ * (for the humour impaired: it was a joke, on the TODO ... but really,
+ * it's not that urgent since the rump kernel uses its own caching
+ * allocators, so once the backing pages are allocated, they tend to
+ * never get freed)
  */
 void *
 bmk_allocpg(size_t howmany)
