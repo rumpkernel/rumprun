@@ -79,11 +79,11 @@ bmk_isr_netinit(int (*func)(void *), void *arg, int intr)
 	int error;
 
 	if (intr > sizeof(isr_todo)*8 || intr > BMK_MAXINTR)
-		return EGENERIC;
+		return BMK_EGENERIC;
 
 	ih = bmk_xmalloc(sizeof(*ih));
 	if (!ih)
-		return ENOMEM;
+		return BMK_ENOMEM;
 
 	if ((error = bmk_cpu_intr_init(intr)) != 0) {
 		bmk_memfree(ih);
@@ -116,6 +116,6 @@ bmk_isr_init(void)
 
 	isr_thread = bmk_sched_create("netisr", NULL, 0, isr, NULL, NULL, 0);
 	if (!isr_thread)
-		return EGENERIC;
+		return BMK_EGENERIC;
 	return 0;
 }

@@ -53,10 +53,10 @@ extern unsigned long bmk_membase, bmk_memsize;
 
 #endif /* _LOCORE */
 
-#define ENOMEM		1
-#define EBUSY		2
-#define EINVAL		3
-#define EGENERIC	EINVAL
-#define ETIMEDOUT	4
+#define BMK_ENOMEM		1
+#define BMK_EBUSY		2
+#define BMK_EINVAL		3
+#define BMK_EGENERIC		BMK_EINVAL
+#define BMK_ETIMEDOUT		4
 
 #define BMK_MAXINTR	32

@@ -45,7 +45,7 @@ rumpuser_init(int version, const struct rumpuser_hyperup *hyp)
 {
 
 	if (version != RUMPUSER_VERSION) {
-		return EINVAL;
+		return BMK_EINVAL;
 	}
 
         rumpuser__hyp = *hyp;
@@ -87,7 +87,7 @@ wait(struct waithead *wh, uint64_t nsec)
 	if (w.onlist)
 		TAILQ_REMOVE(wh, &w, entries);
 
-	return w.onlist ? ETIMEDOUT : 0;
+	return w.onlist ? BMK_ETIMEDOUT : 0;
 }
 
 static void
@@ -123,7 +123,7 @@ rumpuser_thread_create(void *(*f)(void *), void *arg, const char *thrname,
         thr = bmk_sched_create(thrname, NULL, joinable,
 	    (void (*)(void *))f, arg, NULL, 0);
         if (!thr)
-                return EINVAL;
+                return BMK_EINVAL;
 
         *tptr = thr;
         return 0;
@@ -194,7 +194,7 @@ rumpuser_mutex_tryenter(struct rumpuser_mtx *mtx)
 	struct lwp *l = bmk_sched_gettls(bmk_sched_current(), BMK_TLS_RUMPLWP);
 
 	if (mtx->v && mtx->o != l)
-		return EBUSY;
+		return BMK_EBUSY;
 
 	mtx->v++;
 	mtx->o = l;
@@ -284,7 +284,7 @@ rumpuser_rw_tryenter(int enum_rumprwlock, struct rumpuser_rw *rw)
 			rw->o = rumpuser_curlwp();
 			rv = 0;
 		} else {
-			rv = EBUSY;
+			rv = BMK_EBUSY;
 		}
 		break;
 	case RUMPUSER_RW_READER:
@@ -292,11 +292,11 @@ rumpuser_rw_tryenter(int enum_rumprwlock, struct rumpuser_rw *rw)
 			rw->v++;
 			rv = 0;
 		} else {
-			rv = EBUSY;
+			rv = BMK_EBUSY;
 		}
 		break;
 	default:
-		rv = EINVAL;
+		rv = BMK_EINVAL;
 	}
 
 	return rv;
@@ -361,7 +361,7 @@ rumpuser_rw_tryupgrade(struct rumpuser_rw *rw)
 		return 0;
 	}
 
-	return EBUSY;
+	return BMK_EBUSY;
 }
 
 struct rumpuser_cv {

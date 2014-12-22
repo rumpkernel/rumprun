@@ -79,7 +79,7 @@ rumpuser_malloc(size_t howmuch, int alignment, void **memp)
 		*memp = rv;
 		return 0;
 	}
-	return ENOMEM;
+	return BMK_ENOMEM;
 }
 
 void

@@ -177,7 +177,7 @@ bmk_cpu_intr_init(int intr)
 
 	/* XXX: too lazy to keep PIC1 state */
 	if (intr < 8)
-		return EGENERIC;
+		return BMK_EGENERIC;
 
 	switch (intr) {
 	case 10:
@@ -187,7 +187,7 @@ bmk_cpu_intr_init(int intr)
 		fillgate(&idt[32+11], bmk_cpu_isr_11);
 		break;
 	default:
-		return EGENERIC;
+		return BMK_EGENERIC;
 	}
 
 	/* unmask interrupt in PIC */

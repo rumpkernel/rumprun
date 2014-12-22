@@ -49,7 +49,7 @@ rumpcomp_pci_irq_map(unsigned bus, unsigned device, unsigned fun,
 {
 
 	if (cookie > BMK_MAXINTR)
-		return EGENERIC;
+		return BMK_EGENERIC;
 
 	intrs[cookie] = intrline;
 	return 0;
