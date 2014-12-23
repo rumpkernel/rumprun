@@ -147,6 +147,10 @@ bmk_app_main(void)
 	rumpkern_config();
 	_netbsd_init();
 
+#ifdef RUMP_SYSPROXY
+	rump_init_server("tcp://0:12345");
+#endif
+
 	if (havenet)
 		nettest();
 	disktest();

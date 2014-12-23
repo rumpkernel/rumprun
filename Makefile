@@ -8,6 +8,7 @@ THEISO=	$(basename ${THEBIN}).iso
 # similar to how we provide librt for x86, but not sure it's worth
 # the bother ...
 RUMPRUN_PRESENT?= yes
+SYSPROXY?= no
 
 CFLAGS+=	-std=gnu99 -g -O2
 CFLAGS+=	-Wall -Wmissing-prototypes -Wstrict-prototypes
@@ -43,9 +44,14 @@ ifneq (${supported},true)
 $(error only supported target is x86, you have ${MACHINE})
 endif
 
+ifeq (${SYSPROXY},y)
+CPPFLAGS+=	-DRUMP_SYSPROXY
+OBJS-y+=	sysproxy.o
+endif
+
 all: include/bmk/machine ${THEBIN}
 
-OBJS-y=			intr.o kernel.o undefs.o memalloc.o sched.o subr.o
+OBJS-y+=		intr.o kernel.o undefs.o memalloc.o sched.o subr.o
 OBJS-y+=		rumpuser.o rumpfiber.o
 OBJS-${HASPCI}+=	rumppci.o
 
