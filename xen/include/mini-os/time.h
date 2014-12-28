@@ -30,7 +30,7 @@
  * of real time into system time 
  */
 typedef int64_t s_time_t;
-#define NOW()                   ((s_time_t)minios_monotonic_clock())
+#define NOW()                   ((s_time_t)minios_clock_monotonic())
 #define SECONDS(_s)             (((s_time_t)(_s))  * 1000000000UL )
 #define TENTHS(_ts)             (((s_time_t)(_ts)) * 100000000UL )
 #define HUNDREDTHS(_hs)         (((s_time_t)(_hs)) * 10000000UL )
@@ -50,7 +50,8 @@ void     init_time(void);
 void     fini_time(void);
 s_time_t get_s_time(void);
 s_time_t get_v_time(void);
-uint64_t minios_monotonic_clock(void);
+uint64_t minios_clock_monotonic(void);
+void     minios_clock_wall(uint32_t *sec, uint64_t *nsec);
 void     block_domain(s_time_t until);
 
 #endif /* _MINIOS_TIME_H_ */
