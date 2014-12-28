@@ -149,10 +149,24 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 int
 rumpuser_clock_gettime(int which, int64_t *sec, long *nsec)
 {
-	s_time_t time = NOW();
+	int64_t outsec;
+	long outnsec;
+	uint64_t time;
 
-	*sec  = time / (1000*1000*1000ULL);
-	*nsec = time % (1000*1000*1000ULL);
+	switch (which) {
+	case RUMPUSER_CLOCK_RELWALL:
+		minios_clock_wall(&outsec, &outnsec);
+
+		*sec = outsec;
+		*nsec = outnsec;
+		break;
+	case RUMPUSER_CLOCK_ABSMONO:
+		time = minios_clock_monotonic();
+
+		*sec  = time / (1000*1000*1000ULL);
+		*nsec = time % (1000*1000*1000ULL);
+		break;
+	}
 
 	return 0;
 }
@@ -233,7 +247,7 @@ rumpuser_getrandom(void *buf, size_t buflen, int flags, size_t *retp)
 	uint8_t *rndbuf;
 
 	for (*retp = 0, rndbuf = buf; *retp < buflen; (*retp)++) {
-		*rndbuf++ = NOW() & 0xff;
+		*rndbuf++ = minios_clock_monotonic() & 0xff;
 	}
 
 	return 0;

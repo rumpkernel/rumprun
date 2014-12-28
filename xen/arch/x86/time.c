@@ -146,11 +146,12 @@ static void get_time_values_from_xen(void)
 
 
 
-/* monotonic_clock(): returns # of nanoseconds passed since time_init()
+/* minios_clock_monotonic():
+ *              returns # of nanoseconds passed since time_init()
  *		Note: This function is required to return accurate
  *		time even in the absence of multiple timer ticks.
  */
-uint64_t minios_monotonic_clock(void)
+uint64_t minios_clock_monotonic(void)
 {
 	uint64_t time;
 	uint32_t local_time_version;
@@ -159,7 +160,7 @@ uint64_t minios_monotonic_clock(void)
 		local_time_version = shadow.version;
 		rmb();
 		time = shadow.system_timestamp + get_nsec_offset();
-        if (!time_values_up_to_date())
+                if (!time_values_up_to_date())
 			get_time_values_from_xen();
 		rmb();
 	} while (local_time_version != shadow.version);
@@ -181,11 +182,21 @@ static void update_wallclock(void)
 	while ((s->wc_version & 1) | (shadow_ts_version ^ s->wc_version));
 }
 
+/* minios_clock_wall():
+ *                    returns seconds and nanoseconds passed since the epoch.
+ */
+void minios_clock_wall(uint32_t *sec, uint64_t *nsec)
+{
+        uint64_t now = minios_clock_monotonic();
+
+        *sec = shadow_ts.tv_sec + NSEC_TO_SEC(now);
+        *nsec = shadow_ts.tv_nsec + (now / 1000000000UL);
+}
 
 void block_domain(s_time_t until)
 {
     ASSERT(irqs_disabled());
-    if(minios_monotonic_clock() < until)
+    if(minios_clock_monotonic() < until)
     {
         HYPERVISOR_set_timer_op(until);
         HYPERVISOR_sched_op(SCHEDOP_block, 0);
@@ -209,6 +220,10 @@ static evtchn_port_t port;
 void init_time(void)
 {
     minios_printk("Initialising timer interface\n");
+    /* ensure time values are up to date after exit from this function */
+    get_time_values_from_xen();
+    update_wallclock();
+    /* start timer handler */
     port = minios_bind_virq(VIRQ_TIMER, &timer_handler, NULL);
     minios_unmask_evtchn(port);
 }

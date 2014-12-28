@@ -61,7 +61,7 @@ wait(struct waithead *wh, uint64_t nsec)
 	w.onlist = 1;
 	minios_block(w.who);
 	if (nsec)
-		w.who->wakeup_time = NOW() + nsec;
+		w.who->wakeup_time = minios_clock_monotonic() + nsec;
 	minios_schedule();
 
 	/* woken up by timeout? */
