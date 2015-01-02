@@ -25,6 +25,8 @@ while [ $# != 0 ]; do
 	-z)
 		outargs+=("$a" "$1"); shift || noshift
 		;;
+	-pie)
+		;;
 	--as-needed|--no-as-needed)
 		;;
 	--stunt-final-script)
