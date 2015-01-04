@@ -12,6 +12,9 @@ unset march
 while [ $# != 0 ]; do
 	a=$1; shift
 	case "$a" in
+	# ignore lib(s) which may be insisted upon by the toolchain
+	-lssp_nonshared)
+		;;
 	[^-]*|-L*|-l*|--whole-archive|--no-whole-archive|--start-group|--end-group)
 		outargs+=("$a")
 		;;
