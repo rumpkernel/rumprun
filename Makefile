@@ -6,6 +6,8 @@
 #
 OBJ_DIR ?= $(CURDIR)/obj
 
+CONFIG_SYSPROXY?=	no
+
 OBJCOPY=objcopy
 
 CPPFLAGS = -isystem rump/include -isystem xen/include -I. -nostdinc
@@ -50,6 +52,11 @@ rump-src-y += rumphyper_stubs.c
 rump-src-y += callmain.c
 rump-src-y += netbsd_init.c
 rump-src-y += rumpconfig.c
+
+ifeq (${CONFIG_SYSPROXY},y)
+rump-src-${CONFIG_SYSPROXY} += sysproxy.c
+CPPFLAGS+= -DRUMP_SYSPROXY
+endif
 
 # Rump kernel middleware objects to build.
 RUMP_OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(rump-src-y))
