@@ -35,7 +35,7 @@ err() {
 
 usage() {
 	cat <<EOM
-usage: rumprun STACK [ -ipd ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] [ -n NETSPEC ] [ -- ] APP [ args ]
+usage: rumprun STACK [ -ipd ] [ -D PORT ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] [ -n NETSPEC ] [ -- ] APP [ args ]
     STACK is the rumprun stack to use. Only "xen" is currently supported
     APP is the rumprun application to start
     args will be passed to the application command line
@@ -48,6 +48,7 @@ usage: rumprun STACK [ -ipd ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] [ -n NETSPEC
     -i attaches to domain console on startup
     -p creates the domain but leaves it paused
     -d destroys the domain on poweroff
+    -D PORT attaches a GDB server on PORT to the domain, implies -p
     
     When run without -i the local domain id is printed to standard output
 EOM
@@ -140,7 +141,8 @@ run_xen() {
 	opt_destroy='on_poweroff="preserve"'
 	opt_mem=16
 	opt_name=
-	while getopts "n:b:pidN:M:" opt; do
+	opt_debug=
+	while getopts "n:b:pidD:N:M:" opt; do
 		case "$opt" in
 			# -n: NETSPEC
 			n)
@@ -185,6 +187,14 @@ run_xen() {
 			M)
 				opt_mem=${OPTARG}
 				;;
+			# -D PORT: attach gdbsx to domain.
+			D)
+				if ! type gdbsx >/dev/null 2>&1; then
+					err "'gdbsx' is required for -D, please install it."
+				fi
+				opt_debug=${OPTARG}
+				opt_pause=1
+				;;
 			*)
 				usage
 				;;
@@ -226,6 +236,15 @@ EOM
 		xenstore-write ${prefix}/${line}
 	done
 	rm ${xenstore}
+	# Attach debugger if requested.
+	if [ -n "$opt_debug" ]; then
+		if objdump -f ${app} | grep -q elf64; then
+			bits=64
+		else
+			bits=32
+		fi
+		gdbsx -a ${domid} ${bits} ${opt_debug} &
+	fi
 	# Go go go!
 	[ -z "$opt_pause" ] && xl unpause ${domid}
 	if [ -n "$opt_interactive" ]; then
