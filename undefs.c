@@ -27,17 +27,6 @@ NOTHING(rumpuser_bio)
 NOTHING(rumpuser_iovread)
 NOTHING(rumpuser_iovwrite)
 
-#ifndef RUMP_SYSPROXY
-NOTHING(rumpuser_sp_anonmmap)
-NOTHING(rumpuser_sp_copyin)
-NOTHING(rumpuser_sp_copyinstr)
-NOTHING(rumpuser_sp_copyout)
-NOTHING(rumpuser_sp_copyoutstr)
-NOTHING(rumpuser_sp_fini)
-NOTHING(rumpuser_sp_init)
-NOTHING(rumpuser_sp_raise)
-#endif
-
 NOTHING(rumpuser_unmap)
 
 /* libc */
