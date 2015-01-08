@@ -15,17 +15,6 @@ NOTSUP(rumpuser_unmap);
 
 NOTSUP(rumpuser_kill);
 
-#ifndef RUMP_SYSPROXY
-NOTSUP(rumpuser_sp_init);
-NOTHING(rumpuser_sp_fini);
-NOTSUP(rumpuser_sp_raise);
-NOTSUP(rumpuser_sp_copyin);
-NOTSUP(rumpuser_sp_copyout);
-NOTSUP(rumpuser_sp_copyinstr);
-NOTSUP(rumpuser_sp_copyoutstr);
-NOTSUP(rumpuser_sp_anonmmap);
-#endif
-
 NOTHING(rumpuser_dl_bootstrap);
 
 NOTSUP(rumpuser_daemonize_begin);
