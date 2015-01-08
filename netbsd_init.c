@@ -43,6 +43,10 @@ _netbsd_init(void)
 
 	/* XXX: we should probably use csu, but this is quicker for now */
 	__progname = "rumpxenstack";
+
+#ifdef RUMP_SYSPROXY
+	rump_init_server("tcp://0:12345");
+#endif
 }
 
 void
