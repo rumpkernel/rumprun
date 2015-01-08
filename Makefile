@@ -47,6 +47,7 @@ endif
 ifeq (${SYSPROXY},y)
 CPPFLAGS+=	-DRUMP_SYSPROXY
 OBJS-y+=	sysproxy.o
+LIBS_SYSPROXY=	-lrumpkern_sysproxy
 endif
 
 all: include/bmk/machine ${THEBIN}
@@ -85,6 +86,7 @@ ALLLIBS=	${LIBS_VIO_NET}					\
 		${LIBS_PCI}					\
 		${LIBS_NETINET}					\
 		${LIBS_NETBPF}					\
+		${LIBS_SYSPROXY}				\
 		-lrumpdev -lrumpvfs -lrump
 
 ifeq (${RUMPRUN_PRESENT},yes)
