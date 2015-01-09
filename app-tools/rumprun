@@ -142,6 +142,7 @@ run_xen() {
 	opt_mem=16
 	opt_name=
 	opt_debug=
+	sudo=''
 	while getopts "n:b:pidD:N:M:" opt; do
 		case "$opt" in
 			# -n: NETSPEC
@@ -224,12 +225,16 @@ extra="$@"
 ${conf_vif}
 ${conf_disk}
 EOM
+	if [ $(id -u) -ne 0 ]; then
+		sudo='sudo'
+	fi
+
 	# Create the domain and leave it paused so that we can get its domid.
-	if ! xl create -p ${conf} >/dev/null; then
+	if ! ${sudo} xl create -p ${conf} >/dev/null; then
 		err xl create failed
 	fi
 	rm ${conf}
-	domid=$(xl domid ${name})
+	domid=$(${sudo} xl domid ${name})
 	# Write provisioning information for domain to xenstore.
 	prefix=/local/domain/${domid}/rumprun
 	cat ${xenstore} | while read line; do
@@ -246,9 +251,9 @@ EOM
 		gdbsx -a ${domid} ${bits} ${opt_debug} &
 	fi
 	# Go go go!
-	[ -z "$opt_pause" ] && xl unpause ${domid}
+	[ -z "$opt_pause" ] && ${sudo} xl unpause ${domid}
 	if [ -n "$opt_interactive" ]; then
-		exec xl console $domid
+		exec ${sudo} xl console $domid
 	else
 		echo ${domid}
 	fi
@@ -256,9 +261,6 @@ EOM
 
 if [ $# -lt 2 ]; then
 	usage
-fi
-if [ $(id -u) -ne 0 ]; then
-	err Must be root
 fi
 
 [ "$1" != "xen" ] && usage
