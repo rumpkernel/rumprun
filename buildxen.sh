@@ -8,8 +8,7 @@ CPPFLAGS+=-DMAXPHYS=32768
 PTHREAD_MAKELWP=pthread_makelwp_rumprunxen.c
 CPPFLAGS+=      -D_PTHREAD_GETTCB_EXT=_lwp_rumpxen_gettcb
 .endif  # LIB == pthread
-CFLAGS+=-fno-stack-protector
-USE_SSP=no"
+CFLAGS+=-fno-stack-protector"
 unset IFS
 
 export BUILDXENMETAL_MKCONF
