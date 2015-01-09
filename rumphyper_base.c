@@ -149,8 +149,8 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 int
 rumpuser_clock_gettime(int which, int64_t *sec, long *nsec)
 {
-	int64_t outsec;
-	long outnsec;
+	uint32_t outsec;
+	uint64_t outnsec;
 	uint64_t time;
 
 	switch (which) {
