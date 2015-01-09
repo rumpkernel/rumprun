@@ -3,4 +3,4 @@ set -e
 case " $* " in
 *" -v "*)   set -x ;;
 esac
-exec ${RUMP_APPTOOLS_CC:-cc} -no-integrated-cpp -specs=!APPTOOLS!/specs "$@"
+exec ${RUMP_APPTOOLS_CC:-cc} -fno-stack-protector -no-integrated-cpp -specs=!APPTOOLS!/specs "$@"

@@ -34,6 +34,7 @@ include minios.mk
 CFLAGS += -isystem ../rump/include -I.. -nostdinc
 CFLAGS += -I$(MINI-OS_ROOT)
 CFLAGS += -no-integrated-cpp
+CFLAGS += -fno-stack-protector
 
 LDARCHLIB := -l$(ARCH_LIB_NAME)
 LDSCRIPT := $(TARGET_ARCH_DIR)/minios-$(XEN_TARGET_ARCH).lds
