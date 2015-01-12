@@ -1,8 +1,5 @@
 /* Copyright (c) 2013 Antti Kantee.  See COPYING */
 
-#include <mini-os/console.h>
-#include <mini-os/netfront.h>
-
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
@@ -10,6 +7,7 @@
 
 #include <ufs/ufs/ufsmount.h>
 
+#include <assert.h>
 #include <dirent.h>
 #include <err.h>
 #include <errno.h>
@@ -240,7 +238,7 @@ donet(void)
 
 	setupnet();
 	masterfd = sucketonport(4096);
-	ASSERT(masterfd < MAXCONN);
+	assert(masterfd < MAXCONN);
 
 	for (i = 0; i < MAXCONN; i++) {
 		pfds[i].fd = -1;
@@ -252,16 +250,16 @@ donet(void)
 
 	printf("WOPR reporting for duty on port 4096\n");
 
-	zombietime = NOW();
+	zombietime = time(NULL);
 	for (;;) {
-		if (NOW() - zombietime >= SECONDS(1)) {
+		if (time(NULL) - zombietime >= 1) {
 			processzombies();
-			zombietime = NOW();
+			zombietime = time(NULL);
 		}
 
 		rv = poll(pfds, maxfd, 1000);
 		if (rv == 0) {
-			printf("still waiting ... %"PRId64"d\n", NOW());
+			printf("still waiting ... %"PRId64"d\n", time(NULL));
 			continue;
 		}
 
@@ -283,7 +281,7 @@ donet(void)
 				rv--;
 			}
 		}
-		ASSERT(rv == 0);
+		assert(rv == 0);
 	}
 }
 
@@ -379,14 +377,14 @@ dohttpd(void)
 void test_pthread(void);
 
 int
-app_main(start_info_t *si)
+main(int argc, char *argv[])
 {
 	long tests;
 
-	printf("running demos, command line: %s\n", si->cmd_line);
+	printf("running demos, command line: %s\n", argv[1]);
 
-	if (si->cmd_line[0]) {
-		tests = strtol((const char *)si->cmd_line, NULL, 16);
+	if (argv[1]) {
+		tests = strtol(argv[1], NULL, 16);
 	}
 
 	if (tests & 0x1)
