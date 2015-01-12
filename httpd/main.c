@@ -116,8 +116,10 @@ usage(bozohttpd_t *httpd, char *progname)
 	bozo_err(httpd, 1, "%s failed to start", progname);
 }
 
+int httpd_main(int, char **);
+
 int
-main(int argc, char **argv)
+httpd_main(int argc, char **argv)
 {
 	bozo_httpreq_t	*request;
 	bozohttpd_t	 httpd;

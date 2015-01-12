@@ -287,7 +287,7 @@ donet(void)
 	}
 }
 
-int main(int, char **);
+int http_main(int, char **);
 void *
 wwwbozo(void *arg)
 {
@@ -301,7 +301,7 @@ wwwbozo(void *arg)
 	 */
 	optind = 1;
 	optreset = 1;
-	main(sizeof(argv)/sizeof(argv[0]), argv);
+	httpd_main(sizeof(argv)/sizeof(argv[0]), argv);
 
 	/* among other things, will close fd's */
 	rump_pub_lwproc_releaselwp();
