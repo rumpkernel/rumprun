@@ -287,6 +287,7 @@ ENTRY(page_fault)
 ENTRY(thread_starter)
         popq %rdi
         popq %rbx
+        pushq $0                        /* correct stack alignment for SSE */
         pushq $0
         xorq %rbp,%rbp
         call *%rbx
