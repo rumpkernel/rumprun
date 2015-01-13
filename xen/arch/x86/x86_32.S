@@ -23,6 +23,8 @@ _start:
         cld
         lss stack_start,%esp
         andl $(~(__STACK_SIZE-1)), %esp
+        pushl $0
+        xorl %ebp,%ebp
         push %esi 
         call _minios_start_kernel
 

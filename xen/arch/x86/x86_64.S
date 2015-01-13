@@ -23,6 +23,9 @@ _start:
         cld
         movq stack_start(%rip),%rsp
         andq $(~(__STACK_SIZE-1)), %rsp
+        pushq $0
+        pushq $0
+        xorq %rbp,%rbp
         movq %rsi,%rdi
         call _minios_start_kernel
 
