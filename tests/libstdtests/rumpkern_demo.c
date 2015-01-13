@@ -395,6 +395,7 @@ main(int argc, char *argv[])
 		donet();
 	if (tests & 0x4)
 		dohttpd();
+	sleep(1);
 
 	return 0;
 }
