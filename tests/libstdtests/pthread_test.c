@@ -100,7 +100,7 @@ test_pthread(void)
 		errx(1, "pthread_create()");
 
 	clock_gettime(CLOCK_REALTIME, &ts);
-	ts.tv_nsec += 1000*1000;
+	ts.tv_nsec += 100*1000*1000;
 	pthread_mutex_lock(&mtx);
 	if (pthread_cond_timedwait(&cv2, &mtx, &ts) != ETIMEDOUT) {
 		printf("cond_timedwait fail\n");
