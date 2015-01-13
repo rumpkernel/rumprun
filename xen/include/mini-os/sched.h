@@ -52,7 +52,7 @@ void minios_schedule(void);
 
 void minios_wake(struct thread *thread);
 void minios_block(struct thread *thread);
-int minios_msleep(uint32_t millisecs);
-int minios_absmsleep(uint32_t millisecs);
+int minios_msleep(uint64_t millisecs);
+int minios_absmsleep(uint64_t millisecs);
 
 #endif /* __MINIOS_SCHED_H__ */

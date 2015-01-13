@@ -262,16 +262,22 @@ dosleep(s_time_t wakeuptime)
     return rv;
 }
 
-int minios_msleep(uint32_t millisecs)
+int minios_msleep(uint64_t millisecs)
 {
 
     return dosleep(NOW() + MILLISECS(millisecs));
 }
 
-int minios_absmsleep(uint32_t millisecs)
+int minios_absmsleep(uint64_t millisecs)
 {
+    uint32_t secs;
+    uint64_t nsecs;
 
-    return dosleep(MILLISECS(millisecs));
+    /* oh the silliness! */
+    minios_clock_wall(&secs, &nsecs);
+    millisecs -= 1000ULL*(uint64_t)secs + nsecs/(1000ULL*1000);
+
+    return dosleep(MILLISECS(millisecs) + NOW());
 }
 
 void minios_wake(struct thread *thread)

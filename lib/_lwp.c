@@ -177,7 +177,7 @@ ___lwp_park60(clockid_t clock_id, int flags, const struct timespec *ts,
 		_lwp_unpark(unpark, unparkhint);
 
 	if (ts) {
-		uint32_t msecs = ts->tv_sec*1000 + ts->tv_nsec/(1000*1000);
+		uint64_t msecs = ts->tv_sec*1000 + ts->tv_nsec/(1000*1000);
 		
 		if (flags & TIMER_ABSTIME) {
 			rv = minios_absmsleep(msecs);
