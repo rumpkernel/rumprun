@@ -198,10 +198,6 @@ out:
 static void
 rumprun_deconfig_net(const char *if_index)
 {
-#if 1
-	/* TODO According to pwwka this is not fully implemented yet */
-	printf("rumprun_deconfig: (not yet) deconfiguring xenif%s\n", if_index);
-#else
 	char *if_type = NULL;
 	char *if_method = NULL;
 	char *if_addr = NULL;
@@ -217,10 +213,19 @@ rumprun_deconfig_net(const char *if_index)
 
 	if (strcmp(if_type, "inet") == 0 &&
 	    strcmp(if_method, "dhcp") == 0) {
-		/* TODO: need an interface into brlib dhcp to allow us to
-		 * destroy the interface. */
-	        printf("rumprun_deconfig: not deconfiguring xenif%s (uses dhcp)\n",
-			if_index);
+		/* TODO: need an interface to send DHCPRELEASE here */
+		snprintf(buf, sizeof buf, "xenif%s", if_index);
+		if ((rv = rump_pub_netconfig_ifdown(buf)) != 0) {
+			warnx("rumprun_deconfig: %s: ifdown failed: %s\n", buf,
+				strerror(rv));
+			goto out;
+		}
+		if ((rv = rump_pub_netconfig_ifdestroy(buf)) != 0) {
+			printf("rumprun_deconfig: %s: ifdestroy failed: %s\n",
+				buf, strerror(rv));
+			goto out;
+		}
+
 	}
 	else if (strcmp(if_type, "inet") == 0 &&
 		 strcmp(if_method, "static") == 0) {
@@ -250,7 +255,6 @@ out:
 		free(if_mask);
 	if (if_gw)
 		free(if_gw);
-#endif
 }
 
 static int
