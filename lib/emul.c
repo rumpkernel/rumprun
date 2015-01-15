@@ -23,6 +23,12 @@
 #include "netbsd_init.h"
 #include "rumpconfig.h"
 
+#ifdef RUMPRUN_MMAP_DEBUG
+#define MMAP_PRINTF(x) printf x
+#else
+#define MMAP_PRINTF(x)
+#endif
+
 void *
 mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 {
@@ -31,6 +37,7 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 	int error;
 
 	if (fd != -1 && prot != PROT_READ) {
+		MMAP_PRINTF(("mmap: trying to r/w map a file. failing!\n"));
 		errno = ENOTSUP;
 		return MAP_FAILED;
 	}
@@ -44,6 +51,7 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 		return v;
 
 	if ((nn = pread(fd, v, len, off)) == -1) {
+		MMAP_PRINTF(("mmap: failed to populate r/o file mapping!\n"));
 		error = errno;
 		free(v);
 		errno = error;
