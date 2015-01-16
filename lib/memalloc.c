@@ -473,7 +473,7 @@ memrealloc(void *cp, size_t nbytes)
 	alignpad = op->ov_alignpad;
 
 	/* don't bother "compacting".  don't like it?  don't use realloc! */
-	if (((1<<(size+MINSHIFT)) - (alignpad+sizeof(*op))) >= nbytes)
+	if (((1<<(size+MINSHIFT)) - alignpad) >= nbytes)
 		return cp;
 
 	/* we're gonna need a bigger bucket */
@@ -481,7 +481,7 @@ memrealloc(void *cp, size_t nbytes)
 	if (np == NULL)
 		return NULL;
 
-	memcpy(np, cp, (1<<(size+MINSHIFT)) - (alignpad+sizeof(*op)));
+	memcpy(np, cp, (1<<(size+MINSHIFT)) - alignpad);
 	memfree(cp);
 	return np;
 }
