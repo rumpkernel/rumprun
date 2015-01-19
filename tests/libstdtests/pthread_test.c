@@ -18,6 +18,8 @@ static pthread_cond_t cv, cv2;
 
 static int nthreads = 4;
 
+static pthread_key_t thrnumkey;
+
 static void
 threxit(void *arg)
 {
@@ -29,6 +31,11 @@ threxit(void *arg)
 	}
 	pthread_mutex_unlock(&mtx);
 
+	if (pthread_getspecific(thrnumkey) != arg) {
+		printf("ERROR: specificdata fail");
+		abort();
+	}
+
 	printf("thread %p EXIT %d\n", arg, nthreads);
 }
 
@@ -37,6 +44,7 @@ mythread(void *arg)
 {
 
 	printf("thread %p\n", arg);
+	pthread_setspecific(thrnumkey, arg);
 
 	pthread_mutex_lock(&mtx);
 	printf("got lock %p\n", arg);
@@ -57,6 +65,7 @@ waitthread(void *arg)
 {
 
 	printf("thread %p\n", arg);
+	pthread_setspecific(thrnumkey, arg);
 	pthread_mutex_lock(&mtx);
 	while (!predicate) {
 		printf("no good, need to wait %p\n", arg);
@@ -75,6 +84,7 @@ wakeupthread(void *arg)
 {
 
 	printf("thread %p\n", arg);
+	pthread_setspecific(thrnumkey, arg);
 	pthread_mutex_lock(&mtx);
 	predicate = 1;
 	printf("rise and shine %p!\n", arg);
@@ -91,6 +101,8 @@ test_pthread(void)
 {
 	struct timespec ts;
 	pthread_t pt;
+
+	pthread_key_create(&thrnumkey, NULL);
 
 	pthread_mutex_init(&mtx, NULL);
 	pthread_cond_init(&cv, NULL);
