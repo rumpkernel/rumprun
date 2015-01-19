@@ -310,8 +310,6 @@ __strong_alias(_lwp_kill,_lwpabort);
 
 __strong_alias(_sys___sigprocmask14,_lwpnullop);
 
-__strong_alias(pthread__cancel_stub_binder,_lwpnullop);
-
 __strong_alias(__libc_static_tls_setup,_lwpnullop);
 
 int rasctl(void);
