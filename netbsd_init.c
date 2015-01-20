@@ -3,6 +3,7 @@
 #include <sys/exec_elf.h>
 #include <sys/exec.h>
 
+#include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -41,6 +42,12 @@ _netbsd_init(void)
 
 	/* XXX: we should probably use csu, but this is quicker for now */
 	__progname = "baremetal";
+
+	/*
+	 * give all threads a chance to run, and ensure that the main
+	 * thread has gone through a context switch
+	 */
+	sched_yield();
 }
 
 #if 0
