@@ -3,6 +3,7 @@
 #include <sys/exec_elf.h>
 #include <sys/exec.h>
 
+#include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,6 +48,12 @@ _netbsd_init(void)
 #ifdef RUMP_SYSPROXY
 	rump_init_server("tcp://0:12345");
 #endif
+
+	/*
+	 * give all threads a chance to run, and ensure that the main
+	 * thread has gone through a context switch
+	 */
+	sched_yield();
 }
 
 void
