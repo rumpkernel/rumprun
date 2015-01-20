@@ -375,6 +375,7 @@ dohttpd(void)
 }
 
 void test_pthread(void);
+void test_tls(void);
 
 int
 main(int argc, char *argv[])
@@ -391,6 +392,8 @@ main(int argc, char *argv[])
 		dofs();
 	if (tests & 0x8)
 		test_pthread();
+	if (tests & 0x10)
+		test_tls();
 	if (tests & 0x2)
 		donet();
 	if (tests & 0x4)
