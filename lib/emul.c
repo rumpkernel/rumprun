@@ -96,7 +96,13 @@ void __dead
 _exit(int eval)
 {
 	/* XXX this duplicates _app_main / callmain cleanup */
-	minios_printk("\n=== _exit(%d) called ===\n", eval);
+	if (eval) {
+		minios_printk("\n=== ERROR: _exit(%d) called ===\n", eval);
+		/* XXX: work around the console being slow to attach */
+		sleep(1);
+	} else {
+		minios_printk("\n=== _exit(%d) called ===\n", eval);
+	}
 	_rumprun_deconfig();
 	_netbsd_fini();
 	minios_stop_kernel();
