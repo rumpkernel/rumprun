@@ -19,7 +19,7 @@ static void *
 wrkthread(void *arg)
 {
 
-	printf ("Thread %d starting\n", (int)(uintptr_t)arg);
+	printf("Thread %d starting\n", (int)(uintptr_t)arg);
 	if (i != IINITIAL) {
 		printf("initial i incorrect: %lu vs. %d\n", i, IINITIAL);
 		return NULL;
@@ -45,7 +45,7 @@ test_tls(void)
 		rc = pthread_create(&threads[n], NULL,
 		    wrkthread, (void *)(uintptr_t)n);
 		if (rc != 0) {
-			errx(1, "pthread_create[%d] failed", n);
+			errx(1, "pthread_create[%d] failed: %d", n, rc);
 		}
 	}
 
@@ -55,11 +55,11 @@ test_tls(void)
 
 		rc = pthread_join(threads[n], &ret);
 		if (rc != 0) {
-			err(1, "pthread_join[%d] failed", n);
+			errx(1, "pthread_join[%d] failed: %d", n, rc);
 		}
 		rv = (int)(uintptr_t)ret;
 		if (rv != LOOPCNT)
-			errx(1, "thread[%d]: expected %d, got %d\n",
+			errx(1, "thread[%d]: expected %d, got %d",
 			    n, LOOPCNT, rv);
 	}
 }
