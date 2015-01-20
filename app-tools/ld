@@ -43,6 +43,8 @@ while [ $# != 0 ]; do
 		;;
 	-plugin-opt=*)
 		;;
+	-E|--export-dynamic|--no-export-dynamic)
+		;;
 	*)
 		fail "unknown option $a"
 		;;
