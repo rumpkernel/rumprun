@@ -49,6 +49,18 @@ SECTIONS
 
   _edata = .;			/* End of data section */
 
+  .tdata : {
+	_tdata_start = . ;
+	*(.tdata)
+	_tdata_end = . ;
+	}
+
+  .tbss : {
+	_tbss_start = . ;
+	*(.tbss)
+	_tbss_end = . ;
+	}
+
   __bss_start = .;		/* BSS */
   .bss : {
 	*(.bss)

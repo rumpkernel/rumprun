@@ -289,7 +289,8 @@ ENTRY(thread_starter)
     call *%ebx
     call minios_exit_thread
     
-ENTRY(arch_switch_threads)
+.globl arch__switch
+arch__switch:
     movl 4(%esp), %ecx		/* prev */
     movl 8(%esp), %edx		/* next */
     pushl %ebp

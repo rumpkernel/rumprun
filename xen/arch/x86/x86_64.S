@@ -297,7 +297,8 @@ ENTRY(thread_starter)
         call minios_exit_thread 
         
 
-ENTRY(arch_switch_threads)
+.globl arch__switch
+arch__switch:
 	pushq %rbp
 	pushq %rbx
 	pushq %r12

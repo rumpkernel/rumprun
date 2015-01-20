@@ -128,3 +128,16 @@ void run_idle_thread(void)
                          :"m" (idle_thread->thr_ip));                                                    
 #endif
 }
+
+void arch__switch(unsigned long *, unsigned long *);
+void
+arch_switch_threads(struct thread *prev, struct thread *next)
+{
+
+/* XXX: TLS is available only on x86_64 currently */
+#if defined(__x86_64__)
+    wrmsrl(0xc0000100, next->thr_tp);
+#endif
+
+    arch__switch(&prev->thr_sp, &next->thr_sp);
+}

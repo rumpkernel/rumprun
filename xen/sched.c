@@ -47,6 +47,8 @@
 
 #include <sys/queue.h>
 
+#include <string.h> /* XXX: for mem{cpy,set}() */
+
 TAILQ_HEAD(thread_list, thread);
 
 struct thread *idle_thread = NULL;
@@ -141,6 +143,42 @@ void minios_schedule(void)
     }
 }
 
+/*
+ * Allocate tls and initialize it.
+ *
+ * XXX: this needs to change in the future so that
+ * we put the tcb in the same space instead of having multiple
+ * random copies flying around.
+ */
+extern const char _tdata_start[], _tdata_end[];
+extern const char _tbss_start[], _tbss_end[];
+static int
+allocothertls(struct thread *thread)
+{
+    const size_t tdatasize = _tdata_end - _tdata_start;
+    const size_t tbsssize = _tbss_end - _tbss_start;
+    uint8_t *tlsmem;
+
+    tlsmem = memalloc(tdatasize + tbsssize, 0);
+
+    memcpy(tlsmem, _tdata_start, tdatasize);
+    memset(tlsmem + tdatasize, 0, tbsssize);
+
+    thread->thr_tp = (uintptr_t)(tlsmem + tdatasize + tbsssize);
+    thread->thr_tl = tdatasize + tbsssize;
+
+    return 0;
+}
+
+static void
+freeothertls(struct thread *thread)
+{
+    void *mem;
+
+    mem = (void *)(thread->thr_tp);
+    memfree(mem);
+}
+
 struct thread *
 minios_create_thread(const char *name, void *cookie,
 	void (*function)(void *), void *data, void *stack)
@@ -155,6 +193,7 @@ minios_create_thread(const char *name, void *cookie,
     thread->lwp = NULL;
     thread->cookie = cookie;
     set_runnable(thread);
+    allocothertls(thread);
     local_irq_save(flags);
     TAILQ_INSERT_TAIL(&thread_list, thread, thread_list);
     local_irq_restore(flags);
@@ -200,6 +239,8 @@ void minios_exit_thread(void)
     /* Put onto exited list */
     TAILQ_INSERT_HEAD(&exited_threads, thread, thread_list);
     local_irq_restore(flags);
+
+    freeothertls(thread);
 
     /* Schedule will free the resources */
     while(1)
@@ -312,6 +353,7 @@ struct thread *minios_init_mainlwp(void *cookie)
 {
 
     current->cookie = cookie;
+    allocothertls(current);
     return current;
 }
 
