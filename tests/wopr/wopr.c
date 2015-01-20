@@ -168,7 +168,7 @@ donet(void)
 
 		rv = poll(pfds, maxfd, 1000);
 		if (rv == 0) {
-			printf("still waiting ... %"PRId64"d\n", NOW());
+			printf("still waiting ... %"PRId64"\n", NOW());
 			continue;
 		}
 
