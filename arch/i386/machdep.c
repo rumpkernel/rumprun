@@ -1,5 +1,6 @@
 #include <bmk/types.h>
 #include <bmk/kernel.h>
+#include <bmk/sched.h>
 
 /* enter the kernel with interrupts disabled */
 int bmk_spldepth = 1;
@@ -66,10 +67,17 @@ struct segment_descriptor {
 #define SDT_MEMRWA	19	/* memory read write accessed */
 #define SDT_MEMERA	27	/* memory execute read accessed */
 
-static struct segment_descriptor gdt[3];
+#define SEGMENT_CODE	1
+#define SEGMENT_DATA	2
+#define SEGMENT_GS	3
+
+#define SEG_BYTEGRAN	0
+#define SEG_PAGEGRAN	1
+
+static struct segment_descriptor gdt[4];
 
 static void
-fillsegment(struct segment_descriptor *sd, int type)
+fillsegment(struct segment_descriptor *sd, int type, int gran)
 {
 
 	sd->sd_lobase = 0;
@@ -85,7 +93,17 @@ fillsegment(struct segment_descriptor *sd, int type)
 	sd->sd_p = 1;
 	sd->sd_xx = 0;
 	sd->sd_def32 = 1;
-	sd->sd_gran = 1;
+	sd->sd_gran = gran;
+}
+
+static void
+adjustgs(uintptr_t p, size_t s)
+{
+	struct segment_descriptor *sd = &gdt[SEGMENT_GS];
+
+	sd->sd_lobase = p & 0xffffff;
+	sd->sd_hibase = (p >> 24) & 0xff;
+	sd->sd_lolimit = s;
 }
 
 #define PIC1_CMD	0x20
@@ -134,8 +152,9 @@ bmk_cpu_init(void)
 	struct region_descriptor region;
 	int i;
 
-	fillsegment(&gdt[1], SDT_MEMERA); /* code */
-	fillsegment(&gdt[2], SDT_MEMRWA); /* data */
+	fillsegment(&gdt[SEGMENT_CODE], SDT_MEMERA, SEG_PAGEGRAN);
+	fillsegment(&gdt[SEGMENT_DATA], SDT_MEMRWA, SEG_PAGEGRAN);
+	fillsegment(&gdt[SEGMENT_GS], SDT_MEMRWA, SEG_BYTEGRAN);
 
 	region.rd_limit = sizeof(gdt)-1;
 	region.rd_base = (unsigned int)(uintptr_t)(void *)gdt;
@@ -234,4 +253,13 @@ bmk_cpu_nanohlt(void)
 	outb(PIC1_DATA, 0xff & ~(1<<2|1<<0));
 	hlt();
 	outb(PIC1_DATA, 0xff & ~(1<<2));
+}
+
+void bmk__cpu_switch(struct bmk_tcb *, struct bmk_tcb *);
+void
+bmk_cpu_sched_switch(struct bmk_tcb *prev, struct bmk_tcb *next)
+{
+
+	adjustgs(next->btcb_tp, next->btcb_tpsize);
+	bmk__cpu_switch(prev, next);
 }

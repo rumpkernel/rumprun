@@ -212,6 +212,42 @@ bmk_sched(void)
 	}
 }
 
+/*
+ * Allocate tls and initialize it.
+ *
+ * XXX: this needs to change in the future so that
+ * we put the tcb in the same space instead of having multiple
+ * random copies flying around.
+ */
+static int
+allocothertls(struct bmk_thread *thread)
+{
+	extern const char _tdata_start[], _tdata_end[];
+	extern const char _tbss_start[], _tbss_end[];
+	const size_t tdatasize = _tdata_end - _tdata_start;
+	const size_t tbsssize = _tbss_end - _tbss_start;
+	uint8_t *tlsmem;
+
+	tlsmem = bmk_memalloc(tdatasize + tbsssize, 0);
+
+	bmk_memcpy(tlsmem, _tdata_start, tdatasize);
+	bmk_memset(tlsmem + tdatasize, 0, tbsssize);
+
+	thread->bt_tcb.btcb_tp = (uintptr_t)(tlsmem + tdatasize + tbsssize);
+	thread->bt_tcb.btcb_tpsize = tdatasize + tbsssize;
+
+	return 0;
+}
+
+static void
+freeothertls(struct bmk_thread *thread)
+{
+	void *mem;
+
+	mem = (void *)(thread->bt_tcb.btcb_tp-thread->bt_tcb.btcb_tpsize);
+	bmk_memfree(mem);
+}
+
 void bmk_cpu_sched_bouncer(void);
 struct bmk_thread *
 bmk_sched_create(const char *name, void *cookie, int thrflags,
@@ -248,6 +284,8 @@ bmk_sched_create(const char *name, void *cookie, int thrflags,
 	set_runnable(thread);
 	TAILQ_INSERT_HEAD(&threads, thread, bt_entries);
 
+	allocothertls(thread);
+
 	return thread;
 }
 
@@ -278,6 +316,7 @@ bmk_sched_exit(void)
 		bmk_sched_block(thread);
 		bmk_sched();
 	}
+	freeothertls(thread);
 
 	/* Remove from the thread list */
 	TAILQ_REMOVE(&threads, thread, bt_entries);
@@ -385,6 +424,7 @@ bmk_sched_init_mainthread(void *cookie)
 {
 
 	current_thread->bt_cookie = cookie;
+	allocothertls(current_thread);
 	return current_thread;
 }
 

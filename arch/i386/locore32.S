@@ -50,9 +50,11 @@ ENTRY(bmk_cpu_lgdt)
 	movl $0x10, %eax
 	movl %eax, %ds
 	movl %eax, %es
-	movl %eax, %gs
 	movl %eax, %ss
 	movl %eax, %fs
+
+	movl $0x18, %eax
+	movl %eax, %gs
 
 	popl %eax
 	pushl $0x8
@@ -129,9 +131,14 @@ ENTRY(bmk_cpu_sched_bouncer)
 	/* call exit_thread  */		/* hope no threads exit ;) */
 END(bmk_cpu_sched_bouncer)
 
-ENTRY(bmk_cpu_sched_switch)
+ENTRY(bmk__cpu_switch)
 	movl 4(%esp), %ecx		/* prev */
 	movl 8(%esp), %edx		/* next */
+
+	/* reload tls for new thread */
+	movl $0x18, %eax
+	movl %eax, %gs
+
 	pushl %ebp
 	pushl %ebx
 	pushl %esi
@@ -147,4 +154,4 @@ ENTRY(bmk_cpu_sched_switch)
 	popl %ebx
 	popl %ebp
 	ret
-END(bmk_cpu_sched_switch)
+END(bmk__cpu_switch)
