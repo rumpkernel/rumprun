@@ -12,6 +12,7 @@ SYSPROXY?= no
 
 CFLAGS+=	-std=gnu99 -g -O2
 CFLAGS+=	-Wall -Wmissing-prototypes -Wstrict-prototypes
+CFLAGS+=	-fno-stack-protector
 ifndef NOGCCERROR
 CFLAGS+=	-Werror
 endif
@@ -97,7 +98,6 @@ ifeq (${RUMPRUN_PRESENT},yes)
 else
   COMPILER_RT=	librt/divdi3.o librt/udivmoddi4.o librt/udivsi3.o
   COMPILER_RT+=	librt/udivdi3.o librt/moddi3.o librt/umoddi3.o
-  CFLAGS+=	-fno-stack-protector
 endif
 
 .PHONY:	clean cleandir test
