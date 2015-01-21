@@ -81,7 +81,7 @@ void minios_schedule(void)
     struct thread *prev, *next, *thread, *tmp;
     unsigned long flags;
 
-    prev = current;
+    prev = get_current();
     local_irq_save(flags); 
 
     if (_minios_in_hypervisor_callback) {
@@ -210,7 +210,7 @@ static TAILQ_HEAD(, join_waiter) joinwq = TAILQ_HEAD_INITIALIZER(joinwq);
 void minios_exit_thread(void)
 {
     unsigned long flags;
-    struct thread *thread = current;
+    struct thread *thread = get_current();
     struct join_waiter *jw_iter;
 
     /* if joinable, gate until we are allowed to exit */
@@ -331,7 +331,7 @@ void idle_thread_fn(void *unused)
 {
     threads_started = 1;
     while (1) {
-        minios_block(current);
+        minios_block(get_current());
         minios_schedule();
     }
 }
@@ -351,6 +351,7 @@ void minios_set_sched_hook(void (*f)(void *, void *))
 
 struct thread *minios_init_mainlwp(void *cookie)
 {
+    struct thread *current = get_current();
 
     current->cookie = cookie;
     allocothertls(current);

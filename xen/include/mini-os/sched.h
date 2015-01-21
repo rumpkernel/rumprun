@@ -48,8 +48,6 @@ void minios_set_sched_hook(void (*hook)(void *, void *));
 struct thread *minios_init_mainlwp(void *cookie);
 void minios_schedule(void);
 
-#define current get_current()
-
 void minios_wake(struct thread *thread);
 void minios_block(struct thread *thread);
 int minios_msleep(uint64_t millisecs);
