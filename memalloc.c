@@ -440,7 +440,7 @@ bmk_memrealloc(void *cp, size_t nbytes)
 	alignpad = op->ov_alignpad;
 
 	/* don't bother "compacting".  don't like it?  don't use realloc! */
-	if (((1<<(size+MINSHIFT)) - (alignpad+sizeof(*op))) >= nbytes)
+	if (((1<<(size+MINSHIFT)) - alignpad) >= nbytes)
 		return cp;
 
 	/* we're gonna need a bigger bucket */
@@ -448,7 +448,7 @@ bmk_memrealloc(void *cp, size_t nbytes)
 	if (np == NULL)
 		return NULL;
 
-	bmk_memcpy(np, cp, (1<<(size+MINSHIFT)) - (alignpad+sizeof(*op)));
+	bmk_memcpy(np, cp, (1<<(size+MINSHIFT)) - alignpad);
 	bmk_memfree(cp);
 	return np;
 }
