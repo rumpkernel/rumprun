@@ -1,4 +1,4 @@
-Rump kernels for "bare metal" [![Build Status](https://travis-ci.org/rumpkernel/rumpuser-baremetal.svg?branch=master)](https://travis-ci.org/rumpkernel/rumpuser-baremetal)
+Rump kernels for "bare metal" [![Build Status](https://travis-ci.org/rumpkernel/rumprun-baremetal.svg?branch=master)](https://travis-ci.org/rumpkernel/rumprun-baremetal)
 =======================================
 
 This repository contains a simple, and highly experimental, "bare
@@ -9,7 +9,7 @@ and of course system calls -- enough be able to use TCP/IP via sockets.
 
 Testing has been done with QEMU, VirtualBox and a few laptops.
 
-See the [wiki page](http://wiki.rumpkernel.org/Repo:-rumpuser-baremetal)
+See the [wiki page](http://wiki.rumpkernel.org/Repo:-rumprun-baremetal)
 for information on building and running.
 
 Future directions
