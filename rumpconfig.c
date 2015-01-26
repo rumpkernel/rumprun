@@ -410,13 +410,66 @@ out:
 	free(blk_fstype);
 }
 
+static int
+xs_read_environ(const char *name, char **value_out)
+{
+	char *value = NULL;
+	char buf[128];
+	char *xberr = NULL;
+	xenbus_transaction_t txn;
+	int xbretry = 0;
+
+	xberr = xenbus_transaction_start(&txn);
+	if (xberr) {
+		warnx("rumprun_config: xenbus_transaction_start() failed: %s",
+			xberr);
+		return 1;
+	}
+	snprintf(buf, sizeof buf, "rumprun/environ/%s", name);
+	xberr = xenbus_read(txn, buf, &value);
+	if (xberr) {
+		warnx("rumprun_config: environ: read %s failed: %s",
+			buf, xberr);
+		xenbus_transaction_end(txn, 0, &xbretry);
+		return 1;
+	}
+	xberr = xenbus_transaction_end(txn, 0, &xbretry);
+	if (xberr) {
+		warnx("rumprun_config: xenbus_transaction_end() failed: %s",
+			xberr);
+		free(value);
+		return 1;
+	}
+	*value_out = value;
+	return 0;
+}
+
+static void
+rumprun_config_environ(const char *name)
+{
+	char *value = NULL;
+	int rv;
+
+	rv = xs_read_environ(name, &value);
+	if (rv != 0)
+		return;
+	if (setenv(name, value, 1) != 0) {
+		warnx("rumprun_config: setenv(%s) failed: %d", errno);
+		goto out;
+	}
+
+out:
+	free(value);
+}
+
 void
 _rumprun_config(void)
 {
 	char *err = NULL;
 	xenbus_transaction_t txn;
 	char **netdevices = NULL,
-	     **blkdevices = NULL;
+	     **blkdevices = NULL,
+	     **environ = NULL;
 	int retry = 0,
 	    i;
 
@@ -435,6 +488,13 @@ _rumprun_config(void)
 	err = xenbus_ls(txn, "rumprun/blk", &blkdevices);
 	if (err && strcmp(err, "ENOENT") != 0) {
 		warnx("rumprun_config: xenbus_ls(rumprun/blk) failed: %s", err);
+		xenbus_transaction_end(txn, 0, &retry);
+		goto out_err;
+	}
+	err = xenbus_ls(txn, "rumprun/environ", &environ);
+	if (err && strcmp(err, "ENOENT") != 0) {
+		warnx("rumprun_config: xenbus_ls(rumprun/environ) failed: %s",
+				err);
 		xenbus_transaction_end(txn, 0, &retry);
 		goto out_err;
 	}
@@ -458,6 +518,13 @@ _rumprun_config(void)
 		}
 		free(blkdevices);
 	}
+	if (environ) {
+		for(i = 0; environ[i]; i++) {
+			rumprun_config_environ(environ[i]);
+			free(environ[i]);
+		}
+		free(environ);
+	}
 	return;
 
 out_err:
@@ -470,6 +537,11 @@ out_err:
 		for(i = 0; blkdevices[i]; i++)
 			free(blkdevices[i]);
 		free(blkdevices);
+	}
+	if (environ) {
+		for(i = 0; environ[i]; i++)
+			free(environ[i]);
+		free(environ);
 	}
 }
 

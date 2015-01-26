@@ -35,7 +35,7 @@ err() {
 
 usage() {
 	cat <<EOM
-usage: rumprun STACK [ -ipd ] [ -D PORT ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] [ -n NETSPEC ] [ -- ] APP [ args ]
+usage: rumprun STACK [ -ipd ] [ -D PORT ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] [ -n NETSPEC ] [ -e VAR[=VALUE] ] [ -- ] APP [ args ]
     STACK is the rumprun stack to use. Only "xen" is currently supported
     APP is the rumprun application to start
     args will be passed to the application command line
@@ -45,6 +45,7 @@ usage: rumprun STACK [ -ipd ] [ -D PORT ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] 
     -n NETSPEC configures a network interface, using one of:
        inet,dhcp - IPv4 with DHCP
        inet,static,ADDR/MASK[,GATEWAY] - IPv4 with static IP
+    -e set guest environment VAR to VALUE
     -i attaches to domain console on startup
     -p creates the domain but leaves it paused
     -d destroys the domain on poweroff
@@ -143,7 +144,7 @@ run_xen() {
 	opt_name=
 	opt_debug=
 	sudo=''
-	while getopts "n:b:pidD:N:M:" opt; do
+	while getopts "n:b:e:pidD:N:M:" opt; do
 		case "$opt" in
 			# -n: NETSPEC
 			n)
@@ -167,6 +168,21 @@ run_xen() {
 				echo blk/${bindex}/mountpoint $mountpoint\
 					>>${xenstore}
 				bindex=$(expr $bindex + 1)
+				;;
+			# -e: Set guest environment variable.
+			e)
+				case "${OPTARG}" in
+					*=*)
+						key=${OPTARG%%=*}
+						value=${OPTARG#*=}
+						;;
+					*)
+						key=${OPTARG}
+						value=
+						;;
+				esac
+				[ -n "$key" ] || usage
+				echo environ/${key} "${value}" >>${xenstore}
 				;;
 			# -p: Leave the domain paused after creation.
 			p)
@@ -237,8 +253,8 @@ EOM
 	domid=$(${sudo} xl domid ${name})
 	# Write provisioning information for domain to xenstore.
 	prefix=/local/domain/${domid}/rumprun
-	cat ${xenstore} | while read line; do
-		xenstore-write ${prefix}/${line}
+	cat ${xenstore} | while read key value; do
+		xenstore-write "${prefix}/${key}" "${value}"
 	done
 	rm ${xenstore}
 	# Attach debugger if requested.
