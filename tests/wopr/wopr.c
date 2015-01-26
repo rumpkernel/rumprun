@@ -16,8 +16,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <mini-os/time.h>
-
 #define MAXCONN 64
 
 struct conn {
@@ -159,16 +157,16 @@ donet(void)
 
 	printf("WOPR reporting for duty on port 4096\n");
 
-	zombietime = NOW();
+	zombietime = time(NULL);
 	for (;;) {
-		if (NOW() - zombietime >= SECONDS(1)) {
+		if (time(NULL) - zombietime >= 1) {
 			processzombies();
-			zombietime = NOW();
+			zombietime = time(NULL);
 		}
 
 		rv = poll(pfds, maxfd, 1000);
 		if (rv == 0) {
-			printf("still waiting ... %"PRId64"\n", NOW());
+			printf("still waiting ... %"PRId64"\n", time(NULL));
 			continue;
 		}
 
