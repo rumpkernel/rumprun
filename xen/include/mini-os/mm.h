@@ -65,7 +65,8 @@ void arch_init_p2m(unsigned long max_pfn_p);
 
 unsigned long allocate_ondemand(unsigned long n, unsigned long alignment);
 /* map f[i*stride]+i*increment for i in 0..n-1, aligned on alignment pages */
-void *map_frames_ex(const unsigned long *f, unsigned long n, unsigned long stride,
+void *minios_map_frames_ex(const unsigned long *f, unsigned long n,
+	unsigned long stride,
 	unsigned long increment, unsigned long alignment, domid_t id,
 	int *err, unsigned long prot);
 void do_map_frames(unsigned long addr,
