@@ -52,8 +52,8 @@ static void *__do_ioremap(unsigned long phys_addr, unsigned long size,
             goto mfn_invalid;
         }
     }   
-    va = (unsigned long)map_frames_ex(&mfns, num_pages, 0, 1, 1,
-                                      DOMID_IO, NULL, prot);
+    va = (unsigned long)minios_map_frames_ex(&mfns, num_pages, 0, 1, 1,
+                                             DOMID_IO, NULL, prot);
     return (void *)(va + offset);
     
 mfn_invalid:

@@ -618,10 +618,10 @@ void do_map_frames(unsigned long va,
  * Map an array of MFNs contiguous into virtual address space. Virtual
  * addresses are allocated from the on demand area.
  */
-void *map_frames_ex(const unsigned long *mfns, unsigned long n, 
-                    unsigned long stride, unsigned long incr,
-                    unsigned long alignment,
-                    domid_t id, int *err, unsigned long prot)
+void *minios_map_frames_ex(const unsigned long *mfns, unsigned long n,
+                           unsigned long stride, unsigned long incr,
+                           unsigned long alignment,
+                           domid_t id, int *err, unsigned long prot)
 {
     unsigned long va = allocate_ondemand(n, alignment);
 
