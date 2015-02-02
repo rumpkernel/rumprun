@@ -6,7 +6,7 @@ before_install:
 
 script:
   - ./buildxen.sh -qq
-  - ( export PATH="${PATH}:$(pwd)/app-tools" ; cd tests/configure && rumpapp-xen-configure ./configure && rumpapp-xen-make )
+  - ( export PATH="${PATH}:$(pwd)/app-tools" ; cd tests/configure && rumprun-xen-configure ./configure && rumprun-xen-make )
 
 notifications:
   irc:
