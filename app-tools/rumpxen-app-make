@@ -1,5 +1,0 @@
-#!/bin/sh
-# invoke this (for example) as  .../app-build make target
-set -e
-export RUMP_APPTOOLS_MAKE=$1; shift
-exec $(dirname $0)/rumpapp-xen-make "$@"
