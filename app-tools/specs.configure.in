@@ -1,7 +1,7 @@
 %rename cpp_options old_cpp_options
 
 *cpp_options:
--nostdinc -isystem !BASE!/rump/include -isystem !BASE!/xen/include %(old_cpp_options) !CPPFLAGS! -D__RUMPUSER_XEN__ -D__RUMPAPP__ -D__NetBSD__
+-nostdinc -isystem !BASE!/rump/include -isystem !BASE!/xen/include %(old_cpp_options) !CPPFLAGS! -D__RUMPRUN__ -D__NetBSD__
 
 *linker:
 !APPTOOLS!/ld --stunt-intermediate %g.link1 --stunt-final-script !LDSCRIPT!

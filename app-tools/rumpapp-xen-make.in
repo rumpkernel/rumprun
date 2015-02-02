@@ -1,2 +1,0 @@
-#!/bin/sh
-exec "${RUMP_APPTOOLS_MAKE:-make}" CC=!APPTOOLS!/rumpapp-xen-cc "$@"

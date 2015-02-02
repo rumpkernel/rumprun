@@ -12,11 +12,11 @@ xen/include/xen
 
 app-tools/specs
 app-tools/specs.configure
-app-tools/rumpapp-xen-cc
-app-tools/rumpapp-xen-cc.configure
-app-tools/rumpapp-xen-configure
-app-tools/rumpapp-xen-gmake
-app-tools/rumpapp-xen-make
+app-tools/rumprun-xen-cc
+app-tools/rumprun-xen-cc.configure
+app-tools/rumprun-xen-configure
+app-tools/rumprun-xen-gmake
+app-tools/rumprun-xen-make
 
 tests/hello/hello
 tests/wopr/wopr

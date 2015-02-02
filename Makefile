@@ -82,8 +82,8 @@ rumprun: $(OBJ_DIR)/rumprun.o
 $(OBJ_DIR)/rumprun.o: $(RUMP_OBJS)
 	$(LD) -r $(LDFLAGS) $(RUMP_OBJS) -o $@
 
-APP_TOOLS += rumpapp-xen-cc rumpapp-xen-cc.configure specs specs.configure
-APP_TOOLS += rumpapp-xen-configure rumpapp-xen-make rumpapp-xen-gmake
+APP_TOOLS += rumprun-xen-cc rumprun-xen-cc.configure specs specs.configure
+APP_TOOLS += rumprun-xen-configure rumprun-xen-make rumprun-xen-gmake
 
 .PHONY: app-tools
 app-tools: $(addprefix app-tools/, $(APP_TOOLS))
@@ -96,7 +96,7 @@ APP_TOOLS_OBJS := $(abspath $(OBJ_DIR)/rumprun.o)
 APP_TOOLS_CPPFLAGS := $(filter -U%, $(shell \
 	rumptools/rumpmake -f rumptools/mk.conf -V '$${CPPFLAGS}'))
 
-APP_TOOLS_MAKE := $(abspath app-tools/rumpapp-xen-make)
+APP_TOOLS_MAKE := $(abspath app-tools/rumprun-xen-make)
 
 app-tools/%: app-tools/%.in Makefile
 	sed <$< >$@.tmp \
@@ -130,7 +130,7 @@ httpd:
 STDTESTS=tests/libstdtests/rumpkern_demo.c tests/libstdtests/pthread_test.c \
 	 tests/libstdtests/tls_test.c
 rump-kernel: ${STDTESTS} httpd
-	app-tools/rumpapp-xen-cc -o $@ ${STDTESTS} httpd/*.o
+	app-tools/rumprun-xen-cc -o $@ ${STDTESTS} httpd/*.o
 
 img/test.ffs:
 	cp img/test_clean.ffs img/test.ffs
