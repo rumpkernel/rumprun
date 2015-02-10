@@ -41,7 +41,6 @@ NOTHING(_lwp_kill);
 
 //NOTHING(__libc_static_tls_setup);
 
-NOTHING(__wait450);
 NOTHING(__fork);
 NOTHING(__vfork14);
 NOTHING(kill);
@@ -56,3 +55,14 @@ execve(const char *file, char *const argv[], char *const envp[])
 	bmk_cons_puts("execve not implemented\n");
 	return -1;
 }
+
+NOTHING(_sys_mq_send);
+NOTHING(_sys_mq_receive);
+NOTHING(_sys___mq_timedsend50);
+NOTHING(_sys___mq_timedreceive50);
+NOTHING(_sys_msgrcv);
+NOTHING(_sys_msgsnd);
+NOTHING(_sys___msync13);
+NOTHING(_sys___wait450);
+NOTHING(_sys___sigsuspend14);
+NOTHING(____sigtimedwait50);
