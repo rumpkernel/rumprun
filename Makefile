@@ -39,11 +39,12 @@ ifeq (${MACHINE},x86_64)
   supported:= true
   MACHINE:=i386
   CFLAGS+=-m32
-  LDFLAGS+=-m32
 endif
 ifneq (${supported},true)
 $(error only supported target is x86, you have ${MACHINE})
 endif
+
+LDFLAGS:= -L$(abspath rump/lib)
 
 ifeq (${SYSPROXY},y)
 CPPFLAGS+=	-DRUMP_SYSPROXY
@@ -106,13 +107,13 @@ include/bmk/machine:
 	ln -s ../arch/${MACHINE} include/bmk/machine
 
 rumprun.o: ${OBJS}
-	${CC} -nostdlib -Wl,-r ${LDFLAGS} ${OBJS} -o $@
+	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS} -o $@
 
 ${THEBIN}: ${THEBIN}.gdb
 	${STRIP} -g -o $@ $<
 
 ${THEBIN}.gdb: rumprun.o ${COMPILER_RT} ${LDSCRIPT} Makefile
-	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} ${LDFLAGS} rumprun.o -Lrump/lib -Wl,--whole-archive ${RUMP_LDLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
+	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} ${CFLAGS} ${LDFLAGS} rumprun.o -Wl,--whole-archive ${RUMP_LDLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
 
 iso/boot/grub/grub.cfg:
 	mkdir -p iso/boot/grub
