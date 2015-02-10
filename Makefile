@@ -76,7 +76,7 @@ LIBS_NETINET=	-lrumpnet_config -lrumpnet_netinet -lrumpnet_net -lrumpnet
 LIBS_NETBPF=	-lrumpdev_bpf
 LIBS_NETUNIX=	-lrumpnet_local
 
-ALLLIBS=	${LIBS_VIO_NET}					\
+RUMP_LDLIBS=	${LIBS_VIO_NET}					\
 		${LIBS_VIO_LD}					\
 		${LIBS_VIO_RND}					\
 		${LIBS_VIO}					\
@@ -112,7 +112,7 @@ ${THEBIN}: ${THEBIN}.gdb
 	${STRIP} -g -o $@ $<
 
 ${THEBIN}.gdb: rumprun.o ${COMPILER_RT} ${LDSCRIPT} Makefile
-	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} ${LDFLAGS} rumprun.o -Lrump/lib -Wl,--whole-archive ${ALLLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
+	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} ${LDFLAGS} rumprun.o -Lrump/lib -Wl,--whole-archive ${RUMP_LDLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
 
 iso/boot/grub/grub.cfg:
 	mkdir -p iso/boot/grub
