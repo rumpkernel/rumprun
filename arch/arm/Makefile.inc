@@ -1,4 +1,4 @@
-OBJS+=		arch/arm/stubs.o arch/arm/locore.o
+OBJS_BMK+=	arch/arm/stubs.o arch/arm/locore.o
 LDSCRIPT=	arch/arm/kern.ldscript
 
 arch/arm/locore.o: arch/arm/locore.S

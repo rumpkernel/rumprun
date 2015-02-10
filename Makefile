@@ -54,11 +54,11 @@ endif
 
 all: include/bmk/machine ${THEBIN}
 
-OBJS-y+=		intr.o kernel.o undefs.o memalloc.o sched.o subr.o
-OBJS-y+=		rumpuser.o rumpfiber.o
-OBJS-${HASPCI}+=	rumppci.o
+OBJS_BMK-y+=		intr.o kernel.o undefs.o memalloc.o sched.o subr.o
+OBJS_BMK-y+=		rumpuser.o rumpfiber.o
+OBJS_BMK-${HASPCI}+=	rumppci.o
 
-OBJS= ${OBJS-y}
+OBJS_BMK+= ${OBJS_BMK-y}
 
 include arch/${MACHINE}/Makefile.inc
 
@@ -92,8 +92,8 @@ RUMP_LDLIBS=	${LIBS_VIO_NET}					\
 		-lrumpdev -lrumpvfs -lrump
 
 ifeq (${RUMPRUN_PRESENT},yes)
-  OBJS+=	libc_errno.o libc_emul.o libc_malloc.o netbsd_init.o
-  OBJS+=	app.o
+  OBJS_BMK+=	libc_errno.o libc_emul.o libc_malloc.o netbsd_init.o
+  OBJS_APP=	app.o
   CPPFLAGS+=	-DBMK_APP
   LIBS_USER=	-lcrypto -lpthread -lc
 else
@@ -101,19 +101,21 @@ else
   COMPILER_RT+=	librt/udivdi3.o librt/moddi3.o librt/umoddi3.o
 endif
 
+OBJS= ${OBJS_BMK} ${OBJS_APP}
+
 .PHONY:	clean cleandir test
 
 include/bmk/machine:
 	ln -s ../arch/${MACHINE} include/bmk/machine
 
 rumprun.o: ${OBJS}
-	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS} -o $@
+	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@
 
 ${THEBIN}: ${THEBIN}.gdb
 	${STRIP} -g -o $@ $<
 
 ${THEBIN}.gdb: rumprun.o ${COMPILER_RT} ${LDSCRIPT} Makefile
-	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} ${CFLAGS} ${LDFLAGS} rumprun.o -Wl,--whole-archive ${RUMP_LDLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
+	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} ${CFLAGS} ${LDFLAGS} rumprun.o ${OBJS_APP} -Wl,--whole-archive ${RUMP_LDLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
 
 iso/boot/grub/grub.cfg:
 	mkdir -p iso/boot/grub

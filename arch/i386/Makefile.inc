@@ -1,4 +1,4 @@
-OBJS+=		arch/i386/locore32.o arch/i386/cpu_sched.o arch/i386/machdep.o
+OBJS_BMK+=	arch/i386/locore32.o arch/i386/cpu_sched.o arch/i386/machdep.o
 LDSCRIPT=	arch/i386/kern.ldscript
 
 arch/i386/locore32.o: arch/i386/locore32.S
