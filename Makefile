@@ -105,11 +105,14 @@ endif
 include/bmk/machine:
 	ln -s ../arch/${MACHINE} include/bmk/machine
 
+rumprun.o: ${OBJS}
+	${CC} -nostdlib -Wl,-r ${LDFLAGS} ${OBJS} -o $@
+
 ${THEBIN}: ${THEBIN}.gdb
 	${STRIP} -g -o $@ $<
 
-${THEBIN}.gdb: ${OBJS} ${COMPILER_RT} ${LDSCRIPT} Makefile
-	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} ${LDFLAGS} ${OBJS} -Lrump/lib -Wl,--whole-archive ${ALLLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
+${THEBIN}.gdb: rumprun.o ${COMPILER_RT} ${LDSCRIPT} Makefile
+	${CC} -ffreestanding -nostdlib -o $@ -T ${LDSCRIPT} ${LDFLAGS} rumprun.o -Lrump/lib -Wl,--whole-archive ${ALLLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
 
 iso/boot/grub/grub.cfg:
 	mkdir -p iso/boot/grub
