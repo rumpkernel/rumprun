@@ -6,7 +6,7 @@ echo 'PLEASE WRITE ON THIS IMAGE' | dd of=disk.img conv=notrunc 2>/dev/null
 
 sum=$(md5sum disk.img | awk '{print $1}')
 qemu-system-i386 -net none -drive if=virtio,file=disk.img -display none	\
-    -no-kvm -kernel rk.bin &
+    -no-kvm -kernel test-app &
 
 rv=1
 

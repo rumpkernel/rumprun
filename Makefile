@@ -142,5 +142,8 @@ cleanrump: clean
 
 distcleanrump: cleanrump
 
-test: all
+test-app: app.c
+	./app-tools/rumprun-bmk-cc $< -o $@ -m32 -lpthread -lcrypto
+
+test: all test-app
 	./tests/checksum/test.sh
