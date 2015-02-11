@@ -93,7 +93,7 @@ RUMP_LDLIBS=	${LIBS_VIO_NET}					\
 
 ifeq (${RUMPRUN_PRESENT},yes)
   OBJS_BMK+=	libc_errno.o libc_emul.o libc_malloc.o netbsd_init.o
-  OBJS_APP=	app.o
+  OBJS_BMK+=	init.o
   CPPFLAGS+=	-DBMK_APP
   LIBS_USER=	-lcrypto -lpthread -lc
 else

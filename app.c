@@ -22,31 +22,7 @@
 #include <rump/rump.h>
 #include <rump/netconfig.h>
 
-#include <bmk/app.h>
-
 #include "netbsd_init.h"
-
-static int havenet;
-
-/*
- * boot and configure rump kernel
- */
-static void
-rumpkern_config(void)
-{
-	int rv = 1;
-
-	rump_init();
-
-	/* le hack */
-	if (rump_pub_netconfig_ifup("wm0") == 0)
-		rv = rump_pub_netconfig_dhcp_ipv4_oneshot("wm0");
-	else if (rump_pub_netconfig_ifup("pcn0") == 0)
-		rv = rump_pub_netconfig_dhcp_ipv4_oneshot("pcn0");
-	else if (rump_pub_netconfig_ifup("vioif0") == 0)
-		rv = rump_pub_netconfig_dhcp_ipv4_oneshot("vioif0");
-	havenet = rv == 0;
-}
 
 /*
  * could use DNS via libc resolver, but would require us
@@ -140,18 +116,16 @@ disktest(void)
 /*
  * Just a simple demo and/or test.
  */
+extern int bmk_havenet;
 int
 main(int argc, char *argv[])
 {
-
-	rumpkern_config();
-	_netbsd_init();
 
 #ifdef RUMP_SYSPROXY
 	rump_init_server("tcp://0:12345");
 #endif
 
-	if (havenet)
+	if (bmk_havenet)
 		nettest();
 	disktest();
 

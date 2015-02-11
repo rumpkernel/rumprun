@@ -79,9 +79,7 @@ bmk_main(struct multiboot_info *mbi)
 	bmk_isr_init();
 
 #ifdef BMK_APP
-	/* run 'em if you got 'em */
-	char *argv[] = {"bmk_main", 0};
-	main(1, argv);
+	bmk_beforemain();
 #endif
 }
 
