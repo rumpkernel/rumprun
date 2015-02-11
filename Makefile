@@ -52,7 +52,7 @@ OBJS-y+=	sysproxy.o
 LIBS_SYSPROXY=	-lrumpkern_sysproxy
 endif
 
-all: include/bmk/machine ${THEBIN}
+all: app-tools include/bmk/machine ${THEBIN}
 
 OBJS_BMK-y+=		intr.o kernel.o undefs.o memalloc.o sched.o subr.o
 OBJS_BMK-y+=		rumpuser.o rumpfiber.o
@@ -105,6 +105,9 @@ OBJS= ${OBJS_BMK} ${OBJS_APP}
 
 .PHONY:	clean cleandir test
 
+APP_TOOLS_PLATFORM= bmk
+include Makefile.app-tools
+
 include/bmk/machine:
 	ln -s ../arch/${MACHINE} include/bmk/machine
 
@@ -127,7 +130,7 @@ ${THEISO}: ${THEBIN} iso/boot/grub/grub.cfg
 
 iso: ${THEISO}
 
-clean:
+clean: app-tools_clean
 	rm -f ${OBJS} ${COMPILER_RT} ${THEBIN} ${THEBIN}.gdb \
 	    iso/boot/${THEBIN} ${THEISO} iso/boot/grub/grub.cfg \
 	    include/bmk/machine

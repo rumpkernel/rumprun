@@ -1,0 +1,2 @@
+#!/bin/sh
+exec "${RUMP_APPTOOLS_MAKE:-make}" CC=!APPTOOLS!/rumprun-bmk-cc "$@"
