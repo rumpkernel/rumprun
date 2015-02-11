@@ -1,1 +1,1 @@
-void bmk_app_main(void);
+int main(int, char **);

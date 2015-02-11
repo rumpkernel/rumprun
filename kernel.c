@@ -80,7 +80,8 @@ bmk_main(struct multiboot_info *mbi)
 
 #ifdef BMK_APP
 	/* run 'em if you got 'em */
-	bmk_app_main();
+	char *argv[] = {"bmk_main", 0};
+	main(1, argv);
 #endif
 }
 

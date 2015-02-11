@@ -140,8 +140,8 @@ disktest(void)
 /*
  * Just a simple demo and/or test.
  */
-void
-bmk_app_main(void)
+int
+main(int argc, char *argv[])
 {
 
 	rumpkern_config();
@@ -156,4 +156,5 @@ bmk_app_main(void)
 	disktest();
 
 	printf("\nTHE END\n");
+	return 0;
 }
