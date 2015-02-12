@@ -66,6 +66,15 @@ nettest(void)
 	printf("[omitting rest ...]\n");
 }
 
+int myvalue = 12;
+#define MYCONSTRUCTED 24
+static void __attribute__((__constructor__))
+dosetup(void)
+{
+
+	myvalue = MYCONSTRUCTED;
+}
+
 #define TESTMAGIC "PLEASE WRITE ON THIS IMAGE"
 static void
 disktest(void)
@@ -101,6 +110,14 @@ disktest(void)
 	if (strncmp(buf, TESTMAGIC, sizeof(TESTMAGIC)-1) != 0)
 		return;
 
+	/* test that __constructor__ worked */
+	if (myvalue != MYCONSTRUCTED) {
+		memset(buf, 0, sizeof(buf));
+		snprintf(buf, sizeof(buf), "ERROR\nconstructor did not run\n");
+		pwrite(fd, buf, sizeof(buf), 0);
+		return;
+	}
+
 	printf("writing test results onto image\n");
 	memset(buf, 0, sizeof(buf));
 	strlcat(buf, "OK\n", sizeof(buf));
@@ -113,14 +130,6 @@ disktest(void)
 	pwrite(fd, buf, sizeof(buf), 0);
 }
 
-int myvalue = 12;
-static void __attribute__((__constructor__))
-dosetup(void)
-{
-
-	myvalue = 24;
-}
-
 /*
  * Just a simple demo and/or test.
  */
@@ -128,11 +137,6 @@ extern int bmk_havenet;
 int
 main(int argc, char *argv[])
 {
-
-	/* test that __constructor__ works */
-	if (myvalue != 24) {
-		errx(1, "constructor has not run!");
-	}
 
 #ifdef RUMP_SYSPROXY
 	rump_init_server("tcp://0:12345");

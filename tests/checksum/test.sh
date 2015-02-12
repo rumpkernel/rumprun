@@ -23,6 +23,11 @@ for x in $(seq 10) ; do
 			rv=0
 		fi
 		break
+	elif [ "${res}" = "ERROR" ]; then
+		emesg=$(sed -n '2{p;q;}' disk.img)
+		echo GOT ERROR: ${emesg}
+		rv=1
+		break
 	fi
 	sleep 1
 done
