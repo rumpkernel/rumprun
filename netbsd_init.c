@@ -13,6 +13,8 @@
 
 #include <bmk/sched.h>
 
+#include "netbsd_init.h"
+
 static char *the_env[1] = { NULL } ;
 extern void *environ;
 void _libc_init(void);
@@ -24,9 +26,31 @@ static AuxInfo myaux[2];
 extern struct ps_strings *__ps_strings;
 extern size_t pthread__stacksize;
 
-#include "netbsd_init.h"
-
 #include <bmk/sched.h>
+
+typedef void (*initfini_fn)(void);
+extern const initfini_fn __init_array_start[1];
+extern const initfini_fn __init_array_end[1];
+extern const initfini_fn __fini_array_start[1];
+extern const initfini_fn __fini_array_end[1];
+
+static void
+runinit(void)
+{
+	const initfini_fn *fn;
+
+	for (fn = __init_array_start; fn < __init_array_end; fn++)
+		(*fn)();
+}
+
+static void
+runfini(void)
+{
+	const initfini_fn *fn;
+
+	for (fn = __fini_array_start; fn < __fini_array_end; fn++)
+		(*fn)();
+}
 
 void
 _netbsd_init(void)
@@ -38,6 +62,7 @@ _netbsd_init(void)
 
 	environ = the_env;
 	bmk_lwp_init();
+	runinit();
 	_libc_init();
 
 	/* XXX: we should probably use csu, but this is quicker for now */
@@ -50,11 +75,9 @@ _netbsd_init(void)
 	sched_yield();
 }
 
-#if 0
 void
 _netbsd_fini(void)
 {
 
-    rump_sys_reboot(0, 0);
+	runfini();
 }
-#endif
