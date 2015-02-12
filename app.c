@@ -113,6 +113,14 @@ disktest(void)
 	pwrite(fd, buf, sizeof(buf), 0);
 }
 
+int myvalue = 12;
+static void __attribute__((__constructor__))
+dosetup(void)
+{
+
+	myvalue = 24;
+}
+
 /*
  * Just a simple demo and/or test.
  */
@@ -120,6 +128,11 @@ extern int bmk_havenet;
 int
 main(int argc, char *argv[])
 {
+
+	/* test that __constructor__ works */
+	if (myvalue != 24) {
+		errx(1, "constructor has not run!");
+	}
 
 #ifdef RUMP_SYSPROXY
 	rump_init_server("tcp://0:12345");
