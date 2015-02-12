@@ -34,6 +34,8 @@ extern const initfini_fn __init_array_end[1];
 extern const initfini_fn __fini_array_start[1];
 extern const initfini_fn __fini_array_end[1];
 
+void *__dso_handle;
+
 static void
 runinit(void)
 {
