@@ -68,7 +68,7 @@ nettest(void)
 
 int myvalue = 12;
 #define MYCONSTRUCTED 24
-static void __attribute__((__constructor__))
+static void __attribute__((constructor,used))
 dosetup(void)
 {
 
