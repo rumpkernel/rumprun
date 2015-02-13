@@ -117,7 +117,6 @@ disktest(void)
 	if (strncmp(buf, TESTMAGIC, sizeof(TESTMAGIC)-1) != 0)
 		return;
 
-#ifdef notyet
 	/* test that __constructor__ worked */
 	if (myvalue != 8) {
 		memset(buf, 0, sizeof(buf));
@@ -126,7 +125,6 @@ disktest(void)
 		pwrite(fd, buf, sizeof(buf), 0);
 		return;
 	}
-#endif
 
 	printf("writing test results onto image\n");
 	memset(buf, 0, sizeof(buf));
