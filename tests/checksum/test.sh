@@ -1,6 +1,11 @@
 #!/bin/bash
 # ^ bash for job control
 
+if ! type qemu-system-i386 >/dev/null 2>&1; then
+	echo ERROR: qemu-system-i386 required but not found
+	exit 1
+fi
+
 dd if=/dev/urandom of=disk.img count=1 2>/dev/null
 echo 'PLEASE WRITE ON THIS IMAGE' | dd of=disk.img conv=notrunc 2>/dev/null
 
