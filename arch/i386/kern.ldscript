@@ -21,10 +21,12 @@ SECTIONS
 	{
 		*(.rodata)
 		__init_array_start = . ;
-		*(SORT(.init_array.*))
+		*(SORT_BY_INIT_PRIORITY(.init_array.*))
+		*(SORT_BY_INIT_PRIORITY(.ctors*))
 		__init_array_end = . ;
 		__fini_array_start = . ;
-		*(SORT(.fini_array.*))
+		*(SORT_BY_INIT_PRIORITY(.fini_array.*))
+		*(SORT_BY_INIT_PRIORITY(.dtors*))
 		__fini_array_end = . ;
 	}
 
