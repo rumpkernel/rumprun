@@ -66,13 +66,20 @@ nettest(void)
 	printf("[omitting rest ...]\n");
 }
 
-int myvalue = 12;
-#define MYCONSTRUCTED 24
-static void __attribute__((constructor,used))
-dosetup(void)
+/* Constructor test.  Checks that constructors run in the correct order */
+int myvalue = 2;
+static void __attribute__((constructor(2000),used))
+ctor1(void)
 {
 
-	myvalue = MYCONSTRUCTED;
+	myvalue = myvalue * 2;
+}
+
+static void __attribute__((constructor(1000),used))
+ctor2(void)
+{
+
+	myvalue = myvalue + 2;
 }
 
 #define TESTMAGIC "PLEASE WRITE ON THIS IMAGE"
@@ -112,9 +119,10 @@ disktest(void)
 
 #ifdef notyet
 	/* test that __constructor__ worked */
-	if (myvalue != MYCONSTRUCTED) {
+	if (myvalue != 8) {
 		memset(buf, 0, sizeof(buf));
-		snprintf(buf, sizeof(buf), "ERROR\nconstructor did not run\n");
+		snprintf(buf, sizeof(buf),
+		    "ERROR\nconstructor myvalue is %d\n", myvalue);
 		pwrite(fd, buf, sizeof(buf), 0);
 		return;
 	}
