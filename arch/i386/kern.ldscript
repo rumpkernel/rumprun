@@ -21,10 +21,10 @@ SECTIONS
 	{
 		*(.rodata)
 		__init_array_start = . ;
-		*(.init_array)
+		*(SORT(.init_array.*))
 		__init_array_end = . ;
 		__fini_array_start = . ;
-		*(.fini_array)
+		*(SORT(.fini_array.*))
 		__fini_array_end = . ;
 	}
 
