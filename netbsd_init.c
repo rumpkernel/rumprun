@@ -27,6 +27,32 @@ extern size_t pthread__stacksize;
 
 #include "netbsd_init.h"
 
+typedef void (*initfini_fn)(void);
+extern const initfini_fn __init_array_start[1];
+extern const initfini_fn __init_array_end[1];
+extern const initfini_fn __fini_array_start[1];
+extern const initfini_fn __fini_array_end[1];
+
+void *__dso_handle;
+
+static void
+runinit(void)
+{
+	const initfini_fn *fn;
+
+	for (fn = __init_array_start; fn < __init_array_end; fn++)
+		(*fn)();
+}
+
+static void
+runfini(void)
+{
+	const initfini_fn *fn;
+
+	for (fn = __fini_array_start; fn < __fini_array_end; fn++)
+		(*fn)();
+}
+
 void
 _netbsd_init(void)
 {
@@ -40,6 +66,7 @@ _netbsd_init(void)
 
 	environ = the_env;
 	_lwp_rumpxen_scheduler_init();
+	runinit();
 	_libc_init();
 
 	/* XXX: we should probably use csu, but this is quicker for now */
@@ -59,6 +86,6 @@ _netbsd_init(void)
 void
 _netbsd_fini(void)
 {
-
-    rump_sys_reboot(0, 0);
+	runfini();
+	rump_sys_reboot(0, 0);
 }

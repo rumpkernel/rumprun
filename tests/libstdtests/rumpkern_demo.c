@@ -377,11 +377,35 @@ dohttpd(void)
 void test_pthread(void);
 void test_tls(void);
 
+/* Constructor test.  Checks that constructors run in the correct order */
+int myvalue = 2;
+static void __attribute__((constructor(2000),used))
+ctor1(void)
+{
+	myvalue = myvalue * 2;
+}
+
+static void __attribute__((constructor(1000),used))
+ctor2(void)
+{
+	myvalue = myvalue + 2;
+}
+
+static void __attribute__((constructor(1000),used))
+ctor3(void)
+{
+	printf("I'm a constructor!\n");
+}
+
 int
 main(int argc, char *argv[])
 {
 	long tests;
 
+	if (myvalue != 8) {
+		printf("ERROR running constructor test, myvalue=%d, expected 8\n",
+			myvalue);
+	}
 	printf("running demos, command line: %s\n", argv[1]);
 
 	if (argv[1]) {
@@ -401,4 +425,10 @@ main(int argc, char *argv[])
 	sleep(1);
 
 	return 0;
+}
+
+static void __attribute__((destructor(1000),used))
+dtor1(void)
+{
+	printf("I'm a destructor!\n");
 }
