@@ -19,12 +19,14 @@ SECTIONS
           /* Constructors/destructors */
           . = ALIGN(64 / 8);
           __init_array_start = . ;
-          *(SORT_BY_INIT_PRIORITY(.init_array*))
+          *(SORT_BY_INIT_PRIORITY(.init_array.*))
           *(SORT_BY_INIT_PRIORITY(.ctors*))
+          *(.init_array)
           __init_array_end = . ;
           __fini_array_start = . ;
-          *(SORT_BY_INIT_PRIORITY(.fini_array*))
+          *(SORT_BY_INIT_PRIORITY(.fini_array.*))
           *(SORT_BY_INIT_PRIORITY(.dtors*))
+          *(.fini_array)
           __fini_array_end = . ;
 	  }
 
