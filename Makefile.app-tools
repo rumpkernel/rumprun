@@ -1,4 +1,5 @@
 APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-cc
+APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-c++
 APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-cc.configure
 APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-configure
 APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-make
