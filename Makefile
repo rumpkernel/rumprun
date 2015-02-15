@@ -134,7 +134,7 @@ clean: app-tools_clean
 	rm -f ${OBJS} ${COMPILER_RT} ${THEBIN} ${THEBIN}.gdb \
 	    iso/boot/${THEBIN} ${THEISO} iso/boot/grub/grub.cfg \
 	    include/bmk/machine
-	rm -f test-app
+	rm -f test-app test-apppp
 
 cleandir: clean
 
@@ -146,5 +146,8 @@ distcleanrump: cleanrump
 test-app: app.c
 	./app-tools/rumprun-bmk-cc $< -o $@ -m32 -lpthread -lcrypto
 
-test: all test-app
+test-apppp: apppp.cc
+	./app-tools/rumprun-bmk-c++ $< -o $@ -m32 -lpthread
+
+test: all test-app test-apppp
 	./tests/checksum/test.sh
