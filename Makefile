@@ -134,6 +134,7 @@ clean: app-tools_clean
 	rm -f ${OBJS} ${COMPILER_RT} ${THEBIN} ${THEBIN}.gdb \
 	    iso/boot/${THEBIN} ${THEISO} iso/boot/grub/grub.cfg \
 	    include/bmk/machine
+	rm -f test-app
 
 cleandir: clean
 
