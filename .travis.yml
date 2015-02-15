@@ -10,7 +10,7 @@ before_script:
   - git submodule update --init --recursive
 
 script:
-  - ./buildme.sh -qq -- -F ACLFLAGS=-m32
+  - CC=clang ./buildme.sh -qq -- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686
   - make clean
   - make RUMPRUN_PRESENT=no
   - size rk.bin rk.bin.gdb
