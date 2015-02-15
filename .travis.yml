@@ -6,10 +6,11 @@ compiler:
 before_script:
   - sudo apt-get update -y
   - sudo apt-get install qemu-kvm -y
+  - sudo apt-get install clang -y
   - git submodule update --init --recursive
 
 script:
-  - ./buildme.sh -qq -- -F ACLFLAGS=-m32
+  - CC=clang ./buildme.sh -qq -- -F ACLFLAGS=-m32
   - make clean
   - make RUMPRUN_PRESENT=no
   - size rk.bin rk.bin.gdb
