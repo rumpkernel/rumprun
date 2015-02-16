@@ -143,11 +143,17 @@ cleanrump: clean
 
 distcleanrump: cleanrump
 
+TESTAPPS= test-app
+HAVECXX:= $(shell rumptools/rumpmake -f bsd.own.mk -V '$${_BUILDRUMP_CXX}')
+ifeq (${HAVECXX},yes)
+TESTAPPS+= test-apppp
+endif
+
 test-app: app.c
 	./app-tools/rumprun-bmk-cc $< -o $@ -m32 -lpthread -lcrypto
 
 test-apppp: apppp.cc
 	./app-tools/rumprun-bmk-c++ $< -o $@ -m32 -lpthread
 
-test: all test-app test-apppp
+test: all ${TESTAPPS}
 	./tests/checksum/test.sh
