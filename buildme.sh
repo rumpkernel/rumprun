@@ -17,9 +17,10 @@ export BUILDXENMETAL_MKCONF
 . ./buildrump.sh/subr.sh
 ./buildrump.sh/xenbaremetal.sh "$@" || die xenbaremetal.sh failed
 
-# build unwind bits
+# build unwind bits if we sport c++
 RUMPMAKE=$(pwd)/rumptools/rumpmake
-( cd librumprun_unwind && ${RUMPMAKE} dependall && ${RUMPMAKE} install )
+havecxx \
+    && ( cd librumprun_unwind && ${RUMPMAKE} dependall && ${RUMPMAKE} install )
 
 # build the image
 make
