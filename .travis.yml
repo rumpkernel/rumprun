@@ -6,7 +6,7 @@ before_install:
  - sudo apt-get install libxen-dev -y
 
 script:
-  - ./buildxen.sh -qq
+  - CC=clang ./buildxen.sh -qq
   - ( export PATH="${PATH}:$(pwd)/app-tools" ; cd tests/configure && rumprun-xen-configure ./configure && rumprun-xen-make )
 
 notifications:
