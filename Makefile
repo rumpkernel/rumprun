@@ -6,7 +6,8 @@
 #
 OBJ_DIR ?= $(CURDIR)/obj
 
-CONFIG_SYSPROXY?=	no
+CONFIG_SYSPROXY ?=	no
+CONFIG_CXX ?=		no
 
 OBJCOPY=objcopy
 
@@ -84,6 +85,9 @@ $(OBJ_DIR)/rumprun.o: $(RUMP_OBJS)
 
 APP_TOOLS += rumprun-xen-cc rumprun-xen-cc.configure specs specs.configure
 APP_TOOLS += rumprun-xen-configure rumprun-xen-make rumprun-xen-gmake
+ifeq ($(CONFIG_CXX),yes)
+APP_TOOLS += rumprun-xen-c++
+endif
 
 .PHONY: app-tools
 app-tools: $(addprefix app-tools/, $(APP_TOOLS))

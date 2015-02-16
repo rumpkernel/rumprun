@@ -1,4 +1,10 @@
-all: hello hellopp
+ALL=hello
+
+ifeq ($(CONFIG_CXX),yes)
+ALL += hellopp
+endif
+
+all: $(ALL)
 
 hello: hello.c
 

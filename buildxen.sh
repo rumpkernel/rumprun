@@ -20,7 +20,11 @@ export BUILDXENMETAL_PCI_P=true
 ./buildrump.sh/xenbaremetal.sh "$@" || die xenbaremetal.sh failed
 
 RUMPMAKE="$(pwd)/rumptools/rumpmake"
-( cd librumprun_unwind && ${RUMPMAKE} dependall && ${RUMPMAKE} install )
+# Build librumprun_unwind only if we have C++ support
+BUILDRUMP_CXX="$(${RUMPMAKE} -f rumptools/mk.conf -V '${_BUILDRUMP_CXX}')"
+if [ "${BUILDRUMP_CXX}" = "yes" ]; then
+	( cd librumprun_unwind && ${RUMPMAKE} dependall && ${RUMPMAKE} install )
+fi
 
 makekernlib ()
 {
@@ -38,7 +42,7 @@ makekernlib rumpxenif
 makekernlib rumpxendev
 
 # build the domU image
-make
+make CONFIG_CXX="${BUILDRUMP_CXX}"
 
 echo
 echo ">> $0 ran successfully"
