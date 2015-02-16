@@ -2,15 +2,15 @@ language: c
 
 compiler:
   - gcc
+  - clang
 
 before_script:
   - sudo apt-get update -y
   - sudo apt-get install qemu-kvm -y
-  - sudo apt-get install clang -y
   - git submodule update --init --recursive
 
 script:
-  - CC=clang ./buildme.sh -qq -- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686
+  - ./buildme.sh -qq -- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686
   - make clean
   - make RUMPRUN_PRESENT=no
   - size rk.bin rk.bin.gdb
