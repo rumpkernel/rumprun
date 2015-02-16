@@ -12,7 +12,7 @@ SYSPROXY?= no
 
 CFLAGS+=	-std=gnu99 -g -O2
 CFLAGS+=	-Wall -Wmissing-prototypes -Wstrict-prototypes
-CFLAGS+=	-fno-stack-protector
+CFLAGS+=	-fno-stack-protector -ffreestanding
 ifndef NOGCCERROR
 CFLAGS+=	-Werror
 endif
@@ -118,7 +118,7 @@ ${THEBIN}: ${THEBIN}.gdb
 	${STRIP} -g -o $@ $<
 
 ${THEBIN}.gdb: rumprun.o ${COMPILER_RT} ${LDSCRIPT} Makefile
-	${CC} -ffreestanding -nostdlib -o $@ -Wl,-T ${LDSCRIPT} ${CFLAGS} ${LDFLAGS} rumprun.o ${OBJS_APP} -Wl,--whole-archive ${RUMP_LDLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
+	${CC} -nostdlib -o $@ -Wl,-T ${LDSCRIPT} ${CFLAGS} ${LDFLAGS} rumprun.o ${OBJS_APP} -Wl,--whole-archive ${RUMP_LDLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
 
 iso/boot/grub/grub.cfg:
 	mkdir -p iso/boot/grub
