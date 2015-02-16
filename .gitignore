@@ -14,9 +14,11 @@ app-tools/specs
 app-tools/specs.configure
 app-tools/rumprun-xen-cc
 app-tools/rumprun-xen-cc.configure
+app-tools/rumprun-xen-c++
 app-tools/rumprun-xen-configure
 app-tools/rumprun-xen-gmake
 app-tools/rumprun-xen-make
 
 tests/hello/hello
+tests/hello/hellopp
 tests/wopr/wopr
