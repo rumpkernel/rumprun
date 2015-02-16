@@ -20,6 +20,8 @@ export BUILDXENMETAL_PCI_P=true
 ./buildrump.sh/xenbaremetal.sh "$@" || die xenbaremetal.sh failed
 
 RUMPMAKE="$(pwd)/rumptools/rumpmake"
+( cd librumprun_unwind && ${RUMPMAKE} dependall && ${RUMPMAKE} install )
+
 makekernlib ()
 {
 	lib=$1
