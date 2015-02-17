@@ -83,15 +83,17 @@ rumprun: $(OBJ_DIR)/rumprun.o
 $(OBJ_DIR)/rumprun.o: $(RUMP_OBJS)
 	$(LD) -r $(LDFLAGS) $(RUMP_OBJS) -o $@
 
-APP_TOOLS += rumprun-xen-cc rumprun-xen-cc.configure specs specs.configure
-APP_TOOLS += rumprun-xen-configure rumprun-xen-make rumprun-xen-gmake
-ifeq ($(CONFIG_CXX),yes)
-APP_TOOLS += rumprun-xen-c++
-endif
+APP_TOOLS_PLATFORM= xen
+APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-cc
+APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-c++
+APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-cc.configure
+APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-configure
+APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-make
+APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-gmake
+APP_TOOLS += specs specs.configure
 
 .PHONY: app-tools
 app-tools: $(addprefix app-tools/, $(APP_TOOLS))
-
 
 APP_TOOLS_LDLIBS := $(RUMP_LDLIBS)
 APP_TOOLS_LDSCRIPT := $(OBJ_DIR)/xen/minios.lds
