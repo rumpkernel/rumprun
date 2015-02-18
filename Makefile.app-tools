@@ -16,7 +16,7 @@ APP_TOOLS_OBJS := $(abspath $(OBJ_DIR)/rumprun.o)
 APP_TOOLS_CPPFLAGS := $(filter -U%, $(shell \
 	rumptools/rumpmake -f rumptools/mk.conf -V '$${CPPFLAGS}'))
 
-APP_TOOLS_MAKE := $(abspath app-tools/rumprun-xen-make)
+APP_TOOLS_MAKE := $(abspath app-tools/rumprun-$(APP_TOOLS_PLATFORM)-make)
 
 app-tools/%: app-tools/%.in Makefile
 	sed <$< >$@.tmp \
