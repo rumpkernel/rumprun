@@ -1,3 +1,7 @@
+# XXX TODO: explicitly document what should be set before
+# including this Makefile
+#
+
 APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-cc
 APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-c++
 APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-cc.configure
@@ -10,9 +14,7 @@ APP_TOOLS += specs specs.configure
 app-tools: $(addprefix app-tools/, $(APP_TOOLS))
 
 APP_TOOLS_LDLIBS := $(RUMP_LDLIBS)
-APP_TOOLS_LDSCRIPT := arch/$(MACHINE)/kern.ldscript
 APP_TOOLS_LDFLAGS := $(LDFLAGS)
-APP_TOOLS_OBJS :=
 APP_TOOLS_CPPFLAGS := $(filter -U%, $(shell \
 	rumptools/rumpmake -f rumptools/mk.conf -V '$${CPPFLAGS}'))
 
@@ -27,8 +29,8 @@ app-tools/%: app-tools/%.in Makefile
 		-e 's#!OBJS!#$(APP_TOOLS_OBJS)#g;' \
 		-e 's#!LDLIBS!#$(APP_TOOLS_LDLIBS)#g;' \
 		-e 's#!LDFLAGS!#$(APP_TOOLS_LDFLAGS)#g;' \
-		-e 's#!HEAD_OBJ!#$(abspath rumprun.o)#g;' \
-		-e 's#!LDSCRIPT!#$(abspath $(APP_TOOLS_LDSCRIPT))#g;'
+		-e 's#!HEAD_OBJ!#$(APP_TOOLS_HEADOBJ)#g;' \
+		-e 's#!LDSCRIPT!#$(APP_TOOLS_LDSCRIPT)#g;'
 	if test -x $<; then chmod +x $@.tmp; fi
 	mv -f $@.tmp $@
 
