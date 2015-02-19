@@ -87,7 +87,7 @@ APP_TOOLS_PLATFORM= xen
 APP_TOOLS_HEADOBJ= $(abspath $(OBJ_DIR)/xen/minios.o)
 APP_TOOLS_OBJS= $(abspath $(OBJ_DIR)/rumprun.o)
 APP_TOOLS_LDSCRIPT:= $(abspath $(OBJ_DIR)/xen/minios.lds)
-include Makefile.app-tools
+include buildrump.sh/bmk-common/Makefile.app-tools
 
 # New demos each have their own Makefile under tests/ and are built using
 # app-tools.
