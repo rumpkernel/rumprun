@@ -19,15 +19,10 @@ export BUILDXENMETAL_PCI_P=true
 . ./buildrump.sh/subr.sh
 ./buildrump.sh/xenbaremetal.sh "$@" || die xenbaremetal.sh failed
 
-RUMPMAKE="$(pwd)/rumptools/rumpmake"
-# Build librumprun_unwind only if we have C++ support
-BUILDRUMP_CXX="$(${RUMPMAKE} -f rumptools/mk.conf -V '${_BUILDRUMP_CXX}')"
-if [ "${BUILDRUMP_CXX}" = "yes" ]; then
-	( cd librumprun_unwind &&
-		${RUMPMAKE} dependall &&
-		${RUMPMAKE} install
-	) || die librumprun_unwind build failed
-fi
+# build unwind bits if we sport c++
+RUMPMAKE=$(pwd)/rumptools/rumpmake
+havecxx \
+    && ( cd librumprun_unwind && ${RUMPMAKE} dependall && ${RUMPMAKE} install )
 
 makekernlib ()
 {
