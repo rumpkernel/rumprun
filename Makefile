@@ -109,7 +109,7 @@ APP_TOOLS_PLATFORM= bmk
 APP_TOOLS_HEADOBJ= $(abspath rumprun.o)
 APP_TOOLS_OBJS=
 APP_TOOLS_LDSCRIPT= $(abspath ${LDSCRIPT})
-include Makefile.app-tools
+include buildrump.sh/bmk-common/Makefile.app-tools
 
 include/bmk/machine:
 	ln -s ../arch/${MACHINE} include/bmk/machine
