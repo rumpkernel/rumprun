@@ -1,12 +1,3 @@
 #!/bin/sh
-set -e
-case " $* " in
-*" -v "*)   set -x ;;
-esac
 exec ${RUMP_APPTOOLS_CXX:-c++} \
-    -fno-stack-protector \
-    -fno-builtin-sin -fno-builtin-cos \
-    -fno-builtin-sinf -fno-builtin-cosf \
-    -nodefaultlibs \
-    -isystem !BASE!/rump/include/c++ \
-    -no-integrated-cpp -specs=!APPTOOLS!/specs "$@" -lc++ -lrumprun_unwind -lc
+    -no-integrated-cpp -specs=!APPTOOLS!/specs "$@" -lrumprun_unwind

@@ -1,19 +1,24 @@
 %rename cpp_options old_cpp_options
  
 *cpp_options:
--nostdinc -isystem !BASE!/rump/include -isystem !BASE!/xen/include %(old_cpp_options) !CPPFLAGS! -D__RUMPRUN__ -D__NetBSD__ -D__RUMPUSER_XEN__
+-nostdinc -isystem !BASE!/rump/include -isystem !BASE!/rump/include/c++ -isystem !BASE!/xen/include %(old_cpp_options) !CPPFLAGS! -D__RUMPRUN__ -D__NetBSD__ -D__RUMPUSER_XEN__
 
-*linker:
-!APPTOOLS!/ld --stunt-intermediate %g.link1 --stunt-final-script !LDSCRIPT!
+%rename cc1_options old_cc1_options
 
-*link:
-%{m64:-m elf_x86_64;mx32:-m elf32_x86_64;m32:-m elf_i386}
-
-*endfile:
-!OBJS! !LDFLAGS! !LDLIBS!
+*cc1_options:
+%(old_cc1_options) -fno-stack-protector -fno-builtin-sin -fno-builtin-sinf -fno-builtin-cos -fno-builtin-cosf
 
 *startfile:
-!HEAD_OBJ!
+!HEAD_OBJ! !OBJS!
+
+*endfile:
+
+
+*lib:
+!LDFLAGS! !LDLIBS!
+
+*link:
+%{m64:-m elf_x86_64;mx32:-m elf32_x86_64;m32:-m elf_i386} -T !LDSCRIPT! %:replace-outfile(-lstdc++ -lc++) %{rdynamic:}
 
 %rename link_libgcc old_link_libgcc
 
