@@ -9,13 +9,13 @@
 %(old_cc1_options) -fno-stack-protector -fno-builtin-sin -fno-builtin-sinf -fno-builtin-cos -fno-builtin-cosf
 
 *startfile:
-!HEAD_OBJ! !OBJS!
+
 
 *endfile:
-
+!STUBS_OBJ!
 
 *lib:
-!LDFLAGS! -lrumpnet_config -lrumpnet_net -lrumpnet -lrump -lpthread -lc
+!LDFLAGS! -lpthread -lc -lrump
 
 *link:
 %{m64:-m elf_x86_64;mx32:-m elf32_x86_64;m32:-m elf_i386} -T !LDSCRIPT! %:replace-outfile(-lstdc++ -lc++) %{rdynamic:}
