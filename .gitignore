@@ -18,6 +18,7 @@ app-tools/rumprun-xen-c++
 app-tools/rumprun-xen-configure
 app-tools/rumprun-xen-gmake
 app-tools/rumprun-xen-make
+app-tools/rumprun-xen-ar
 
 tests/hello/hello
 tests/hello/hellopp
