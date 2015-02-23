@@ -21,9 +21,12 @@ export BUILDXENMETAL_PCI_P=true
 
 # build unwind bits if we support c++
 RUMPMAKE=$(pwd)/rumptools/rumpmake
-havecxx \
-    && ( cd librumprun_unwind && ${RUMPMAKE} dependall && ${RUMPMAKE} install ) \
-    || die build of librumprun_unwind failed
+if havecxx; then
+	( cd librumprun_unwind &&
+		${RUMPMAKE} dependall &&
+		${RUMPMAKE} install
+	) || die build of librumprun_unwind failed
+fi
 
 makekernlib ()
 {
