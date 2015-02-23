@@ -1,5 +1,4 @@
 #!/bin/sh
 exec "${RUMP_APPTOOLS_MAKE:-make}" \
     CC=!APPTOOLS!/rumprun-xen-cc \
-    CXX=!APPTOOLS!/rumprun-xen-c++ \
     "$@"
