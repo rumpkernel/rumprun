@@ -29,7 +29,7 @@ notifications:
     use_notice: true
   email:
     recipients:
-      - rumpkernel-builds@lists.sourceforge.net
+      - rumpkernel-builds@freelists.org
     on_success: always
     on_failure: always
 
