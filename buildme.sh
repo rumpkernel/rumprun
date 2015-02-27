@@ -22,6 +22,8 @@ RUMPMAKE=$(pwd)/rumptools/rumpmake
 havecxx \
     && ( cd librumprun_unwind && ${RUMPMAKE} dependall && ${RUMPMAKE} install )
 
+echo "BUILDRUMP=${BUILDRUMP}" > config.mk
+
 # build the image
 make
 
