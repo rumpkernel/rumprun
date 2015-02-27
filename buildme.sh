@@ -1,5 +1,7 @@
 #!/bin/sh
 
+: ${BUILDRUMP:=./buildrump.sh}
+
 IFS=' '
 BUILDXENMETAL_MKCONF=".if defined(LIB) && \${LIB} == \"pthread\"
 .PATH:  $(pwd)/pthread
@@ -13,9 +15,9 @@ export BUILDXENMETAL_PCI_P='[ "${MACHINE}" = "amd64" -o "${MACHINE}" = "i386" ]'
 export BUILDXENMETAL_PCI_ARGS='RUMP_PCI_IOSPACE=yes'
 export BUILDXENMETAL_MKCONF
 
-[ ! -f ./buildrump.sh/subr.sh ] && git submodule update --init buildrump.sh
-. ./buildrump.sh/subr.sh
-./buildrump.sh/xenbaremetal.sh "$@" || die xenbaremetal.sh failed
+[ ! -f ${BUILDRUMP}/subr.sh ] && git submodule update --init buildrump.sh
+. ${BUILDRUMP}/subr.sh
+${BUILDRUMP}/xenbaremetal.sh "$@" || die xenbaremetal.sh failed
 
 # build unwind bits if we sport c++
 RUMPMAKE=$(pwd)/rumptools/rumpmake

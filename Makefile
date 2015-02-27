@@ -18,7 +18,7 @@ CFLAGS+=	-fno-stack-protector -ffreestanding
 ifndef NOGCCERROR
 CFLAGS+=	-Werror
 endif
-CPPFLAGS=	-Iinclude -Irump/include -Ibuildrump.sh/bmk-common -nostdinc
+CPPFLAGS=	-Iinclude -Irump/include -I${BUILDRUMP}/bmk-common -nostdinc
 STRIP?=		strip
 
 MACHINE:= $(shell ${CC} -dumpmachine | sed 's/i.86/i386/;s/-.*//;')
@@ -111,7 +111,7 @@ APP_TOOLS_PLATFORM= bmk
 APP_TOOLS_HEADOBJ= $(abspath rumprun.o)
 APP_TOOLS_OBJS=
 APP_TOOLS_LDSCRIPT= $(abspath ${LDSCRIPT})
-include buildrump.sh/bmk-common/Makefile.app-tools
+include ${BUILDRUMP}/bmk-common/Makefile.app-tools
 
 include/bmk/machine:
 	ln -s ../arch/${MACHINE} include/bmk/machine
