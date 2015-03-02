@@ -1,5 +1,7 @@
 #!/bin/sh
 
+: ${BUILDRUMP:=./buildrump.sh}
+
 IFS=' '
 BUILDXENMETAL_MKCONF="# maxphys = 32k is a Xen limitation (64k - overhead)
 CPPFLAGS+=-DMAXPHYS=32768
@@ -15,9 +17,9 @@ unset IFS
 export BUILDXENMETAL_MKCONF
 export BUILDXENMETAL_PCI_P=true
 
-[ ! -f ./buildrump.sh/subr.sh ] && git submodule update --init buildrump.sh
-. ./buildrump.sh/subr.sh
-./buildrump.sh/xenbaremetal.sh "$@" || die xenbaremetal.sh failed
+[ ! -f ${BUILDRUMP}/subr.sh ] && git submodule update --init ${BUILDRUMP}
+. ${BUILDRUMP}/subr.sh
+${BUILDRUMP}/xenbaremetal.sh "$@" || die xenbaremetal.sh failed
 
 # build unwind bits if we support c++
 RUMPMAKE=$(pwd)/rumptools/rumpmake
