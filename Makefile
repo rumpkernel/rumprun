@@ -1,4 +1,4 @@
-include config.mk
+-include config.mk
 
 THEBIN= rk.bin
 THEISO=	$(basename ${THEBIN}).iso
