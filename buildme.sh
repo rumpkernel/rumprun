@@ -15,7 +15,7 @@ export BUILDXENMETAL_PCI_P='[ "${MACHINE}" = "amd64" -o "${MACHINE}" = "i386" ]'
 export BUILDXENMETAL_PCI_ARGS='RUMP_PCI_IOSPACE=yes'
 export BUILDXENMETAL_MKCONF
 
-[ ! -f ${BUILDRUMP}/subr.sh ] && git submodule update --init buildrump.sh
+[ ! -f ${BUILDRUMP}/subr.sh ] && git submodule update --init ${BUILDRUMP}
 . ${BUILDRUMP}/subr.sh
 ${BUILDRUMP}/xenbaremetal.sh "$@" || die xenbaremetal.sh failed
 
