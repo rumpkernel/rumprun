@@ -150,8 +150,7 @@ distcleanrump: cleanrump
 	rm -f config.mk
 
 TESTAPPS= test-app
-HAVECXX:= $(shell rumptools/rumpmake -f bsd.own.mk -V '$${_BUILDRUMP_CXX}')
-ifeq (${HAVECXX},yes)
+ifeq (${CONFIG_CXX},yes)
 TESTAPPS+= test-apppp
 endif
 
