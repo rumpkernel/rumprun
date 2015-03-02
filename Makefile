@@ -1,3 +1,5 @@
+include config.mk
+
 #
 # Rumprun-xen Makefile.
 # Abandon all hope, ye who enter here:
@@ -7,7 +9,6 @@
 OBJ_DIR ?= $(CURDIR)/obj
 
 CONFIG_SYSPROXY ?=	no
-CONFIG_CXX ?=		no
 
 OBJCOPY=objcopy
 
@@ -90,7 +91,7 @@ APP_TOOLS_HEADOBJ= $(abspath $(OBJ_DIR)/xen/minios.o)
 APP_TOOLS_OBJS= $(abspath $(OBJ_DIR)/rumprun.o)
 APP_TOOLS_LDSCRIPT:= $(abspath $(OBJ_DIR)/xen/minios.lds)
 APP_TOOLS_STUBSOBJ= $(abspath $(OBJ_DIR)/configure_stubs.o)
-include buildrump.sh/bmk-common/Makefile.app-tools
+include ${BUILDRUMP}/bmk-common/Makefile.app-tools
 
 # New demos each have their own Makefile under tests/ and are built using
 # app-tools.
