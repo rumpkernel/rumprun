@@ -16,6 +16,10 @@ case ${platform} in
 	script=platform/baremetal/buildme.sh
 	result=platform/baremetal/rump
 	;;
+'xen')
+	script=platform/xen/buildxen.sh
+	result=platform/xen/rump
+	;;
 *)
 	die Platform \"$platform\" not supported!
 	;;
