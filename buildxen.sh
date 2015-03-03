@@ -21,6 +21,8 @@ export BUILDXENMETAL_PCI_P=true
 . ${BUILDRUMP}/subr.sh
 ${BUILDRUMP}/xenbaremetal.sh "$@" || die xenbaremetal.sh failed
 
+RUMPMAKE=$(pwd)/rumptools/rumpmake
+
 makekernlib ()
 {
 	lib=$1
