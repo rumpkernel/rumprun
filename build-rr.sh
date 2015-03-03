@@ -13,12 +13,10 @@ shift
 
 case ${platform} in
 'baremetal')
-	script=platform/baremetal/buildme.sh
-	result=platform/baremetal/rump
+	script=buildme.sh
 	;;
 'xen')
-	script=platform/xen/buildxen.sh
-	result=platform/xen/rump
+	script=buildxen.sh
 	;;
 *)
 	die Platform \"$platform\" not supported!
@@ -27,7 +25,8 @@ esac
 
 export BUILDRUMP=$(pwd)/buildrump.sh
 export RUMPSRC=$(pwd)/rumpsrc
-( cd $(dirname ${script}) && ./$(basename ${script}) "$@" )
+( cd platform/${platform} && ./${script} "$@" )
 [ $? -eq 0 ] || die Build script \"$script\" failed!
 
-ln -s ${result} ./rump
+ln -s platform/${platform}/rump .
+ln -s platform/${platform}/app-tools .
