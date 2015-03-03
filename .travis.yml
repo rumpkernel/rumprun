@@ -10,14 +10,14 @@ before_script:
   - git submodule update --init --recursive
 
 script:
-  - ./buildme.sh -qq -- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686
-  - make clean
-  - make RUMPRUN_PRESENT=no
-  - size rk.bin rk.bin.gdb
-  - make RUMPRUN_PRESENT=no clean
-  - make
-  - size rk.bin rk.bin.gdb
-  - make test
+  - ./build-rr.sh baremetal -qq -- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686
+  - ( cd platform/baremetal && make clean )
+  - ( cd platform/baremetal && make RUMPRUN_PRESENT=no )
+  - ( cd platform/baremetal && size rk.bin rk.bin.gdb )
+  - ( cd platform/baremetal && make RUMPRUN_PRESENT=no clean )
+  - ( cd platform/baremetal && make )
+  - ( cd platform/baremetal && size rk.bin rk.bin.gdb )
+  - ( cd platform/baremetal && make test )
 
 notifications:
   irc:
