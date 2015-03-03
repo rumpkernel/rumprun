@@ -1,4 +1,4 @@
-include config.mk
+-include config.mk
 
 #
 # Rumprun-xen Makefile.
@@ -91,6 +91,7 @@ APP_TOOLS_HEADOBJ= $(abspath $(OBJ_DIR)/xen/minios.o)
 APP_TOOLS_OBJS= $(abspath $(OBJ_DIR)/rumprun.o)
 APP_TOOLS_LDSCRIPT:= $(abspath $(OBJ_DIR)/xen/minios.lds)
 APP_TOOLS_STUBSOBJ= $(abspath $(OBJ_DIR)/configure_stubs.o)
+BUILDRUMP?=./buildrump.sh
 include ${BUILDRUMP}/bmk-common/Makefile.app-tools
 
 # New demos each have their own Makefile under tests/ and are built using
