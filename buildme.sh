@@ -19,18 +19,6 @@ export BUILDXENMETAL_MKCONF
 . ${BUILDRUMP}/subr.sh
 ${BUILDRUMP}/xenbaremetal.sh "$@" || die xenbaremetal.sh failed
 
-# build unwind bits if we sport c++
-RUMPMAKE=$(pwd)/rumptools/rumpmake
-if havecxx; then
-	( cd librumprun_unwind && ${RUMPMAKE} dependall && ${RUMPMAKE} install )
-	CONFIG_CXX=yes
-else
-	CONFIG_CXX=no
-fi
-
-echo "BUILDRUMP=${BUILDRUMP}" > config.mk
-echo "CONFIG_CXX=${CONFIG_CXX}" >> config.mk
-
 # build the image
 make
 
