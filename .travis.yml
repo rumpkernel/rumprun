@@ -2,7 +2,8 @@ language: c
 
 compiler:
   - gcc
-  - clang
+  # clang build runs into problems with the minios MD code
+  # - clang
 
 before_install:
  - sudo apt-get update -y
