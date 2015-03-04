@@ -17,7 +17,13 @@ unset IFS
 export BUILDXENMETAL_MKCONF
 export BUILDXENMETAL_PCI_P=true
 
-[ ! -f ${BUILDRUMP}/subr.sh ] && git submodule update --init ${BUILDRUMP}
+if [ ! -f ${BUILDRUMP}/subr.sh ]; then
+	# old git versions need to run submodule in the repo root.
+	(
+		cd $(git rev-parse --show-cdup)
+		git submodule update --init ${BUILDRUMP}
+	)
+fi
 . ${BUILDRUMP}/subr.sh
 ${BUILDRUMP}/xenbaremetal.sh "$@" || die xenbaremetal.sh failed
 
