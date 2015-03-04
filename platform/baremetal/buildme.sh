@@ -1,6 +1,6 @@
 #!/bin/sh
 
-: ${BUILDRUMP:=./buildrump.sh}
+: ${BUILDRUMP:=../../buildrump.sh}
 
 IFS=' '
 BUILDXENMETAL_MKCONF=".if defined(LIB) && \${LIB} == \"pthread\"
