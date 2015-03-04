@@ -1,6 +1,6 @@
 #!/bin/sh
 
-: ${BUILDRUMP:=./buildrump.sh}
+: ${BUILDRUMP:=../../buildrump.sh}
 
 IFS=' '
 BUILDXENMETAL_MKCONF="# maxphys = 32k is a Xen limitation (64k - overhead)
