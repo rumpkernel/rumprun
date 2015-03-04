@@ -3,6 +3,9 @@ int _stub_func(void); int _stub_func(void) {return 0;}
 #define STUB(name) \
 int name(void) __attribute__((alias("_stub_func")));
 
+#define WEAK_STUB(name) \
+int name(void) __attribute__((weak,alias("_stub_func")));
+
 STUB(__errno);
 STUB(_exit);
 STUB(_lwp_kill);
@@ -19,9 +22,13 @@ STUB(munmap);
 STUB(realloc);
 
 STUB(__sigaction14);
-STUB(__sigprocmask14);
+WEAK_STUB(__sigprocmask14);
+STUB(sigprocmask);
+STUB(sigaction);
 STUB(__sigaction_sigtramp);
 STUB(__getrusage50);
+
+WEAK_STUB(fcntl)
 
 STUB(__fork);
 STUB(__vfork14);
@@ -40,6 +47,7 @@ STUB(_sys_msgsnd);
 STUB(_sys___msync13);
 STUB(_sys___wait450);
 STUB(_sys___sigsuspend14);
+STUB(_sys___sigprocmask14);
 STUB(____sigtimedwait50);
 
 STUB(rumpuser_anonmmap);
@@ -89,3 +97,29 @@ STUB(rumpuser_thread_create);
 STUB(rumpuser_thread_exit);
 STUB(rumpuser_thread_join);
 STUB(rumpuser_unmap);
+
+STUB(_lwp_rumpxen_gettcb);
+STUB(_lwp_ctl);
+STUB(_lwp_wakeup);
+STUB(_lwp_setname);
+STUB(_lwp_continue);
+STUB(_lwp_suspend);
+STUB(_lwp_exit);
+STUB(___lwp_park60);
+STUB(_lwp_unpark_all);
+STUB(_lwp_unpark);
+
+STUB(_rtld_tls_free);
+STUB(_rtld_tls_allocate);
+STUB(_sys_setcontext);
+STUB(_sched_getparam);
+STUB(_sched_setparam);
+STUB(_sched_getaffinity);
+STUB(_sys_sched_yield);
+STUB(sched_yield);
+STUB(rasctl);
+STUB(__libc_static_tls_setup);
+STUB(rumprunxen_makelwp);
+STUB(_sched_setaffinity);
+
+STUB(posix_spawn);
