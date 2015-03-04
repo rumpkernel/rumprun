@@ -28,5 +28,5 @@ export RUMPSRC=$(pwd)/rumpsrc
 ( cd platform/${platform} && ./${script} "$@" )
 [ $? -eq 0 ] || die Build script \"$script\" failed!
 
-ln -s platform/${platform}/rump .
-ln -s platform/${platform}/app-tools .
+ln -sf platform/${platform}/rump .
+ln -sf platform/${platform}/app-tools .
