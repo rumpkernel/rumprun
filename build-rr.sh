@@ -48,6 +48,7 @@ case ${RUMPSRC} in
 	;;
 esac
 export RUMPSRC
+export BUILD_QUIET
 
 ( cd platform/${platform} && ./${script} "$@" )
 [ $? -eq 0 ] || die Build script \"$script\" failed!
