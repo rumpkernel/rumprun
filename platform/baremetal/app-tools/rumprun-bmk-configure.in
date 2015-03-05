@@ -1,0 +1,5 @@
+#!/bin/sh
+# invoke this (for example) as  .../app-configure ./configure --prefix=...
+set -e
+prog=$1; shift
+CC=!APPTOOLS!/rumprun-bmk-cc.configure exec "$prog" --host=!ARCH!-rumprun-netbsd "$@"
