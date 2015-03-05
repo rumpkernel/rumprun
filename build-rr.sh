@@ -25,8 +25,6 @@ shift $((${OPTIND} - 1))
 
 [ $# -gt 0 ] || die Need platform argument
 platform=$1
-shift
-
 case ${platform} in
 'baremetal')
 	script=buildme.sh
@@ -38,6 +36,15 @@ case ${platform} in
 	die Platform \"$platform\" not supported!
 	;;
 esac
+
+shift
+if [ $# -gt 0 ]; then
+	if [ $1 = '--' ]; then
+		shift
+	else
+		die Invalid argument: $1
+	fi
+fi
 
 export BUILDRUMP=$(pwd)/buildrump.sh
 case ${RUMPSRC} in
