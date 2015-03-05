@@ -2,22 +2,18 @@ language: c
 
 compiler:
   - gcc
-  - clang
 
 before_script:
   - sudo apt-get update -y
   - sudo apt-get install qemu-kvm -y
-  - git submodule update --init --recursive
+  - sudo apt-get install libxen-dev -y
+
+env:
+  - PLATFORM=xen EXTRAFLAGS=
+  - PLATFORM=baremetal EXTRAFLAGS='-- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686'
 
 script:
-  - ./build-rr.sh baremetal -qq -- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686
-  - ( cd platform/baremetal && make clean )
-  - ( cd platform/baremetal && make RUMPRUN_PRESENT=no )
-  - ( cd platform/baremetal && size rk.bin rk.bin.gdb )
-  - ( cd platform/baremetal && make RUMPRUN_PRESENT=no clean )
-  - ( cd platform/baremetal && make )
-  - ( cd platform/baremetal && size rk.bin rk.bin.gdb )
-  - ( cd platform/baremetal && make test )
+  - ./build-rr.sh ${PLATFORM} -qq ${EXTRAFLAGS}
 
 notifications:
   irc:
