@@ -1,0 +1,3 @@
+#!/bin/sh
+exec ${RUMP_APPTOOLS_CXX:-c++} \
+    -no-integrated-cpp -specs=!APPTOOLS!/specs "$@" -lrumprun_unwind

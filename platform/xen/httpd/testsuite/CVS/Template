@@ -1,0 +1,16 @@
+CVS: ----------------------------------------------------------------------
+CVS: CVSROOT  cvs.NetBSD.org:/cvsroot
+CVS: please use "PR category/123" to have the commitmsg appended to PR 123
+CVS:
+CVS: Please evaluate your changes and consider the following.
+CVS: Abort checkin if you answer no.
+CVS: => For all changes:
+CVS: Do the changed files compile?
+CVS: Has the change been tested?
+CVS: => If you are not completely familiar with the changed components:
+CVS: Has the change been posted for review?              
+CVS: Have you allowed enough time for feedback?
+CVS: => If the change is major:
+CVS: => If the change adds files to, or removes files from $DESTDIR:
+CVS: => If you are changing a library or kernel interface:
+CVS: Have you successfully run "./build.sh release"?

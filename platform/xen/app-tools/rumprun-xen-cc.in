@@ -1,0 +1,3 @@
+#!/bin/sh
+exec ${RUMP_APPTOOLS_CC:-cc} \
+    -no-integrated-cpp -specs=!APPTOOLS!/specs "$@"
