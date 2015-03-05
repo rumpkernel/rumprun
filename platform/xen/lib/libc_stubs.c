@@ -20,6 +20,9 @@ STUB(execve);
 STUB(kill);
 STUB(getpriority);
 STUB(setpriority);
+STUB(posix_spawn);
+
+STUB(mlockall);
 
 /* for pthread_cancelstub */
 STUB(_sys_mq_send);

@@ -2,24 +2,17 @@
 *.o
 obj
 
-img/*.ffs
+platform/*/img/*.ffs
 rump
 rump-kernel
 rumpobj
 rumptools
-xen/include/mini-os/machine
-xen/include/xen
+platform/xen/xen/include/mini-os/machine
+platform/xen/xen/include/xen
 
-app-tools/specs
-app-tools/specs.configure
-app-tools/rumprun-xen-cc
-app-tools/rumprun-xen-cc.configure
-app-tools/rumprun-xen-c++
-app-tools/rumprun-xen-configure
-app-tools/rumprun-xen-gmake
-app-tools/rumprun-xen-make
-app-tools/rumprun-xen-ar
+app-tools
 
-tests/hello/hello
-tests/hello/hellopp
-tests/wopr/wopr
+platform/*/config.mk
+platform/*/tests/hello/hello
+platform/*/tests/hello/hellopp
+platform/*/tests/wopr/wopr
