@@ -1,0 +1,43 @@
+# XXX TODO: explicitly document what should be set before
+# including this Makefile
+#
+
+APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-cc
+APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-c++
+APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-cc.configure
+APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-configure
+APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-make
+APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-gmake
+APP_TOOLS += rumprun-$(APP_TOOLS_PLATFORM)-ar
+APP_TOOLS += specs specs.configure
+
+.PHONY: app-tools
+app-tools: $(addprefix app-tools/, $(APP_TOOLS))
+
+APP_TOOLS_LDLIBS := $(RUMP_LDLIBS)
+APP_TOOLS_LDFLAGS := $(LDFLAGS)
+APP_TOOLS_CPPFLAGS := $(filter -U%, $(shell \
+	rumptools/rumpmake -f rumptools/mk.conf -V '$${CPPFLAGS}'))
+
+APP_TOOLS_MAKE := $(abspath app-tools/rumprun-$(APP_TOOLS_PLATFORM)-make)
+
+app-tools/%: app-tools/%.in Makefile
+	sed <$< >$@.tmp \
+		-e 's#!ARCH!#$(TARGET_ARCH)#g;' \
+		-e 's#!BASE!#$(abspath .)#g;' \
+		-e 's#!APPTOOLS!#$(abspath app-tools)#g;' \
+		-e 's#!CPPFLAGS!#$(APP_TOOLS_CPPFLAGS)#g;' \
+		-e 's#!OBJS!#$(APP_TOOLS_OBJS)#g;' \
+		-e 's#!LDLIBS!#$(APP_TOOLS_LDLIBS)#g;' \
+		-e 's#!LDFLAGS!#$(APP_TOOLS_LDFLAGS)#g;' \
+		-e 's#!HEAD_OBJ!#$(APP_TOOLS_HEADOBJ)#g;' \
+		-e 's#!STUBS_OBJ!#$(APP_TOOLS_STUBSOBJ)#g;' \
+		-e 's#!LDSCRIPT!#$(APP_TOOLS_LDSCRIPT)#g;'
+	if test -x $<; then chmod +x $@.tmp; fi
+	mv -f $@.tmp $@
+
+app-tools/rumprun-$(APP_TOOLS_PLATFORM)-ar:
+	ln -s $(shell which ar) $@
+
+app-tools_clean:
+	rm -f $(addprefix app-tools/, $(APP_TOOLS))
