@@ -44,6 +44,7 @@ makekernlib ()
 make -C xen links
 makekernlib rumpxenif
 makekernlib rumpxendev
+makekernlib rumpxentc
 
 # build the domU image
 make || die make failed

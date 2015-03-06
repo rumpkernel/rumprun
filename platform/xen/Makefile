@@ -34,7 +34,7 @@ RUMP_LIBS_NET = -lrumpnet_config -lrumpdev_bpf -lrumpnet_xenif -lrumpnet_netinet
 RUMP_LIBS_NET+= -lrumpnet_net -lrumpxen_xendev -lrumpnet
 
 # Define some default flags for linking.
-RUMP_LDLIBS = --whole-archive ${RUMP_LIBS_FS} ${RUMP_LIBS_NET} ${RUMP_LIBS_PCI} ${RUMP_LIBS_SYSPROXY} -lrump --no-whole-archive
+RUMP_LDLIBS = --whole-archive ${RUMP_LIBS_FS} ${RUMP_LIBS_NET} ${RUMP_LIBS_PCI} ${RUMP_LIBS_SYSPROXY} -lrumpxen_tc -lrump --no-whole-archive
 RUMP_LDLIBS := ${RUMP_LDLIBS} -lpthread -lc
 
 LDFLAGS := -L$(abspath rump/lib)
