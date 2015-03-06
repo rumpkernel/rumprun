@@ -91,8 +91,9 @@ APP_TOOLS_HEADOBJ= $(abspath $(OBJ_DIR)/xen/minios.o)
 APP_TOOLS_OBJS= $(abspath $(OBJ_DIR)/rumprun.o)
 APP_TOOLS_LDSCRIPT:= $(abspath $(OBJ_DIR)/xen/minios.lds)
 APP_TOOLS_STUBSOBJ= $(abspath $(OBJ_DIR)/configure_stubs.o)
-BUILDRUMP?=./buildrump.sh
-include ${BUILDRUMP}/bmk-common/Makefile.app-tools
+APP_TOOLS_DIR= $(abspath ../../app-tools)
+
+include $(APP_TOOLS_DIR)/Makefile.app-tools
 
 # New demos each have their own Makefile under tests/ and are built using
 # app-tools.
@@ -109,7 +110,7 @@ httpd:
 STDTESTS=tests/libstdtests/rumpkern_demo.c tests/libstdtests/pthread_test.c \
 	 tests/libstdtests/tls_test.c
 rump-kernel: ${STDTESTS} httpd
-	app-tools/rumprun-xen-cc -o $@ ${STDTESTS} httpd/*.o
+	$(APP_TOOLS_DIR)/rumprun-xen-cc -o $@ ${STDTESTS} httpd/*.o
 
 img/test.ffs:
 	cp img/test_clean.ffs img/test.ffs
