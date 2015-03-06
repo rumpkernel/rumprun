@@ -1,4 +1,4 @@
 #!/bin/sh
 exec "${RUMP_APPTOOLS_MAKE:-gmake}" \
-    CC=!APPTOOLS!/rumprun-xen-cc \
+    CC=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-cc \
     "$@"
