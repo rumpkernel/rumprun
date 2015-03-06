@@ -10,8 +10,6 @@ rumptools
 platform/xen/xen/include/mini-os/machine
 platform/xen/xen/include/xen
 
-app-tools
-
 platform/*/config.mk
 platform/*/tests/hello/hello
 platform/*/tests/hello/hellopp
