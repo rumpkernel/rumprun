@@ -79,7 +79,7 @@ LIBS_NETINET=	-lrumpnet_config -lrumpnet_netinet -lrumpnet_net -lrumpnet
 LIBS_NETBPF=	-lrumpdev_bpf
 LIBS_NETUNIX=	-lrumpnet_local
 
-RUMP_LDLIBS=	${LIBS_VIO_NET}					\
+RUMPKERN_LIB=	${LIBS_VIO_NET}					\
 		${LIBS_VIO_LD}					\
 		${LIBS_VIO_RND}					\
 		${LIBS_VIO}					\
@@ -98,6 +98,7 @@ ifeq (${RUMPRUN_PRESENT},yes)
   OBJS_BMK+=	init.o
   CPPFLAGS+=	-DBMK_APP
   LIBS_USER=	-lcrypto -lpthread -lc
+  RUMP_LDLIBS=	--whole-archive ${RUMPKERN_LIB} --no-whole-archive -lpthread -lc
 else
   COMPILER_RT=	librt/divdi3.o librt/udivmoddi4.o librt/udivsi3.o
   COMPILER_RT+=	librt/udivdi3.o librt/moddi3.o librt/umoddi3.o
@@ -110,9 +111,10 @@ OBJS= ${OBJS_BMK} ${OBJS_APP}
 APP_TOOLS_PLATFORM= bmk
 APP_TOOLS_HEADOBJ= $(abspath rumprun.o)
 APP_TOOLS_OBJS=
-APP_TOOLS_LDSCRIPT= $(abspath ${LDSCRIPT})
-BUILDRUMP?=../../buildrump.sh
-include ${BUILDRUMP}/bmk-common/Makefile.app-tools
+APP_TOOLS_LDSCRIPT:= $(abspath ${LDSCRIPT})
+APP_TOOLS_DIR:= $(abspath ../../app-tools)
+
+include $(APP_TOOLS_DIR)/Makefile.app-tools
 
 include/bmk/machine:
 	ln -s ../arch/${MACHINE} include/bmk/machine
@@ -124,7 +126,7 @@ ${THEBIN}: ${THEBIN}.gdb
 	${STRIP} -g -o $@ $<
 
 ${THEBIN}.gdb: rumprun.o ${COMPILER_RT} ${LDSCRIPT} Makefile
-	${CC} -nostdlib -o $@ -Wl,-T ${LDSCRIPT} ${CFLAGS} ${LDFLAGS} rumprun.o ${OBJS_APP} -Wl,--whole-archive ${RUMP_LDLIBS} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
+	${CC} -nostdlib -o $@ -Wl,-T ${LDSCRIPT} ${CFLAGS} ${LDFLAGS} rumprun.o ${OBJS_APP} -Wl,--whole-archive ${RUMPKERN_LIB} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
 
 iso/boot/grub/grub.cfg:
 	mkdir -p iso/boot/grub
@@ -156,10 +158,10 @@ TESTAPPS+= test-apppp
 endif
 
 test-app: app.c
-	./app-tools/rumprun-bmk-cc $< -o $@ -m32 -lpthread -lcrypto
+	$(APP_TOOLS_DIR)/rumprun-bmk-cc $< -o $@ -m32 -lpthread -lcrypto
 
 test-apppp: apppp.cc
-	./app-tools/rumprun-bmk-c++ $< -o $@ -m32 -lpthread
+	$(APP_TOOLS_DIR)/rumprun-bmk-c++ $< -o $@ -m32 -lpthread
 
 test: all ${TESTAPPS}
 	./tests/checksum/test.sh
