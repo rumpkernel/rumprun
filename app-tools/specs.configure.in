@@ -1,7 +1,7 @@
 %rename cpp_options old_cpp_options
 
 *cpp_options:
--nostdinc -isystem !BASE!/rump/include -isystem !BASE!/rump/include/c++ -isystem !BASE!/xen/include %(old_cpp_options) !CPPFLAGS! -D__RUMPRUN__ -D__NetBSD__ -D__RUMPUSER_XEN__
+-nostdinc -isystem !BASE!/rump/include -isystem !BASE!/rump/include/c++ %(old_cpp_options) !CPPFLAGS! -D__RUMPRUN__ -D__NetBSD__
 
 %rename cc1_options old_cc1_options
 
