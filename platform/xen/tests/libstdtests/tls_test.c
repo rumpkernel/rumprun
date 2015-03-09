@@ -1,5 +1,4 @@
 /* Simple test for TLS support */
-#ifdef __x86_64__
 #include <sys/types.h>
 
 #include <err.h>
@@ -63,7 +62,3 @@ test_tls(void)
 			    n, LOOPCNT, rv);
 	}
 }
-
-#else
-void test_tls(void) {}
-#endif
