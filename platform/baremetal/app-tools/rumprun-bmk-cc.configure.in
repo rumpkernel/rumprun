@@ -1,9 +1,0 @@
-#!/bin/sh
-set -e
-case " $* " in
-*" -v "*)   set -x ;;
-esac
-exec ${RUMP_APPTOOLS_CC:-cc} \
-    -fno-builtin-sin -fno-builtin-cos \
-    -fno-builtin-sinf -fno-builtin-cosf \
-    -no-integrated-cpp -specs=!APPTOOLS!/specs.configure "$@"
