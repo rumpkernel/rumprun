@@ -4,6 +4,12 @@
 
 #include <stdio.h>
 
+/*
+ * What we're looking for with the next test is something that is likely
+ * to be present on the host, but unlikely to be present on the target.
+ * So we assume a Linux host.
+ */
+
 #ifdef HAVE_SYS_EPOLL_H
 #error Should not have epoll.  In case NetBSD now has epoll, please update test.
 #endif
