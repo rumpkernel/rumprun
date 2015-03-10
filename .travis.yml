@@ -10,7 +10,7 @@ before_script:
 
 env:
   - PLATFORM=xen EXTRAFLAGS=
-  - PLATFORM=baremetal EXTRAFLAGS='-- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686'
+  - PLATFORM=baremetal EXTRAFLAGS=
 
 script:
   - ./build-rr.sh -qq ${PLATFORM} ${EXTRAFLAGS}
