@@ -25,6 +25,9 @@ fi
 . ${BUILDRUMP}/subr.sh
 ${BUILDRUMP}/xenbaremetal.sh "$@" || die xenbaremetal.sh failed
 
+RUMPMAKE=$(pwd)/rumptools/rumpmake
+export RUMPMAKE
+
 # build the image
 make
 
