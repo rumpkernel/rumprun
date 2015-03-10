@@ -45,9 +45,6 @@ if [ $# -gt 0 ]; then
 		die Invalid argument: $1
 	fi
 fi
-if [ "${platform}" = "baremetal" -a $# -eq 0 -a "$(uname -m)" = "x86_64" ]; then
-	set -- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686
-fi
 
 export BUILDRUMP=$(pwd)/buildrump.sh
 case ${RUMPSRC} in
