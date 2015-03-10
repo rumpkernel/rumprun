@@ -28,6 +28,7 @@ fi
 ${BUILDRUMP}/xenbaremetal.sh "$@" || die xenbaremetal.sh failed
 
 RUMPMAKE=$(pwd)/rumptools/rumpmake
+export RUMPMAKE
 
 makekernlib ()
 {
