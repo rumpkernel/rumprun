@@ -27,11 +27,12 @@
 #include <sys/param.h>
 #include <sys/cpu.h>
 #include <sys/kernel.h>
+#include <sys/module.h>
 #include <sys/timetc.h>
 
 #include <mini-os/time.h>
 
-#include "rump_private.h"
+MODULE(MODULE_CLASS_MISC, rumpxen_tc, NULL);
 
 static u_int
 rumpxen_tc_get(struct timecounter *tc)
@@ -48,7 +49,20 @@ static struct timecounter rumpxen_tc = {
 	.tc_quality		= 100,
 };
 
-RUMP_COMPONENT(RUMP_COMPONENT_KERN)
+static int
+rumpxen_tc_modcmd(modcmd_t cmd, void *arg)
 {
-	tc_init(&rumpxen_tc);
+	switch (cmd) {
+	case MODULE_CMD_INIT:
+		tc_init(&rumpxen_tc);
+		break;
+
+	case MODULE_CMD_FINI:
+		tc_detach(&rumpxen_tc);
+		break;
+
+	default:
+	return ENOTTY;
+	}
+	return 0;
 }
