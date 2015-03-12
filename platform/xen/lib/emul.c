@@ -14,7 +14,10 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <lwp.h>
+#include <signal.h>
 #include <stdlib.h>
+#include <time.h>
 #include <unistd.h>
 
 #include <mini-os/os.h> /* for PAGE_SIZE */
@@ -107,4 +110,18 @@ _exit(int eval)
 	_netbsd_fini();
 	minios_stop_kernel();
 	minios_do_halt(MINIOS_HALT_POWEROFF);
+}
+
+int ____sigtimedwait50(const sigset_t *set, siginfo_t *info,
+		const struct timespec *timeout)
+{
+	int rc;
+	rc = _lwp_park(CLOCK_MONOTONIC, 0, timeout, NULL, NULL, NULL);
+	if (rc == -1) {
+		if (errno == ETIMEDOUT)
+			errno = EAGAIN;
+	} else {
+		errno = EAGAIN;
+	}
+	return -1;
 }
