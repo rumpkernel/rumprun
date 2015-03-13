@@ -396,7 +396,7 @@ rumprun_deconfig_blk(const char *blk_index)
 		blk_index, blk_mountpoint);
 	if (unmount(blk_mountpoint, 0) != 0) {
 		warnx("rumprun_config: unmount failed: %d", errno);
-		/* Continue anyway, the initial mount may have failed. */
+		goto out;
 	}
 	snprintf(key, sizeof key, "/dev/xenblk%s", blk_index);
 	if ((rv = rump_pub_etfs_remove(key)) != 0) {
