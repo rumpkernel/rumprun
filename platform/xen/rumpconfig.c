@@ -147,14 +147,14 @@ rumprun_config_net(const char *if_index)
 		if_index, if_type, if_method, if_addr ? if_addr : "");
 	snprintf(buf, sizeof buf, "xenif%s", if_index);
 	if ((rv = rump_pub_netconfig_ifcreate(buf)) != 0) {
-		warnx("rumprun_config: %s: ifcreate failed: %s\n", buf,
+		warnx("rumprun_config: %s: ifcreate failed: %s", buf,
 			strerror(rv));
 		goto out;
 	}
 	if (strcmp(if_type, "inet") == 0 &&
 	    strcmp(if_method, "dhcp") == 0) {
 		if ((rv = rump_pub_netconfig_dhcp_ipv4_oneshot(buf)) != 0) {
-			warnx("rumprun_config: %s: dhcp_ipv4 failed: %s\n", buf,
+			warnx("rumprun_config: %s: dhcp_ipv4 failed: %s", buf,
 				strerror(rv));
 			goto out;
 		}
@@ -162,25 +162,25 @@ rumprun_config_net(const char *if_index)
 	else if (strcmp(if_type, "inet") == 0 &&
 		 strcmp(if_method, "static") == 0) {
 		if (if_addr == NULL || if_mask == NULL) {
-			warnx("rumprun_config: %s: missing if_addr/mask\n",
+			warnx("rumprun_config: %s: missing if_addr/mask",
 			    buf);
 			goto out;
 		}
 		if ((rv = rump_pub_netconfig_ipv4_ifaddr(buf, if_addr,
 			if_mask)) != 0) {
-			warnx("rumprun_config: %s: ipv4_ifaddr failed: %s\n",
+			warnx("rumprun_config: %s: ipv4_ifaddr failed: %s",
 				buf, strerror(rv));
 			goto out;
 		}
 		if (if_gw &&
 			(rv = rump_pub_netconfig_ipv4_gw(if_gw)) != 0) {
-			warnx("rumprun_config: %s: ipv4_gw failed: %s\n",
+			warnx("rumprun_config: %s: ipv4_gw failed: %s",
 				buf, strerror(rv));
 			goto out;
 		}
 	}
 	else {
-		warnx("rumprun_config: %s: unknown type/method %s/%s\n",
+		warnx("rumprun_config: %s: unknown type/method %s/%s",
 			buf, if_type, if_method);
 	}
 
@@ -216,12 +216,12 @@ rumprun_deconfig_net(const char *if_index)
 		/* TODO: need an interface to send DHCPRELEASE here */
 		snprintf(buf, sizeof buf, "xenif%s", if_index);
 		if ((rv = rump_pub_netconfig_ifdown(buf)) != 0) {
-			warnx("rumprun_deconfig: %s: ifdown failed: %s\n", buf,
+			warnx("rumprun_deconfig: %s: ifdown failed: %s", buf,
 				strerror(rv));
 			goto out;
 		}
 		if ((rv = rump_pub_netconfig_ifdestroy(buf)) != 0) {
-			printf("rumprun_deconfig: %s: ifdestroy failed: %s\n",
+			printf("rumprun_deconfig: %s: ifdestroy failed: %s",
 				buf, strerror(rv));
 			goto out;
 		}
@@ -231,18 +231,18 @@ rumprun_deconfig_net(const char *if_index)
 		 strcmp(if_method, "static") == 0) {
 		snprintf(buf, sizeof buf, "xenif%s", if_index);
 		if ((rv = rump_pub_netconfig_ifdown(buf)) != 0) {
-			warnx("rumprun_deconfig: %s: ifdown failed: %s\n", buf,
+			warnx("rumprun_deconfig: %s: ifdown failed: %s", buf,
 				strerror(rv));
 			goto out;
 		}
 		if ((rv = rump_pub_netconfig_ifdestroy(buf)) != 0) {
-			printf("rumprun_deconfig: %s: ifdestroy failed: %s\n",
+			printf("rumprun_deconfig: %s: ifdestroy failed: %s",
 				buf, strerror(rv));
 			goto out;
 		}
 	}
 	else {
-		warnx("rumprun_config: %s: unknown type/method %s/%s\n",
+		warnx("rumprun_config: %s: unknown type/method %s/%s",
 			buf, if_type, if_method);
 	}
 
@@ -340,7 +340,7 @@ rumprun_config_blk(const char *blk_index)
 		return;
 	if ((strcmp(blk_fstype, "ffs") != 0) &&
 		(strcmp(blk_fstype, "cd9660") != 0)) {
-		warnx("rumprun_config: xenblk%s: unsupported fstype %s\n",
+		warnx("rumprun_config: xenblk%s: unsupported fstype %s",
 			blk_index, blk_fstype);
 		goto out;
 	}
@@ -348,7 +348,7 @@ rumprun_config_blk(const char *blk_index)
 	printf("rumprun_config: mounting xenblk%s on %s as %s\n",
 		blk_index, blk_mountpoint, blk_fstype);
 	if ((rv = mkdir(blk_mountpoint, 0777)) != 0) {
-		warnx("rumprun_config: mkdir failed: %d", errno);
+		warn("rumprun_config: mkdir failed");
 		goto out;
 	}
 	snprintf(key, sizeof key, "/dev/xenblk%s", blk_index);
@@ -395,7 +395,7 @@ rumprun_deconfig_blk(const char *blk_index)
 	printf("rumprun_config: unmounting xenblk%s from %s\n",
 		blk_index, blk_mountpoint);
 	if (unmount(blk_mountpoint, 0) != 0) {
-		warnx("rumprun_config: unmount failed: %d", errno);
+		warn("rumprun_config: unmount failed");
 		goto out;
 	}
 	snprintf(key, sizeof key, "/dev/xenblk%s", blk_index);
@@ -454,7 +454,7 @@ rumprun_config_environ(const char *name)
 	if (rv != 0)
 		return;
 	if (setenv(name, value, 1) != 0) {
-		warnx("rumprun_config: setenv(%s) failed: %d", errno);
+		warn("rumprun_config: setenv(%s) failed", name);
 		goto out;
 	}
 
