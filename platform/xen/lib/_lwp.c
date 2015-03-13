@@ -304,7 +304,13 @@ void _lwpnullop(void);
 void _lwpnullop(void) { }
 
 void _lwpabort(void);
-void _lwpabort(void) {abort();}
+void __dead
+_lwpabort(void)
+{
+	minios_printk("_lwpabort() called\n");
+	_exit(1);
+}
+
 __strong_alias(_sys_setcontext,_lwpabort);
 __strong_alias(_lwp_kill,_lwpabort);
 
