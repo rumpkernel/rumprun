@@ -34,4 +34,3 @@ STUB(_sys_msgsnd);
 STUB(_sys___msync13);
 STUB(_sys___wait450);
 STUB(_sys___sigsuspend14);
-STUB(____sigtimedwait50);
