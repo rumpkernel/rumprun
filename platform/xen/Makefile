@@ -107,9 +107,6 @@ tests:
 httpd:
 	$(APP_TOOLS_MAKE) -C httpd -f Makefile.boot
 
-STDTESTS=tests/libstdtests/rumpkern_demo.c tests/libstdtests/pthread_test.c \
-	 tests/libstdtests/tls_test.c
-
 .PHONY: clean arch_clean app-tools_clean
 
 clean:	app-tools_clean
