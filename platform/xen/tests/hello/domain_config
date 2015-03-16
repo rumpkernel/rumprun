@@ -1,5 +1,0 @@
-kernel = "hello"
-memory = 16
-vcpus=1
-name = "rump-kernel-hello"
-on_crash="preserve"
