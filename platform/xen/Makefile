@@ -99,7 +99,7 @@ include $(APP_TOOLS_DIR)/Makefile.app-tools
 # app-tools.
 .PHONY: tests
 tests:
-	$(APP_TOOLS_MAKE) -C tests
+	$(APP_TOOLS_MAKE) -C ../../tests
 
 # This is the "old" rumprun-xen demo, migrated to app-tools. Do not remove this
 # demo from the build without prior coordination, Xen oss-test CI relies on it.
