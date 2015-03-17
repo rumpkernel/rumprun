@@ -1,4 +1,4 @@
-rumprun
+rumprun [![Build Status](https://travis-ci.org/rumpkernel/rumprun.svg?branch=master)](https://travis-ci.org/rumpkernel/rumprun)
 =======
 
 This repository provides the rumprun software stack.  Rumprun enables
