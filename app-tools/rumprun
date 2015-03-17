@@ -34,12 +34,14 @@ echo !!! NOTE: rumprun is experimental and usage may change in the future
 echo !!!
 echo
 
-err() {
+err()
+{
 	echo rumprun: error: "$@" 1>&2
 	exit 1
 }
 
-usage() {
+usage()
+{
 	cat <<EOM
 usage: rumprun STACK [ -ipd ] [ -D PORT ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] [ -n NETSPEC ] [ -e VAR[=VALUE] ] [ -- ] APP [ args ]
     STACK is the rumprun stack to use. Only "xen" is currently supported
@@ -63,27 +65,26 @@ EOM
 }
 
 # Detect the filesystem type of the image at $1.
-detect_fstype() {
-	(
-		eval $(blkid -o export $1)
-		if [ $? -ne 0 ]; then
-			TYPE=unknown
-		fi
-		case ${TYPE} in
-			ufs)
-				echo ffs
-				return 0
-				;;
-			iso9660)
-				echo cd9660
-				return 0
-				;;
-			*)
-				echo unknown
-				return 1
-				;;
-		esac
-	)
+detect_fstype()
+{
+	eval $(blkid -o export $1)
+	if [ $? -ne 0 ]; then
+		TYPE=unknown
+	fi
+	case ${TYPE} in
+	ufs)
+		echo ffs
+		return 0
+		;;
+	iso9660)
+		echo cd9660
+		return 0
+		;;
+	*)
+		echo unknown
+		return 1
+		;;
+	esac
 }
 
 cidr2mask()
@@ -94,7 +95,8 @@ cidr2mask()
 	echo ${1-0}.${2-0}.${3-0}.${4-0}
 }
 
-parse_netspec() {
+parse_netspec()
+{
 	# Call ourselves recursively to split $@ on ,
 	if [ "$IFS" != "," ]; then
 		OLDIFS=$IFS
@@ -133,7 +135,8 @@ parse_netspec() {
 }
 
 # run_xen: Generate Xen configuration and run application stack.
-run_xen() {
+run_xen()
+{
 	conf=/tmp/xr.conf.$$
 	xenstore=/tmp/xr.store.$$
 	>${conf}
@@ -152,75 +155,76 @@ run_xen() {
 	sudo=''
 	while getopts "n:b:e:pidD:N:M:" opt; do
 		case "$opt" in
-			# -n: NETSPEC
-			n)
-				parse_netspec "${OPTARG}" || usage
-				nindex=$(expr $nindex + 1)
-				;;
-			# -b: BLKSPEC: hostpath,mountpoint
-			b)
-				image=${OPTARG%,*}
-				image=$(readlink -f ${image})
-				mountpoint=${OPTARG#*,}
-				[ -n "$image" ] || usage
-				[ -n "$mountpoint" ] || usage
-				[ -f "$image" ] || err File $image does not exist
-				fstype=$(detect_fstype $image)
-				[ $? -ne 0 ] && err File $image: unknown fstype
-				vdev=hd$(echo $bindex | tr '[0-9]' '[a-j]')
-				conf_disk="${conf_disk}'file:$image,$vdev,w',"
-				echo blk/${bindex}/type etfs >>${xenstore}
-				echo blk/${bindex}/fstype $fstype >>${xenstore}
-				echo blk/${bindex}/mountpoint $mountpoint\
-					>>${xenstore}
-				bindex=$(expr $bindex + 1)
-				;;
-			# -e: Set guest environment variable.
-			e)
-				case "${OPTARG}" in
-					*=*)
-						key=${OPTARG%%=*}
-						value=${OPTARG#*=}
-						;;
-					*)
-						key=${OPTARG}
-						value=
-						;;
-				esac
-				[ -n "$key" ] || usage
-				echo environ/${key} "${value}" >>${xenstore}
-				;;
-			# -p: Leave the domain paused after creation.
-			p)
-				opt_pause=1
-				;;
-			# -i: Attach to domain console on startup.
-			i)
-				opt_interactive=1
-				;;
-			# -d: Destroy domain on poweroff instead of preserving it.
-			d)
-				opt_destroy='on_poweroff="destroy"'
-				;;
-			# -N: Override domain name.
-			N)
-				opt_name=${OPTARG}
-				;;
-			# -M: Set domain memory.
-			M)
-				opt_mem=${OPTARG}
-				;;
-			# -D PORT: attach gdbsx to domain.
-			D)
-				if ! type gdbsx >/dev/null 2>&1; then
-					err "'gdbsx' is required for -D, please install it."
-				fi
-				opt_debug=${OPTARG}
-				opt_pause=1
-				;;
-			*)
-				usage
-				;;
+		# -n: NETSPEC
+		n)
+			parse_netspec "${OPTARG}" || usage
+			nindex=$(expr $nindex + 1)
+			;;
+		# -b: BLKSPEC: hostpath,mountpoint
+		b)
+			image=${OPTARG%,*}
+			image=$(readlink -f ${image})
+			mountpoint=${OPTARG#*,}
+			[ -n "$image" ] || usage
+			[ -n "$mountpoint" ] || usage
+			[ -f "$image" ] || err File $image does not exist
+
+			fstype=$(detect_fstype $image)
+			[ $? -ne 0 ] && err File $image: unknown fstype
+			vdev=hd$(echo $bindex | tr '[0-9]' '[a-j]')
+			conf_disk="${conf_disk}'file:$image,$vdev,w',"
+			echo blk/${bindex}/type etfs >>${xenstore}
+			echo blk/${bindex}/fstype $fstype >>${xenstore}
+			echo blk/${bindex}/mountpoint $mountpoint\
+				>>${xenstore}
+			bindex=$(expr $bindex + 1)
+			;;
+		# -e: Set guest environment variable.
+		e)
+			case "${OPTARG}" in
+			*=*)
+				key=${OPTARG%%=*}
+					value=${OPTARG#*=}
+					;;
+				*)
+					key=${OPTARG}
+					value=
+					;;
+			esac
+			[ -n "$key" ] || usage
+			echo environ/${key} "${value}" >>${xenstore}
+			;;
+		# -p: Leave the domain paused after creation.
+		p)
+			opt_pause=1
+			;;
+		# -i: Attach to domain console on startup.
+		i)
+			opt_interactive=1
+			;;
+		# -d: Destroy domain on poweroff instead of preserving it.
+		d)
+			opt_destroy='on_poweroff="destroy"'
+			;;
+		# -N: Override domain name.
+		N)
+			opt_name=${OPTARG}
+			;;
+		# -M: Set domain memory.
+		M)
+			opt_mem=${OPTARG}
+			;;
+		# -D PORT: attach gdbsx to domain.
+		D)
+			if ! type gdbsx >/dev/null 2>&1; then
+				err "'gdbsx' is required for -D, please install it."
+			fi
+			opt_debug=${OPTARG}
+			opt_pause=1
+			;;
+		*)
+			usage
+			;;
 		esac
 	done
 	# Clean up vif and disk, xl does not like trailing commas.
