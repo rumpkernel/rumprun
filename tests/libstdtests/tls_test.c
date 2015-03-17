@@ -32,8 +32,8 @@ wrkthread(void *arg)
 	return (void *)(uintptr_t)c;
 }
 
-void
-test_tls(void)
+int
+main(void)
 {
 	pthread_t threads[NTHREADS];
 	int n, rc;
@@ -61,4 +61,5 @@ test_tls(void)
 			errx(1, "thread[%d]: expected %d, got %d",
 			    n, LOOPCNT, rv);
 	}
+	return 0;
 }

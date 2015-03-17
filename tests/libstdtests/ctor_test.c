@@ -29,7 +29,7 @@ dtor1(void)
 }
 
 int
-main()
+main(void)
 {
 
 	if (myvalue != 8) {

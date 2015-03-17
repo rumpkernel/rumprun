@@ -96,8 +96,8 @@ wakeupthread(void *arg)
 	return NULL;
 }
 
-void
-test_pthread(void)
+int
+main(void)
 {
 	struct timespec ts;
 	pthread_t pt;
@@ -142,4 +142,6 @@ test_pthread(void)
 	pthread_mutex_unlock(&mtx);
 
 	printf("main thread done\n");
+
+	return 0;
 }
