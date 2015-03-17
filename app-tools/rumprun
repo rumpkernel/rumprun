@@ -28,6 +28,12 @@
 # rumprun: "driver" script for running rumprun application stacks
 #
 
+echo
+echo !!!
+echo !!! NOTE: rumprun is experimental and usage may change in the future
+echo !!!
+echo
+
 err() {
 	echo rumprun: error: "$@" 1>&2
 	exit 1
