@@ -40,6 +40,8 @@ err()
 	exit 1
 }
 
+myoptstr='n:b:e:pidD:N:M:'
+
 usage()
 {
 	cat <<EOM
@@ -153,7 +155,7 @@ run_xen()
 	opt_name=
 	opt_debug=
 	sudo=''
-	while getopts "n:b:e:pidD:N:M:" opt; do
+	while getopts "${myoptstr}" opt; do
 		case "$opt" in
 		# -n: NETSPEC
 		n)
@@ -285,10 +287,30 @@ EOM
 	fi
 }
 
+run_qemu()
+{
+
+	while getopts "${myoptstr}" opt; do
+		err qemu target does not support options yet
+	done
+	qemu-system-i386 -net none -kernel $1
+}
+
 if [ $# -lt 2 ]; then
 	usage
 fi
 
-[ "$1" != "xen" ] && usage
+platform="$1"
 shift
-run_xen "$@"
+case ${platform} in
+xen)
+	run_xen "$@"
+	;;
+qemu)
+	run_qemu "$@"
+	;;
+*)
+	usage
+	;;
+esac
+exit 0
