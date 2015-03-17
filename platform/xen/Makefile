@@ -95,25 +95,18 @@ APP_TOOLS_DIR= $(abspath ../../app-tools)
 
 include $(APP_TOOLS_DIR)/Makefile.app-tools
 
-# New demos each have their own Makefile under tests/ and are built using
+# New demos each have their own Makefile under ../../tests/ and are built using
 # app-tools.
 .PHONY: tests
 tests:
 	$(APP_TOOLS_MAKE) -C ../../tests
-
-# This is the "old" rumprun-xen demo, migrated to app-tools. Do not remove this
-# demo from the build without prior coordination, Xen oss-test CI relies on it.
-.PHONY: httpd
-httpd:
-	$(APP_TOOLS_MAKE) -C httpd -f Makefile.boot
 
 .PHONY: clean arch_clean app-tools_clean
 
 clean:	app-tools_clean
 	$(MAKE) -C xen OBJ_DIR=$(OBJ_DIR)/xen clean
 	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/lib/*.o
-	$(MAKE) -C httpd -f Makefile.boot clean
-	$(MAKE) -C tests clean
+	$(MAKE) -C ../../tests clean
 
 cleanrump: clean
 	rm -rf rump rumpobj rumptools
