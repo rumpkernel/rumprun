@@ -18,7 +18,7 @@ CFLAGS+=	-fno-stack-protector -ffreestanding
 ifndef NOGCCERROR
 CFLAGS+=	-Werror
 endif
-CPPFLAGS=	-Iinclude -Irump/include -I${BUILDRUMP}/bmk-common -nostdinc
+CPPFLAGS=	-Iinclude -Irump/include -I../../include -nostdinc
 STRIP?=		strip
 
 MACHINE:= $(shell ${CC} -dumpmachine | sed 's/i.86/i386/;s/-.*//;')
