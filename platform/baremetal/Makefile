@@ -54,7 +54,7 @@ OBJS-y+=	sysproxy.o
 LIBS_SYSPROXY=	-lrumpkern_sysproxy
 endif
 
-all: app-tools include/bmk/machine ${THEBIN}
+all: app-tools include/bmk/machine rumprun.o
 
 OBJS_BMK-y+=		intr.o kernel.o undefs.o memalloc.o sched.o subr.o
 OBJS_BMK-y+=		rumpuser.o rumpfiber.o
@@ -122,27 +122,8 @@ include/bmk/machine:
 rumprun.o: ${OBJS}
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@
 
-${THEBIN}: ${THEBIN}.gdb
-	${STRIP} -g -o $@ $<
-
-${THEBIN}.gdb: rumprun.o ${COMPILER_RT} ${LDSCRIPT} Makefile
-	${CC} -nostdlib -o $@ -Wl,-T ${LDSCRIPT} ${CFLAGS} ${LDFLAGS} rumprun.o ${OBJS_APP} -Wl,--whole-archive ${RUMPKERN_LIB} -Wl,--no-whole-archive ${LIBS_USER} ${COMPILER_RT}
-
-iso/boot/grub/grub.cfg:
-	mkdir -p iso/boot/grub
-	printf "menuentry "rumpkernel" {\n\tmultiboot /boot/${THEBIN}\n}\n" > $@
-
-${THEISO}: ${THEBIN} iso/boot/grub/grub.cfg
-	ln -f ${THEBIN} iso/boot/
-	grub-mkrescue -o $@ iso
-
-iso: ${THEISO}
-
 clean: app-tools_clean
-	rm -f ${OBJS} ${COMPILER_RT} ${THEBIN} ${THEBIN}.gdb \
-	    iso/boot/${THEBIN} ${THEISO} iso/boot/grub/grub.cfg \
-	    include/bmk/machine
-	rm -f test-app test-apppp
+	rm -f ${OBJS} ${COMPILER_RT} include/bmk/machine
 
 cleandir: clean
 
@@ -151,17 +132,3 @@ cleanrump: clean
 
 distcleanrump: cleanrump
 	rm -f config.mk
-
-TESTAPPS= test-app
-ifeq (${CONFIG_CXX},yes)
-TESTAPPS+= test-apppp
-endif
-
-test-app: app.c
-	$(APP_TOOLS_DIR)/rumprun-bmk-cc $< -o $@ -m32 -lpthread -lcrypto
-
-test-apppp: apppp.cc
-	$(APP_TOOLS_DIR)/rumprun-bmk-c++ $< -o $@ -m32 -lpthread
-
-test: all ${TESTAPPS}
-	./tests/checksum/test.sh
