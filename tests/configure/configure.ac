@@ -12,6 +12,7 @@ AM_INIT_AUTOMAKE([1.11 foreign subdir-objects -Wall -Werror])
 AM_MAINTAINER_MODE
 
 AC_PROG_CC
+AC_PROG_CXX
 AC_PROG_CC_C_O
 AC_PROG_LIBTOOL
 
