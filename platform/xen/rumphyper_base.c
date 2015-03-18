@@ -31,11 +31,12 @@
 #include <mini-os/blkfront.h>
 #include <mini-os/mm.h>
 
-#include <errno.h>
 #include <fcntl.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <bmk-common/errno.h>
 
 #include "rumphyper.h"
 
@@ -97,7 +98,7 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 	int rv = 0;
 
 	if (buflen <= 1)
-		return EINVAL;
+		return BMK_EINVAL;
 
 	if (strcmp(name, RUMPUSER_PARAM_NCPU) == 0
 	    || strcmp(name, "RUMP_VERBOSE") == 0) {
@@ -125,7 +126,7 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 
 		for (i = 0; memsize > 0; i++) {
 			if (i >= sizeof(tmp)-1)
-				return E2BIG;
+				return BMK_E2BIG;
 			tmp[i] = (memsize % 10) + '0';
 			memsize = memsize / 10;
 		}
@@ -139,7 +140,7 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 		}
 
 	} else {
-		rv = ENOENT;
+		rv = BMK_ENOENT;
 	}
 
 	return rv;
@@ -227,7 +228,7 @@ rumpuser_malloc(size_t len, int alignment, void **retval)
 	if (*retval)
 		return 0;
 	else
-		return ENOMEM;
+		return BMK_ENOMEM;
 }
 
 void
@@ -289,7 +290,7 @@ devopen(int num)
 		blkopen[num] = 1;
 		return 0;
 	} else {
-		return EIO; /* guess something */
+		return BMK_EIO; /* guess something */
 	}
 }
 
@@ -317,7 +318,7 @@ rumpuser_open(const char *name, int mode, int *fdp)
 	int acc, rv, num;
 
 	if ((mode & RUMPUSER_OPEN_BIO) == 0 || (num = devname2num(name)) == -1)
-		return ENXIO;
+		return BMK_ENXIO;
 
 	if ((rv = devopen(num)) != 0)
 		return rv;
@@ -326,7 +327,7 @@ rumpuser_open(const char *name, int mode, int *fdp)
 	if (acc == RUMPUSER_OPEN_WRONLY || acc == RUMPUSER_OPEN_RDWR) {
 		if (blkinfos[num].mode != O_RDWR) {
 			/* XXX: unopen */
-			return EROFS;
+			return BMK_EROFS;
 		}
 	}
 
@@ -340,7 +341,7 @@ rumpuser_close(int fd)
 	int rfd = fd - BLKFDOFF;
 
 	if (rfd < 0 || rfd+1 > NBLKDEV)
-		return EBADF;
+		return BMK_EBADF;
 
 	if (--blkopen[rfd] == 0) {
 		struct blkfront_dev *toclose = blkdevs[rfd];
@@ -359,7 +360,7 @@ rumpuser_getfileinfo(const char *name, uint64_t *size, int *type)
 	int rv, num;
 
 	if ((num = devname2num(name)) == -1)
-		return ENXIO;
+		return BMK_ENXIO;
 	if ((rv = devopen(num)) != 0)
 		return rv;
 
@@ -386,7 +387,7 @@ biocomp(struct blkfront_aiocb *aiocb, int ret)
 
 	rumpkern_sched(0, NULL);
 	if (ret)
-		bio->bio_done(bio->bio_arg, 0, EIO);
+		bio->bio_done(bio->bio_arg, 0, BMK_EIO);
 	else
 		bio->bio_done(bio->bio_arg, bio->bio_aiocb.aio_nbytes, 0);
 	rumpkern_unsched(&dummy, NULL);
@@ -486,6 +487,9 @@ rumpuser_bio(int fd, int op, void *data, size_t dlen, int64_t off,
 
 	rumpkern_sched(nlocks, NULL);
 }
+
+/* XXX FIXME */
+#include <errno.h>
 
 void
 rumpuser_seterrno(int err)

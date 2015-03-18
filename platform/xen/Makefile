@@ -12,7 +12,8 @@ CONFIG_SYSPROXY ?=	no
 
 OBJCOPY=objcopy
 
-CPPFLAGS = -isystem rump/include -isystem xen/include -I. -nostdinc
+CPPFLAGS = -isystem rump/include -isystem xen/include -I. -I../../include
+CPPFLAGS+= -nostdinc
 CPPFLAGS += -DVIRTIF_BASE=xenif
 
 CFLAGS = -Wall -g

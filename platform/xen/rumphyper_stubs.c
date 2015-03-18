@@ -1,8 +1,8 @@
-#include <errno.h>
+#include <bmk-common/errno.h>
 
 int stub_nothing(void); int stub_nothing(void) {return 0;}
 
-int stub_enotsup(void); int stub_enotsup(void) {return ENOTSUP;}
+int stub_enotsup(void); int stub_enotsup(void) {return BMK_EGENERIC;}
 
 #define NOTHING(name) \
 int name(void) __attribute__((alias("stub_nothing")));

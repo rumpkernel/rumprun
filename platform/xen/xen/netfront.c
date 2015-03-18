@@ -8,7 +8,6 @@
 #include <mini-os/os.h>
 #include <mini-os/xenbus.h>
 #include <mini-os/events.h>
-#include <errno.h>
 #include <xen/io/netif.h>
 #include <mini-os/gnttab.h>
 #include <mini-os/xmalloc.h>

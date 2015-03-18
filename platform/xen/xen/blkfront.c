@@ -12,7 +12,8 @@
 #include <xen/io/blkif.h>
 #include <xen/io/protocols.h>
 
-#include <errno.h>
+#include <bmk-common/errno.h>
+
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
@@ -503,7 +504,7 @@ moretodo:
         dev->ring.rsp_cons = ++cons;
         /* Nota: callback frees aiocbp itself */
         if (aiocbp && aiocbp->aio_cb)
-            aiocbp->aio_cb(aiocbp, status ? -EIO : 0);
+            aiocbp->aio_cb(aiocbp, status ? -BMK_EIO : 0);
         if (dev->ring.rsp_cons != cons)
             /* We reentered, we must not continue here */
             break;

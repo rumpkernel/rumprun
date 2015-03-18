@@ -30,9 +30,10 @@
 #include <mini-os/mm.h>
 #include <mini-os/hypervisor.h>
 
+#include <bmk-common/errno.h>
+
 #include "pci_user.h"
 
-#include <errno.h>
 #include <stdlib.h> /* for malloc */
 
 void *
@@ -136,7 +137,7 @@ rumpcomp_pci_dmamem_map(struct rumpcomp_pci_dmaseg *dss, size_t nseg,
 {
 
 	if (nseg > 1) {
-		return ENOTSUP;
+		return BMK_EIO;
 	}
 	*vap = (void *)dss[0].ds_vacookie;
 

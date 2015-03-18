@@ -31,7 +31,7 @@ OBJCOPY=objcopy
 include minios.mk
 
 # TODO: Import rump CPPFLAGS / include directories from top-level Makefile
-CFLAGS += -isystem ../rump/include -I.. -nostdinc
+CFLAGS += -isystem ../rump/include -I.. -I../../../include -nostdinc
 CFLAGS += -I$(MINI-OS_ROOT)
 CFLAGS += -no-integrated-cpp
 CFLAGS += -fno-stack-protector

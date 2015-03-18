@@ -36,7 +36,8 @@
 #include <mini-os/console.h>
 #include <mini-os/sched.h>
 
-#include <errno.h>
+#include <bmk-common/errno.h>
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -68,7 +69,7 @@ wait(struct waithead *wh, uint64_t nsec)
 	if (w.onlist)
 		TAILQ_REMOVE(wh, &w, entries);
 
-	return w.onlist ? ETIMEDOUT : 0;
+	return w.onlist ? BMK_ETIMEDOUT : 0;
 }
 
 static void
@@ -111,7 +112,7 @@ rumpuser_thread_create(void *(*f)(void *), void *arg, const char *thrname,
 		thr->flags |= THREAD_MUSTJOIN;
 
 	if (!thr)
-		return EINVAL;
+		return BMK_EINVAL;
 
 	*tptr = thr;
 	return 0;
@@ -182,7 +183,7 @@ rumpuser_mutex_tryenter(struct rumpuser_mtx *mtx)
 	struct lwp *l = get_current()->lwp;
 
 	if (mtx->v && mtx->o != l)
-		return EBUSY;
+		return BMK_EBUSY;
 
 	mtx->v++;
 	mtx->o = l;
@@ -272,7 +273,7 @@ rumpuser_rw_tryenter(int enum_rumprwlock, struct rumpuser_rw *rw)
 			rw->o = rumpuser_curlwp();
 			rv = 0;
 		} else {
-			rv = EBUSY;
+			rv = BMK_EBUSY;
 		}
 		break;
 	case RUMPUSER_RW_READER:
@@ -280,7 +281,7 @@ rumpuser_rw_tryenter(int enum_rumprwlock, struct rumpuser_rw *rw)
 			rw->v++;
 			rv = 0;
 		} else {
-			rv = EBUSY;
+			rv = BMK_EBUSY;
 		}
 		break;
 	}
@@ -347,7 +348,7 @@ rumpuser_rw_tryupgrade(struct rumpuser_rw *rw)
 		return 0;
 	}
 
-	return EBUSY;
+	return BMK_EBUSY;
 }
 
 struct rumpuser_cv {

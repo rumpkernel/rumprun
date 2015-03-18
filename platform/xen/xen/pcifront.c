@@ -11,10 +11,11 @@
 #include <mini-os/pcifront.h>
 #include <mini-os/sched.h>
 
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <bmk-common/errno.h>
 
 #define PCI_DEVFN(slot, func) ((((slot) & 0x1f) << 3) | ((func) & 0x07))
 
@@ -483,7 +484,7 @@ int pcifront_conf_read(struct pcifront_dev *dev,
     if (!dev)
         dev = pcidev;
     if (!dev)
-        return ENXIO;
+        return BMK_ENXIO;
 
     if (pcifront_physical_to_virtual(dev, &dom, &bus, &slot, &fun) < 0)
         return XEN_PCI_ERR_dev_not_found;
@@ -516,7 +517,7 @@ int pcifront_conf_write(struct pcifront_dev *dev,
     if (!dev)
         dev = pcidev;
     if (!dev)
-        return ENXIO;
+        return BMK_ENXIO;
 
     if (pcifront_physical_to_virtual(dev, &dom, &bus, &slot, &fun) < 0)
         return XEN_PCI_ERR_dev_not_found;

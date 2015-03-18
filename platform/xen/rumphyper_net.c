@@ -28,9 +28,10 @@
 #include <mini-os/os.h>
 #include <mini-os/netfront.h>
 
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <bmk-common/errno.h>
 
 #include "rumphyper.h"
 #include <rump/rumpuser.h>
@@ -154,7 +155,7 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 
 	viu = malloc(sizeof(*viu));
 	if (viu == NULL) {
-		rv = ENOMEM;
+		rv = BMK_ENOMEM;
 		goto out;
 	}
 	memset(viu, 0, sizeof(*viu));
@@ -162,7 +163,7 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 
 	viu->viu_dev = netfront_init(NULL, myrecv, enaddr, NULL, viu);
 	if (!viu->viu_dev) {
-		rv = EINVAL; /* ? */
+		rv = BMK_EINVAL; /* ? */
 		free(viu);
 		goto out;
 	}

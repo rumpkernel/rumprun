@@ -33,12 +33,13 @@
 #include <mini-os/os.h>
 #include <mini-os/lib.h>
 #include <mini-os/xmalloc.h>
-#include <errno.h>
 #include <xen/grant_table.h>
 #include <inttypes.h>
 #include <mini-os/gntmap.h>
 
 #include <string.h>
+
+#include <bmk-common/errno.h>
 
 #define DEFAULT_MAX_GRANTS 128
 
@@ -90,11 +91,11 @@ gntmap_set_max_grants(struct gntmap *map, int count)
 #endif
 
     if (map->nentries != 0)
-        return -EBUSY;
+        return -BMK_EBUSY;
 
     map->entries = xmalloc_array(struct gntmap_entry, count);
     if (map->entries == NULL)
-        return -ENOMEM;
+        return -BMK_ENOMEM;
 
     memset(map->entries, 0, sizeof(struct gntmap_entry) * count);
     map->nentries = count;
@@ -168,7 +169,7 @@ gntmap_munmap(struct gntmap *map, unsigned long start_address, int count)
         ent = gntmap_find_entry(map, start_address + PAGE_SIZE * i);
         if (ent == NULL) {
             minios_printk("gntmap: tried to munmap unknown page\n");
-            return -EINVAL;
+            return -BMK_EINVAL;
         }
 
         rc = _gntmap_unmap_grant_ref(ent);
