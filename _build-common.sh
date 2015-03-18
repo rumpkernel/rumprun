@@ -64,7 +64,8 @@ eval ${BUILDXENMETAL_PCI_P} && makepci ${RUMPSRC} ${BUILDXENMETAL_PCI_ARGS}
 
 # build unwind bits if we support c++
 if havecxx; then
-        ( cd librumprun_unwind && ${RUMPMAKE} dependall && ${RUMPMAKE} install )
+        ( cd ../../lib/librumprun_unwind
+	    ${RUMPMAKE} dependall && ${RUMPMAKE} install )
         CONFIG_CXX=yes
 else
         CONFIG_CXX=no
