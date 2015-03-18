@@ -87,6 +87,7 @@ $(OBJ_DIR)/rumprun.o: $(RUMP_OBJS)
 
 $(OBJ_DIR)/configure_stubs.o: configure_stubs.c
 
+APP_TOOLS_TARGETARCH= $(TARGET_ARCH)
 APP_TOOLS_PLATFORM= xen
 APP_TOOLS_HEADOBJ= $(abspath $(OBJ_DIR)/xen/minios.o)
 APP_TOOLS_OBJS= $(abspath $(OBJ_DIR)/rumprun.o)
