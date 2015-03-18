@@ -25,7 +25,7 @@ if [ ! -f ${BUILDRUMP}/subr.sh ]; then
 	)
 fi
 . ${BUILDRUMP}/subr.sh
-${BUILDRUMP}/xenbaremetal.sh "$@" || die xenbaremetal.sh failed
+../../_build-common.sh.sh "$@" || die _build-common.sh failed
 
 RUMPMAKE=$(pwd)/rumptools/rumpmake
 export RUMPMAKE
