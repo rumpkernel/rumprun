@@ -73,5 +73,6 @@ fi
 echo "BUILDRUMP=${BUILDRUMP}" > config.mk
 echo "RUMPSRC=${RUMPSRC}" >> config.mk
 echo "CONFIG_CXX=${CONFIG_CXX}" >> config.mk
+echo "RUMPMAKE=${RUMPMAKE}" >> config.mk
 
 exit 0

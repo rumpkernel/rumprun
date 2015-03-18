@@ -28,7 +28,6 @@ fi
 ../../_build-common.sh "$@" || die _build-common.sh failed
 
 RUMPMAKE=$(pwd)/rumptools/rumpmake
-export RUMPMAKE
 
 makekernlib ()
 {
