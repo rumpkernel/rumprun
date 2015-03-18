@@ -40,7 +40,10 @@ endif
 ifeq (${MACHINE},x86_64)
   supported:= true
   MACHINE:=i386
+  # XXX
   CFLAGS+=-m32
+  CFLAGS_PLATFORM=-m32
+  LDFLAGS_PLATFORM=-m32
 endif
 ifneq (${supported},true)
 $(error only supported target is x86, you have ${MACHINE})
@@ -54,7 +57,7 @@ OBJS-y+=	sysproxy.o
 LIBS_SYSPROXY=	-lrumpkern_sysproxy
 endif
 
-all: app-tools include/bmk/machine rumprun.o
+all: app-tools include/bmk/machine rumprun.o tests
 
 OBJS_BMK-y+=		intr.o kernel.o undefs.o memalloc.o sched.o subr.o
 OBJS_BMK-y+=		rumpuser.o rumpfiber.o
@@ -123,8 +126,12 @@ include/bmk/machine:
 rumprun.o: ${OBJS}
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@
 
+tests: rumprun.o app-tools
+	CFLAGS=$(CFLAGS_PLATFORM) LDFLAGS=$(LDFLAGS_PLATFORM) $(APP_TOOLS_MAKE) -C ../../tests
+
 clean: app-tools_clean
 	rm -f ${OBJS} ${COMPILER_RT} include/bmk/machine
+	$(MAKE) -C ../../tests clean
 
 cleandir: clean
 
