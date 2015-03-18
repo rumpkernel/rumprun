@@ -8,7 +8,7 @@
 #include <bmk/string.h>
 
 size_t
-bmk_strlen(const char* str)
+bmk_strlen(const char *str)
 {
 	size_t rv = 0;
 
