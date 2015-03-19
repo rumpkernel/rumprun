@@ -22,8 +22,6 @@
 #include <rump/rump.h>
 #include <rump/netconfig.h>
 
-#include "netbsd_init.h"
-
 /*
  * could use DNS via libc resolver, but would require us
  * creating /etc/resolv.conf first0

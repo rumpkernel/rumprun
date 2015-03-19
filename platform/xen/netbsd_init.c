@@ -54,12 +54,12 @@ runfini(void)
 }
 
 void
-_netbsd_init(void)
+_netbsd_init(long stacksize)
 {
 
 	thestrings.ps_argvstr = (void *)((char *)&myaux - 2);
 	__ps_strings = &thestrings;
-	pthread__stacksize = 2*STACK_SIZE;
+	pthread__stacksize = 2*stacksize;
 
 	rump_boot_setsigmodel(RUMP_SIGMODEL_IGNORE);
 	rump_init();

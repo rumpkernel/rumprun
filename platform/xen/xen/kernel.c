@@ -74,7 +74,7 @@ _app_main(void *arg)
     init_pcifront(NULL);
 #endif
 
-    _netbsd_init();
+    _netbsd_init(STACK_SIZE);
 
     app_main(si);
     _netbsd_fini(); /* stubbornly execute this anyway */

@@ -8,10 +8,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <bmk/sched.h>
+
 #include <rump/rump.h>
 #include <rump/rump_syscalls.h>
-
-#include <bmk/sched.h>
 
 #include "netbsd_init.h"
 
@@ -25,8 +25,6 @@ static struct ps_strings thestrings;
 static AuxInfo myaux[2];
 extern struct ps_strings *__ps_strings;
 extern size_t pthread__stacksize;
-
-#include <bmk/sched.h>
 
 typedef void (*initfini_fn)(void);
 extern const initfini_fn __init_array_start[1];
@@ -55,12 +53,12 @@ runfini(void)
 }
 
 void
-_netbsd_init(void)
+_netbsd_init(long stacksize)
 {
 
 	thestrings.ps_argvstr = (void *)((char *)&myaux - 2);
 	__ps_strings = &thestrings;
-	pthread__stacksize = 2*BMK_THREAD_STACKSIZE;
+	pthread__stacksize = 2*stacksize;
 
 	rump_boot_setsigmodel(RUMP_SIGMODEL_IGNORE);
 	rump_init();
