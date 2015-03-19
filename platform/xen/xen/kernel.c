@@ -45,7 +45,7 @@
 #include <xen/features.h>
 #include <xen/version.h>
 
-#include "netbsd_init.h"
+#include <bmk-common/netbsd_initfini.h>
 
 uint8_t _minios_xen_features[XENFEAT_NR_SUBMAPS * 32];
 

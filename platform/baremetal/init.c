@@ -7,8 +7,6 @@
 
 #include <bmk/app.h>
 
-#include "netbsd_init.h"
-
 int bmk_havenet;
 
 /*
@@ -50,8 +48,6 @@ bmk_beforemain(void)
 	printf("=== calling main() ===\n\n");
         rv = main(1, argv);
 	printf("=== main() returned %d ===\n\n", rv);
-
-	_netbsd_fini();
 
 	/* XXX: just fall somewhere */
 }

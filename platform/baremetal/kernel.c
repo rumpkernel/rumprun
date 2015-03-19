@@ -6,7 +6,7 @@
 #include <bmk/sched.h>
 #include <bmk/app.h>
 
-#include "netbsd_init.h"
+#include <bmk-common/netbsd_initfini.h>
 
 unsigned long bmk_membase;
 unsigned long bmk_memsize;
@@ -83,6 +83,7 @@ bmk_main(struct multiboot_info *mbi)
 #ifdef BMK_APP
 	_netbsd_init(BMK_THREAD_STACKSIZE);
 	bmk_beforemain();
+	_netbsd_fini();
 #endif
 }
 

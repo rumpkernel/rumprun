@@ -23,7 +23,8 @@
 #include <mini-os/os.h> /* for PAGE_SIZE */
 #include <mini-os/kernel.h>
 
-#include "netbsd_init.h"
+#include <bmk-common/netbsd_initfini.h>
+
 #include "rumpconfig.h"
 
 #ifdef RUMPRUN_MMAP_DEBUG
