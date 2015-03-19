@@ -41,7 +41,6 @@ RUMP_LDLIBS := ${RUMP_LDLIBS} -L$(shell pwd)/../../lib/librumprun_base/xen -lrum
 LDFLAGS := -L$(abspath rump/lib)
 
 rump-src-y += lib/__errno.c
-rump-src-y += lib/emul.c
 rump-src-y += lib/libc_stubs.c
 rump-src-y += lib/memalloc.c
 rump-src-y += lib/_lwp.c

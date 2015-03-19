@@ -97,7 +97,7 @@ RUMPKERN_LIB=	${LIBS_VIO_NET}					\
 		-lrumpdev -lrumpvfs -lrump
 
 ifeq (${RUMPRUN_PRESENT},yes)
-  OBJS_BMK+=	libc_errno.o libc_emul.o libc_malloc.o
+  OBJS_BMK+=	libc_errno.o libc_malloc.o
   OBJS_BMK+=	init.o
   CPPFLAGS+=	-DBMK_APP
   LIBS_USER=	-L$(shell pwd)/../../lib/librumprun_base/baremetal -lrumprun_base -lpthread -lc
