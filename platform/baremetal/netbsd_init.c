@@ -71,7 +71,7 @@ _netbsd_init(void)
 	_libc_init();
 
 	/* XXX: we should probably use csu, but this is quicker for now */
-	__progname = "baremetal";
+	__progname = "rumprun";
 
 #ifdef RUMP_SYSPROXY
 	rump_init_server("tcp://0:12345");
