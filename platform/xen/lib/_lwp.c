@@ -295,15 +295,16 @@ _lwp_self(void)
 	return mylwp->scd_lwpid;
 }
 
+/* XXX: messy.  see sched.h, libc, libpthread, and all over */
+int _sys_sched_yield(void);
 int
-sched_yield(void)
+_sys_sched_yield(void)
 {
 
 	minios_schedule();
 	return 0;
 }
-__weak_alias(_sched_yield,sched_yield);
-__strong_alias(_sys_sched_yield,_sched_yield);
+__weak_alias(sched_yield,_sys_sched_yield);
 
 struct tls_tcb *
 _rtld_tls_allocate(void)
