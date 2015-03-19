@@ -109,8 +109,7 @@ _exit(int eval)
 	}
 	_rumprun_deconfig();
 	_netbsd_fini();
-	minios_stop_kernel();
-	minios_do_halt(MINIOS_HALT_POWEROFF);
+	bmk_ops->bmk_halt();
 }
 
 /* XXX: manual proto.  plug into libc internals some other day */
