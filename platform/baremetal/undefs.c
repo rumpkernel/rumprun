@@ -65,4 +65,3 @@ NOTHING(_sys_msgsnd);
 NOTHING(_sys___msync13);
 NOTHING(_sys___wait450);
 NOTHING(_sys___sigsuspend14);
-NOTHING(____sigtimedwait50);
