@@ -29,7 +29,7 @@
 
 #include <xen/xen.h>
 
-#include "rumpconfig.h"
+#include <bmk-common/rumprun_config.h>
 
 extern int main(int argc, char **argv);
 

@@ -25,8 +25,7 @@
 #include <mini-os/kernel.h>
 
 #include <bmk-common/netbsd_initfini.h>
-
-#include "rumpconfig.h"
+#include <bmk-common/rumprun_config.h>
 
 #ifdef RUMPRUN_MMAP_DEBUG
 #define MMAP_PRINTF(x) printf x
