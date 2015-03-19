@@ -66,7 +66,9 @@
 
 #include <mini-os/os.h>
 #include <mini-os/mm.h>
+#include <mini-os/xmalloc.h>
 
+#include <stdlib.h>
 #include <string.h>
 
 #endif
