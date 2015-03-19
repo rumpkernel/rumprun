@@ -1,6 +1,19 @@
-# XXX TODO: explicitly document what should be set before
-# including this Makefile
-#
+_APPTOOLS_PARAMS=  APP_TOOLS_TARGETARCH APP_TOOLS_PLATFORM APP_TOOLS_DIR
+_APPTOOLS_PARAMS+= APP_TOOLS_HEADOBJ APP_TOOLS_LDSCRIPT
+
+define varchk_tmpl
+ifeq ($${$1},)
+  _APPTOOLS_MISSING=$1
+endif
+endef
+$(foreach var,${_APPTOOLS_PARAMS},$(eval $(call varchk_tmpl,${var})))
+ifdef _APPTOOLS_MISSING
+$(error ${_APPTOOLS_MISSING} not defined)
+endif
+
+#ifneq (,)
+#$(error foo is not set)
+#endif
 
 APP_TOOL_FILES=		cc c++ configure make gmake ar specs
 
