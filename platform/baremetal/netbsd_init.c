@@ -62,6 +62,8 @@ _netbsd_init(void)
 	__ps_strings = &thestrings;
 	pthread__stacksize = 2*BMK_THREAD_STACKSIZE;
 
+	rump_init();
+
 	environ = the_env;
 	bmk_lwp_init();
 	runinit();

@@ -45,7 +45,6 @@ bmk_beforemain(void)
         char *argv[] = {"bmk_main", 0};
 	int rv;
 
-	rump_init();
 	_netbsd_init();
 	rumpkern_config();
 
