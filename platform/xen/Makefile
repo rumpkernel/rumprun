@@ -16,7 +16,7 @@ CPPFLAGS = -isystem rump/include -isystem xen/include -I. -I../../include
 CPPFLAGS+= -nostdinc
 CPPFLAGS += -DVIRTIF_BASE=xenif
 
-CFLAGS = -Wall -g -Werror
+CFLAGS = -Wall -Wstrict-prototypes -Wmissing-prototypes -g -Werror
 CFLAGS += -fno-builtin -no-integrated-cpp -fno-stack-protector
 
 # This is semi-duplicated from xen/arch/x86/arch.mk, can we avoid that?
