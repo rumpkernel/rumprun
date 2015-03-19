@@ -11,10 +11,6 @@ ifdef _APPTOOLS_MISSING
 $(error ${_APPTOOLS_MISSING} not defined)
 endif
 
-#ifneq (,)
-#$(error foo is not set)
-#endif
-
 APP_TOOL_FILES=		cc c++ configure make gmake ar specs
 
 _APP_TOOL_TARGETS:= \
