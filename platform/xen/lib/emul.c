@@ -21,9 +21,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <mini-os/os.h> /* for PAGE_SIZE */
-#include <mini-os/kernel.h>
-
 #include <bmk-common/netbsd_initfini.h>
 #include <bmk-common/rumprun_config.h>
 
@@ -46,7 +43,7 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 		return MAP_FAILED;
 	}
 
-	if ((error = posix_memalign(&v, len, PAGE_SIZE)) != 0) {
+	if ((error = posix_memalign(&v, len, bmk_pagesize)) != 0) {
 		errno = error;
 		return MAP_FAILED;
 	}

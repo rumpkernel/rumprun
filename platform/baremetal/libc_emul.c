@@ -15,15 +15,14 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <lwp.h>
-
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
 
-/* XXX */
-#define PAGE_SIZE 0x1000
+#include <bmk-common/netbsd_initfini.h>
+#include <bmk-common/rumprun_config.h>
 
 #ifdef RUMPRUN_MMAP_DEBUG
 #define MMAP_PRINTF(x) printf x
@@ -44,7 +43,7 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 		return MAP_FAILED;
 	}
 
-	if ((error = posix_memalign(&v, len, PAGE_SIZE)) != 0) {
+	if ((error = posix_memalign(&v, len, bmk_pagesize)) != 0) {
 		errno = error;
 		return MAP_FAILED;
 	}
@@ -97,11 +96,17 @@ munmap(void *addr, size_t len)
 void __dead
 _exit(int eval)
 {
-
-	/* XXX */
-	//do_exit();
-	printf("oh no, more exits\n");
-	for (;;);
+	/* XXX this duplicates _app_main / callmain cleanup */
+	if (eval) {
+		printf("\n=== ERROR: _exit(%d) called ===\n", eval);
+		/* XXX: work around the console being slow to attach */
+		sleep(1);
+	} else {
+		printf("\n=== _exit(%d) called ===\n", eval);
+	}
+	_rumprun_deconfig();
+	_netbsd_fini();
+	bmk_ops->bmk_halt();
 }
 
 /* XXX: manual proto.  plug into libc internals some other day */
