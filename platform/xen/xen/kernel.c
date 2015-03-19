@@ -66,7 +66,7 @@ void setup_xen_features(void)
     }
 }
 
-static void
+static void __attribute__((noreturn))
 stopandhalt(void)
 {
 
