@@ -6,5 +6,6 @@ struct bmk_ops {
 };
 
 extern const struct bmk_ops *bmk_ops;
+extern long bmk_stacksize, bmk_pagesize;
 
 #endif /* _BMKCOMMON_BMK_OPS_H_ */
