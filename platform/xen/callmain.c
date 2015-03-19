@@ -80,6 +80,7 @@ static void parseargs(void *cmdline, int *nargs, char **outarray) {
 	}
 }
 
+int __default_app_main(start_info_t *);
 int
 __default_app_main(start_info_t *si)
 {
