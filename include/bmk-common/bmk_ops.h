@@ -2,7 +2,7 @@
 #define _BMKCOMMON_BMK_OPS_H_
 
 struct bmk_ops {
-	void (*bmk_halt)(void);
+	void (*bmk_halt)(void) __attribute__((noreturn));
 };
 
 extern const struct bmk_ops *bmk_ops;
