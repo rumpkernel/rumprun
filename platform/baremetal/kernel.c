@@ -169,7 +169,7 @@ bmk_init(void)
 		cons_putat(' ', x % CONS_WIDTH, x / CONS_WIDTH);
 }
 
-void
+void __attribute__((noreturn))
 bmk_halt(void)
 {
 
