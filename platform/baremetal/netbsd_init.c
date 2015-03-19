@@ -8,8 +8,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <bmk/sched.h>
-
 #include <rump/rump.h>
 #include <rump/rump_syscalls.h>
 
