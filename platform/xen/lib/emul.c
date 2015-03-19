@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <lwp.h>
 #include <signal.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
@@ -102,11 +103,11 @@ _exit(int eval)
 {
 	/* XXX this duplicates _app_main / callmain cleanup */
 	if (eval) {
-		minios_printk("\n=== ERROR: _exit(%d) called ===\n", eval);
+		printf("\n=== ERROR: _exit(%d) called ===\n", eval);
 		/* XXX: work around the console being slow to attach */
 		sleep(1);
 	} else {
-		minios_printk("\n=== _exit(%d) called ===\n", eval);
+		printf("\n=== _exit(%d) called ===\n", eval);
 	}
 	_rumprun_deconfig();
 	_netbsd_fini();
