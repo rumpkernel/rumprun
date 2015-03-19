@@ -87,4 +87,5 @@ _netbsd_fini(void)
 {
 
 	runfini();
+	rump_sys_reboot(0, 0);
 }
