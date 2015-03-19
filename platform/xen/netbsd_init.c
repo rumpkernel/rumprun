@@ -11,8 +11,7 @@
 #include <rump/rump.h>
 #include <rump/rump_syscalls.h>
 
-#include <mini-os/os.h>
-#include <mini-os/mm.h>
+#include "netbsd_init.h"
 
 static char *the_env[1] = { NULL } ;
 extern void *environ;
@@ -24,8 +23,6 @@ static struct ps_strings thestrings;
 static AuxInfo myaux[2];
 extern struct ps_strings *__ps_strings;
 extern size_t pthread__stacksize;
-
-#include "netbsd_init.h"
 
 typedef void (*initfini_fn)(void);
 extern const initfini_fn __init_array_start[1];
