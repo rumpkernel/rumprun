@@ -105,10 +105,12 @@ _exit(int eval)
 	for (;;);
 }
 
-int sigtimedwait(const sigset_t *set, siginfo_t *info,
-		const struct timespec *timeout)
+int
+sigtimedwait(const sigset_t *set, siginfo_t *info,
+	const struct timespec *timeout)
 {
 	int rc;
+
 	rc = _lwp_park(CLOCK_MONOTONIC, 0, timeout, 0, NULL, NULL);
 	if (rc == -1) {
 		if (errno == ETIMEDOUT)
@@ -116,5 +118,6 @@ int sigtimedwait(const sigset_t *set, siginfo_t *info,
 	} else {
 		errno = EAGAIN;
 	}
+
 	return -1;
 }
