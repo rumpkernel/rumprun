@@ -8,6 +8,7 @@
 
 /* for libc namespace */
 #define mmap _mmap
+#define sigtimedwait ___sigtimedwait50
 
 #include <sys/cdefs.h>
 #include <sys/mman.h>
@@ -113,7 +114,7 @@ _exit(int eval)
 	minios_do_halt(MINIOS_HALT_POWEROFF);
 }
 
-int ____sigtimedwait50(const sigset_t *set, siginfo_t *info,
+int sigtimedwait(const sigset_t *set, siginfo_t *info,
 		const struct timespec *timeout)
 {
 	int rc;
