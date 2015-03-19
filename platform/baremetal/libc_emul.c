@@ -8,18 +8,29 @@
 
 /* for libc namespace */
 #define mmap _mmap
+#define sigtimedwait ___sigtimedwait50
 
 #include <sys/cdefs.h>
 #include <sys/mman.h>
 
 #include <errno.h>
 #include <fcntl.h>
+#include <lwp.h>
+
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <unistd.h>
 
 /* XXX */
 #define PAGE_SIZE 0x1000
+
+#ifdef RUMPRUN_MMAP_DEBUG
+#define MMAP_PRINTF(x) printf x
+#else
+#define MMAP_PRINTF(x)
+#endif
 
 void *
 mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
@@ -29,6 +40,7 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 	int error;
 
 	if (fd != -1 && prot != PROT_READ) {
+		MMAP_PRINTF(("mmap: trying to r/w map a file. failing!\n"));
 		errno = ENOTSUP;
 		return MAP_FAILED;
 	}
@@ -42,6 +54,7 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 		return v;
 
 	if ((nn = pread(fd, v, len, off)) == -1) {
+		MMAP_PRINTF(("mmap: failed to populate r/o file mapping!\n"));
 		error = errno;
 		free(v);
 		errno = error;
@@ -68,6 +81,13 @@ mprotect(void *addr, size_t len, int prot)
 }
 
 int
+minherit(void *addr, size_t len, int inherit)
+{
+	/* nothing to inherit */
+	return 0;
+}
+
+int
 munmap(void *addr, size_t len)
 {
 
@@ -83,4 +103,18 @@ _exit(int eval)
 	//do_exit();
 	printf("oh no, more exits\n");
 	for (;;);
+}
+
+int sigtimedwait(const sigset_t *set, siginfo_t *info,
+		const struct timespec *timeout)
+{
+	int rc;
+	rc = _lwp_park(CLOCK_MONOTONIC, 0, timeout, 0, NULL, NULL);
+	if (rc == -1) {
+		if (errno == ETIMEDOUT)
+			errno = EAGAIN;
+	} else {
+		errno = EAGAIN;
+	}
+	return -1;
 }
