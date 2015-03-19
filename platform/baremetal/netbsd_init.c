@@ -64,7 +64,7 @@ _netbsd_init(long stacksize)
 	rump_init();
 
 	environ = the_env;
-	bmk_lwp_init();
+	rumprun_lwp_init();
 	runinit();
 	_libc_init();
 

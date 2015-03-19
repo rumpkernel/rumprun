@@ -158,7 +158,7 @@ schedhook(void *prevcookie, void *nextcookie)
 }
 
 void
-_lwp_rumpxen_scheduler_init(void)
+rumprun_lwp_init(void)
 {
 
 	minios_set_sched_hook(schedhook);

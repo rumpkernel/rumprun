@@ -35,4 +35,4 @@ struct bmk_thread *bmk_sched_init_mainthread(void *);
 struct bmk_thread *bmk_sched_current(void);
 int *bmk_sched_geterrno(void);
 
-void	bmk_lwp_init(void);
+void	lwp_rumprun_init(void);

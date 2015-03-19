@@ -154,7 +154,7 @@ schedhook(void *prevcookie, void *nextcookie)
 }
 
 void
-bmk_lwp_init(void)
+rumprun_lwp_init(void)
 {
 
 	bmk_sched_set_hook(schedhook);
