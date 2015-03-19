@@ -62,6 +62,7 @@ _netbsd_init(void)
 	__ps_strings = &thestrings;
 	pthread__stacksize = 2*BMK_THREAD_STACKSIZE;
 
+	rump_boot_setsigmodel(RUMP_SIGMODEL_IGNORE);
 	rump_init();
 
 	environ = the_env;
