@@ -100,7 +100,7 @@ ifeq (${RUMPRUN_PRESENT},yes)
   OBJS_BMK+=	libc_errno.o libc_emul.o libc_malloc.o
   OBJS_BMK+=	init.o
   CPPFLAGS+=	-DBMK_APP
-  LIBS_USER=	-L$(shell pwd)/../../lib/librumprun_base -lrumprun_base -lpthread -lc
+  LIBS_USER=	-L$(shell pwd)/../../lib/librumprun_base/baremetal -lrumprun_base -lpthread -lc
   RUMP_LDLIBS=	--whole-archive ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USER}
 else
   COMPILER_RT=	librt/divdi3.o librt/udivmoddi4.o librt/udivsi3.o

@@ -15,6 +15,9 @@ STDJ='-j4'
 : ${RUMPSRC=./rumpsrc}
 : ${BUILDRUMP:=./buildrump.sh}
 
+platform=$1
+shift
+
 # the buildxen.sh is not as forgiving as I am
 set -e
 
@@ -72,7 +75,9 @@ else
 fi
 
 ( cd ../../lib/librumprun_base
-    ${RUMPMAKE} dependall && ${RUMPMAKE} install )
+    ${RUMPMAKE} MAKEOBJDIR=${platform} obj \
+      && ${RUMPMAKE} MAKEOBJDIR=${platform} dependall \
+      && ${RUMPMAKE} MAKEOBJDIR=${platform} install )
 
 echo "BUILDRUMP=${BUILDRUMP}" > config.mk
 echo "RUMPSRC=${RUMPSRC}" >> config.mk
