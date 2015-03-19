@@ -146,10 +146,6 @@ int
 main(int argc, char *argv[])
 {
 
-#ifdef RUMP_SYSPROXY
-	rump_init_server("tcp://0:12345");
-#endif
-
 	if (bmk_havenet)
 		nettest();
 	disktest();

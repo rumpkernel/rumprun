@@ -70,6 +70,10 @@ _netbsd_init(void)
 	/* XXX: we should probably use csu, but this is quicker for now */
 	__progname = "baremetal";
 
+#ifdef RUMP_SYSPROXY
+	rump_init_server("tcp://0:12345");
+#endif
+
 	/*
 	 * give all threads a chance to run, and ensure that the main
 	 * thread has gone through a context switch
