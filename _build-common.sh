@@ -71,6 +71,9 @@ else
         CONFIG_CXX=no
 fi
 
+( cd ../../lib/librumprun_base
+    ${RUMPMAKE} dependall && ${RUMPMAKE} install )
+
 echo "BUILDRUMP=${BUILDRUMP}" > config.mk
 echo "RUMPSRC=${RUMPSRC}" >> config.mk
 echo "CONFIG_CXX=${CONFIG_CXX}" >> config.mk
