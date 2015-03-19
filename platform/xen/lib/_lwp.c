@@ -2,6 +2,8 @@
  * Copyright (c) 2014 Antti Kantee.  See COPYING.
  */
 
+#define _lwp_park ___lwp_park60
+
 #include <sys/cdefs.h>
 
 #include <sys/param.h>
@@ -13,6 +15,8 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <lwp.h>
+#include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -21,6 +25,10 @@
 #include <mini-os/sched.h>
 #include <mini-os/os.h>
 #include <mini-os/mm.h>
+
+#include "rumprunxen_makelwp.h"
+
+#include <bmk-common/netbsd_initfini.h>
 
 #if 0
 #define DPRINTF(x) printf x
@@ -200,7 +208,7 @@ ___lwp_park60(clockid_t clock_id, int flags, const struct timespec *ts,
 	return rv;
 }
 
-void
+int
 _lwp_exit(void)
 {
 	struct schedulable *scd = (struct schedulable *)curtcb;
@@ -208,24 +216,34 @@ _lwp_exit(void)
 	scd->scd_lwpctl.lc_curcpu = LWPCTL_CPU_EXITED;
 	TAILQ_REMOVE(&scheds, scd, entries);
 	minios_exit_thread();
+
+	return 0;
 }
 
-void
+int
 _lwp_continue(lwpid_t lid)
 {
 	struct schedulable *scd;
 
-	if ((scd = lwpid2scd(lid)) != NULL)
-		minios_wake(scd->scd_thread);
+	if ((scd = lwpid2scd(lid)) == NULL) {
+		return ESRCH;
+	}
+
+	minios_wake(scd->scd_thread);
+	return 0;
 }
 
-void
+int
 _lwp_suspend(lwpid_t lid)
 {
 	struct schedulable *scd;
 
-	if ((scd = lwpid2scd(lid)) != NULL)
-		minios_block(scd->scd_thread);
+	if ((scd = lwpid2scd(lid)) == NULL) {
+		return ESRCH;
+	}
+
+	minios_block(scd->scd_thread);
+	return 0;
 }
 
 int
@@ -277,13 +295,14 @@ _lwp_self(void)
 	return mylwp->scd_lwpid;
 }
 
-void
-_sched_yield(void)
+int
+sched_yield(void)
 {
 
 	minios_schedule();
+	return 0;
 }
-__weak_alias(sched_yield,_sched_yield);
+__weak_alias(_sched_yield,sched_yield);
 __strong_alias(_sys_sched_yield,_sched_yield);
 
 struct tls_tcb *
