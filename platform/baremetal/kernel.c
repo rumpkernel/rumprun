@@ -7,6 +7,7 @@
 #include <bmk/app.h>
 
 #include <bmk-common/netbsd_initfini.h>
+#include <bmk-common/bmk_ops.h>
 
 unsigned long bmk_membase;
 unsigned long bmk_memsize;
@@ -65,6 +66,12 @@ parsemem(uint32_t addr, uint32_t len)
 	return 0;
 }
 
+#ifdef BMK_APP
+static const struct bmk_ops myops = {
+	.bmk_halt = bmk_halt,
+};
+#endif
+
 void
 bmk_main(struct multiboot_info *mbi)
 {
@@ -81,7 +88,7 @@ bmk_main(struct multiboot_info *mbi)
 	bmk_isr_init();
 
 #ifdef BMK_APP
-	_netbsd_init(BMK_THREAD_STACKSIZE);
+	_netbsd_init(BMK_THREAD_STACKSIZE, PAGE_SIZE, &myops);
 	bmk_beforemain();
 	_netbsd_fini();
 #endif
@@ -160,4 +167,13 @@ bmk_init(void)
 
 	for (x = 0; x < CONS_HEIGHT * CONS_WIDTH; x++)
 		cons_putat(' ', x % CONS_WIDTH, x / CONS_WIDTH);
+}
+
+void
+bmk_halt(void)
+{
+
+	bmk_cons_puts("baremetal halted (well, spinning ...)\n");
+	for (;;)
+		continue;
 }

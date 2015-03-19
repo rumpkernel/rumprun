@@ -50,8 +50,12 @@ runfini(void)
 		(*fn)();
 }
 
+long bmk_stacksize;
+long bmk_pagesize;
+const struct bmk_ops *bmk_ops;
+
 void
-_netbsd_init(long stacksize)
+_netbsd_init(long stacksize, long pagesize, const struct bmk_ops *bops)
 {
 
 	thestrings.ps_argvstr = (void *)((char *)&myaux - 2);

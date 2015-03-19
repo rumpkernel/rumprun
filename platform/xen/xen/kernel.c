@@ -46,6 +46,7 @@
 #include <xen/version.h>
 
 #include <bmk-common/netbsd_initfini.h>
+#include <bmk-common/bmk_ops.h>
 
 uint8_t _minios_xen_features[XENFEAT_NR_SUBMAPS * 32];
 
@@ -66,6 +67,18 @@ void setup_xen_features(void)
 }
 
 static void
+stopandhalt(void)
+{
+
+	minios_stop_kernel();
+	minios_do_halt(MINIOS_HALT_POWEROFF);
+}
+
+static const struct bmk_ops myops = {
+	.bmk_halt = stopandhalt,
+};
+
+static void
 _app_main(void *arg)
 {
     start_info_t *si = arg;
@@ -74,7 +87,7 @@ _app_main(void *arg)
     init_pcifront(NULL);
 #endif
 
-    _netbsd_init(STACK_SIZE);
+    _netbsd_init(STACK_SIZE, PAGE_SIZE, &myops);
 
     app_main(si);
     _netbsd_fini(); /* stubbornly execute this anyway */
