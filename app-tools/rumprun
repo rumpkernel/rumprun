@@ -310,6 +310,7 @@ qemu)
 	run_qemu "$@"
 	;;
 *)
+	echo Invalid STACK \"${platform}\"
 	usage
 	;;
 esac
