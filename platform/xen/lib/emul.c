@@ -117,7 +117,7 @@ int ____sigtimedwait50(const sigset_t *set, siginfo_t *info,
 		const struct timespec *timeout)
 {
 	int rc;
-	rc = _lwp_park(CLOCK_MONOTONIC, 0, timeout, NULL, NULL, NULL);
+	rc = _lwp_park(CLOCK_MONOTONIC, 0, timeout, 0, NULL, NULL);
 	if (rc == -1) {
 		if (errno == ETIMEDOUT)
 			errno = EAGAIN;
