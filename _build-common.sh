@@ -84,4 +84,10 @@ echo "RUMPSRC=${RUMPSRC}" >> config.mk
 echo "CONFIG_CXX=${CONFIG_CXX}" >> config.mk
 echo "RUMPMAKE=${RUMPMAKE}" >> config.mk
 
+tools="AR CPP CC INSTALL NM OBJCOPY"
+havecxx && tools="${tools} CXX"
+for t in ${tools}; do
+	echo "${t}=$(${RUMPMAKE} -f bsd.own.mk -V "\${${t}}")" >> config.mk
+done
+
 exit 0
