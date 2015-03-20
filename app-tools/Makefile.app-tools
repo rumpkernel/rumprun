@@ -30,6 +30,9 @@ define APPTOOLS_templ
 $(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-${1}: \
     $(APP_TOOLS_DIR)/${1}.in Makefile
 	sed <$$< >$$@.tmp \
+		-e 's#!AR!#$(AR)#g;' \
+		-e 's#!CC!#$(CC)#g;' \
+		-e 's#!CXX!#$(CXX)#g;' \
 		-e 's#!ARCH!#$(APP_TOOLS_TARGETARCH)#g;' \
 		-e 's#!BASE!#$(abspath .)#g;' \
 		-e 's#!APPTOOLS!#$(APP_TOOLS_DIR)#g;' \
