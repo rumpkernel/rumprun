@@ -1,16 +1,20 @@
 include ../../config.mk
 include ../../global.mk
 -include config.mk
+ifdef BUILDRUMP_TOOLFLAGS
+include ${BUILDRUMP_TOOLFLAGS}
+endif
 
 CPPFLAGS=	-Iinclude -Irump/include -I../../include -nostdinc
-
-MACHINE:= $(shell ${CC} -dumpmachine | sed 's/i.86/i386/;s/-.*//;')
+CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
 
 # Check if we're building for a supported target. For the time being,
 # we build x86_64 in 32bit mode, because someone was lazy and did
 # not write the 64bit bootstrap.
 supported= false
 HASPCI= y
+# assume we're doing "make clean"
+MACHINE?= i386
 ifeq (${MACHINE},i386)
 supported:= true
 endif
@@ -19,14 +23,6 @@ ifdef IWANTARM
 supported:= true
 HASPCI:= n
 endif
-endif
-ifeq (${MACHINE},x86_64)
-  supported:= true
-  MACHINE:=i386
-  # XXX
-  CFLAGS+=-m32
-  CFLAGS_PLATFORM=-m32
-  LDFLAGS_PLATFORM=-m32
 endif
 ifneq (${supported},true)
 $(error only supported target is x86, you have ${MACHINE})
@@ -103,7 +99,7 @@ rumprun.o: ${OBJS}
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@
 
 tests: rumprun.o app-tools
-	CFLAGS=$(CFLAGS_PLATFORM) LDFLAGS=$(LDFLAGS_PLATFORM) $(APP_TOOLS_MAKE) -C ../../tests
+	$(APP_TOOLS_MAKE) -C ../../tests
 
 clean: app-tools_clean
 	rm -f ${OBJS} include/bmk/machine
