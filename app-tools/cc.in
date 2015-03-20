@@ -1,4 +1,4 @@
 #!/bin/sh
 
-exec !CC! -no-integrated-cpp \
+exec !CC! !CFLAGS! -no-integrated-cpp \
     -specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs "$@"
