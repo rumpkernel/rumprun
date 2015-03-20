@@ -1,4 +1,5 @@
 include ../../../global.mk
+-include ../config.mk
 
 # Common Makefile for mini-os.
 #
