@@ -2,4 +2,8 @@
 # invoke this (for example) as  .../app-configure ./configure --prefix=...
 set -e
 prog=$1; shift
-CC=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-cc CXX=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-c++ exec "$prog" --host=!ARCH!-rumprun-netbsd "$@"
+
+export CC=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-cc
+export CXX=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-c++
+
+exec "$prog" --host=!ARCH!-rumprun-netbsd "$@"

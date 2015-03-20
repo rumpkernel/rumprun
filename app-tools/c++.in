@@ -1,3 +1,4 @@
 #!/bin/sh
-exec !CXX! \
-    -no-integrated-cpp -specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs "$@" -lrumprun_unwind
+
+exec !CXX! -no-integrated-cpp \
+    -specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs "$@" -lrumprun_unwind
