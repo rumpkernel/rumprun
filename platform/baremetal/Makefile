@@ -1,4 +1,5 @@
 include ../../config.mk
+include ../../global.mk
 -include config.mk
 
 THEBIN= rk.bin
@@ -12,12 +13,6 @@ THEISO=	$(basename ${THEBIN}).iso
 # the bother ...
 RUMPRUN_PRESENT?= yes
 
-CFLAGS+=	-std=gnu99 -g -O2
-CFLAGS+=	-Wall -Wmissing-prototypes -Wstrict-prototypes
-CFLAGS+=	-fno-stack-protector -ffreestanding
-ifndef NOGCCERROR
-CFLAGS+=	-Werror
-endif
 CPPFLAGS=	-Iinclude -Irump/include -I../../include -nostdinc
 STRIP?=		strip
 
