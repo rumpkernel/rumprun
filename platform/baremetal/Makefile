@@ -1,3 +1,4 @@
+include ../../config.mk
 -include config.mk
 
 THEBIN= rk.bin
@@ -10,7 +11,6 @@ THEISO=	$(basename ${THEBIN}).iso
 # similar to how we provide librt for x86, but not sure it's worth
 # the bother ...
 RUMPRUN_PRESENT?= yes
-SYSPROXY?= no
 
 CFLAGS+=	-std=gnu99 -g -O2
 CFLAGS+=	-Wall -Wmissing-prototypes -Wstrict-prototypes
@@ -51,9 +51,7 @@ endif
 
 LDFLAGS:= -L$(abspath rump/lib)
 
-ifeq (${SYSPROXY},y)
-CPPFLAGS+=	-DRUMP_SYSPROXY
-OBJS-y+=	sysproxy.o
+ifeq (${CONFIG_SYSPROXY},yes)
 LIBS_SYSPROXY=	-lrumpkern_sysproxy
 endif
 

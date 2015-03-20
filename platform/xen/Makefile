@@ -1,3 +1,4 @@
+include ../../config.mk
 -include config.mk
 
 #
@@ -7,8 +8,6 @@
 #   Makefile is being worked out.
 #
 OBJ_DIR ?= $(CURDIR)/obj
-
-CONFIG_SYSPROXY ?=	no
 
 OBJCOPY=objcopy
 
@@ -54,9 +53,7 @@ rump-src-y += rumphyper_stubs.c
 rump-src-y += callmain.c
 rump-src-y += rumpconfig.c
 
-ifeq (${CONFIG_SYSPROXY},y)
-rump-src-${CONFIG_SYSPROXY} += sysproxy.c
-CPPFLAGS+= -DRUMP_SYSPROXY
+ifeq (${CONFIG_SYSPROXY},yes)
 RUMP_LIBS_SYSPROXY = -lrumpkern_sysproxy
 endif
 
