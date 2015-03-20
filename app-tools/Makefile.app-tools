@@ -42,7 +42,6 @@ $(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-${1}: \
 		-e 's#!LDLIBS!#$(APP_TOOLS_LDLIBS)#g;' \
 		-e 's#!LDFLAGS!#$(APP_TOOLS_LDFLAGS)#g;' \
 		-e 's#!HEAD_OBJ!#$(APP_TOOLS_HEADOBJ)#g;' \
-		-e 's#!STUBS_OBJ!#$(APP_TOOLS_STUBSOBJ)#g;' \
 		-e 's#!LDSCRIPT!#$(APP_TOOLS_LDSCRIPT)#g;'
 	if test -x $$<; then chmod +x $$@.tmp; fi
 	mv -f $$@.tmp $$@
