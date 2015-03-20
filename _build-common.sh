@@ -34,7 +34,7 @@ set -e
 
 # build tools
 ${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k \
-    -V MKPIC=no -s ${RUMPSRC} -T rumptools -o rumpobj -N \
+    -V MKPIC=no -s ${RUMPSRC} -T rumptools -o rumpobj \
     -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes "$@" tools
 
 [ -n "${BUILDXENMETAL_MKCONF}" ] \
@@ -46,7 +46,7 @@ MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
 
 # build rump kernel
 ${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k \
-    -V MKPIC=no -s ${RUMPSRC} -T rumptools -o rumpobj -N \
+    -V MKPIC=no -s ${RUMPSRC} -T rumptools -o rumpobj \
     -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes "$@" \
     build kernelheaders install
 
