@@ -82,6 +82,8 @@ echo "BUILDRUMP=${BUILDRUMP}" > config.mk
 echo "RUMPSRC=${RUMPSRC}" >> config.mk
 echo "CONFIG_CXX=${CONFIG_CXX}" >> config.mk
 echo "RUMPMAKE=${RUMPMAKE}" >> config.mk
+echo "BUILDRUMP_TOOLFLAGS=$(pwd)/rumptools/toolchain-conf.mk" >> config.mk
+echo "MACHINE=${MACHINE}" >> config.mk
 
 tools="AR CPP CC INSTALL NM OBJCOPY"
 havecxx && tools="${tools} CXX"
