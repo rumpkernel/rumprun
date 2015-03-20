@@ -28,6 +28,10 @@ ifeq ($(TARGET_ARCH),x86_64)
 CFLAGS += -m64 -mno-red-zone -fno-reorder-blocks -fno-asynchronous-unwind-tables
 endif
 
+ifeq (${CONFIG_SYSPROXY},yes)
+RUMP_LIBS_SYSPROXY = -lrumpkern_sysproxy
+endif
+
 RUMP_LIBS_PCI = -lrumpdev_pci -lrumpdev_pci_if_wm -lrumpdev_miiphy
 RUMP_LIBS_FS = -lrumpfs_ffs -lrumpfs_cd9660 -lrumpdev_disk -lrumpdev -lrumpvfs
 RUMP_LIBS_NET = -lrumpnet_config -lrumpdev_bpf -lrumpnet_xenif -lrumpnet_netinet
@@ -52,10 +56,6 @@ rump-src-y += rumphyper_stubs.c
 
 rump-src-y += callmain.c
 rump-src-y += rumpconfig.c
-
-ifeq (${CONFIG_SYSPROXY},yes)
-RUMP_LIBS_SYSPROXY = -lrumpkern_sysproxy
-endif
 
 # Rump kernel middleware objects to build.
 RUMP_OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(rump-src-y))
