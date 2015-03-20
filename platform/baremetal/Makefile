@@ -2,19 +2,7 @@ include ../../config.mk
 include ../../global.mk
 -include config.mk
 
-THEBIN= rk.bin
-THEISO=	$(basename ${THEBIN}).iso
-
-# answer "yes" if you have built "userspace" (i.e. you've run buildme.sh)
-#
-# Note, RUMPRUN_PRESENT=no will work only on x86.  On e.g. ARM, we depend
-# on libc to provide toolchain helpers.  They could probably be provided
-# similar to how we provide librt for x86, but not sure it's worth
-# the bother ...
-RUMPRUN_PRESENT?= yes
-
 CPPFLAGS=	-Iinclude -Irump/include -I../../include -nostdinc
-STRIP?=		strip
 
 MACHINE:= $(shell ${CC} -dumpmachine | sed 's/i.86/i386/;s/-.*//;')
 
@@ -89,16 +77,11 @@ RUMPKERN_LIB=	${LIBS_VIO_NET}					\
 		${LIBS_SYSPROXY}				\
 		-lrumpdev -lrumpvfs -lrump
 
-ifeq (${RUMPRUN_PRESENT},yes)
-  OBJS_BMK+=	libc_errno.o libc_malloc.o
-  OBJS_BMK+=	init.o
-  CPPFLAGS+=	-DBMK_APP
-  LIBS_USER=	-L$(shell pwd)/../../lib/librumprun_base/baremetal --start-group -lrumprun_base -lpthread -lc --end-group
-  RUMP_LDLIBS=	--whole-archive ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USER}
-else
-  COMPILER_RT=	librt/divdi3.o librt/udivmoddi4.o librt/udivsi3.o
-  COMPILER_RT+=	librt/udivdi3.o librt/moddi3.o librt/umoddi3.o
-endif
+OBJS_BMK+=	libc_errno.o libc_malloc.o
+OBJS_BMK+=	init.o
+CPPFLAGS+=	-DBMK_APP
+LIBS_USER=	-L$(shell pwd)/../../lib/librumprun_base/baremetal --start-group -lrumprun_base -lpthread -lc --end-group
+RUMP_LDLIBS=	--whole-archive ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USER}
 
 OBJS= ${OBJS_BMK} ${OBJS_APP}
 
@@ -123,7 +106,7 @@ tests: rumprun.o app-tools
 	CFLAGS=$(CFLAGS_PLATFORM) LDFLAGS=$(LDFLAGS_PLATFORM) $(APP_TOOLS_MAKE) -C ../../tests
 
 clean: app-tools_clean
-	rm -f ${OBJS} ${COMPILER_RT} include/bmk/machine
+	rm -f ${OBJS} include/bmk/machine
 	$(MAKE) -C ../../tests clean
 
 cleandir: clean
