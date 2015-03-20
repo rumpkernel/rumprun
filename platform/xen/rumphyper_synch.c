@@ -241,7 +241,7 @@ void
 rumpuser_rw_enter(int enum_rumprwlock, struct rumpuser_rw *rw)
 {
 	enum rumprwlock lk = enum_rumprwlock;
-	struct waithead *w;
+	struct waithead *w = NULL;
 	int nlocks;
 
 	switch (lk) {
@@ -265,7 +265,7 @@ int
 rumpuser_rw_tryenter(int enum_rumprwlock, struct rumpuser_rw *rw)
 {
 	enum rumprwlock lk = enum_rumprwlock;
-	int rv;
+	int rv = -1;
 
 	switch (lk) {
 	case RUMPUSER_RW_WRITER:
