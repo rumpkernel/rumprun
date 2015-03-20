@@ -1,11 +1,12 @@
 # Useful config stuff
 
+include $(MINI-OS_ROOT)/../config.mk
+
 # Where to find xen headers from.  XXX: this can probably be done better
 XEN_HEADERS ?= /usr/include/xen
 
 # from Xen/Config.mk
-XEN_COMPILE_ARCH    ?= $(shell uname -m | sed -e s/i.86/x86_32/ \
-			-e s/i86pc/x86_32/ -e s/amd64/x86_64/ -e s/arm.*/arm/)
+XEN_COMPILE_ARCH    ?= $(patsubst i386,x86_32,${MACHINE})
 XEN_TARGET_ARCH     ?= $(XEN_COMPILE_ARCH)
 
 XEN_INTERFACE_VERSION := 0x00030205

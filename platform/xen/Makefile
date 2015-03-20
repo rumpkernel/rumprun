@@ -1,6 +1,9 @@
 include ../../config.mk
 include ../../global.mk
 -include config.mk
+ifdef BUILDRUMP_TOOLFLAGS
+include ${BUILDRUMP_TOOLFLAGS}
+endif
 
 #
 # Rumprun-xen Makefile.
@@ -16,16 +19,16 @@ CPPFLAGS = -isystem rump/include -isystem xen/include -I. -I../../include
 CPPFLAGS+= -nostdinc
 CPPFLAGS += -DVIRTIF_BASE=xenif
 
-CFLAGS += -fno-builtin -no-integrated-cpp
+CFLAGS += -fno-builtin -no-integrated-cpp ${BUILDRUMP_TOOL_CFLAGS}
 
 # This is semi-duplicated from xen/arch/x86/arch.mk, can we avoid that?
-TARGET_ARCH := $(shell uname -m | sed -e s/i.86/i386/)
+TARGET_ARCH := ${MACHINE}
 # XXX Which parts of the rumprun source *must* be compiled with these flags?
 ifeq ($(TARGET_ARCH),i386)
-CFLAGS += -m32 -march=i686
+CFLAGS += -march=i686
 endif
 ifeq ($(TARGET_ARCH),x86_64)
-CFLAGS += -m64 -mno-red-zone -fno-reorder-blocks -fno-asynchronous-unwind-tables
+CFLAGS += -mno-red-zone -fno-reorder-blocks -fno-asynchronous-unwind-tables
 endif
 
 ifeq (${CONFIG_SYSPROXY},yes)
@@ -78,7 +81,7 @@ mini-os:
 rumprun: $(OBJ_DIR)/rumprun.o $(OBJ_DIR)/configure_stubs.o
 
 $(OBJ_DIR)/rumprun.o: $(RUMP_OBJS)
-	$(LD) -r $(LDFLAGS) $(RUMP_OBJS) -o $@
+	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(RUMP_OBJS) -nostdlib -o $@
 
 $(OBJ_DIR)/configure_stubs.o: configure_stubs.c
 

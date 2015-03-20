@@ -37,6 +37,7 @@ include minios.mk
 CFLAGS += -isystem ../rump/include -I.. -I../../../include -nostdinc
 CFLAGS += -I$(MINI-OS_ROOT)
 CFLAGS += -no-integrated-cpp
+CFLAGS += ${BUILDRUMP_TOOL_CFLAGS}
 
 LDARCHLIB := -l$(ARCH_LIB_NAME)
 LDSCRIPT := $(TARGET_ARCH_DIR)/minios-$(XEN_TARGET_ARCH).lds
@@ -96,7 +97,7 @@ arch_lib:
 # XXX: Note that HEAD_OBJ is linked into the final minios.o
 # This is so that we don't have to hunt for it in the rumprun build of app-tools.
 $(OBJ_DIR)/minios.o: links $(OBJS) arch_lib
-	$(CC) -Wl,-r $(LDFLAGS) $(HEAD_OBJ) $(OBJS) -Wl,--whole-archive $(LDARCHLIB) -Wl,--no-whole-archive $(LDLIBS) -nostdlib -o $@
+	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(HEAD_OBJ) $(OBJS) -Wl,--whole-archive $(LDARCHLIB) -Wl,--no-whole-archive $(LDLIBS) -nostdlib -o $@
 	$(OBJCOPY) -w $(GLOBAL_PREFIXES) -G _start $@ $@
 
 $(OBJ_DIR)/minios.lds: $(LDSCRIPT)

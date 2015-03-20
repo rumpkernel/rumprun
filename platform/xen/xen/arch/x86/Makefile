@@ -15,6 +15,7 @@ include $(MINI-OS_ROOT)/minios.mk
 
 # TODO: Import rump CPPFLAGS / include directories from top-level Makefile
 CFLAGS+= -isystem $(MINI-OS_ROOT)/../rump/include -nostdinc
+CFLAGS+= ${BUILDRUMP_TOOL_CFLAGS}
 
 # Sources here are all *.c *.S without $(XEN_TARGET_ARCH).S
 # This is handled in $(HEAD_ARCH_OBJ)
