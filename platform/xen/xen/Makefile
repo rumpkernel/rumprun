@@ -96,7 +96,7 @@ arch_lib:
 # XXX: Note that HEAD_OBJ is linked into the final minios.o
 # This is so that we don't have to hunt for it in the rumprun build of app-tools.
 $(OBJ_DIR)/minios.o: links $(OBJS) arch_lib
-	$(LD) -r $(LDFLAGS) $(HEAD_OBJ) $(OBJS) --whole-archive $(LDARCHLIB) --no-whole-archive $(LDLIBS) -o $@
+	$(CC) -Wl,-r $(LDFLAGS) $(HEAD_OBJ) $(OBJS) -Wl,--whole-archive $(LDARCHLIB) -Wl,--no-whole-archive $(LDLIBS) -nostdlib -o $@
 	$(OBJCOPY) -w $(GLOBAL_PREFIXES) -G _start $@ $@
 
 $(OBJ_DIR)/minios.lds: $(LDSCRIPT)
