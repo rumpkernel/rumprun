@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#if defined(__linux__) || !defined(__NetBSD__)
+# error compiler wrapper fail
+#endif
+
 int main (int argc, char *argv[])
 {
     char *world = getenv ("WORLD");
