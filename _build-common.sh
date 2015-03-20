@@ -76,8 +76,7 @@ fi
 
 ( cd ../../lib/librumprun_base
     ${RUMPMAKE} MAKEOBJDIR=${platform} obj \
-      && ${RUMPMAKE} MAKEOBJDIR=${platform} dependall \
-      && ${RUMPMAKE} MAKEOBJDIR=${platform} install )
+      && ${RUMPMAKE} MAKEOBJDIR=${platform} dependall )
 
 echo "BUILDRUMP=${BUILDRUMP}" > config.mk
 echo "RUMPSRC=${RUMPSRC}" >> config.mk
