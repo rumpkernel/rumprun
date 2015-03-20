@@ -6,8 +6,8 @@ include $(MINI-OS_ROOT)/../config.mk
 XEN_HEADERS ?= /usr/include/xen
 
 # from Xen/Config.mk
-XEN_COMPILE_ARCH    ?= $(patsubst i386,x86_32,${MACHINE})
-XEN_TARGET_ARCH     ?= $(XEN_COMPILE_ARCH)
+XEN_COMPILE_ARCH ?= $(patsubst amd64,x86_64,$(patsubst i386,x86_32,${MACHINE}))
+XEN_TARGET_ARCH  ?= $(XEN_COMPILE_ARCH)
 
 XEN_INTERFACE_VERSION := 0x00030205
 export XEN_INTERFACE_VERSION
