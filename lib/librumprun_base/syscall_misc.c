@@ -97,11 +97,12 @@ _exit(int eval)
 {
 	if (eval) {
 		printf("\n=== ERROR: _exit(%d) called ===\n", eval);
-		/* XXX: work around the console being slow to attach */
-		sleep(1);
 	} else {
 		printf("\n=== _exit(%d) called ===\n", eval);
 	}
+	/* XXX: work around the console being slow to attach */
+	sleep(1);
+
 	_netbsd_fini();
 }
 
