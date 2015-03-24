@@ -95,7 +95,6 @@ munmap(void *addr, size_t len)
 void __dead
 _exit(int eval)
 {
-	/* XXX this duplicates _app_main / callmain cleanup */
 	if (eval) {
 		printf("\n=== ERROR: _exit(%d) called ===\n", eval);
 		/* XXX: work around the console being slow to attach */
