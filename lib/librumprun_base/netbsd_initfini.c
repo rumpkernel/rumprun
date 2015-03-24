@@ -79,6 +79,9 @@ _netbsd_init(long stacksize, long pagesize, const struct bmk_ops *bops)
 #endif
 	_rumprun_config();
 
+	/* Create rump kernel process container for the application */
+	rump_pub_lwproc_rfork(0);
+
 	/*
 	 * give all threads a chance to run, and ensure that the main
 	 * thread has gone through a context switch
@@ -89,6 +92,11 @@ _netbsd_init(long stacksize, long pagesize, const struct bmk_ops *bops)
 void __dead
 _netbsd_fini(void)
 {
+	/* Release rump kernel process container. Allow for being called from
+	 * the implicit context, as pre-main initialisation code could call
+	 * _exit() on error. */
+	if (rump_pub_lwproc_curlwp() != NULL)
+		rump_pub_lwproc_releaselwp();
 	_rumprun_deconfig();
 	runfini();
 	rump_sys_reboot(0, 0);
