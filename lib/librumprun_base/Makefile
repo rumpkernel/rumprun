@@ -1,4 +1,6 @@
-.include "${.CURDIR}/../../config.mk"
+CONFIG_MK=	${.CURDIR}/../../config.mk
+DPSRCS+=	${CONFIG_MK}
+.include	"${CONFIG_MK}"
 
 LIB=		rumprun_base
 LIBISPRIVATE=	# defined
