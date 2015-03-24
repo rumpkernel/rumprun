@@ -30,6 +30,9 @@ calloc(size_t n, size_t size)
 	void *v;
 	size_t tot = n * size;
 
+	if (size != 0 && tot / size != n)
+		return NULL;
+
 	if ((v = malloc(tot)) != NULL) {
 		bmk_memset(v, 0, tot);
 	}
