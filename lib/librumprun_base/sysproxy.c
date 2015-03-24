@@ -2192,6 +2192,24 @@ rumpuser_sp_fini(void *arg)
 {
 	struct spclient *spc = arg;
 	register_t retval[2] = {0, 0};
+	struct lwp *mylwp;
+	int nlocks;
+
+	/*
+	 * ok, so, um, our lwp will change in this routine.
+	 * that's, ahm, um, eh, "interesting".  However, it
+	 * shouldn't matter too much, since we're shutting down
+	 * anyway, and this call is most likely following by
+	 * rumpuser_exit()
+	 *
+	 * (strictly speaking, one could shut down the sysproxy
+	 * service without halting ... but you know what, we'll
+	 * call it a feature)
+	 */
+
+	rumpkern_unsched(&nlocks, NULL);
+	mylwp = lwproc_curlwp();
+	lwproc_newlwp(1);
 
 	if (spclist[0].spc_fd) {
 		parsetab[cleanupidx].cleanup(cleanupsa);
@@ -2209,8 +2227,4 @@ rumpuser_sp_fini(void *arg)
 		spfini = 1;
 	}
 
-	/*
-	 * could release thread, but don't bother, since the container
-	 * will be stone dead in a moment.
-	 */
 }
