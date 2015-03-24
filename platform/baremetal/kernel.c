@@ -6,9 +6,6 @@
 #include <bmk/sched.h>
 #include <bmk/app.h>
 
-#include <bmk-common/netbsd_initfini.h>
-#include <bmk-common/bmk_ops.h>
-
 unsigned long bmk_membase;
 unsigned long bmk_memsize;
 
@@ -66,12 +63,6 @@ parsemem(uint32_t addr, uint32_t len)
 	return 0;
 }
 
-#ifdef BMK_APP
-static const struct bmk_ops myops = {
-	.bmk_halt = bmk_halt,
-};
-#endif
-
 void
 bmk_main(struct multiboot_info *mbi)
 {
@@ -88,9 +79,7 @@ bmk_main(struct multiboot_info *mbi)
 	bmk_isr_init();
 
 #ifdef BMK_APP
-	_netbsd_init(BMK_THREAD_STACKSIZE, PAGE_SIZE, &myops);
 	bmk_beforemain();
-	_netbsd_fini();
 #endif
 }
 

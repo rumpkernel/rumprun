@@ -6,6 +6,10 @@
 #include <rump/netconfig.h>
 
 #include <bmk/app.h>
+#include <bmk/kernel.h>
+#include <bmk/sched.h>
+
+#include <bmk-common/netbsd_initfini.h>
 
 int bmk_havenet;
 
@@ -37,17 +41,22 @@ __nopmain(void)
 }
 __weak_alias(main,__nopmain);
 
+static const struct bmk_ops myops = {
+	.bmk_halt = bmk_halt,
+};
+
 void
 bmk_beforemain(void)
 {
         char *argv[] = {"bmk_main", 0};
 	int rv;
 
+	_netbsd_init(BMK_THREAD_STACKSIZE, PAGE_SIZE, &myops);
 	rumpkern_config();
 
 	printf("=== calling main() ===\n\n");
         rv = main(1, argv);
 	printf("=== main() returned %d ===\n\n", rv);
 
-	/* XXX: just fall somewhere */
+	_exit(rv);
 }

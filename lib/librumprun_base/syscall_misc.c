@@ -22,7 +22,6 @@
 #include <unistd.h>
 
 #include <bmk-common/netbsd_initfini.h>
-#include <bmk-common/rumprun_config.h>
 
 #ifdef RUMPRUN_MMAP_DEBUG
 #define MMAP_PRINTF(x) printf x
@@ -104,9 +103,7 @@ _exit(int eval)
 	} else {
 		printf("\n=== _exit(%d) called ===\n", eval);
 	}
-	_rumprun_deconfig();
 	_netbsd_fini();
-	bmk_ops->bmk_halt();
 }
 
 /* XXX: manual proto.  plug into libc internals some other day */

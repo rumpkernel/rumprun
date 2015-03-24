@@ -26,10 +26,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include <xen/xen.h>
 
-#include <bmk-common/rumprun_config.h>
+#include <mini-os/os.h>
+
+#include <bmk-common/bmk_ops.h>
+#include <bmk-common/netbsd_initfini.h>
 
 extern int main(int argc, char **argv);
 
@@ -80,6 +84,18 @@ static void parseargs(void *cmdline, int *nargs, char **outarray) {
 	}
 }
 
+static void __attribute__((noreturn))
+stopandhalt(void)
+{
+
+	minios_stop_kernel();
+	minios_do_halt(MINIOS_HALT_POWEROFF);
+}
+
+static const struct bmk_ops myops = {
+	.bmk_halt = stopandhalt,
+};
+
 int __default_app_main(start_info_t *);
 int
 __default_app_main(start_info_t *si)
@@ -88,6 +104,8 @@ __default_app_main(start_info_t *si)
 	int nargs, r;
 	char **argv;
 
+        _netbsd_init(STACK_SIZE, PAGE_SIZE, &myops);
+
 	parseargs(si->cmd_line, &nargs, 0);
 	argv = malloc(sizeof(*argv) * (nargs+3));
 	argv[0] = argv0;
@@ -95,12 +113,10 @@ __default_app_main(start_info_t *si)
 	argv[nargs+1] = 0;
 	argv[nargs+2] = 0;
 
-	_rumprun_config();
 	fprintf(stderr,"=== calling main() ===\n\n");
 	r = main(nargs+1, argv);
 	fprintf(stderr,"\n=== main() returned %d ===\n", r);
-	_rumprun_deconfig();
-	return r;
+	_exit(r);
 }
 
 __weak_alias(app_main,__default_app_main)

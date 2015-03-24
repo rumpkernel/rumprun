@@ -12,6 +12,7 @@
 #include <rump/rump_syscalls.h>
 
 #include <bmk-common/netbsd_initfini.h>
+#include <bmk-common/rumprun_config.h>
 
 static char *the_env[1] = { NULL } ;
 extern void *environ;
@@ -57,10 +58,10 @@ const struct bmk_ops *bmk_ops;
 void
 _netbsd_init(long stacksize, long pagesize, const struct bmk_ops *bops)
 {
-
 	thestrings.ps_argvstr = (void *)((char *)&myaux - 2);
 	__ps_strings = &thestrings;
 	pthread__stacksize = 2*stacksize;
+	bmk_ops = bops;
 
 	rump_boot_setsigmodel(RUMP_SIGMODEL_IGNORE);
 	rump_init();
@@ -76,6 +77,7 @@ _netbsd_init(long stacksize, long pagesize, const struct bmk_ops *bops)
 #ifdef RUMP_SYSPROXY
 	rump_init_server("tcp://0:12345");
 #endif
+	_rumprun_config();
 
 	/*
 	 * give all threads a chance to run, and ensure that the main
@@ -84,10 +86,12 @@ _netbsd_init(long stacksize, long pagesize, const struct bmk_ops *bops)
 	sched_yield();
 }
 
-void
+void __dead
 _netbsd_fini(void)
 {
-
+	_rumprun_deconfig();
 	runfini();
 	rump_sys_reboot(0, 0);
+	/* XXX: Should print something if we ever get here, but how? */
+	bmk_ops->bmk_halt();
 }
