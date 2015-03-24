@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 : ${BUILDRUMP:=../../buildrump.sh}
 
 IFS=' '
