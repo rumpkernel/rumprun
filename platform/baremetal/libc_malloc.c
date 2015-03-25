@@ -1,7 +1,7 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include <bmk/memalloc.h>
-#include <bmk/string.h>
 
 int
 posix_memalign(void **rv, size_t nbytes, size_t align)
@@ -34,7 +34,7 @@ calloc(size_t n, size_t size)
 		return NULL;
 
 	if ((v = malloc(tot)) != NULL) {
-		bmk_memset(v, 0, tot);
+		memset(v, 0, tot);
 	}
 
 	return v;
