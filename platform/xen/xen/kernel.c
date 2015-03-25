@@ -45,6 +45,8 @@
 #include <xen/features.h>
 #include <xen/version.h>
 
+#include <bmk-core/core.h>
+
 uint8_t _minios_xen_features[XENFEAT_NR_SUBMAPS * 32];
 
 void setup_xen_features(void)
@@ -75,11 +77,25 @@ _app_main(void *arg)
     app_main(si);
 }
 
+static void __attribute__((noreturn))
+stopandhalt(void)
+{
+
+	minios_stop_kernel();
+	minios_do_halt(MINIOS_HALT_POWEROFF);
+}
+
+static const struct bmk_ops myops = {
+	.bmk_halt = stopandhalt,
+};
+
 /*
  * INITIAL C ENTRY POINT.
  */
 void _minios_start_kernel(start_info_t *si)
 {
+
+    bmk_core_init(STACK_SIZE, PAGE_SIZE, &myops);
 
     arch_init(si);
     trap_init();

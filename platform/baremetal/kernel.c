@@ -5,6 +5,7 @@
 #include <bmk/sched.h>
 #include <bmk/app.h>
 
+#include <bmk-core/core.h>
 #include <bmk-core/string.h>
 #include <bmk-core/bmk_ops.h>
 
@@ -67,15 +68,15 @@ parsemem(uint32_t addr, uint32_t len)
 	return 0;
 }
 
-#ifdef BMK_APP
 static const struct bmk_ops myops = {
 	.bmk_halt = bmk_halt,
 };
-#endif
 
 void
 bmk_main(struct multiboot_info *mbi)
 {
+
+	bmk_core_init(BMK_THREAD_STACKSIZE, PAGE_SIZE, &myops);
 
 	bmk_cons_puts("rump kernel bare metal bootstrap\n\n");
 	if ((mbi->flags & MULTIBOOT_MEMORY_INFO) == 0) {
@@ -89,7 +90,7 @@ bmk_main(struct multiboot_info *mbi)
 	bmk_isr_init();
 
 #ifdef BMK_APP
-	_netbsd_init(BMK_THREAD_STACKSIZE, PAGE_SIZE, &myops);
+	_netbsd_init();
 	bmk_beforemain();
 	_netbsd_fini();
 #endif

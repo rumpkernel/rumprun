@@ -1,7 +1,7 @@
 LIB=		rumprun_core
 LIBISPRIVATE=	# defined
 
-SRCS=		bmk_string.c
+SRCS=		init.c bmk_string.c
 
 CPPFLAGS+=	-I${.CURDIR}/../../include
 

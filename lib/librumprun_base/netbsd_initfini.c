@@ -11,6 +11,8 @@
 #include <rump/rump.h>
 #include <rump/rump_syscalls.h>
 
+#include <bmk-core/core.h>
+
 #include <bmk-base/netbsd_initfini.h>
 #include <bmk-base/rumprun_config.h>
 
@@ -51,17 +53,12 @@ runfini(void)
 		(*fn)();
 }
 
-long bmk_stacksize;
-long bmk_pagesize;
-const struct bmk_ops *bmk_ops;
-
 void
-_netbsd_init(long stacksize, long pagesize, const struct bmk_ops *bops)
+_netbsd_init(void)
 {
 	thestrings.ps_argvstr = (void *)((char *)&myaux - 2);
 	__ps_strings = &thestrings;
-	pthread__stacksize = 2*stacksize;
-	bmk_ops = bops;
+	pthread__stacksize = 2*bmk_stacksize;
 
 	rump_boot_setsigmodel(RUMP_SIGMODEL_IGNORE);
 	rump_init();

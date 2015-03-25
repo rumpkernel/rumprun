@@ -21,6 +21,8 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <bmk-core/core.h>
+
 #include <bmk-base/netbsd_initfini.h>
 
 #ifdef RUMPRUN_MMAP_DEBUG
