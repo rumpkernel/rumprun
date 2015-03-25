@@ -37,9 +37,8 @@
 #include <mini-os/sched.h>
 
 #include <bmk-core/errno.h>
+#include <bmk-core/memalloc.h>
 #include <bmk-core/string.h>
-
-#include <stdlib.h>
 
 #include "rumphyper.h"
 
@@ -145,8 +144,7 @@ rumpuser_mutex_init(struct rumpuser_mtx **mtxp, int flags)
 {
 	struct rumpuser_mtx *mtx;
 
-	mtx = malloc(sizeof(*mtx));
-	bmk_memset(mtx, 0, sizeof(*mtx));
+	mtx = bmk_memcalloc(1, sizeof(*mtx));
 	mtx->flags = flags;
 	TAILQ_INIT(&mtx->waiters);
 	*mtxp = mtx;
@@ -207,7 +205,7 @@ rumpuser_mutex_destroy(struct rumpuser_mtx *mtx)
 {
 
 	assert(TAILQ_EMPTY(&mtx->waiters) && mtx->o == NULL);
-	free(mtx);
+	bmk_memfree(mtx);
 }
 
 void
@@ -229,8 +227,7 @@ rumpuser_rw_init(struct rumpuser_rw **rwp)
 {
 	struct rumpuser_rw *rw;
 
-	rw = malloc(sizeof(*rw));
-	bmk_memset(rw, 0, sizeof(*rw));
+	rw = bmk_memcalloc(1, sizeof(*rw));
 	TAILQ_INIT(&rw->rwait);
 	TAILQ_INIT(&rw->wwait);
 
@@ -312,7 +309,7 @@ void
 rumpuser_rw_destroy(struct rumpuser_rw *rw)
 {
 
-	free(rw);
+	bmk_memfree(rw);
 }
 
 void
@@ -361,8 +358,7 @@ rumpuser_cv_init(struct rumpuser_cv **cvp)
 {
 	struct rumpuser_cv *cv;
 
-	cv = malloc(sizeof(*cv));
-	bmk_memset(cv, 0, sizeof(*cv));
+	cv = bmk_memcalloc(1, sizeof(*cv));
 	TAILQ_INIT(&cv->waiters);
 	*cvp = cv;
 }
@@ -372,7 +368,7 @@ rumpuser_cv_destroy(struct rumpuser_cv *cv)
 {
 
 	assert(cv->nwaiters == 0);
-	free(cv);
+	bmk_memfree(cv);
 }
 
 static void

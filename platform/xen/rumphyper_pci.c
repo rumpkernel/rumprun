@@ -31,10 +31,9 @@
 #include <mini-os/hypervisor.h>
 
 #include <bmk-core/errno.h>
+#include <bmk-core/memalloc.h>
 
 #include "pci_user.h"
-
-#include <stdlib.h> /* for malloc */
 
 void *
 rumpcomp_pci_map(unsigned long addr, unsigned long len)
@@ -101,7 +100,7 @@ rumpcomp_pci_irq_establish(unsigned cookie, int (*handler)(void *), void *data)
 		return NULL;
 	pirq = myintr;
 
-	ihan = malloc(sizeof(*ihan));
+	ihan = bmk_memalloc(sizeof(*ihan), 0);
 	if (!ihan)
 		return NULL;
 	ihan->i_handler = handler;

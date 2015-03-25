@@ -12,10 +12,12 @@
 #include <mini-os/sched.h>
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
+#include <stdlib.h> /* XXX: strtoul() */
+
 #include <bmk-core/errno.h>
+#include <bmk-core/memalloc.h>
 
 #define PCI_DEVFN(slot, func) ((((slot) & 0x1f) << 3) | ((func) & 0x07))
 
@@ -52,9 +54,9 @@ static void free_pcifront(struct pcifront_dev *dev)
 
     minios_unbind_evtchn(dev->evtchn);
 
-    free(dev->backend);
-    free(dev->nodename);
-    free(dev);
+    bmk_memfree(dev->backend);
+    bmk_memfree(dev->nodename);
+    bmk_memfree(dev);
 }
 
 void pcifront_watches(void *opaque)
@@ -75,23 +77,23 @@ void pcifront_watches(void *opaque)
         minios_printk("pcifront_watches: waiting for backend path to appear %s\n", path);
         xenbus_watch_path_token(XBT_NIL, path, path, &events);
         while ((err = xenbus_read(XBT_NIL, path, &be_path)) != NULL) {
-            free(err);
+            bmk_memfree(err);
             xenbus_wait_for_watch(&events);
         }
         xenbus_unwatch_path_token(XBT_NIL, path, path);
         minios_printk("pcifront_watches: waiting for backend to get into the right state %s\n", be_path);
-        be_state = (char *) malloc(strlen(be_path) +  7);
+        be_state = (char *) bmk_memalloc(strlen(be_path) +  7, 0);
         snprintf(be_state, strlen(be_path) +  7, "%s/state", be_path);
         xenbus_watch_path_token(XBT_NIL, be_state, be_state, &events);
         while ((err = xenbus_read(XBT_NIL, be_state, &msg)) != NULL || msg[0] > '4') {
-            free(msg);
-            free(err);
+            bmk_memfree(msg);
+            bmk_memfree(err);
             xenbus_wait_for_watch(&events);
         }
         xenbus_unwatch_path_token(XBT_NIL, be_state, be_state);
         if (init_pcifront(NULL) == NULL) {
-            free(be_state);
-            free(be_path);
+            bmk_memfree(be_state);
+            bmk_memfree(be_path);
             continue;
         }
         xenbus_watch_path_token(XBT_NIL, be_state, be_state, &events);
@@ -99,7 +101,7 @@ void pcifront_watches(void *opaque)
         minios_printk("pcifront_watches: waiting for backend events %s\n", be_state);
         while ((err = xenbus_wait_for_state_change(be_state, &state, &events)) == NULL &&
                (err = xenbus_read(XBT_NIL, pcidev->backend, &msg)) == NULL) {
-            free(msg);
+            bmk_memfree(msg);
             minios_printk("pcifront_watches: backend state changed: %s %d\n", be_state, state);
             if (state == XenbusStateReconfiguring) {
                 minios_printk("pcifront_watches: writing %s %d\n", fe_state, XenbusStateReconfiguring);
@@ -108,7 +110,7 @@ void pcifront_watches(void *opaque)
                             XenbusStateReconfiguring, err);
                     if (!strcmp(err, "ENOENT")) {
                         xenbus_write(XBT_NIL, fe_state, "7");
-                        free(err);
+                        bmk_memfree(err);
                     }
                 }
             } else if (state == XenbusStateReconfigured) {
@@ -119,7 +121,7 @@ void pcifront_watches(void *opaque)
                             XenbusStateConnected, err);
                     if (!strcmp(err, "ENOENT")) {
                         xenbus_write(XBT_NIL, fe_state, "4");
-                        free(err);
+                        bmk_memfree(err);
                     }
                 }
             } else if (state == XenbusStateClosing)
@@ -131,9 +133,9 @@ void pcifront_watches(void *opaque)
             minios_printk("pcifront_watches: done waiting\n");
         xenbus_unwatch_path_token(XBT_NIL, be_state, be_state);
         shutdown_pcifront(pcidev);
-        free(be_state);
-        free(be_path);
-        free(err);
+        bmk_memfree(be_state);
+        bmk_memfree(be_path);
+        bmk_memfree(err);
         pcidev = NULL;
     }
 
@@ -164,8 +166,7 @@ struct pcifront_dev *init_pcifront(char *_nodename)
         return NULL;
     }
 
-    dev = malloc(sizeof(*dev));
-    memset(dev, 0, sizeof(*dev));
+    dev = bmk_memcalloc(1, sizeof(*dev));
     dev->nodename = strdup(nodename);
     dev->dom = dom;
 
@@ -182,7 +183,7 @@ again:
     err = xenbus_transaction_start(&xbt);
     if (err) {
         minios_printk("starting transaction\n");
-        free(err);
+        bmk_memfree(err);
     }
 
     err = xenbus_printf(xbt, nodename, "pci-op-ref","%u",
@@ -212,7 +213,7 @@ again:
     }
 
     err = xenbus_transaction_end(xbt, 0, &retry);
-    if (err) free(err);
+    if (err) bmk_memfree(err);
     if (retry) {
             goto again;
         minios_printk("completing transaction\n");
@@ -221,7 +222,7 @@ again:
     goto done;
 
 abort_transaction:
-    free(err);
+    bmk_memfree(err);
     err = xenbus_transaction_end(xbt, 1, &retry);
     minios_printk("Abort transaction %s\n", message);
     goto error;
@@ -271,7 +272,7 @@ done:
     return dev;
 
 error:
-    free(err);
+    bmk_memfree(err);
     free_pcifront(dev);
     return NULL;
 }
@@ -326,7 +327,7 @@ void pcifront_scan(struct pcifront_dev *dev, void (*func)(unsigned int domain, u
     }
 
     len = strlen(dev->backend) + 1 + 5 + 10 + 1;
-    path = (char *) malloc(len);
+    path = (char *) bmk_memalloc(len, 0);
     snprintf(path, len, "%s/num_devs", dev->backend);
     n = xenbus_read_integer(path);
 
@@ -339,7 +340,7 @@ void pcifront_scan(struct pcifront_dev *dev, void (*func)(unsigned int domain, u
         }
 
         rv = parsepciaddr(s, &domain, &bus, &slot, &fun);
-        free(s);
+        bmk_memfree(s);
         if (!rv)
             continue;
 
@@ -348,7 +349,7 @@ void pcifront_scan(struct pcifront_dev *dev, void (*func)(unsigned int domain, u
         if (func)
             func(domain, bus, slot, fun);
     }
-    free(path);
+    bmk_memfree(path);
 }
 
 void shutdown_pcifront(struct pcifront_dev *dev)
@@ -371,7 +372,7 @@ void shutdown_pcifront(struct pcifront_dev *dev)
     state = xenbus_read_integer(path);
     while (err == NULL && state < XenbusStateClosing)
         err = xenbus_wait_for_state_change(path, &state, &dev->events);
-    if (err) free(err);
+    if (err) bmk_memfree(err);
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateClosed)) != NULL) {
         minios_printk("shutdown_pcifront: error changing state to %d: %s\n",
@@ -381,7 +382,7 @@ void shutdown_pcifront(struct pcifront_dev *dev)
     state = xenbus_read_integer(path);
     while (state < XenbusStateClosed) {
         err = xenbus_wait_for_state_change(path, &state, &dev->events);
-        free(err);
+        bmk_memfree(err);
     }
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateInitialising)) != NULL) {
@@ -395,7 +396,7 @@ void shutdown_pcifront(struct pcifront_dev *dev)
         err = xenbus_wait_for_state_change(path, &state, &dev->events);
 
 close_pcifront:
-    if (err) free(err);
+    if (err) bmk_memfree(err);
     xenbus_unwatch_path_token(XBT_NIL, path, path);
 
     snprintf(path, sizeof(path), "%s/info-ref", nodename);
@@ -434,7 +435,7 @@ int pcifront_physical_to_virtual (struct pcifront_dev *dev,
         }
 
         rv = parsepciaddr(s, &dom1, &bus1, &slot1, &fun1);
-        free(s);
+        bmk_memfree(s);
         if (!rv)
             continue;
 
@@ -447,7 +448,7 @@ int pcifront_physical_to_virtual (struct pcifront_dev *dev,
             }
 
             rv = parsepciaddr(s, dom, bus, slot, fun);
-            free(s);
+            bmk_memfree(s);
             if (!rv)
                 continue;
 

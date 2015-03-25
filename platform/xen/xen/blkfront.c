@@ -13,11 +13,13 @@
 #include <xen/io/protocols.h>
 
 #include <bmk-core/errno.h>
+#include <bmk-core/memalloc.h>
 
 #include <fcntl.h>
-#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
+#include <stdlib.h> /* XXX: strtoul() */
 
 /* Note: we generally don't need to disable IRQs since we hardly do anything in
  * the interrupt handler.  */
@@ -59,15 +61,15 @@ static void free_blkfront(struct blkfront_dev *dev)
 {
     minios_mask_evtchn(dev->evtchn);
 
-    free(dev->backend);
+    bmk_memfree(dev->backend);
 
     gnttab_end_access(dev->ring_ref);
     minios_free_page(dev->ring.sring);
 
     minios_unbind_evtchn(dev->evtchn);
 
-    free(dev->nodename);
-    free(dev);
+    bmk_memfree(dev->nodename);
+    bmk_memfree(dev);
 }
 
 struct blkfront_dev *blkfront_init(char *_nodename, struct blkfront_info *info)
@@ -85,8 +87,7 @@ struct blkfront_dev *blkfront_init(char *_nodename, struct blkfront_info *info)
 
     char path[strlen(nodename) + 1 + 10 + 1];
 
-    dev = malloc(sizeof(*dev));
-    memset(dev, 0, sizeof(*dev));
+    dev = bmk_memcalloc(1, sizeof(*dev));
     dev->nodename = strdup(nodename);
 
     snprintf(path, sizeof(path), "%s/backend-id", nodename);
@@ -108,7 +109,7 @@ again:
     err = xenbus_transaction_start(&xbt);
     if (err) {
         minios_printk("starting transaction\n");
-        free(err);
+        bmk_memfree(err);
     }
 
     err = xenbus_printf(xbt, nodename, "ring-ref","%u",
@@ -139,7 +140,7 @@ again:
 
 
     err = xenbus_transaction_end(xbt, 0, &retry);
-    if (err) free(err);
+    if (err) bmk_memfree(err);
     if (retry) {
             goto again;
         minios_printk("completing transaction\n");
@@ -148,7 +149,7 @@ again:
     goto done;
 
 abort_transaction:
-    free(err);
+    bmk_memfree(err);
     err = xenbus_transaction_end(xbt, 1, &retry);
     minios_printk("Abort transaction %s\n", message);
     goto error;
@@ -179,7 +180,7 @@ done:
             dev->info.mode = O_RDWR;
         else
             dev->info.mode = O_RDONLY;
-        free(c);
+        bmk_memfree(c);
 
         snprintf(path, sizeof(path), "%s/state", dev->backend);
 
@@ -220,8 +221,8 @@ done:
     return dev;
 
 error:
-    free(msg);
-    free(err);
+    bmk_memfree(msg);
+    bmk_memfree(err);
     free_blkfront(dev);
     return NULL;
 }
@@ -249,7 +250,7 @@ void blkfront_shutdown(struct blkfront_dev *dev)
     state = xenbus_read_integer(path);
     while (err == NULL && state < XenbusStateClosing)
         err = xenbus_wait_for_state_change(path, &state, &dev->events);
-    if (err) free(err);
+    if (err) bmk_memfree(err);
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateClosed)) != NULL) {
         minios_printk("shutdown_blkfront: error changing state to %d: %s\n",
@@ -259,7 +260,7 @@ void blkfront_shutdown(struct blkfront_dev *dev)
     state = xenbus_read_integer(path);
     while (state < XenbusStateClosed) {
         err = xenbus_wait_for_state_change(path, &state, &dev->events);
-        if (err) free(err);
+        if (err) bmk_memfree(err);
     }
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateInitialising)) != NULL) {
@@ -273,7 +274,7 @@ void blkfront_shutdown(struct blkfront_dev *dev)
         err = xenbus_wait_for_state_change(path, &state, &dev->events);
 
 close:
-    if (err) free(err);
+    if (err) bmk_memfree(err);
     xenbus_unwatch_path_token(XBT_NIL, path, path);
 
     snprintf(path, sizeof(path), "%s/ring-ref", nodename);

@@ -28,9 +28,8 @@
 #include <mini-os/os.h>
 #include <mini-os/netfront.h>
 
-#include <stdlib.h>
-
 #include <bmk-core/errno.h>
+#include <bmk-core/memalloc.h>
 #include <bmk-core/string.h>
 
 #include "rumphyper.h"
@@ -107,7 +106,7 @@ pusher(void *arg)
 	struct thread *me;
 	int flags;
 
-	mypkt = malloc(sizeof(*mypkt));
+	mypkt = bmk_xmalloc(sizeof(*mypkt));
 
 	/* give us a rump kernel context */
 	rumpuser__hyp.hyp_schedule();
@@ -153,7 +152,7 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 
 	rumpkern_unsched(&nlocks, NULL);
 
-	viu = malloc(sizeof(*viu));
+	viu = bmk_memalloc(sizeof(*viu), 0);
 	if (viu == NULL) {
 		rv = BMK_ENOMEM;
 		goto out;
@@ -164,7 +163,7 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 	viu->viu_dev = netfront_init(NULL, myrecv, enaddr, NULL, viu);
 	if (!viu->viu_dev) {
 		rv = BMK_EINVAL; /* ? */
-		free(viu);
+		bmk_memfree(viu);
 		goto out;
 	}
 
@@ -205,7 +204,7 @@ VIFHYPER_SEND(struct virtif_user *viu,
 		for (i = 0, tlen = 0; i < iovlen; i++) {
 			tlen += iov[i].iov_len;
 		}
-		d = d0 = malloc(tlen);
+		d = d0 = bmk_xmalloc(tlen);
 		for (i = 0; i < iovlen; i++) {
 			bmk_memcpy(d0, iov[i].iov_base, iov[i].iov_len);
 			d0 += iov[i].iov_len;
@@ -215,7 +214,7 @@ VIFHYPER_SEND(struct virtif_user *viu,
 	netfront_xmit(viu->viu_dev, d, tlen);
 
 	if (iovlen != 1)
-		free(d);
+		bmk_memfree(d);
 
 	rumpkern_sched(nlocks, NULL);
 }
@@ -237,5 +236,5 @@ VIFHYPER_DESTROY(struct virtif_user *viu)
 
 	minios_join_thread(viu->viu_thr);
 	netfront_shutdown(viu->viu_dev);
-	free(viu);
+	bmk_memfree(viu);
 }

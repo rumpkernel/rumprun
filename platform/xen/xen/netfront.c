@@ -15,9 +15,12 @@
 #include <mini-os/lib.h>
 #include <mini-os/semaphore.h>
 
+#include <bmk-core/memalloc.h>
+
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+
+#include <stdlib.h> /* XXX: strtoul() */
 
 DECLARE_WAIT_QUEUE_HEAD(netfront_queue);
 
@@ -211,8 +214,8 @@ static void free_netfront(struct netfront_dev *dev)
 
     minios_mask_evtchn(dev->evtchn);
 
-    free(dev->mac);
-    free(dev->backend);
+    bmk_memfree(dev->mac);
+    bmk_memfree(dev->backend);
 
     gnttab_end_access(dev->rx_ring_ref);
     gnttab_end_access(dev->tx_ring_ref);
@@ -231,8 +234,8 @@ static void free_netfront(struct netfront_dev *dev)
 	if (dev->tx_buffers[i].page)
 	    minios_free_page(dev->tx_buffers[i].page);
 
-    free(dev->nodename);
-    free(dev);
+    bmk_memfree(dev->nodename);
+    bmk_memfree(dev);
 }
 
 struct netfront_dev *netfront_init(char *_nodename, void (*thenetif_rx)(struct netfront_dev *, unsigned char* data, int len), unsigned char rawmac[6], char **ip, void *priv)
@@ -256,8 +259,7 @@ struct netfront_dev *netfront_init(char *_nodename, void (*thenetif_rx)(struct n
         strncpy(nodename, _nodename, strlen(nodename));
     netfrontends++;
 
-    dev = malloc(sizeof(*dev));
-    memset(dev, 0, sizeof(*dev));
+    dev = bmk_memcalloc(1, sizeof(*dev));
     dev->nodename = strdup(nodename);
     dev->netfront_priv = priv;
 
@@ -304,7 +306,7 @@ again:
     err = xenbus_transaction_start(&xbt);
     if (err) {
         minios_printk("starting transaction\n");
-        free(err);
+        bmk_memfree(err);
     }
 
     err = xenbus_printf(xbt, nodename, "tx-ring-ref","%u",
@@ -346,7 +348,7 @@ again:
     }
 
     err = xenbus_transaction_end(xbt, 0, &retry);
-    if (err) free(err);
+    if (err) bmk_memfree(err);
     if (retry) {
             goto again;
         minios_printk("completing transaction\n");
@@ -355,7 +357,7 @@ again:
     goto done;
 
 abort_transaction:
-    free(err);
+    bmk_memfree(err);
     err = xenbus_transaction_end(xbt, 1, &retry);
     minios_printk("Abort transaction %s\n", message);
     goto error;
@@ -419,8 +421,8 @@ done:
 
     return dev;
 error:
-    free(msg);
-    free(err);
+    bmk_memfree(msg);
+    bmk_memfree(err);
     free_netfront(dev);
     return NULL;
 }
@@ -447,7 +449,7 @@ void netfront_shutdown(struct netfront_dev *dev)
     state = xenbus_read_integer(path);
     while (err == NULL && state < XenbusStateClosing)
         err = xenbus_wait_for_state_change(path, &state, &dev->events);
-    if (err) free(err);
+    if (err) bmk_memfree(err);
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateClosed)) != NULL) {
         minios_printk("shutdown_netfront: error changing state to %d: %s\n",
@@ -457,7 +459,7 @@ void netfront_shutdown(struct netfront_dev *dev)
     state = xenbus_read_integer(path);
     while (state < XenbusStateClosed) {
         err = xenbus_wait_for_state_change(path, &state, &dev->events);
-        if (err) free(err);
+        if (err) bmk_memfree(err);
     }
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateInitialising)) != NULL) {
@@ -471,7 +473,7 @@ void netfront_shutdown(struct netfront_dev *dev)
         err = xenbus_wait_for_state_change(path, &state, &dev->events);
 
 close:
-    if (err) free(err);
+    if (err) bmk_memfree(err);
     xenbus_unwatch_path_token(XBT_NIL, path, path);
 
     snprintf(path, sizeof(path), "%s/tx-ring-ref", nodename);
