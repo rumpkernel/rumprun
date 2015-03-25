@@ -1,5 +1,6 @@
+#include <sys/types.h>
+
 #include <stdlib.h>
-#include <string.h>
 
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
