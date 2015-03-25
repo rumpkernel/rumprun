@@ -7,7 +7,7 @@
 
 #include <mini-os/machine/traps.h>
 
-#include <string.h>
+#include <bmk-core/string.h>
 
 /*
  * These are assembler stubs in entry.S.
@@ -148,7 +148,7 @@ static int handle_cow(unsigned long addr) {
 	    return 0;
 
 	new_page = minios_alloc_pages(0);
-	memset((void*) new_page, 0, PAGE_SIZE);
+	bmk_memset((void*) new_page, 0, PAGE_SIZE);
 
 	rc = HYPERVISOR_update_va_mapping(addr & PAGE_MASK, __pte(virt_to_mach(new_page) | L1_PROT), UVMF_INVLPG);
 	if (!rc)

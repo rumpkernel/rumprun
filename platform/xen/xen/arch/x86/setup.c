@@ -28,7 +28,7 @@
 
 #include <mini-os/os.h>
 
-#include <string.h>
+#include <bmk-core/string.h>
 
 /*
  * Shared page for communicating with the hypervisor.
@@ -81,7 +81,7 @@ arch_init(start_info_t *si)
 	/* Copy the start_info struct to a globally-accessible area. */
 	/* WARN: don't do printk before here, it uses information from
 	   shared_info. Use xprintk instead. */
-	memcpy(&start_info, si, sizeof(*si));
+	bmk_memcpy(&start_info, si, sizeof(*si));
 
 	/* set up minimal memory infos */
 	_minios_phys_to_machine_mapping = (unsigned long *)start_info.mfn_list;

@@ -41,7 +41,7 @@
 #include <mini-os/lib.h>
 #include <xen/memory.h>
 
-#include <string.h>
+#include <bmk-core/string.h>
 
 #ifdef MM_DEBUG
 #define DEBUG(_f, _a...) \
@@ -76,7 +76,7 @@ static void new_pt_frame(unsigned long *pt_pfn, unsigned long prev_l_mfn,
 
     /* We need to clear the page, otherwise we might fail to map it
        as a page table page */
-    memset((void*) pt_page, 0, PAGE_SIZE);  
+    bmk_memset((void*) pt_page, 0, PAGE_SIZE);  
  
     switch ( level )
     {
@@ -571,7 +571,7 @@ void do_map_frames(unsigned long va,
           va, n, mfns[0], stride, incr, prot);
 
     if ( err )
-        memset(err, 0x00, n * sizeof(int));
+        bmk_memset(err, 0x00, n * sizeof(int));
     while ( done < n )
     {
         unsigned long todo;
@@ -850,7 +850,7 @@ static void clear_bootstrap(void)
     int rc;
 
     /* Use first page as the CoW zero page */
-    memset(&_text, 0, PAGE_SIZE);
+    bmk_memset(&_text, 0, PAGE_SIZE);
     _minios_mfn_zero = virt_to_mfn((unsigned long) &_text);
     if ( (rc = HYPERVISOR_update_va_mapping(0, nullpte, UVMF_INVLPG)) )
         minios_printk("Unable to unmap NULL page. rc=%d\n", rc);

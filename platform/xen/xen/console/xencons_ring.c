@@ -11,10 +11,9 @@
 #include <xen/io/ring.h>
 #include <mini-os/gnttab.h>
 
-#include "console.h"
+#include <bmk-core/memalloc.h>
 
-#include <stdlib.h>
-#include <string.h>
+#include "console.h"
 
 DECLARE_WAIT_QUEUE_HEAD(console_queue);
 
@@ -110,8 +109,7 @@ struct consfront_dev *xencons_ring_init(void)
 	if (!start_info.console.domU.evtchn)
 		return 0;
 
-	dev = malloc(sizeof(struct consfront_dev));
-	memset(dev, 0, sizeof(struct consfront_dev));
+	dev = bmk_memcalloc(1, sizeof(struct consfront_dev));
 	dev->nodename = "device/console";
 	dev->dom = 0;
 	dev->backend = 0;
@@ -123,7 +121,7 @@ struct consfront_dev *xencons_ring_init(void)
 	err = minios_bind_evtchn(dev->evtchn, console_handle_input, dev);
 	if (err <= 0) {
 		minios_printk("XEN console request chn bind failed %i\n", err);
-                free(dev);
+                bmk_memfree(dev);
 		return NULL;
 	}
         minios_unmask_evtchn(dev->evtchn);

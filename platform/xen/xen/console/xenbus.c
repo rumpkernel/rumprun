@@ -13,17 +13,19 @@
 
 #include "console.h"
 
+#include <bmk-core/memalloc.h>
+#include <bmk-core/string.h>
+
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include <string.h> /* XXX: for strdup */
 
 void free_consfront(struct consfront_dev *dev)
 {
     char* err = NULL;
     XenbusState state;
 
-    char path[strlen(dev->backend) + 1 + 5 + 1];
-    char nodename[strlen(dev->nodename) + 1 + 5 + 1];
+    char path[bmk_strlen(dev->backend) + 1 + 5 + 1];
+    char nodename[bmk_strlen(dev->nodename) + 1 + 5 + 1];
 
     snprintf(path, sizeof(path), "%s/state", dev->backend);
     snprintf(nodename, sizeof(nodename), "%s/state", dev->nodename);
@@ -36,7 +38,7 @@ void free_consfront(struct consfront_dev *dev)
     state = xenbus_read_integer(path);
     while (err == NULL && state < XenbusStateClosing)
         err = xenbus_wait_for_state_change(path, &state, &dev->events);
-    if (err) free(err);
+    if (err) bmk_memfree(err);
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateClosed)) != NULL) {
         minios_printk("free_consfront: error changing state to %d: %s\n",
@@ -45,18 +47,18 @@ void free_consfront(struct consfront_dev *dev)
     }
 
 close:
-    if (err) free(err);
+    if (err) bmk_memfree(err);
     xenbus_unwatch_path_token(XBT_NIL, path, path);
 
     minios_mask_evtchn(dev->evtchn);
     minios_unbind_evtchn(dev->evtchn);
-    free(dev->backend);
-    free(dev->nodename);
+    bmk_memfree(dev->backend);
+    bmk_memfree(dev->nodename);
 
     gnttab_end_access(dev->ring_ref);
 
     minios_free_page(dev->ring);
-    free(dev);
+    bmk_memfree(dev);
 }
 
 struct consfront_dev *init_consfront(char *_nodename)
@@ -75,13 +77,12 @@ struct consfront_dev *init_consfront(char *_nodename)
     if (!_nodename)
         snprintf(nodename, sizeof(nodename), "device/console/%d", consfrontends);
     else
-        strncpy(nodename, _nodename, sizeof(nodename));
+        bmk_strncpy(nodename, _nodename, sizeof(nodename));
 
     minios_printk("******************* CONSFRONT for %s **********\n\n\n", nodename);
 
     consfrontends++;
-    dev = malloc(sizeof(*dev));
-    memset(dev, 0, sizeof(*dev));
+    dev = bmk_memcalloc(1, sizeof(*dev));
     dev->nodename = strdup(nodename);
 
     snprintf(path, sizeof(path), "%s/backend-id", nodename);
@@ -92,7 +93,7 @@ struct consfront_dev *init_consfront(char *_nodename)
     minios_evtchn_alloc_unbound(dev->dom, console_handle_input, dev, &dev->evtchn);
 
     dev->ring = (struct xencons_interface *) minios_alloc_page();
-    memset(dev->ring, 0, PAGE_SIZE);
+    bmk_memset(dev->ring, 0, PAGE_SIZE);
     dev->ring_ref = gnttab_grant_access(dev->dom, virt_to_mfn(dev->ring), 0);
 
     xenbus_event_queue_init(&dev->events);
@@ -101,7 +102,7 @@ again:
     err = xenbus_transaction_start(&xbt);
     if (err) {
         minios_printk("starting transaction\n");
-        free(err);
+        bmk_memfree(err);
     }
 
     err = xenbus_printf(xbt, nodename, "ring-ref","%u",
@@ -138,7 +139,7 @@ again:
 
 
     err = xenbus_transaction_end(xbt, 0, &retry);
-    if (err) free(err);
+    if (err) bmk_memfree(err);
     if (retry) {
             goto again;
         minios_printk("completing transaction\n");
@@ -147,7 +148,7 @@ again:
     goto done;
 
 abort_transaction:
-    free(err);
+    bmk_memfree(err);
     err = xenbus_transaction_end(xbt, 1, &retry);
     minios_printk("Abort transaction %s\n", message);
     goto error;
@@ -165,7 +166,7 @@ done:
 
     {
         XenbusState state;
-        char path[strlen(dev->backend) + 1 + 19 + 1];
+        char path[bmk_strlen(dev->backend) + 1 + 19 + 1];
         snprintf(path, sizeof(path), "%s/state", dev->backend);
         
 	xenbus_watch_path_token(XBT_NIL, path, path, &dev->events);
@@ -186,8 +187,8 @@ done:
     return dev;
 
 error:
-    free(msg);
-    free(err);
+    bmk_memfree(msg);
+    bmk_memfree(err);
     free_consfront(dev);
     return NULL;
 }

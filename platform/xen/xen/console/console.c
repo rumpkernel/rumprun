@@ -45,7 +45,8 @@
 #include <xen/io/console.h>
 
 #include <stdio.h>
-#include <string.h>
+
+#include <bmk-core/string.h>
 
 
 /* Copies all print output to the Xen emergency console apart
@@ -92,7 +93,7 @@ void minios_console_print(struct consfront_dev *dev, char *data, int length)
         ring_send_fn = xencons_ring_send;
 
     copied_ptr = copied_str;
-    memcpy(copied_ptr, data, length);
+    bmk_memcpy(copied_ptr, data, length);
     for(curr_char = copied_ptr; curr_char < copied_ptr+length-1; curr_char++)
     {
         if(*curr_char == '\n')
@@ -130,15 +131,15 @@ void print(int direct, const char *fmt, va_list args)
  
     if(direct)
     {
-        (void)HYPERVISOR_console_io(CONSOLEIO_write, strlen(buf), buf);
+        (void)HYPERVISOR_console_io(CONSOLEIO_write, bmk_strlen(buf), buf);
         return;
     } else {
 #ifndef USE_XEN_CONSOLE
     if(!console_initialised)
 #endif    
-            (void)HYPERVISOR_console_io(CONSOLEIO_write, strlen(buf), buf);
+            (void)HYPERVISOR_console_io(CONSOLEIO_write, bmk_strlen(buf), buf);
         
-        minios_console_print(NULL, buf, strlen(buf));
+        minios_console_print(NULL, buf, bmk_strlen(buf));
     }
 }
 
