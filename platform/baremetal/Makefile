@@ -73,7 +73,7 @@ RUMPKERN_LIB=	${LIBS_VIO_NET}					\
 		${LIBS_SYSPROXY}				\
 		-lrumpdev -lrumpvfs -lrump
 
-OBJS_BMK+=	libc_errno.o libc_malloc.o
+OBJS_BMK+=	libc_errno.o
 OBJS_BMK+=	init.o
 LIBS_USER=	-L$(shell pwd)/../../lib/librumprun_base/baremetal --start-group -lrumprun_base -lpthread -lc --end-group -L$(shell pwd)/../../lib/librumprun_core/baremetal -lrumprun_core
 RUMP_LDLIBS=	--whole-archive ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USER}

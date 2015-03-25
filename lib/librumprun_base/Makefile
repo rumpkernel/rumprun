@@ -5,7 +5,7 @@ DPSRCS+=	${CONFIG_MK}
 LIB=		rumprun_base
 LIBISPRIVATE=	# defined
 
-SRCS=		netbsd_initfini.c syscall_misc.c
+SRCS=		malloc.c netbsd_initfini.c syscall_misc.c
 
 CPPFLAGS+=	-I${.CURDIR}/../../include
 
