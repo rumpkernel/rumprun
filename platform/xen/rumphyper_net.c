@@ -29,9 +29,9 @@
 #include <mini-os/netfront.h>
 
 #include <stdlib.h>
-#include <string.h>
 
 #include <bmk-common/errno.h>
+#include <bmk-common/string.h>
 
 #include "rumphyper.h"
 #include <rump/rumpuser.h>
@@ -90,7 +90,7 @@ myrecv(struct netfront_dev *dev, unsigned char *data, int dlen)
 		return;
 	}
 
-	memcpy(viu->viu_pkts[viu->viu_write].pkt_data, data, dlen);
+	bmk_memcpy(viu->viu_pkts[viu->viu_write].pkt_data, data, dlen);
 	viu->viu_pkts[viu->viu_write].pkt_dlen = dlen;
 	viu->viu_write = nextw;
 
@@ -158,7 +158,7 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 		rv = BMK_ENOMEM;
 		goto out;
 	}
-	memset(viu, 0, sizeof(*viu));
+	bmk_memset(viu, 0, sizeof(*viu));
 	viu->viu_vifsc = vif_sc;
 
 	viu->viu_dev = netfront_init(NULL, myrecv, enaddr, NULL, viu);
@@ -207,7 +207,7 @@ VIFHYPER_SEND(struct virtif_user *viu,
 		}
 		d = d0 = malloc(tlen);
 		for (i = 0; i < iovlen; i++) {
-			memcpy(d0, iov[i].iov_base, iov[i].iov_len);
+			bmk_memcpy(d0, iov[i].iov_base, iov[i].iov_len);
 			d0 += iov[i].iov_len;
 		}
 	}

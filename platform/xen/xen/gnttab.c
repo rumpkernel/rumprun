@@ -20,7 +20,7 @@
 #include <mini-os/gnttab.h>
 #include <mini-os/semaphore.h>
 
-#include <string.h>
+#include <bmk-common/string.h>
 
 #define NR_RESERVED_ENTRIES 8
 
@@ -183,7 +183,7 @@ init_gnttab(void)
     int i;
 
 #ifdef GNT_DEBUG
-    memset(inuse, 1, sizeof(inuse));
+    bmk_memset(inuse, 1, sizeof(inuse));
 #endif
     for (i = NR_RESERVED_ENTRIES; i < NR_GRANT_ENTRIES; i++)
         put_free_entry(i);

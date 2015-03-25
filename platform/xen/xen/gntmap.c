@@ -37,9 +37,8 @@
 #include <inttypes.h>
 #include <mini-os/gntmap.h>
 
-#include <string.h>
-
 #include <bmk-common/errno.h>
+#include <bmk-common/string.h>
 
 #define DEFAULT_MAX_GRANTS 128
 
@@ -97,7 +96,7 @@ gntmap_set_max_grants(struct gntmap *map, int count)
     if (map->entries == NULL)
         return -BMK_ENOMEM;
 
-    memset(map->entries, 0, sizeof(struct gntmap_entry) * count);
+    bmk_memset(map->entries, 0, sizeof(struct gntmap_entry) * count);
     map->nentries = count;
     return 0;
 }

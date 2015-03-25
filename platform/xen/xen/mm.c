@@ -42,7 +42,7 @@
 #include <mini-os/lib.h>
 #include <mini-os/xmalloc.h>
 
-#include <string.h>
+#include <bmk-common/string.h>
 
 #ifdef MM_DEBUG
 #define DEBUG(_f, _a...) \
@@ -169,7 +169,7 @@ USED static void print_chunks(void *start, int nr_pages)
     chunk_head_t *head;
     unsigned long pfn_start = virt_to_pfn(start);
    
-    memset(chunks, (int)'_', 1000);
+    bmk_memset(chunks, (int)'_', 1000);
     if(nr_pages > 1000) 
     {
         DEBUG("Can only pring 1000 pages. Increase buffer size.");
@@ -223,7 +223,7 @@ static void init_page_allocator(unsigned long min, unsigned long max)
     range        = max - min;
 
     /* All allocated by default. */
-    memset(alloc_bitmap, ~0, bitmap_size);
+    bmk_memset(alloc_bitmap, ~0, bitmap_size);
     /* Free up the memory we've been given to play with. */
     map_free(PHYS_PFN(min), range>>PAGE_SHIFT);
 

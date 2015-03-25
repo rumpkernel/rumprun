@@ -42,7 +42,7 @@ RUMP_LIBS_NET+= -lrumpnet_local -lrumpnet_net -lrumpxen_xendev -lrumpnet
 
 # Define some default flags for linking.
 RUMP_LDLIBS = --whole-archive ${RUMP_LIBS_FS} ${RUMP_LIBS_NET} ${RUMP_LIBS_PCI} ${RUMP_LIBS_SYSPROXY} -lrumpxen_tc -lrump --no-whole-archive
-RUMP_LDLIBS := ${RUMP_LDLIBS} -L$(shell pwd)/../../lib/librumprun_base/xen --start-group -lrumprun_base -lpthread -lc --end-group
+RUMP_LDLIBS := ${RUMP_LDLIBS} -L$(shell pwd)/../../lib/librumprun_base/xen --start-group -lrumprun_base -lpthread -lc --end-group -L$(shell pwd)/../../lib/librumprun_core/xen -lrumprun_core
 
 LDFLAGS := -L$(abspath rump/lib)
 

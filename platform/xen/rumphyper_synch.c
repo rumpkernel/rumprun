@@ -37,9 +37,9 @@
 #include <mini-os/sched.h>
 
 #include <bmk-common/errno.h>
+#include <bmk-common/string.h>
 
 #include <stdlib.h>
-#include <string.h>
 
 #include "rumphyper.h"
 
@@ -146,7 +146,7 @@ rumpuser_mutex_init(struct rumpuser_mtx **mtxp, int flags)
 	struct rumpuser_mtx *mtx;
 
 	mtx = malloc(sizeof(*mtx));
-	memset(mtx, 0, sizeof(*mtx));
+	bmk_memset(mtx, 0, sizeof(*mtx));
 	mtx->flags = flags;
 	TAILQ_INIT(&mtx->waiters);
 	*mtxp = mtx;
@@ -230,7 +230,7 @@ rumpuser_rw_init(struct rumpuser_rw **rwp)
 	struct rumpuser_rw *rw;
 
 	rw = malloc(sizeof(*rw));
-	memset(rw, 0, sizeof(*rw));
+	bmk_memset(rw, 0, sizeof(*rw));
 	TAILQ_INIT(&rw->rwait);
 	TAILQ_INIT(&rw->wwait);
 
@@ -362,7 +362,7 @@ rumpuser_cv_init(struct rumpuser_cv **cvp)
 	struct rumpuser_cv *cv;
 
 	cv = malloc(sizeof(*cv));
-	memset(cv, 0, sizeof(*cv));
+	bmk_memset(cv, 0, sizeof(*cv));
 	TAILQ_INIT(&cv->waiters);
 	*cvp = cv;
 }

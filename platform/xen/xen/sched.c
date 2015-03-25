@@ -47,7 +47,7 @@
 
 #include <sys/queue.h>
 
-#include <string.h> /* XXX: for mem{cpy,set}() */
+#include <bmk-common/string.h>
 
 TAILQ_HEAD(thread_list, thread);
 
@@ -161,8 +161,8 @@ allocothertls(struct thread *thread)
 
     tlsmem = memalloc(tdatasize + tbsssize, 0);
 
-    memcpy(tlsmem, _tdata_start, tdatasize);
-    memset(tlsmem + tdatasize, 0, tbsssize);
+    bmk_memcpy(tlsmem, _tdata_start, tdatasize);
+    bmk_memset(tlsmem + tdatasize, 0, tbsssize);
 
     thread->thr_tp = (uintptr_t)(tlsmem + tdatasize + tbsssize);
     thread->thr_tl = tdatasize + tbsssize;

@@ -34,9 +34,9 @@
 #include <fcntl.h>
 #include <inttypes.h>
 #include <stdio.h>
-#include <string.h>
 
 #include <bmk-common/errno.h>
+#include <bmk-common/string.h>
 
 #include "rumphyper.h"
 
@@ -87,7 +87,7 @@ rumpuser_dprintf(const char *fmt, ...)
 	va_start(va, fmt);
 	vsnprintf(buf, PAGE_SIZE, fmt, va);
 	va_end(va);
-	minios_console_print(NULL, buf, strlen(buf));
+	minios_console_print(NULL, buf, bmk_strlen(buf));
 
 	minios_free_pages(buf, 0);
 }
@@ -100,15 +100,15 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 	if (buflen <= 1)
 		return BMK_EINVAL;
 
-	if (strcmp(name, RUMPUSER_PARAM_NCPU) == 0
-	    || strcmp(name, "RUMP_VERBOSE") == 0) {
-		strncpy(buf, "1", buflen-1);
+	if (bmk_strcmp(name, RUMPUSER_PARAM_NCPU) == 0
+	    || bmk_strcmp(name, "RUMP_VERBOSE") == 0) {
+		bmk_strncpy(buf, "1", buflen-1);
 
-	} else if (strcmp(name, RUMPUSER_PARAM_HOSTNAME) == 0) {
-		strncpy(buf, "rump-xen", buflen-1);
+	} else if (bmk_strcmp(name, RUMPUSER_PARAM_HOSTNAME) == 0) {
+		bmk_strncpy(buf, "rump-xen", buflen-1);
 
 	/* for memlimit, we have to implement int -> string ... */
-	} else if (strcmp(name, "RUMP_MEMLIMIT") == 0) {
+	} else if (bmk_strcmp(name, "RUMP_MEMLIMIT") == 0) {
 		uint64_t memsize;
 		char tmp[64];
 		char *res = buf;
@@ -301,10 +301,10 @@ devname2num(const char *name)
 	int num;
 
 	/* we support only block devices */
-	if (strncmp(name, "blk", 3) != 0 || strlen(name) != 4)
+	if (bmk_strncmp(name, "blk", 3) != 0 || bmk_strlen(name) != 4)
 		return -1;
 
-	p = name + strlen(name)-1;
+	p = name + bmk_strlen(name)-1;
 	num = *p - '0';
 	if (num < 0 || num >= NBLKDEV)
 		return -1;
