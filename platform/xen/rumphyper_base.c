@@ -27,7 +27,6 @@
 #include <mini-os/console.h>
 
 #include <xen/io/console.h>
-#include <mini-os/xmalloc.h>
 #include <mini-os/blkfront.h>
 #include <mini-os/mm.h>
 
@@ -36,6 +35,7 @@
 #include <stdio.h>
 
 #include <bmk-core/errno.h>
+#include <bmk-core/memalloc.h>
 #include <bmk-core/string.h>
 
 #include "rumphyper.h"
@@ -223,7 +223,7 @@ rumpuser_malloc(size_t len, int alignment, void **retval)
 		ASSERT(alignment <= PAGE_SIZE);
 		*retval = (void *)minios_alloc_page();
 	} else {
-		*retval = memalloc(len, alignment);
+		*retval = bmk_memalloc(len, alignment);
 	}
 	if (*retval)
 		return 0;
@@ -238,7 +238,7 @@ rumpuser_free(void *buf, size_t buflen)
 	if (buflen == PAGE_SIZE)
 		minios_free_page(buf);
 	else
-		memfree(buf);
+		bmk_memfree(buf);
 }
 
 /* Not very random */
@@ -392,7 +392,7 @@ biocomp(struct blkfront_aiocb *aiocb, int ret)
 		bio->bio_done(bio->bio_arg, bio->bio_aiocb.aio_nbytes, 0);
 	rumpkern_unsched(&dummy, NULL);
 	num = bio->bio_num;
-	xfree(bio);
+	bmk_memfree(bio);
 
 	rumpuser_mutex_enter_nowrap(bio_mtx);
 	bio_outstanding_total--;
@@ -444,7 +444,7 @@ rumpuser_bio(int fd, int op, void *data, size_t dlen, int64_t off,
 	rump_biodone_fn biodone, void *donearg)
 {
 	static int bio_inited;
-	struct biocb *bio = memalloc(sizeof(*bio), 0);
+	struct biocb *bio = bmk_memalloc(sizeof(*bio), 0);
 	struct blkfront_aiocb *aiocb = &bio->bio_aiocb;
 	int nlocks;
 	int num = fd - BLKFDOFF;

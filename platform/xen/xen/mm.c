@@ -40,7 +40,6 @@
 #include <mini-os/mm.h>
 #include <mini-os/types.h>
 #include <mini-os/lib.h>
-#include <mini-os/xmalloc.h>
 
 #include <bmk-core/string.h>
 

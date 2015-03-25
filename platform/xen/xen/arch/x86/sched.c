@@ -41,9 +41,10 @@
 #include <mini-os/mm.h>
 #include <mini-os/types.h>
 #include <mini-os/lib.h>
-#include <mini-os/xmalloc.h>
 #include <mini-os/sched.h>
 #include <mini-os/semaphore.h>
+
+#include <bmk-core/memalloc.h>
 
 void dump_stack(struct thread *thread)
 {
@@ -87,7 +88,7 @@ struct thread* arch_create_thread(const char *name, void (*function)(void *),
 {
     struct thread *thread;
     
-    thread = xmalloc(struct thread);
+    thread = bmk_xmalloc(sizeof(struct thread));
     /* We can't use lazy allocation here since the trap handler runs on the stack */
     if (!stack) {
         thread->stack = (char *)minios_alloc_pages(STACK_SIZE_PAGE_ORDER);

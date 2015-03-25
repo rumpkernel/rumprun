@@ -41,12 +41,12 @@
 #include <mini-os/mm.h>
 #include <mini-os/types.h>
 #include <mini-os/lib.h>
-#include <mini-os/xmalloc.h>
 #include <mini-os/sched.h>
 #include <mini-os/semaphore.h>
 
 #include <sys/queue.h>
 
+#include <bmk-core/memalloc.h>
 #include <bmk-core/string.h>
 
 TAILQ_HEAD(thread_list, thread);
@@ -138,7 +138,7 @@ void minios_schedule(void)
             TAILQ_REMOVE(&exited_threads, thread, thread_list);
 	    if ((thread->flags & THREAD_EXTSTACK) == 0)
                 minios_free_pages(thread->stack, STACK_SIZE_PAGE_ORDER);
-            xfree(thread);
+            bmk_memfree(thread);
         }
     }
 }
@@ -159,7 +159,7 @@ allocothertls(struct thread *thread)
     const size_t tbsssize = _tbss_end - _tbss_start;
     uint8_t *tlsmem;
 
-    tlsmem = memalloc(tdatasize + tbsssize, 0);
+    tlsmem = bmk_memalloc(tdatasize + tbsssize, 0);
 
     bmk_memcpy(tlsmem, _tdata_start, tdatasize);
     bmk_memset(tlsmem + tdatasize, 0, tbsssize);
@@ -176,7 +176,7 @@ freeothertls(struct thread *thread)
     void *mem;
 
     mem = (void *)(thread->thr_tp);
-    memfree(mem);
+    bmk_memfree(mem);
 }
 
 struct thread *

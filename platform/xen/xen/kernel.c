@@ -41,7 +41,6 @@
 #include <mini-os/blkfront.h>
 #include <mini-os/fbfront.h>
 #include <mini-os/pcifront.h>
-#include <mini-os/xmalloc.h>
 #include <xen/features.h>
 #include <xen/version.h>
 

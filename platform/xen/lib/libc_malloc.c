@@ -3,7 +3,8 @@
 
 #include <mini-os/os.h>
 #include <mini-os/mm.h>
-#include <mini-os/xmalloc.h>
+
+#include <bmk-core/memalloc.h>
 
 int
 posix_memalign(void **rv, size_t nbytes, size_t align)
@@ -11,7 +12,7 @@ posix_memalign(void **rv, size_t nbytes, size_t align)
 	void *v;
 	int error = 10; /* XXX */
 
-	if ((v = memalloc(nbytes, align)) != NULL) {
+	if ((v = bmk_memalloc(nbytes, align)) != NULL) {
 		*rv = v;
 		error = 0;
 	}
@@ -23,7 +24,7 @@ void *
 malloc(size_t size)
 {
 
-	return memalloc(size, 8);
+	return bmk_memalloc(size, 8);
 }
 
 void *
@@ -46,12 +47,12 @@ void *
 realloc(void *cp, size_t nbytes)
 {
 
-	return memrealloc(cp, nbytes);
+	return bmk_memrealloc(cp, nbytes);
 }
 
 void
 free(void *cp)
 {
 
-	memfree(cp);
+	bmk_memfree(cp);
 }

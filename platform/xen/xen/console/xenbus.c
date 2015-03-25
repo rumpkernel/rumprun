@@ -9,7 +9,6 @@
 #include <xen/io/console.h>
 #include <xen/io/protocols.h>
 #include <xen/io/ring.h>
-#include <mini-os/xmalloc.h>
 #include <mini-os/gnttab.h>
 
 #include "console.h"

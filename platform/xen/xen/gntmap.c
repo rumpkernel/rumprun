@@ -32,13 +32,13 @@
 
 #include <mini-os/os.h>
 #include <mini-os/lib.h>
-#include <mini-os/xmalloc.h>
 #include <xen/grant_table.h>
 #include <inttypes.h>
 #include <mini-os/gntmap.h>
 
 #include <bmk-core/errno.h>
 #include <bmk-core/string.h>
+#include <bmk-core/memalloc.h>
 
 #define DEFAULT_MAX_GRANTS 128
 
@@ -92,11 +92,10 @@ gntmap_set_max_grants(struct gntmap *map, int count)
     if (map->nentries != 0)
         return -BMK_EBUSY;
 
-    map->entries = xmalloc_array(struct gntmap_entry, count);
+    map->entries = bmk_memcalloc(count, sizeof(struct gntmap_entry));
     if (map->entries == NULL)
         return -BMK_ENOMEM;
 
-    bmk_memset(map->entries, 0, sizeof(struct gntmap_entry) * count);
     map->nentries = count;
     return 0;
 }
@@ -249,7 +248,7 @@ gntmap_fini(struct gntmap *map)
             (void) _gntmap_unmap_grant_ref(ent);
     }
 
-    xfree(map->entries);
+    bmk_memfree(map->entries);
     map->entries = NULL;
     map->nentries = 0;
 }

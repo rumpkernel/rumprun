@@ -10,7 +10,6 @@
 #include <mini-os/events.h>
 #include <xen/io/netif.h>
 #include <mini-os/gnttab.h>
-#include <mini-os/xmalloc.h>
 #include <mini-os/time.h>
 #include <mini-os/netfront.h>
 #include <mini-os/lib.h>

@@ -24,7 +24,6 @@
 #include <mini-os/wait.h>
 #include <xen/io/xs_wire.h>
 #include <mini-os/spinlock.h>
-#include <mini-os/xmalloc.h>
 
 #include <stdio.h>
 #include <stdlib.h>
