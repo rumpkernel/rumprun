@@ -78,9 +78,11 @@ _app_main(void *arg)
 }
 
 static void __attribute__((noreturn))
-stopandhalt(void)
+stopandhalt(const char *panicstring)
 {
 
+	if (panicstring)
+		minios_printk("PANIC: %s\n", panicstring);
 	minios_stop_kernel();
 	minios_do_halt(MINIOS_HALT_POWEROFF);
 }

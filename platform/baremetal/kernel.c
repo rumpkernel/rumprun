@@ -178,9 +178,14 @@ bmk_init(void)
 }
 
 void __attribute__((noreturn))
-bmk_halt(void)
+bmk_halt(const char *panicstring)
 {
 
+	if (panicstring) {
+		bmk_cons_puts("PANIC: ");
+		bmk_cons_puts(panicstring);
+		bmk_cons_puts("\n");
+	}
 	bmk_cons_puts("baremetal halted (well, spinning ...)\n");
 	for (;;)
 		continue;

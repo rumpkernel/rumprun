@@ -3,7 +3,7 @@
 
 struct bmk_ops {
 	void *(*bmk_allocpg2)(int);
-	void (*bmk_halt)(void) __attribute__((noreturn));
+	void (*bmk_halt)(const char *) __attribute__((noreturn));
 };
 
 extern const struct bmk_ops *bmk_ops;
