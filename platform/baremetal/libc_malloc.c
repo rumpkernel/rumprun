@@ -27,17 +27,8 @@ malloc(size_t size)
 void *
 calloc(size_t n, size_t size)
 {
-	void *v;
-	size_t tot = n * size;
 
-	if (size != 0 && tot / size != n)
-		return NULL;
-
-	if ((v = malloc(tot)) != NULL) {
-		memset(v, 0, tot);
-	}
-
-	return v;
+	return bmk_memcalloc(n, size);
 }
 
 void *

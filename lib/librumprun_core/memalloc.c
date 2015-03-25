@@ -312,6 +312,21 @@ bmk_xmalloc(unsigned long howmuch)
 	return rv;
 }
 
+void *
+bmk_memcalloc(unsigned long n, unsigned long size)
+{
+	void *v;
+	unsigned long tot = n * size;
+
+	if (size != 0 && tot / size != n)
+		return NULL;
+
+	if ((v = bmk_memalloc(tot, MINALIGN)) != NULL) {
+		bmk_memset(v, 0, tot);
+	}
+	return v;
+}
+
 static void *
 corealloc(int shift)
 {
