@@ -86,7 +86,15 @@ stopandhalt(const char *panicstring)
 	minios_do_halt(MINIOS_HALT_POWEROFF);
 }
 
+static void *
+allocpg2(int shift)
+{
+
+	return (void *)minios_alloc_pages(shift);
+}
+
 static const struct bmk_ops myops = {
+	.bmk_allocpg2 = allocpg2,
 	.bmk_halt = stopandhalt,
 };
 
