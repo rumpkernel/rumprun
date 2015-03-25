@@ -33,7 +33,6 @@
 #include <mini-os/os.h>
 #include <mini-os/lib.h>
 #include <xen/grant_table.h>
-#include <inttypes.h>
 #include <mini-os/gntmap.h>
 
 #include <bmk-core/errno.h>
@@ -120,7 +119,7 @@ _gntmap_map_grant_ref(struct gntmap_entry *entry,
     rc = HYPERVISOR_grant_table_op(GNTTABOP_map_grant_ref, &op, 1);
     if (rc != 0 || op.status != GNTST_okay) {
         minios_printk("GNTTABOP_map_grant_ref failed: "
-               "returned %d, status %" PRId16 "\n",
+               "returned %d, status %d\n",
                rc, op.status);
         return rc != 0 ? rc : op.status;
     }
@@ -143,7 +142,7 @@ _gntmap_unmap_grant_ref(struct gntmap_entry *entry)
     rc = HYPERVISOR_grant_table_op(GNTTABOP_unmap_grant_ref, &op, 1);
     if (rc != 0 || op.status != GNTST_okay) {
         minios_printk("GNTTABOP_unmap_grant_ref failed: "
-               "returned %d, status %" PRId16 "\n",
+               "returned %d, status %d\n",
                rc, op.status);
         return rc != 0 ? rc : op.status;
     }
@@ -191,9 +190,9 @@ gntmap_map_grant_refs(struct gntmap *map,
     int i;
 
 #ifdef GNTMAP_DEBUG
-    minios_printk("gntmap_map_grant_refs(map=%p, count=%" PRIu32 ", "
-           "domids=%p [%" PRIu32 "...], domids_stride=%d, "
-           "refs=%p [%" PRIu32 "...], writable=%d)\n",
+    minios_printk("gntmap_map_grant_refs(map=%p, count=%u, "
+           "domids=%p [%u...], domids_stride=%d, "
+           "refs=%p [%u...], writable=%d)\n",
            map, count,
            domids, domids == NULL ? 0 : domids[0], domids_stride,
            refs, refs == NULL ? 0 : refs[0], writable);
