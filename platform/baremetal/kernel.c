@@ -89,11 +89,9 @@ bmk_main(struct multiboot_info *mbi)
 	bmk_sched_init();
 	bmk_isr_init();
 
-#ifdef BMK_APP
 	_netbsd_init();
 	bmk_beforemain();
 	_netbsd_fini();
-#endif
 }
 
 /*
