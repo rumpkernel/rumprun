@@ -36,7 +36,7 @@ endif
 
 all: app-tools include/bmk/machine rumprun.o tests
 
-OBJS_BMK-y+=		intr.o kernel.o undefs.o memalloc.o sched.o subr.o
+OBJS_BMK-y+=		intr.o kernel.o undefs.o memalloc.o sched.o
 OBJS_BMK-y+=		rumpuser.o rumpfiber.o rumpconfig.o
 OBJS_BMK-${HASPCI}+=	rumppci.o
 
@@ -76,7 +76,7 @@ RUMPKERN_LIB=	${LIBS_VIO_NET}					\
 OBJS_BMK+=	libc_errno.o libc_malloc.o
 OBJS_BMK+=	init.o
 CPPFLAGS+=	-DBMK_APP
-LIBS_USER=	-L$(shell pwd)/../../lib/librumprun_base/baremetal --start-group -lrumprun_base -lpthread -lc --end-group
+LIBS_USER=	-L$(shell pwd)/../../lib/librumprun_base/baremetal --start-group -lrumprun_base -lpthread -lc --end-group -L$(shell pwd)/../../lib/librumprun_core/baremetal -lrumprun_core
 RUMP_LDLIBS=	--whole-archive ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USER}
 
 OBJS= ${OBJS_BMK} ${OBJS_APP}

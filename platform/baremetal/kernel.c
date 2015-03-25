@@ -2,10 +2,10 @@
 #include <bmk/multiboot.h>
 #include <bmk/kernel.h>
 #include <bmk/memalloc.h>
-#include <bmk/string.h>
 #include <bmk/sched.h>
 #include <bmk/app.h>
 
+#include <bmk-common/string.h>
 #include <bmk-common/netbsd_initfini.h>
 #include <bmk-common/bmk_ops.h>
 

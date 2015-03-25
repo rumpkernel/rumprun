@@ -1,16 +1,14 @@
 /*
- * Fee fi fo fum, I smell the blood of a buggy one
- * (you gotta do what you gotta do when living on bare metal)
+ * The assumption is that these won't be used very often,
+ * only for the very low-level routines.
  */
 
-#include <bmk/types.h>
-#include <bmk/kernel.h>
-#include <bmk/string.h>
+#include <bmk-common/string.h>
 
-size_t
+unsigned long
 bmk_strlen(const char *str)
 {
-	size_t rv = 0;
+	unsigned long rv = 0;
 
 	while (*str++)
 		rv++;
@@ -42,7 +40,7 @@ bmk_strcpy(char *d, const char *s)
 }
 
 char *
-bmk_strncpy(char *d, const char *s, size_t n)
+bmk_strncpy(char *d, const char *s, unsigned long n)
 {
 	char *orig = d;
 
@@ -54,21 +52,21 @@ bmk_strncpy(char *d, const char *s, size_t n)
 }
 
 void *
-bmk_memset(void *b, int c, size_t n)
+bmk_memset(void *b, int c, unsigned long n)
 {
-	uint8_t *v = b;
+	unsigned char *v = b;
 
 	while (n--)
-		*v++ = (uint8_t)c;
+		*v++ = (unsigned char)c;
 
 	return b;
 }
 
 void *
-bmk_memcpy(void *d, const void *src, size_t n)
+bmk_memcpy(void *d, const void *src, unsigned long n)
 {
-	uint8_t *dp;
-	const uint8_t *sp;
+	unsigned char *dp;
+	const unsigned char *sp;
 
 	dp = d;
 	sp = src;

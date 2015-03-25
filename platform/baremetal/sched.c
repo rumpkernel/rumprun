@@ -68,8 +68,9 @@
 
 #include <bmk/kernel.h>
 #include <bmk/sched.h>
-#include <bmk/string.h>
 #include <bmk/memalloc.h>
+
+#include <bmk-common/string.h>
 
 #define TLS_COUNT 2
 #define NAME_MAXLEN 16
