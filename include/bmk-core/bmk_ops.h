@@ -2,6 +2,7 @@
 #define _BMKCORE_BMK_OPS_H_
 
 struct bmk_ops {
+	void *(*bmk_allocpg2)(int);
 	void (*bmk_halt)(void) __attribute__((noreturn));
 };
 

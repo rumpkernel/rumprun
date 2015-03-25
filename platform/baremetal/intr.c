@@ -1,7 +1,8 @@
 #include <bmk/kernel.h>
 #include <bmk/sched.h>
 #include <bmk/queue.h>
-#include <bmk/memalloc.h>
+
+#include <bmk-core/memalloc.h>
 
 #define LIBRUMPUSER
 #include "rumpuser_int.h"

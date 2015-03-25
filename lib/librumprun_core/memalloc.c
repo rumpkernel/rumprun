@@ -63,13 +63,12 @@
 
 #else
 
-#include <bmk/types.h>
-#include <bmk/kernel.h>
-#include <bmk/memalloc.h>
-
 #include <bmk-core/string.h>
+#include <bmk-core/memalloc.h>
+#include <bmk-core/bmk_ops.h>
 
-#define ASSERT(x) assert(x)
+#define NULL (void *)0
+#define ASSERT(x)
 
 #endif
 
@@ -87,12 +86,12 @@
 union	overhead {
 	union	overhead *ov_next;	/* when free */
 	struct {
-		u_long  ovu_alignpad;	/* padding for alignment */
-		u_char	ovu_magic;	/* magic number */
-		u_char	ovu_index;	/* bucket # */
+		unsigned long  ovu_alignpad;	/* padding for alignment */
+		unsigned char	ovu_magic;	/* magic number */
+		unsigned char	ovu_index;	/* bucket # */
 #ifdef RCHECK
-		u_short	ovu_rmagic;	/* range magic number */
-		u_long	ovu_size;	/* actual block size */
+		unsigned short	ovu_rmagic;	/* range magic number */
+		unsigned long	ovu_size;	/* actual block size */
 #endif
 	} ovu;
 #define	ov_alignpad	ovu.ovu_alignpad
@@ -110,7 +109,7 @@ union	overhead {
 #endif
 
 #ifdef RCHECK
-#define	RSLOP		sizeof (u_short)
+#define	RSLOP		sizeof (unsigned short)
 #else
 #define	RSLOP		0
 #endif
@@ -191,19 +190,19 @@ botch(const char *s)
 #endif
 
 void *
-bmk_memalloc(size_t nbytes, size_t align)
+bmk_memalloc(unsigned long nbytes, unsigned long align)
 {
   	union overhead *op;
 	void *rv;
-	size_t allocbytes;
+	unsigned long allocbytes;
 	int bucket;
 	unsigned amt;
-	u_long alignpad;
+	unsigned long alignpad;
 
 	malloc_lock();
 
 	if (pagesz == 0) {
-		pagesz = PAGE_SIZE;
+		pagesz = bmk_pagesize;
 		ASSERT(pagesz > 0);
 
 #if 0
@@ -274,8 +273,8 @@ bmk_memalloc(size_t nbytes, size_t align)
   	nextf[bucket] = op->ov_next;
 
 	/* align op before returned memory */
-	rv = (void *)(((uintptr_t)(op+1) + align - 1) & ~(align - 1));
-	alignpad = (uintptr_t)rv - (uintptr_t)op;
+	rv = (void *)(((unsigned long)(op+1) + align - 1) & ~(align - 1));
+	alignpad = (unsigned long)rv - (unsigned long)op;
 
 #ifdef MEMALLOC_TESTING
 	memset(op, MAGIC, alignpad);
@@ -296,20 +295,22 @@ bmk_memalloc(size_t nbytes, size_t align)
 	 */
 	op->ov_size = (nbytes + RSLOP - 1) & ~(RSLOP - 1);
 	op->ov_rmagic = RMAGIC;
-  	*(u_short *)((char *)(op + 1) + op->ov_size) = RMAGIC;
+  	*(unsigned short *)((char *)(op + 1) + op->ov_size) = RMAGIC;
 #endif
 
   	return rv;
 }
 
 void *
-bmk_xmalloc(size_t howmuch)
+bmk_xmalloc(unsigned long howmuch)
 {
 	void *rv;
 
 	rv = bmk_memalloc(howmuch, 0);
+#if 0
 	if (rv == NULL)
 		panic("xmalloc failed");
+#endif
 	return rv;
 }
 
@@ -321,7 +322,7 @@ corealloc(int shift)
 #ifdef MEMALLOC_TESTING
 	v = malloc((1<<shift) * pagesz);
 #else
-	v = bmk_allocpg(1<<shift);
+	v = bmk_ops->bmk_allocpg2(shift);
 #endif
 
 	return v;
@@ -358,7 +359,7 @@ morecore(int bucket)
   	nextf[bucket] = op;
   	while (--nblks > 0) {
 		op->ov_next =
-		    (union overhead *)(void *)((char *)(void *)op+(size_t)sz);
+		    (union overhead *)(void *)((char *)(void *)op+(unsigned long)sz);
 		op = op->ov_next;
   	}
 	op->ov_next = NULL;
@@ -369,7 +370,7 @@ bmk_memfree(void *cp)
 {   
 	long size;
 	union overhead *op;
-	u_long alignpad;
+	unsigned long alignpad;
 	void *origp;
 
   	if (cp == NULL)
@@ -384,21 +385,23 @@ bmk_memfree(void *cp)
 
 #ifdef RCHECK
   	ASSERT(op->ov_rmagic == RMAGIC);
-	ASSERT(*(u_short *)((char *)(op + 1) + op->ov_size) == RMAGIC);
+	ASSERT(*(unsigned short *)((char *)(op + 1) + op->ov_size) == RMAGIC);
 #endif
   	size = op->ov_index;
 	alignpad = op->ov_alignpad;
   	ASSERT(size < NBUCKETS);
 
 	malloc_lock();
-	origp = (uint8_t *)cp - alignpad;
+	origp = (unsigned char *)cp - alignpad;
 
 #ifdef MEMALLOC_TESTING
 	{
-		u_long i;
+		unsigned long i;
 
-		for (i = 0; (uint8_t *)origp + i < (uint8_t *)op; i++) {
-			ASSERT(*((uint8_t *)origp + i) == MAGIC);
+		for (i = 0;
+		    (unsigned char *)origp + i < (unsigned char *)op;
+		    i++) {
+			ASSERT(*((unsigned char *)origp + i) == MAGIC);
 				
 		}
 	}
@@ -408,7 +411,7 @@ bmk_memfree(void *cp)
 	op->ov_next = nextf[(unsigned int)size];/* also clobbers ov_magic */
   	nextf[(unsigned int)size] = op;
 #ifdef MSTATS
-  	nmalloc[(size_t)size]--;
+  	nmalloc[(unsigned long)size]--;
 #endif
 
 	malloc_unlock();
@@ -421,11 +424,11 @@ bmk_memfree(void *cp)
  *   + else ==> realloc
  */
 void *
-bmk_memrealloc(void *cp, size_t nbytes)
+bmk_memrealloc(void *cp, unsigned long nbytes)
 {   
 	union overhead *op;
-  	size_t size;
-	size_t alignpad;
+  	unsigned long size;
+	unsigned long alignpad;
 	void *np;
 
 	if (cp == NULL)

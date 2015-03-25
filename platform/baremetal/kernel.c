@@ -1,13 +1,13 @@
 #include <bmk/types.h>
 #include <bmk/multiboot.h>
 #include <bmk/kernel.h>
-#include <bmk/memalloc.h>
 #include <bmk/sched.h>
 #include <bmk/app.h>
 
 #include <bmk-core/core.h>
 #include <bmk-core/string.h>
 #include <bmk-core/bmk_ops.h>
+#include <bmk-core/memalloc.h>
 
 #include <bmk-base/netbsd_initfini.h>
 
@@ -33,6 +33,13 @@ bmk_allocpg(size_t howmany)
 		return NULL;
 
 	return (void *)rv;
+}
+
+static void *
+bmk_allocpg2(int shift)
+{
+
+	return bmk_allocpg(1<<shift);
 }
 
 static int
@@ -69,6 +76,7 @@ parsemem(uint32_t addr, uint32_t len)
 }
 
 static const struct bmk_ops myops = {
+	.bmk_allocpg2 = bmk_allocpg2,
 	.bmk_halt = bmk_halt,
 };
 

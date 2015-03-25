@@ -1,9 +1,9 @@
 #include <bmk/types.h>
 #include <bmk/kernel.h>
 #include <bmk/sched.h>
-#include <bmk/memalloc.h>
 
 #include <bmk-core/string.h>
+#include <bmk-core/memalloc.h>
 
 #define LIBRUMPUSER
 #include <rump/rumpuser.h>

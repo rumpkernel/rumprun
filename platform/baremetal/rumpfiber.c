@@ -26,10 +26,10 @@
 
 #include <bmk/types.h>
 #include <bmk/kernel.h>
-#include <bmk/memalloc.h>
 #include <bmk/queue.h>
 #include <bmk/sched.h>
 
+#include <bmk-core/memalloc.h>
 #include <bmk-core/string.h>
 
 #define LIBRUMPUSER
