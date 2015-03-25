@@ -20,7 +20,7 @@
 #include <mini-os/gnttab.h>
 #include <mini-os/semaphore.h>
 
-#include <bmk-common/string.h>
+#include <bmk-core/string.h>
 
 #define NR_RESERVED_ENTRIES 8
 

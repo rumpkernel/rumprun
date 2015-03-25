@@ -12,7 +12,7 @@
 #include <xen/io/blkif.h>
 #include <xen/io/protocols.h>
 
-#include <bmk-common/errno.h>
+#include <bmk-core/errno.h>
 
 #include <fcntl.h>
 #include <stdlib.h>

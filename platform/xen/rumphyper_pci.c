@@ -30,7 +30,7 @@
 #include <mini-os/mm.h>
 #include <mini-os/hypervisor.h>
 
-#include <bmk-common/errno.h>
+#include <bmk-core/errno.h>
 
 #include "pci_user.h"
 

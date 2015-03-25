@@ -35,8 +35,8 @@
 #include <inttypes.h>
 #include <stdio.h>
 
-#include <bmk-common/errno.h>
-#include <bmk-common/string.h>
+#include <bmk-core/errno.h>
+#include <bmk-core/string.h>
 
 #include "rumphyper.h"
 

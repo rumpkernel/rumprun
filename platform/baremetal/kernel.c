@@ -5,9 +5,10 @@
 #include <bmk/sched.h>
 #include <bmk/app.h>
 
-#include <bmk-common/string.h>
-#include <bmk-common/netbsd_initfini.h>
-#include <bmk-common/bmk_ops.h>
+#include <bmk-core/string.h>
+#include <bmk-core/bmk_ops.h>
+
+#include <bmk-base/netbsd_initfini.h>
 
 unsigned long bmk_membase;
 unsigned long bmk_memsize;

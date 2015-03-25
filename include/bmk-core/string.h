@@ -1,5 +1,5 @@
-#ifndef _BMK_STRING_H_
-#define _BMK_STRING_H_
+#ifndef _BMK_CORE_STRING_H_
+#define _BMK_CORE_STRING_H_
 
 void *bmk_memcpy(void *, const void *, unsigned long);
 void *bmk_memset(void *, int, unsigned long);
@@ -10,4 +10,4 @@ char *bmk_strncpy(char *, const char *, unsigned long);
 int bmk_strcmp(const char *, const char *);
 int bmk_strncmp(const char *, const char *, unsigned long);
 
-#endif /* _BMK_STRING_H_ */
+#endif /* _BMK_CORE_STRING_H_ */

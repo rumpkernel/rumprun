@@ -47,7 +47,7 @@
 
 #include <sys/queue.h>
 
-#include <bmk-common/string.h>
+#include <bmk-core/string.h>
 
 TAILQ_HEAD(thread_list, thread);
 

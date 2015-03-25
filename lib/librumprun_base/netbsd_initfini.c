@@ -11,8 +11,8 @@
 #include <rump/rump.h>
 #include <rump/rump_syscalls.h>
 
-#include <bmk-common/netbsd_initfini.h>
-#include <bmk-common/rumprun_config.h>
+#include <bmk-base/netbsd_initfini.h>
+#include <bmk-base/rumprun_config.h>
 
 static char *the_env[1] = { NULL } ;
 extern void *environ;

@@ -28,7 +28,7 @@
 
 #include "rumprunxen_makelwp.h"
 
-#include <bmk-common/netbsd_initfini.h>
+#include <bmk-base/netbsd_initfini.h>
 
 #if 0
 #define DPRINTF(x) printf x

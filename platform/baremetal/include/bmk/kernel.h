@@ -54,6 +54,6 @@ extern unsigned long bmk_membase, bmk_memsize;
 
 #endif /* _LOCORE */
 
-#include <bmk-common/errno.h>
+#include <bmk-core/errno.h>
 
 #define BMK_MAXINTR	32

@@ -1,4 +1,4 @@
-#include <bmk-common/errno.h>
+#include <bmk-core/errno.h>
 
 int stub_nothing(void); int stub_nothing(void) {return 0;}
 

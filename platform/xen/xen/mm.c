@@ -42,7 +42,7 @@
 #include <mini-os/lib.h>
 #include <mini-os/xmalloc.h>
 
-#include <bmk-common/string.h>
+#include <bmk-core/string.h>
 
 #ifdef MM_DEBUG
 #define DEBUG(_f, _a...) \

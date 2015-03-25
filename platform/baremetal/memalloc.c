@@ -67,7 +67,7 @@
 #include <bmk/kernel.h>
 #include <bmk/memalloc.h>
 
-#include <bmk-common/string.h>
+#include <bmk-core/string.h>
 
 #define ASSERT(x) assert(x)
 

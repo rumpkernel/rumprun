@@ -5,7 +5,7 @@
  * Some code from public domain implementations.
  */
 
-#include <bmk-common/string.h>
+#include <bmk-core/string.h>
 
 unsigned long
 bmk_strlen(const char *str)

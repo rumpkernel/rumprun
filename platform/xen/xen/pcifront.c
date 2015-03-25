@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <bmk-common/errno.h>
+#include <bmk-core/errno.h>
 
 #define PCI_DEVFN(slot, func) ((((slot) & 0x1f) << 3) | ((func) & 0x07))
 

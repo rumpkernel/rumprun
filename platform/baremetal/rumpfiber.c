@@ -30,7 +30,7 @@
 #include <bmk/queue.h>
 #include <bmk/sched.h>
 
-#include <bmk-common/string.h>
+#include <bmk-core/string.h>
 
 #define LIBRUMPUSER
 #include <rump/rumpuser.h>

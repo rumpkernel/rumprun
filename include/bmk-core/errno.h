@@ -1,5 +1,5 @@
-#ifndef _BMK_COMMON_ERRNO_H_
-#define _BMK_COMMON_ERRNO_H_
+#ifndef _BMK_CORE_ERRNO_H_
+#define _BMK_CORE_ERRNO_H_
 
 /*
  * errno values.
@@ -22,4 +22,4 @@
 
 #define BMK_EGENERIC		BMK_EINVAL
 
-#endif /* _BMK_COMMON_ERRNO_H_ */
+#endif /* _BMK_CORE_ERRNO_H_ */

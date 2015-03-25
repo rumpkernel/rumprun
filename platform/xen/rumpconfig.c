@@ -44,7 +44,7 @@
 #include <ufs/ufs/ufsmount.h>
 #include <isofs/cd9660/cd9660_mount.h>
 
-#include <bmk-common/rumprun_config.h>
+#include <bmk-base/rumprun_config.h>
 
 static int
 xs_read_netconfig(const char *if_index, char **type, char **method, char **addr,

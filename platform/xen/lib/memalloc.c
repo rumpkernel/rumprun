@@ -68,7 +68,7 @@
 #include <mini-os/mm.h>
 #include <mini-os/xmalloc.h>
 
-#include <bmk-common/string.h>
+#include <bmk-core/string.h>
 
 #endif
 

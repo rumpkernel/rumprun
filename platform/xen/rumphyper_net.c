@@ -30,8 +30,8 @@
 
 #include <stdlib.h>
 
-#include <bmk-common/errno.h>
-#include <bmk-common/string.h>
+#include <bmk-core/errno.h>
+#include <bmk-core/string.h>
 
 #include "rumphyper.h"
 #include <rump/rumpuser.h>

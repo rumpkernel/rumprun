@@ -37,8 +37,8 @@
 #include <inttypes.h>
 #include <mini-os/gntmap.h>
 
-#include <bmk-common/errno.h>
-#include <bmk-common/string.h>
+#include <bmk-core/errno.h>
+#include <bmk-core/string.h>
 
 #define DEFAULT_MAX_GRANTS 128
 

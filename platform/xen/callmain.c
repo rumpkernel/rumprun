@@ -32,8 +32,9 @@
 
 #include <mini-os/os.h>
 
-#include <bmk-common/bmk_ops.h>
-#include <bmk-common/netbsd_initfini.h>
+#include <bmk-core/bmk_ops.h>
+
+#include <bmk-base/netbsd_initfini.h>
 
 extern int main(int argc, char **argv);
 

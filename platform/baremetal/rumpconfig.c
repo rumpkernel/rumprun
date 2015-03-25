@@ -1,6 +1,6 @@
 /* placeholder/stubs (in case it was unguessable) */
 
-#include <bmk-common/rumprun_config.h>
+#include <bmk-base/rumprun_config.h>
 
 void
 _rumprun_config(void)
