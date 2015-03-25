@@ -307,10 +307,8 @@ bmk_xmalloc(unsigned long howmuch)
 	void *rv;
 
 	rv = bmk_memalloc(howmuch, 0);
-#if 0
 	if (rv == NULL)
-		panic("xmalloc failed");
-#endif
+		bmk_ops->bmk_halt("xmalloc failed");
 	return rv;
 }
 
