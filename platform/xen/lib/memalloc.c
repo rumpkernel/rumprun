@@ -68,8 +68,7 @@
 #include <mini-os/mm.h>
 #include <mini-os/xmalloc.h>
 
-#include <stdlib.h>
-#include <string.h>
+#include <bmk-common/string.h>
 
 #endif
 
@@ -302,42 +301,6 @@ memalloc(size_t nbytes, size_t align)
   	return rv;
 }
 
-#ifndef MEMALLOC_TESTING
-int
-posix_memalign(void **rv, size_t nbytes, size_t align)
-{
-	void *v;
-	int error = 10; /* XXX */
-
-	if ((v = memalloc(nbytes, align)) != NULL) {
-		*rv = v;
-		error = 0;
-	}
-
-	return error;
-}
-
-void *
-malloc(size_t size)
-{
-
-	return memalloc(size, MINALIGN);
-}
-
-void *
-calloc(size_t n, size_t size)
-{
-	void *v;
-	size_t tot = n * size;
-
-	if ((v = malloc(tot)) != NULL) {
-		memset(v, 0, tot);
-	}
-
-	return v;
-}
-#endif
-
 static void *
 corealloc(int shift)
 {
@@ -439,15 +402,6 @@ memfree(void *cp)
 	malloc_unlock();
 }
 
-#ifndef MEMALLOC_TESTING
-void
-free(void *cp)
-{
-
-	memfree(cp);
-}
-#endif
-
 /*
  * don't do any of "storage compaction" nonsense, "just" the three modes:
  *   + cp == NULL ==> malloc
@@ -483,19 +437,10 @@ memrealloc(void *cp, size_t nbytes)
 	if (np == NULL)
 		return NULL;
 
-	memcpy(np, cp, (1<<(size+MINSHIFT)) - alignpad);
+	bmk_memcpy(np, cp, (1<<(size+MINSHIFT)) - alignpad);
 	memfree(cp);
 	return np;
 }
-
-#ifndef MEMALLOC_TESTING
-void *
-realloc(void *cp, size_t nbytes)
-{
-
-	return memrealloc(cp, nbytes);
-}
-#endif
 
 #ifdef MSTATS
 /*
