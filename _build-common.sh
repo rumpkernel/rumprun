@@ -74,6 +74,9 @@ else
         CONFIG_CXX=no
 fi
 
+( cd ../../lib/librumprun_core
+    ${RUMPMAKE} MAKEOBJDIR=${platform} obj \
+      && ${RUMPMAKE} MAKEOBJDIR=${platform} dependall )
 ( cd ../../lib/librumprun_base
     ${RUMPMAKE} MAKEOBJDIR=${platform} obj \
       && ${RUMPMAKE} MAKEOBJDIR=${platform} dependall )
