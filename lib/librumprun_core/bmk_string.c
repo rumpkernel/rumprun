@@ -1,6 +1,8 @@
 /*
  * The assumption is that these won't be used very often,
  * only for the very low-level routines.
+ *
+ * Some code from public domain implementations.
  */
 
 #include <bmk-common/string.h>
@@ -27,6 +29,22 @@ bmk_strcmp(const char *a, const char *b)
 		b--;
 	}
 	return *a - *b;
+}
+
+int
+bmk_strncmp(const char *a, const char *b, unsigned long n)
+{
+	unsigned char u1, u2;
+
+	while (n-- > 0) {
+		u1 = (unsigned char)*a++;
+		u2 = (unsigned char)*b++;
+		if (u1 != u2)
+			return u1 - u2;
+		if (u1 == '\0')
+			return 0;
+	}
+	return 0;
 }
 
 char *

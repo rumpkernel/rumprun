@@ -8,5 +8,6 @@ unsigned long bmk_strlen(const char *);
 char *bmk_strcpy(char *, const char *);
 char *bmk_strncpy(char *, const char *, unsigned long);
 int bmk_strcmp(const char *, const char *);
+int bmk_strncmp(const char *, const char *, unsigned long);
 
 #endif /* _BMK_STRING_H_ */
