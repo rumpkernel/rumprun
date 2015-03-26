@@ -7,12 +7,8 @@
 static inline struct thread* get_current(void)
 {
     struct thread **current;
-#ifdef __i386__    
-    register unsigned long sp asm("esp");
-#else
-    register unsigned long sp asm("rsp");
-#endif 
-    current = (void *)(unsigned long)(sp & ~(__STACK_SIZE-1));
+
+    current = (void *)((unsigned long)&current & ~(__STACK_SIZE-1));
     return *current;
 };
 
