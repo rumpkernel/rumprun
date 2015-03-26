@@ -56,91 +56,93 @@ static struct thread_list exited_threads = TAILQ_HEAD_INITIALIZER(exited_threads
 static struct thread_list thread_list = TAILQ_HEAD_INITIALIZER(thread_list);
 static int threads_started;
 
-void inline print_runqueue(void)
+void inline
+print_runqueue(void)
 {
-    struct thread *th;
-    TAILQ_FOREACH(th, &thread_list, thread_list)
-    {
-        minios_printk("   Thread \"%s\", runnable=%d\n", th->name, is_runnable(th));
-    }
-    minios_printk("\n");
+	struct thread *th;
+	TAILQ_FOREACH(th, &thread_list, thread_list) {
+		minios_printk("   Thread \"%s\", runnable=%d\n",
+		    th->name, is_runnable(th));
+	}
+	minios_printk("\n");
 }
 
 static void (*scheduler_hook)(void *, void *);
 
-void switch_threads(struct thread *prev, struct thread *next)
+void
+switch_threads(struct thread *prev, struct thread *next)
 {
 
-    if (scheduler_hook)
-	scheduler_hook(prev->cookie, next->cookie);
-    arch_switch_threads(prev, next);
+	if (scheduler_hook)
+		scheduler_hook(prev->cookie, next->cookie);
+	arch_switch_threads(prev, next);
 }
 
-void minios_schedule(void)
+void
+minios_schedule(void)
 {
-    struct thread *prev, *next, *thread, *tmp;
-    unsigned long flags;
+	struct thread *prev, *next, *thread, *tmp;
+	unsigned long flags;
 
-    prev = get_current();
-    local_irq_save(flags); 
+	prev = get_current();
+	local_irq_save(flags); 
 
-    if (_minios_in_hypervisor_callback) {
-        minios_printk("Must not call schedule() from a callback\n");
-        BUG();
-    }
-    if (flags) {
-        minios_printk("Must not call schedule() with IRQs disabled\n");
-        BUG();
-    }
+	if (_minios_in_hypervisor_callback) {
+		minios_printk("Must not call schedule() from a callback\n");
+		BUG();
+	}
+	if (flags) {
+		minios_printk("Must not call schedule() with IRQs disabled\n");
+		BUG();
+	}
 
-    do {
-        /* Examine all threads.
-           Find a runnable thread, but also wake up expired ones and find the
-           time when the next timeout expires, else use 10 seconds. */
-        s_time_t now = NOW();
-        s_time_t min_wakeup_time = now + SECONDS(10);
-        next = NULL;
-        TAILQ_FOREACH_SAFE(thread, &thread_list, thread_list, tmp)
-        {
-            if (!is_runnable(thread) && thread->wakeup_time != 0LL)
-            {
-                if (thread->wakeup_time <= now) {
-		    thread->flags |= THREAD_TIMEDOUT;
-                    minios_wake(thread);
-                } else if (thread->wakeup_time < min_wakeup_time)
-                    min_wakeup_time = thread->wakeup_time;
-            }
-            if(is_runnable(thread)) 
-            {
-                next = thread;
-                /* Put this thread on the end of the list */
-                TAILQ_REMOVE(&thread_list, thread, thread_list);
-                TAILQ_INSERT_TAIL(&thread_list, thread, thread_list);
-                break;
-            }
-        }
-        if (next)
-            break;
-        /* block until the next timeout expires, or for 10 secs, whichever comes first */
-        block_domain(min_wakeup_time);
-        /* handle pending events if any */
-        minios_force_evtchn_callback();
-    } while(1);
-    local_irq_restore(flags);
-    /* Interrupting the switch is equivalent to having the next thread
-       inturrupted at the return instruction. And therefore at safe point. */
-    if(prev != next) switch_threads(prev, next);
+	do {
+		s_time_t now = NOW();
+		s_time_t min_wakeup_time = now + SECONDS(10);
+		next = NULL;
+		TAILQ_FOREACH_SAFE(thread, &thread_list, thread_list, tmp) {
+			if (!is_runnable(thread)
+			    && thread->wakeup_time != 0LL) {
+				if (thread->wakeup_time <= now) {
+					thread->flags |= THREAD_TIMEDOUT;
+					minios_wake(thread);
+				} else if (thread->wakeup_time < min_wakeup_time)
+					min_wakeup_time = thread->wakeup_time;
+			}
+			if (is_runnable(thread)) {
+				next = thread;
+				/* Put this thread on the end of the list */
+				TAILQ_REMOVE(&thread_list, thread, thread_list);
+				TAILQ_INSERT_TAIL(&thread_list, thread, thread_list);
+				break;
+			}
+		}
+		if (next)
+			break;
 
-    TAILQ_FOREACH_SAFE(thread, &exited_threads, thread_list, tmp)
-    {
-        if(thread != prev)
-        {
-            TAILQ_REMOVE(&exited_threads, thread, thread_list);
-	    if ((thread->flags & THREAD_EXTSTACK) == 0)
-                minios_free_pages(thread->stack, STACK_SIZE_PAGE_ORDER);
-            bmk_memfree(thread);
-        }
-    }
+		/*
+		 * no runnables.  hlt for a while.
+		 */
+		block_domain(min_wakeup_time);
+		/* handle pending events if any */
+		minios_force_evtchn_callback();
+	} while(1);
+
+	local_irq_restore(flags);
+
+	if (prev != next) {
+		switch_threads(prev, next);
+	}
+
+	/* reaper */
+	TAILQ_FOREACH_SAFE(thread, &exited_threads, thread_list, tmp) {
+		if (thread != prev) {
+			TAILQ_REMOVE(&exited_threads, thread, thread_list);
+			if ((thread->flags & THREAD_EXTSTACK) == 0)
+				minios_free_pages(thread->stack, STACK_SIZE_PAGE_ORDER);
+			bmk_memfree(thread);
+		}
+	}
 }
 
 /*
@@ -155,215 +157,215 @@ extern const char _tbss_start[], _tbss_end[];
 static int
 allocothertls(struct thread *thread)
 {
-    const size_t tdatasize = _tdata_end - _tdata_start;
-    const size_t tbsssize = _tbss_end - _tbss_start;
-    uint8_t *tlsmem;
+	const size_t tdatasize = _tdata_end - _tdata_start;
+	const size_t tbsssize = _tbss_end - _tbss_start;
+	uint8_t *tlsmem;
 
-    tlsmem = bmk_memalloc(tdatasize + tbsssize, 0);
+	tlsmem = bmk_memalloc(tdatasize + tbsssize, 0);
 
-    bmk_memcpy(tlsmem, _tdata_start, tdatasize);
-    bmk_memset(tlsmem + tdatasize, 0, tbsssize);
+	bmk_memcpy(tlsmem, _tdata_start, tdatasize);
+	bmk_memset(tlsmem + tdatasize, 0, tbsssize);
 
-    thread->thr_tp = (uintptr_t)(tlsmem + tdatasize + tbsssize);
-    thread->thr_tl = tdatasize + tbsssize;
+	thread->thr_tp = (uintptr_t)(tlsmem + tdatasize + tbsssize);
+	thread->thr_tl = tdatasize + tbsssize;
 
-    return 0;
+	return 0;
 }
 
 static void
 freeothertls(struct thread *thread)
 {
-    void *mem;
+	void *mem;
 
-    mem = (void *)(thread->thr_tp);
-    bmk_memfree(mem);
+	mem = (void *)(thread->thr_tp);
+	bmk_memfree(mem);
 }
 
 struct thread *
 minios_create_thread(const char *name, void *cookie,
 	void (*function)(void *), void *data, void *stack)
 {
-    struct thread *thread;
-    unsigned long flags;
-    /* Call architecture specific setup. */
-    thread = arch_create_thread(name, function, data, stack);
-    /* Not runable, not exited, not sleeping */
-    thread->flags = 0;
-    thread->wakeup_time = 0LL;
-    thread->lwp = NULL;
-    thread->cookie = cookie;
-    set_runnable(thread);
-    allocothertls(thread);
-    local_irq_save(flags);
-    TAILQ_INSERT_TAIL(&thread_list, thread, thread_list);
-    local_irq_restore(flags);
-    return thread;
+	struct thread *thread;
+	unsigned long flags;
+	/* Call architecture specific setup. */
+	thread = arch_create_thread(name, function, data, stack);
+	/* Not runable, not exited, not sleeping */
+	thread->flags = 0;
+	thread->wakeup_time = 0LL;
+	thread->lwp = NULL;
+	thread->cookie = cookie;
+	set_runnable(thread);
+	allocothertls(thread);
+	local_irq_save(flags);
+	TAILQ_INSERT_TAIL(&thread_list, thread, thread_list);
+	local_irq_restore(flags);
+	return thread;
 }
 
 struct join_waiter {
-    struct thread *jw_thread;
-    struct thread *jw_wanted;
-    TAILQ_ENTRY(join_waiter) jw_entries;
+	struct thread *jw_thread;
+	struct thread *jw_wanted;
+	TAILQ_ENTRY(join_waiter) jw_entries;
 };
 static TAILQ_HEAD(, join_waiter) joinwq = TAILQ_HEAD_INITIALIZER(joinwq);
 
-void minios_exit_thread(void)
+void
+minios_exit_thread(void)
 {
-    unsigned long flags;
-    struct thread *thread = get_current();
-    struct join_waiter *jw_iter;
+	unsigned long flags;
+	struct thread *thread = get_current();
+	struct join_waiter *jw_iter;
 
-    /* if joinable, gate until we are allowed to exit */
-    local_irq_save(flags);
-    while (thread->flags & THREAD_MUSTJOIN) {
-        thread->flags |= THREAD_JOINED;
-        local_irq_restore(flags);
+	/* if joinable, gate until we are allowed to exit */
+	local_irq_save(flags);
+	while (thread->flags & THREAD_MUSTJOIN) {
+		thread->flags |= THREAD_JOINED;
+		local_irq_restore(flags);
 
-        /* see if the joiner is already there */
-        TAILQ_FOREACH(jw_iter, &joinwq, jw_entries) {
-            if (jw_iter->jw_wanted == thread) {
-                minios_wake(jw_iter->jw_thread);
-                break;
-            }
-        }
-        minios_block(thread);
-        minios_schedule();
-        local_irq_save(flags);
-    }
+		/* see if the joiner is already there */
+		TAILQ_FOREACH(jw_iter, &joinwq, jw_entries) {
+			if (jw_iter->jw_wanted == thread) {
+				minios_wake(jw_iter->jw_thread);
+				break;
+			}
+		}
+		minios_block(thread);
+		minios_schedule();
+		local_irq_save(flags);
+	}
 
-    /* interrupts still disabled ... */
+	/* interrupts still disabled ... */
 
-    /* Remove from the thread list */
-    TAILQ_REMOVE(&thread_list, thread, thread_list);
-    clear_runnable(thread);
-    /* Put onto exited list */
-    TAILQ_INSERT_HEAD(&exited_threads, thread, thread_list);
-    local_irq_restore(flags);
+	/* Remove from the thread list */
+	TAILQ_REMOVE(&thread_list, thread, thread_list);
+	clear_runnable(thread);
+	/* Put onto exited list */
+	TAILQ_INSERT_HEAD(&exited_threads, thread, thread_list);
+	local_irq_restore(flags);
 
-    freeothertls(thread);
+	freeothertls(thread);
 
-    /* Schedule will free the resources */
-    while(1)
-    {
-        minios_schedule();
-        minios_printk("schedule() returned!  Trying again\n");
-    }
+	/* Schedule will free the resources */
+	for (;;) {
+		minios_schedule();
+		minios_printk("schedule() returned!  Trying again\n");
+	}
 }
 
 /* hmm, all of the interfaces here are namespaced "backwards" ... */
-void minios_join_thread(struct thread *joinable)
+void
+minios_join_thread(struct thread *joinable)
 {
-    struct join_waiter jw;
-    struct thread *thread = get_current();
-    unsigned long flags;
+	struct join_waiter jw;
+	struct thread *thread = get_current();
+	unsigned long flags;
 
-    local_irq_save(flags);
-    ASSERT(joinable->flags & THREAD_MUSTJOIN);
-    /* wait for exiting thread to hit thread_exit() */
-    while (!(joinable->flags & THREAD_JOINED)) {
-        local_irq_restore(flags);
+	local_irq_save(flags);
+	ASSERT(joinable->flags & THREAD_MUSTJOIN);
+	/* wait for exiting thread to hit thread_exit() */
+	while (!(joinable->flags & THREAD_JOINED)) {
+		local_irq_restore(flags);
 
-        jw.jw_thread = thread;
-        jw.jw_wanted = joinable;
-        TAILQ_INSERT_TAIL(&joinwq, &jw, jw_entries);
-        minios_block(thread);
-        minios_schedule();
-        TAILQ_REMOVE(&joinwq, &jw, jw_entries);
+		jw.jw_thread = thread;
+		jw.jw_wanted = joinable;
+		TAILQ_INSERT_TAIL(&joinwq, &jw, jw_entries);
+		minios_block(thread);
+		minios_schedule();
+		TAILQ_REMOVE(&joinwq, &jw, jw_entries);
 
-        local_irq_save(flags);
-    }
+		local_irq_save(flags);
+	}
 
-    /* signal exiting thread that we have seen it and it may now exit */
-    ASSERT(joinable->flags & THREAD_JOINED);
-    joinable->flags &= ~THREAD_MUSTJOIN;
-    local_irq_restore(flags);
+	/* signal exiting thread that we have seen it and it may now exit */
+	ASSERT(joinable->flags & THREAD_JOINED);
+	joinable->flags &= ~THREAD_MUSTJOIN;
+	local_irq_restore(flags);
 
-    minios_wake(joinable);
+	minios_wake(joinable);
 }
 
-void minios_block(struct thread *thread)
+void
+minios_block(struct thread *thread)
 {
-    thread->wakeup_time = 0LL;
-    clear_runnable(thread);
+
+	thread->wakeup_time = 0LL;
+	clear_runnable(thread);
 }
 
 static int
 dosleep(s_time_t wakeuptime)
 {
-    struct thread *thread = get_current();
-    int rv;
+	struct thread *thread = get_current();
+	int rv;
 
-    thread->wakeup_time = wakeuptime;
-    thread->flags &= ~THREAD_TIMEDOUT;
-    clear_runnable(thread);
-    minios_schedule();
+	thread->wakeup_time = wakeuptime;
+	thread->flags &= ~THREAD_TIMEDOUT;
+	clear_runnable(thread);
+	minios_schedule();
 
-    rv = !!(thread->flags & THREAD_TIMEDOUT);
-    thread->flags &= ~THREAD_TIMEDOUT;
-    return rv;
+	rv = !!(thread->flags & THREAD_TIMEDOUT);
+	thread->flags &= ~THREAD_TIMEDOUT;
+	return rv;
 }
 
-int minios_msleep(uint64_t millisecs)
+int
+minios_msleep(uint64_t millisecs)
 {
 
-    return dosleep(NOW() + MILLISECS(millisecs));
+	return dosleep(NOW() + MILLISECS(millisecs));
 }
 
-int minios_absmsleep(uint64_t millisecs)
+int
+minios_absmsleep(uint64_t millisecs)
 {
-    uint32_t secs;
-    uint64_t nsecs;
+	uint32_t secs;
+	uint64_t nsecs;
 
-    /* oh the silliness! */
-    minios_clock_wall(&secs, &nsecs);
-    millisecs -= 1000ULL*(uint64_t)secs + nsecs/(1000ULL*1000);
+	/* oh the silliness! */
+	minios_clock_wall(&secs, &nsecs);
+	millisecs -= 1000ULL*(uint64_t)secs + nsecs/(1000ULL*1000);
 
-    return dosleep(MILLISECS(millisecs) + NOW());
+	return dosleep(MILLISECS(millisecs) + NOW());
 }
 
-void minios_wake(struct thread *thread)
+void
+minios_wake(struct thread *thread)
 {
-    thread->wakeup_time = 0LL;
-    set_runnable(thread);
+	thread->wakeup_time = 0LL;
+	set_runnable(thread);
 }
 
-void idle_thread_fn(void *unused)
+void
+idle_thread_fn(void *unused)
 {
-    threads_started = 1;
-    while (1) {
-        minios_block(get_current());
-        minios_schedule();
-    }
+	threads_started = 1;
+	for (;;) {
+		minios_block(get_current());
+		minios_schedule();
+	}
 }
 
-void init_sched(void)
+void
+init_sched(void)
 {
-    minios_printk("Initialising scheduler\n");
+	minios_printk("Initialising scheduler\n");
 
-    idle_thread = minios_create_thread("Idle", NULL, idle_thread_fn, NULL, NULL);
+	idle_thread = minios_create_thread("Idle", NULL, idle_thread_fn, NULL, NULL);
 }
 
-void minios_set_sched_hook(void (*f)(void *, void *))
+void
+minios_set_sched_hook(void (*f)(void *, void *))
 {
 
-    scheduler_hook = f;
+	scheduler_hook = f;
 }
 
-struct thread *minios_init_mainlwp(void *cookie)
+struct thread *
+minios_init_mainlwp(void *cookie)
 {
-    struct thread *current = get_current();
+	struct thread *current = get_current();
 
-    current->cookie = cookie;
-    allocothertls(current);
-    return current;
+	current->cookie = cookie;
+	allocothertls(current);
+	return current;
 }
-
-/*
- * Local variables:
- * mode: C
- * c-set-style: "BSD"
- * c-basic-offset: 4
- * tab-width: 4
- * indent-tabs-mode: nil
- * End:
- */
