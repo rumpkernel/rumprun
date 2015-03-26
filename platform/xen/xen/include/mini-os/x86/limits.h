@@ -7,11 +7,7 @@
 #ifdef __ASSEMBLY__
 #define __PAGE_SIZE       (1 << __PAGE_SHIFT)
 #else
-#ifdef __x86_64__
 #define __PAGE_SIZE       (1UL << __PAGE_SHIFT)
-#else
-#define __PAGE_SIZE       (1UL << __PAGE_SHIFT)
-#endif
 #endif
 
 #define __STACK_SIZE_PAGE_ORDER  6
