@@ -111,4 +111,4 @@ cleanrump: clean
 	rm -rf rump rumpobj rumptools
 
 distcleanrump: cleanrump
-
+	rm -f config.mk
