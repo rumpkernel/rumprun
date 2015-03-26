@@ -193,7 +193,7 @@ bmk_sched(void)
 		if (next)
 			break;
 		/*
-		 * no runnables.  hlt for a while.  TODO: make accurate
+		 * no runnables.  hlt for a while.
 		 */
 		bmk_cpu_nanohlt();
 	} while (1);
@@ -220,11 +220,11 @@ bmk_sched(void)
  * we put the tcb in the same space instead of having multiple
  * random copies flying around.
  */
+extern const char _tdata_start[], _tdata_end[];
+extern const char _tbss_start[], _tbss_end[];
 static int
 allocothertls(struct bmk_thread *thread)
 {
-	extern const char _tdata_start[], _tdata_end[];
-	extern const char _tbss_start[], _tbss_end[];
 	const size_t tdatasize = _tdata_end - _tdata_start;
 	const size_t tbsssize = _tbss_end - _tbss_start;
 	uint8_t *tlsmem;
@@ -291,9 +291,9 @@ bmk_sched_create(const char *name, void *cookie, int thrflags,
 }
 
 struct join_waiter {
-    struct bmk_thread *jw_thread;
-    struct bmk_thread *jw_wanted;
-    TAILQ_ENTRY(join_waiter) jw_entries;
+	struct bmk_thread *jw_thread;
+	struct bmk_thread *jw_wanted;
+	TAILQ_ENTRY(join_waiter) jw_entries;
 };
 static TAILQ_HEAD(, join_waiter) joinwq = TAILQ_HEAD_INITIALIZER(joinwq);
 
