@@ -10,7 +10,7 @@
 #ifdef __x86_64__
 #define __PAGE_SIZE       (1UL << __PAGE_SHIFT)
 #else
-#define __PAGE_SIZE       (1ULL << __PAGE_SHIFT)
+#define __PAGE_SIZE       (1UL << __PAGE_SHIFT)
 #endif
 #endif
 
