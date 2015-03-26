@@ -18,8 +18,9 @@ OBJCOPY=objcopy
 CPPFLAGS = -isystem rump/include -isystem xen/include -I. -I../../include
 CPPFLAGS+= -nostdinc
 CPPFLAGS += -DVIRTIF_BASE=xenif
+CPPFLAGS+= -no-integrated-cpp -nostdinc
 
-CFLAGS += -fno-builtin -no-integrated-cpp ${BUILDRUMP_TOOL_CFLAGS}
+CFLAGS += -fno-builtin ${BUILDRUMP_TOOL_CFLAGS}
 
 # This is semi-duplicated from xen/arch/x86/arch.mk, can we avoid that?
 TARGET_ARCH := ${MACHINE}
