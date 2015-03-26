@@ -74,13 +74,6 @@ else
         CONFIG_CXX=no
 fi
 
-( cd ../../lib/librumprun_core
-    ${RUMPMAKE} MAKEOBJDIR=${platform} obj \
-      && ${RUMPMAKE} MAKEOBJDIR=${platform} dependall )
-( cd ../../lib/librumprun_base
-    ${RUMPMAKE} MAKEOBJDIR=${platform} obj \
-      && ${RUMPMAKE} MAKEOBJDIR=${platform} dependall )
-
 echo "BUILDRUMP=${BUILDRUMP}" > config.mk
 echo "RUMPSRC=${RUMPSRC}" >> config.mk
 echo "CONFIG_CXX=${CONFIG_CXX}" >> config.mk

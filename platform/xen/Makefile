@@ -31,6 +31,9 @@ ifeq ($(TARGET_ARCH),x86_64)
 CFLAGS += -mno-red-zone -fno-reorder-blocks -fno-asynchronous-unwind-tables
 endif
 
+COREDIR:=       $(shell pwd)/../../lib/librumprun_core
+BASEDIR:=       $(shell pwd)/../../lib/librumprun_base
+
 ifeq (${CONFIG_SYSPROXY},yes)
 RUMP_LIBS_SYSPROXY = -lrumpkern_sysproxy
 endif
@@ -42,7 +45,7 @@ RUMP_LIBS_NET+= -lrumpnet_local -lrumpnet_net -lrumpxen_xendev -lrumpnet
 
 # Define some default flags for linking.
 RUMP_LDLIBS = --whole-archive ${RUMP_LIBS_FS} ${RUMP_LIBS_NET} ${RUMP_LIBS_PCI} ${RUMP_LIBS_SYSPROXY} -lrumpxen_tc -lrump --no-whole-archive
-RUMP_LDLIBS := ${RUMP_LDLIBS} -L$(shell pwd)/../../lib/librumprun_base/xen --start-group -lrumprun_base -lpthread -lc --end-group -L$(shell pwd)/../../lib/librumprun_core/xen -lrumprun_core
+RUMP_LDLIBS := ${RUMP_LDLIBS} -L${BASEDIR}/xen -L${COREDIR}/xen --start-group -lrumprun_base -lpthread -lc --end-group -lrumprun_core
 
 LDFLAGS := -L$(abspath rump/lib)
 
@@ -76,10 +79,20 @@ prepare:
 mini-os:
 	$(MAKE) -C xen OBJ_DIR=$(OBJ_DIR)/xen
 
+${BASEDIR}/xen/librumprun_base.a:
+	( cd ${BASEDIR} \
+	    && ${RUMPMAKE} MAKEOBJDIR=xen obj \
+	    && ${RUMPMAKE} MAKEOBJDIR=xen dependall )
+
+${COREDIR}/xen/librumprun_core.a:
+	( cd ${COREDIR} \
+	    && ${RUMPMAKE} MAKEOBJDIR=xen obj \
+	    && ${RUMPMAKE} MAKEOBJDIR=xen dependall )
+
 .PHONY: rumprun
 rumprun: $(OBJ_DIR)/rumprun.o $(OBJ_DIR)/configure_stubs.o
 
-$(OBJ_DIR)/rumprun.o: $(RUMP_OBJS)
+$(OBJ_DIR)/rumprun.o: $(RUMP_OBJS) ${BASEDIR}/xen/librumprun_base.a ${COREDIR}/xen/librumprun_core.a
 	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(RUMP_OBJS) -nostdlib -o $@
 
 $(OBJ_DIR)/configure_stubs.o: configure_stubs.c
@@ -106,6 +119,8 @@ clean:	app-tools_clean
 	$(MAKE) -C xen OBJ_DIR=$(OBJ_DIR)/xen clean
 	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/lib/*.o
 	$(MAKE) -C ../../tests clean
+	( cd ${BASEDIR} && ${RUMPMAKE} MAKEOBJDIR=baremetal cleandir )
+	( cd ${COREDIR} && ${RUMPMAKE} MAKEOBJDIR=baremetal cleandir )
 
 cleanrump: clean
 	rm -rf rump rumpobj rumptools
