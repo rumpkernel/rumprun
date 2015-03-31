@@ -285,11 +285,18 @@ minios_join_thread(struct thread *joinable)
 }
 
 void
+minios_block_timeout(struct thread *thread, uint64_t deadline)
+{
+
+	thread->wakeup_time = deadline;
+	clear_runnable(thread);
+}
+
+void
 minios_block(struct thread *thread)
 {
 
-	thread->wakeup_time = 0LL;
-	clear_runnable(thread);
+	minios_block_timeout(thread, 0);
 }
 
 static int
