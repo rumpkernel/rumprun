@@ -76,8 +76,7 @@ static inline void minios_wake_up(struct wait_queue_head *head)
         /* protect the list */                                  \
         local_irq_save(flags);                                  \
         minios_add_wait_queue(&wq, &__wait);                           \
-        get_current()->wakeup_time = deadline;                  \
-        clear_runnable(get_current());                          \
+        minios_block_timeout(get_current(), deadline);		\
         local_irq_restore(flags);                               \
         if((condition) || (deadline && NOW() >= deadline))      \
             break;                                              \

@@ -188,8 +188,7 @@ rumpuser_clock_sleep(int enum_rumpclock, int64_t sec, long nsec)
 		break;
 	case RUMPUSER_CLOCK_ABSMONO:
 		thread = get_current();
-		thread->wakeup_time = sec * (1000*1000*1000ULL) + nsec;
-		clear_runnable(thread);
+		minios_block_timeout(thread, sec * (1000*1000*1000ULL) + nsec);
 		minios_schedule();
 		break;
 	}
@@ -456,7 +455,7 @@ rumpuser_bio(int fd, int op, void *data, size_t dlen, int64_t off,
 		if (!bio_inited) {
 			bio_inited = 1;
 			rumpuser_mutex_exit(bio_mtx);
-			minios_create_thread("biopoll", NULL,
+			minios_create_thread("biopoll", NULL, 0,
 			    biothread, NULL, NULL);
 		} else {
 			rumpuser_mutex_exit(bio_mtx);

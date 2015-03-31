@@ -55,13 +55,16 @@ static int
 wait(struct waithead *wh, uint64_t nsec)
 {
 	struct waiter w;
+	uint64_t wakeup;
 
 	w.who = get_current();
 	TAILQ_INSERT_TAIL(wh, &w, entries);
 	w.onlist = 1;
-	minios_block(w.who);
 	if (nsec)
-		w.who->wakeup_time = minios_clock_monotonic() + nsec;
+		wakeup = minios_clock_monotonic() + nsec;
+	else
+		wakeup = 0;
+	minios_block_timeout(w.who, wakeup);
 	minios_schedule();
 
 	/* woken up by timeout? */
@@ -101,15 +104,8 @@ rumpuser_thread_create(void *(*f)(void *), void *arg, const char *thrname,
 {
 	struct thread *thr;
 
-	thr = minios_create_thread(thrname, NULL, (void (*)(void *))f, arg, NULL);
-	/*
-	 * XXX: should be supplied as a flag to create_thread() so as to
-	 * _ensure_ it's set before the thread runs (and could exit).
-	 * now we're trusting unclear semantics of create_thread()
-	 */
-	if (thr && joinable)
-		thr->flags |= THREAD_MUSTJOIN;
-
+	thr = minios_create_thread(thrname, NULL, joinable,
+	    (void (*)(void *))f, arg, NULL);
 	if (!thr)
 		return BMK_EINVAL;
 
@@ -178,7 +174,7 @@ rumpuser_mutex_enter_nowrap(struct rumpuser_mtx *mtx)
 int
 rumpuser_mutex_tryenter(struct rumpuser_mtx *mtx)
 {
-	struct lwp *l = get_current()->lwp;
+	struct lwp *l = rumpuser_curlwp();
 
 	if (mtx->v && mtx->o != l)
 		return BMK_EBUSY;
@@ -469,13 +465,14 @@ rumpuser_curlwpop(int enum_rumplwpop, struct lwp *l)
 	case RUMPUSER_LWP_DESTROY:
 		break;
 	case RUMPUSER_LWP_SET:
+		assert(rumpuser_curlwp() == NULL);
 		thread = get_current();
-		thread->lwp = l;
+		minios_sched_settls(thread, 0, l);
 		break;
 	case RUMPUSER_LWP_CLEAR:
+		assert(rumpuser_curlwp() == l);
 		thread = get_current();
-		assert(thread->lwp == l);
-		thread->lwp = NULL;
+		minios_sched_settls(thread, 0, NULL);
 		break;
 	}
 }
@@ -484,5 +481,5 @@ struct lwp *
 rumpuser_curlwp(void)
 {
 
-	return get_current()->lwp;
+	return minios_sched_gettls(get_current(), 0);
 }

@@ -86,7 +86,7 @@ rumprunxen_makelwp(void (*start)(void *), void *arg, void *private,
 	thestack = (thestack & ~(STACK_SIZE-1)) + STACK_SIZE;
 	assert(stack_size == 2*STACK_SIZE);
 
-	scd->scd_thread = minios_create_thread("lwp", scd,
+	scd->scd_thread = minios_create_thread("lwp", scd, 0,
 	    start, arg, (void *)thestack);
 	if (scd->scd_thread == NULL)
 		return EBUSY; /* ??? */

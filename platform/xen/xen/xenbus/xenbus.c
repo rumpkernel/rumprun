@@ -420,7 +420,7 @@ void init_xenbus(void)
     DEBUG("init_xenbus called.\n");
     xenbus_event_queue_init(&xenbus_default_watch_queue);
     xenstore_buf = mfn_to_virt(start_info.store_mfn);
-    minios_create_thread("xenstore", NULL, xenbus_thread_func, NULL, NULL);
+    minios_create_thread("xenstore", NULL, 0, xenbus_thread_func, NULL, NULL);
     DEBUG("buf at %p.\n", xenstore_buf);
     err = minios_bind_evtchn(start_info.store_evtchn,
 		      xenbus_evtchn_handler,

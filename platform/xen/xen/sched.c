@@ -49,9 +49,36 @@
 #include <bmk-core/memalloc.h>
 #include <bmk-core/string.h>
 
+#define TLS_COUNT 2
+
+struct thread {
+	const char *name;
+	void *bt_tls[TLS_COUNT];
+	char *stack;
+	size_t stack_size;
+	struct thread_md md;
+	TAILQ_ENTRY(thread) thread_list;
+	uint32_t flags;
+	s_time_t wakeup_time;
+	int threrrno;
+	void *lwp;
+	void *cookie;
+};
+
+#define RUNNABLE_FLAG   0x00000001
+#define THREAD_MUSTJOIN 0x00000002
+#define THREAD_JOINED   0x00000004
+#define THREAD_EXTSTACK 0x00000008
+#define THREAD_TIMEDOUT 0x00000010
+
+#define is_runnable(_thread)    (_thread->flags & RUNNABLE_FLAG)
+#define set_runnable(_thread)   (_thread->flags |= RUNNABLE_FLAG)
+#define clear_runnable(_thread) (_thread->flags &= ~RUNNABLE_FLAG)
+
 TAILQ_HEAD(thread_list, thread);
 
-struct thread *idle_thread = NULL;
+static struct thread *idle_thread = NULL;
+struct thread_md *idle_tcb;
 static struct thread_list exited_threads = TAILQ_HEAD_INITIALIZER(exited_threads);
 static struct thread_list thread_list = TAILQ_HEAD_INITIALIZER(thread_list);
 static int threads_started;
@@ -75,7 +102,7 @@ switch_threads(struct thread *prev, struct thread *next)
 
 	if (scheduler_hook)
 		scheduler_hook(prev->cookie, next->cookie);
-	arch_switch_threads(prev, next);
+	arch_switch_threads(&prev->md, &next->md);
 }
 
 void
@@ -182,13 +209,27 @@ freeothertls(struct thread *thread)
 }
 
 struct thread *
-minios_create_thread(const char *name, void *cookie,
+minios_create_thread(const char *name, void *cookie, int joinable,
 	void (*function)(void *), void *data, void *stack)
 {
 	struct thread *thread;
 	unsigned long flags;
+
+	thread = bmk_xmalloc(sizeof(*thread));
+	thread->name = name;
+
+	if (!stack) {
+		stack = (void *)minios_alloc_pages(STACK_SIZE_PAGE_ORDER);
+	} else {
+		thread->flags |= THREAD_EXTSTACK;
+	}
+	thread->stack = stack;
+	if (joinable)
+		thread->flags |= THREAD_MUSTJOIN;
+
 	/* Call architecture specific setup. */
-	thread = arch_create_thread(name, function, data, stack);
+	arch_create_thread(thread, &thread->md, function, data, stack);
+
 	/* Not runable, not exited, not sleeping */
 	thread->flags = 0;
 	thread->wakeup_time = 0LL;
@@ -357,7 +398,9 @@ init_sched(void)
 {
 	minios_printk("Initialising scheduler\n");
 
-	idle_thread = minios_create_thread("Idle", NULL, idle_thread_fn, NULL, NULL);
+	idle_thread = minios_create_thread("Idle", NULL, 0,
+	    idle_thread_fn, NULL, NULL);
+	idle_tcb = &idle_thread->md;
 }
 
 void
@@ -375,4 +418,41 @@ minios_init_mainlwp(void *cookie)
 	current->cookie = cookie;
 	allocothertls(current);
 	return current;
+}
+
+const char *
+minios_threadname(struct thread *thread)
+{
+
+	return thread->name;
+}
+
+int *
+minios_sched_geterrno(void)
+{
+	struct thread *thread = get_current();
+
+	return &thread->threrrno;
+}
+
+void
+minios_sched_settls(struct thread *thread, unsigned int which, void *value)
+{
+
+	if (which >= TLS_COUNT) {
+		minios_printk("out of bmk sched tls space");
+		minios_do_exit();
+	}
+	thread->bt_tls[which] = value;
+}
+
+void *
+minios_sched_gettls(struct thread *thread, unsigned int which)
+{
+
+	if (which >= TLS_COUNT) {
+		minios_printk("out of bmk sched tls space");
+		minios_do_exit();
+	}
+	return thread->bt_tls[which];
 }

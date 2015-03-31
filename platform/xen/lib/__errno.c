@@ -9,5 +9,5 @@ int *
 __errno(void)
 {
 
-	return &get_current()->threrrno;
+	return minios_sched_geterrno();
 }

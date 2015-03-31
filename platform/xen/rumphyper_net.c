@@ -167,12 +167,12 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 		goto out;
 	}
 
-	viu->viu_thr = minios_create_thread("xenifp", NULL, pusher, viu, NULL);
+	viu->viu_thr = minios_create_thread("xenifp",
+	    NULL, 1, pusher, viu, NULL);
 	if (viu->viu_thr == NULL) {
 		minios_printk("fatal thread creation failure\n"); /* XXX */
 		minios_do_exit();
 	}
-	viu->viu_thr->flags |= THREAD_MUSTJOIN;
 
 	rv = 0;
 

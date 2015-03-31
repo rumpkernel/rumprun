@@ -23,7 +23,7 @@ struct thread_md {
 #define thr_tp md.thrmd_tp
 #define thr_tl md.thrmd_tl
 
-extern void _minios_entry_arch_switch_threads(struct thread *prevctx, struct thread *nextctx);
+extern void _minios_entry_arch_switch_threads(struct thread_md *prevctx, struct thread_md *nextctx);
 
 #define arch_switch_threads(prev,next) _minios_entry_arch_switch_threads(prev, next)
 
