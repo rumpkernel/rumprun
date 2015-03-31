@@ -120,8 +120,8 @@ clean:	app-tools_clean
 	$(MAKE) -C xen OBJ_DIR=$(OBJ_DIR)/xen clean
 	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/lib/*.o
 	$(MAKE) -C ../../tests clean
-	( cd ${BASEDIR} && ${RUMPMAKE} MAKEOBJDIR=baremetal cleandir )
-	( cd ${COREDIR} && ${RUMPMAKE} MAKEOBJDIR=baremetal cleandir )
+	( cd ${BASEDIR} && ${RUMPMAKE} MAKEOBJDIR=xen cleandir )
+	( cd ${COREDIR} && ${RUMPMAKE} MAKEOBJDIR=xen cleandir )
 
 cleanrump: clean
 	rm -rf rump rumpobj rumptools
