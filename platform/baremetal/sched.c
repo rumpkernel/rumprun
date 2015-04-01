@@ -250,7 +250,7 @@ freeothertls(struct bmk_thread *thread)
 
 void bmk_cpu_sched_bouncer(void);
 struct bmk_thread *
-bmk_sched_create(const char *name, void *cookie, int thrflags,
+bmk_sched_create(const char *name, void *cookie, int joinable,
 	void (*f)(void *), void *data,
 	void *stack_base, unsigned long stack_size)
 {
@@ -267,6 +267,8 @@ bmk_sched_create(const char *name, void *cookie, int thrflags,
 	} else {
 		thread->bt_flags = THREAD_EXTSTACK;
 	}
+	if (joinable)
+		thread->flags |= THREAD_MUSTJOIN;
 
 	thread->bt_stackbase = stack_base;
 	stack = (uint8_t *)stack_base + stack_size;
