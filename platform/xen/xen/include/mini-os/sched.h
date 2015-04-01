@@ -6,13 +6,15 @@
 
 #include <sys/queue.h>
 
-extern struct thread_md *idle_tcb;
+#include <bmk-core/sched.h>
+
+extern struct bmk_tcb *idle_tcb;
 void idle_thread_fn(void *unused);
 
 void switch_threads(struct thread *prev, struct thread *next);
  
     /* Architecture specific setup of thread creation. */
-void arch_create_thread(void *, struct thread_md *,
+void arch_create_thread(void *, struct bmk_tcb *,
 	void (*function)(void *), void *data, void *stack);
 
 void init_sched(void);

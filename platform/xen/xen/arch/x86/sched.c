@@ -45,6 +45,7 @@
 #include <mini-os/semaphore.h>
 
 #include <bmk-core/memalloc.h>
+#include <bmk-core/sched.h>
 
 #if 0
 void dump_stack(struct thread *thread_md)
@@ -78,24 +79,24 @@ void dump_stack(struct thread *thread_md)
 extern void _minios_entry_thread_starter(void);
 
 /* Pushes the specified value onto the stack of the specified thread */
-static void stack_push(struct thread_md *tcb, unsigned long value)
+static void stack_push(struct bmk_tcb *tcb, unsigned long value)
 {
-    tcb->thrmd_sp -= sizeof(unsigned long);
-    *((unsigned long *)tcb->thrmd_sp) = value;
+    tcb->btcb_sp -= sizeof(unsigned long);
+    *((unsigned long *)tcb->btcb_sp) = value;
 }
 
 /* Architecture specific setup of thread creation */
-void arch_create_thread(void *thread, struct thread_md *tcb,
+void arch_create_thread(void *thread, struct bmk_tcb *tcb,
 	void (*function)(void *), void *data, void *stack)
 {
     
-    tcb->thrmd_sp = (unsigned long)stack + STACK_SIZE;
+    tcb->btcb_sp = (unsigned long)stack + STACK_SIZE;
     /* Save pointer to the thread on the stack, used by current macro */
     *((unsigned long *)stack) = (unsigned long)thread;
     
     stack_push(tcb, (unsigned long) function);
     stack_push(tcb, (unsigned long) data);
-    tcb->thrmd_ip = (unsigned long) _minios_entry_thread_starter;
+    tcb->btcb_ip = (unsigned long) _minios_entry_thread_starter;
 }
 
 void run_idle_thread(void)
@@ -105,26 +106,26 @@ void run_idle_thread(void)
     __asm__ __volatile__("mov %0,%%esp\n\t"
                          "push %1\n\t" 
                          "ret"                                            
-                         :"=m" (idle_tcb->thrmd_sp)
-                         :"m" (idle_tcb->thrmd_ip));
+                         :"=m" (idle_tcb->btcb_sp)
+                         :"m" (idle_tcb->btcb_ip));
 #elif defined(__x86_64__)
     __asm__ __volatile__("mov %0,%%rsp\n\t"
                          "push %1\n\t" 
                          "ret"                                            
-                         :"=m" (idle_tcb->thrmd_sp)
-                         :"m" (idle_tcb->thrmd_ip));
+                         :"=m" (idle_tcb->btcb_sp)
+                         :"m" (idle_tcb->btcb_ip));
 #endif
 }
 
 void arch__switch(unsigned long *, unsigned long *);
 void
-arch_switch_threads(struct thread_md *prev, struct thread_md *next)
+arch_switch_threads(struct bmk_tcb *prev, struct bmk_tcb *next)
 {
 
 /* XXX: TLS is available only on x86_64 currently */
 #if defined(__x86_64__)
-    wrmsrl(0xc0000100, next->thrmd_tp);
+    wrmsrl(0xc0000100, next->btcb_tp);
 #endif
 
-    arch__switch(&prev->thrmd_sp, &next->thrmd_sp);
+    arch__switch(&prev->btcb_sp, &next->btcb_sp);
 }

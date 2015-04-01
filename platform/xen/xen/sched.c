@@ -48,6 +48,7 @@
 
 #include <bmk-core/memalloc.h>
 #include <bmk-core/string.h>
+#include <bmk-core/sched.h>
 
 #define TLS_COUNT 2
 
@@ -56,7 +57,7 @@ struct thread {
 	void *bt_tls[TLS_COUNT];
 	char *stack;
 	size_t stack_size;
-	struct thread_md md;
+	struct bmk_tcb tcb;
 	TAILQ_ENTRY(thread) thread_list;
 	uint32_t flags;
 	s_time_t wakeup_time;
@@ -78,7 +79,7 @@ struct thread {
 TAILQ_HEAD(thread_list, thread);
 
 static struct thread *idle_thread = NULL;
-struct thread_md *idle_tcb;
+struct bmk_tcb *idle_tcb;
 static struct thread_list exited_threads = TAILQ_HEAD_INITIALIZER(exited_threads);
 static struct thread_list thread_list = TAILQ_HEAD_INITIALIZER(thread_list);
 static int threads_started;
@@ -102,7 +103,7 @@ switch_threads(struct thread *prev, struct thread *next)
 
 	if (scheduler_hook)
 		scheduler_hook(prev->cookie, next->cookie);
-	arch_switch_threads(&prev->md, &next->md);
+	arch_switch_threads(&prev->tcb, &next->tcb);
 }
 
 void
@@ -186,6 +187,7 @@ allocothertls(struct thread *thread)
 {
 	const size_t tdatasize = _tdata_end - _tdata_start;
 	const size_t tbsssize = _tbss_end - _tbss_start;
+	struct bmk_tcb *tcb = &thread->tcb;
 	uint8_t *tlsmem;
 
 	tlsmem = bmk_memalloc(tdatasize + tbsssize, 0);
@@ -193,8 +195,8 @@ allocothertls(struct thread *thread)
 	bmk_memcpy(tlsmem, _tdata_start, tdatasize);
 	bmk_memset(tlsmem + tdatasize, 0, tbsssize);
 
-	thread->thr_tp = (uintptr_t)(tlsmem + tdatasize + tbsssize);
-	thread->thr_tl = tdatasize + tbsssize;
+	tcb->btcb_tp = (unsigned long)(tlsmem + tdatasize + tbsssize);
+	tcb->btcb_tpsize = tdatasize + tbsssize;
 
 	return 0;
 }
@@ -204,7 +206,7 @@ freeothertls(struct thread *thread)
 {
 	void *mem;
 
-	mem = (void *)(thread->thr_tp);
+	mem = (void *)(thread->tcb.btcb_tp);
 	bmk_memfree(mem);
 }
 
@@ -228,7 +230,7 @@ minios_create_thread(const char *name, void *cookie, int joinable,
 		thread->flags |= THREAD_MUSTJOIN;
 
 	/* Call architecture specific setup. */
-	arch_create_thread(thread, &thread->md, function, data, stack);
+	arch_create_thread(thread, &thread->tcb, function, data, stack);
 
 	/* Not runable, not exited, not sleeping */
 	thread->flags = 0;
@@ -400,7 +402,7 @@ init_sched(void)
 
 	idle_thread = minios_create_thread("Idle", NULL, 0,
 	    idle_thread_fn, NULL, NULL);
-	idle_tcb = &idle_thread->md;
+	idle_tcb = &idle_thread->tcb;
 }
 
 void
