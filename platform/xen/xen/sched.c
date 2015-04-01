@@ -232,7 +232,7 @@ freeothertls(struct thread *thread)
 {
 	void *mem;
 
-	mem = (void *)(thread->tcb.btcb_tp);
+	mem = (void *)(thread->tcb.btcb_tp - thread->tcb.btcb_tpsize);
 	bmk_memfree(mem);
 }
 
