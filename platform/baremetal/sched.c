@@ -71,6 +71,7 @@
 
 #include <bmk-core/string.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/sched.h>
 
 #define TLS_COUNT 2
 #define NAME_MAXLEN 16
@@ -273,8 +274,8 @@ bmk_sched_create(const char *name, void *cookie, int thrflags,
 	stack = (uint8_t *)stack_base + stack_size;
 	bmk_cpu_sched_create(thread, f, data, &stack);
 
-	thread->bt_tcb.btcb_sp = stack;
-	thread->bt_tcb.btcb_ip = bmk_cpu_sched_bouncer;
+	thread->bt_tcb.btcb_sp = (unsigned long)stack;
+	thread->bt_tcb.btcb_ip = (unsigned long)bmk_cpu_sched_bouncer;
 	
 	thread->bt_cookie = cookie;
 

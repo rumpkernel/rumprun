@@ -2,6 +2,8 @@
 #include <bmk/kernel.h>
 #include <bmk/sched.h>
 
+#include <bmk-core/sched.h>
+
 /* enter the kernel with interrupts disabled */
 int bmk_spldepth = 1;
 

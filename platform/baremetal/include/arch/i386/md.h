@@ -11,14 +11,6 @@ struct region_descriptor;
 void bmk_cpu_lidt(struct region_descriptor *);
 void bmk_cpu_lgdt(struct region_descriptor *);
 
-struct bmk_tcb {
-	void *btcb_sp;		/* instruction pointer	*/
-	void *btcb_ip;		/* stack pointer	*/
-
-	uintptr_t btcb_tp;	/* tls pointer		*/
-	size_t btcb_tpsize;	/* tls size (bytes)	*/
-};
-
 static inline uint8_t
 inb(uint16_t port)
 {
