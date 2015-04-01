@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2007-2014 Antti Kantee.  All Rights Reserved.
+/*-
+ * Copyright (c) 2007-2015 Antti Kantee.  All Rights Reserved.
  * Copyright (c) 2014 Justin Cormack.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,8 +23,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  */
-
-/* Based partly on code from Xen Minios with the following license */
 
 /* 
  ****************************************************************************
