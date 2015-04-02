@@ -50,13 +50,18 @@ stack_push(void **stackp, unsigned long value)
 	*stackp = stack;
 }
 
-void bmk_cpu_sched_starter(void);
+void (*bmk_cpu_sched_bouncer)(void);
 void
-bmk_cpu_sched_create(struct bmk_thread *thread,
-	void (*f)(void *), void *arg, void **stackp)
+bmk_cpu_sched_create(struct bmk_tcb *tcb,
+	void (*f)(void *), void *arg,
+	void *stack_base, unsigned long stack_size)
 {
+	void *stack_top = (char *)stack_base + stack_size;
 
 	/* these values are used by bmk_cpu_sched_bouncer() */
-	stack_push(stackp, (unsigned long)f);
-	stack_push(stackp, (unsigned long)arg);
+	stack_push(&stack_top, (unsigned long)f);
+	stack_push(&stack_top, (unsigned long)arg);
+
+	tcb->btcb_sp = (unsigned long)stack_top;
+	tcb->btcb_ip = (unsigned long)bmk_cpu_sched_bouncer;
 }

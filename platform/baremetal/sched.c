@@ -248,14 +248,12 @@ freeothertls(struct bmk_thread *thread)
 	bmk_memfree(mem);
 }
 
-void bmk_cpu_sched_bouncer(void);
 struct bmk_thread *
 bmk_sched_create(const char *name, void *cookie, int joinable,
 	void (*f)(void *), void *data,
 	void *stack_base, unsigned long stack_size)
 {
 	struct bmk_thread *thread;
-	void *stack;
 
 	thread = bmk_xmalloc(sizeof(*thread));
 	bmk_memset(thread, 0, sizeof(*thread));
@@ -267,16 +265,13 @@ bmk_sched_create(const char *name, void *cookie, int joinable,
 	} else {
 		thread->bt_flags = THREAD_EXTSTACK;
 	}
-	if (joinable)
-		thread->flags |= THREAD_MUSTJOIN;
-
 	thread->bt_stackbase = stack_base;
-	stack = (uint8_t *)stack_base + stack_size;
-	bmk_cpu_sched_create(thread, f, data, &stack);
 
-	thread->bt_tcb.btcb_sp = (unsigned long)stack;
-	thread->bt_tcb.btcb_ip = (unsigned long)bmk_cpu_sched_bouncer;
-	
+	if (joinable)
+		thread->bt_flags |= THREAD_MUSTJOIN;
+
+	bmk_cpu_sched_create(&thread->bt_tcb, f, data, stack_base, stack_size);
+
 	thread->bt_cookie = cookie;
 
 	bmk_strncpy(thread->bt_name, name, sizeof(thread->bt_name)-1);

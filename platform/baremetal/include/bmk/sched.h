@@ -1,5 +1,7 @@
 #include <bmk/bmk_types.h>
 
+#include <bmk-core/sched.h>
+
 #define BMK_THREAD_STACKSIZE (1<<16)
 
 struct bmk_thread;
@@ -24,8 +26,9 @@ int	bmk_sched_nanosleep(bmk_time_t);
 void	*bmk_sched_gettls(struct bmk_thread *, unsigned int);
 void	bmk_sched_settls(struct bmk_thread *, unsigned int, void *);
 
-void	bmk_cpu_sched_create(struct bmk_thread *,
-			     void (*)(void *), void *, void **);
+void	bmk_cpu_sched_create(struct bmk_tcb *,
+			     void (*)(void *), void *,
+			     void *, unsigned long);
 void	bmk_cpu_sched_switch(struct bmk_tcb *, struct bmk_tcb *);
 
 void	bmk_sched_set_hook(void (*)(void *, void *));
