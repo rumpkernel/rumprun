@@ -50,7 +50,7 @@ stack_push(void **stackp, unsigned long value)
 	*stackp = stack;
 }
 
-void (*bmk_cpu_sched_bouncer)(void);
+void bmk_cpu_sched_bouncer(void);
 void
 bmk_cpu_sched_create(struct bmk_tcb *tcb,
 	void (*f)(void *), void *arg,

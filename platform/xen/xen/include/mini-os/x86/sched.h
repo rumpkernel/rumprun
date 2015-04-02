@@ -6,9 +6,9 @@
 
 #include <bmk-core/sched.h>
 
-static inline struct thread* get_current(void)
+static inline struct bmk_thread *get_current(void)
 {
-    struct thread **current;
+    struct bmk_thread **current;
 
     current = (void *)((unsigned long)&current & ~(__STACK_SIZE-1));
     return *current;

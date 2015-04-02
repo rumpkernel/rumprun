@@ -1,13 +1,14 @@
 #ifndef __MINIOS_WAITTYPE_H__
 #define __MINIOS_WAITTYPE_H__
 
+#include <bmk-core/sched.h>
+
 #include <sys/queue.h>
 
-struct thread;
 struct wait_queue
 {
     int waiting;
-    struct thread *thread;
+    struct bmk_thread *thread;
     STAILQ_ENTRY(wait_queue) thread_list;
 };
 

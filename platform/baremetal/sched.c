@@ -67,18 +67,19 @@
 #include <bmk/kernel.h>
 #include <bmk/sched.h>
 
-#include <bmk-core/string.h>
+#include <bmk-core/bmk_ops.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/string.h>
 #include <bmk-core/sched.h>
 
 #define TLS_COUNT 2
 #define NAME_MAXLEN 16
 
-#define THREAD_RUNNABLE 0x01
+#define THREAD_RUNNABLE	0x01
 #define THREAD_MUSTJOIN	0x02
 #define THREAD_JOINED	0x04
 #define THREAD_EXTSTACK	0x08
-#define THREAD_TIMEDOUT 0x10
+#define THREAD_TIMEDOUT	0x10
 
 struct bmk_thread {
 	char bt_name[NAME_MAXLEN];
@@ -134,18 +135,19 @@ clear_runnable(struct bmk_thread *thread)
 	thread->bt_flags &= ~THREAD_RUNNABLE;
 }
 
-static void *
-stackalloc(void)
+static void
+stackalloc(void **stack, unsigned long *ss)
 {
 
-	return bmk_xmalloc(BMK_THREAD_STACKSIZE);
+	*stack = bmk_xmalloc(BMK_THREAD_STACKSIZE);
+	*ss = BMK_THREAD_STACKSIZE;
 }
 
 static void
-stackfree(void *stack)
+stackfree(struct bmk_thread *thread)
 {
 
-	bmk_memfree(stack);
+	bmk_memfree(thread->bt_stackbase);
 }
 
 static void
@@ -157,8 +159,6 @@ sched_switch(struct bmk_thread *prev, struct bmk_thread *next)
 	current_thread = next;
 	bmk_cpu_sched_switch(&prev->bt_tcb, &next->bt_tcb);
 }
-
-#define ONE_SEC_IN_NS (1000*1000*1000ULL)
 
 void
 bmk_sched(void)
@@ -206,7 +206,7 @@ bmk_sched(void)
 		if (thread != prev) {
 			TAILQ_REMOVE(&zombies, thread, bt_entries);
 			if ((thread->bt_flags & THREAD_EXTSTACK) == 0)
-				stackfree(thread->bt_stackbase);
+				stackfree(thread);
 			bmk_memfree(thread);
 		}
 	}
@@ -226,6 +226,7 @@ allocothertls(struct bmk_thread *thread)
 {
 	const size_t tdatasize = _tdata_end - _tdata_start;
 	const size_t tbsssize = _tbss_end - _tbss_start;
+	struct bmk_tcb *tcb = &thread->bt_tcb;
 	uint8_t *tlsmem;
 
 	tlsmem = bmk_memalloc(tdatasize + tbsssize, 0);
@@ -233,8 +234,8 @@ allocothertls(struct bmk_thread *thread)
 	bmk_memcpy(tlsmem, _tdata_start, tdatasize);
 	bmk_memset(tlsmem + tdatasize, 0, tbsssize);
 
-	thread->bt_tcb.btcb_tp = (uintptr_t)(tlsmem + tdatasize + tbsssize);
-	thread->bt_tcb.btcb_tpsize = tdatasize + tbsssize;
+	tcb->btcb_tp = (unsigned long)(tlsmem + tdatasize + tbsssize);
+	tcb->btcb_tpsize = tdatasize + tbsssize;
 
 	return 0;
 }
@@ -256,25 +257,21 @@ bmk_sched_create(const char *name, void *cookie, int joinable,
 	struct bmk_thread *thread;
 
 	thread = bmk_xmalloc(sizeof(*thread));
-	bmk_memset(thread, 0, sizeof(*thread));
+	bmk_strncpy(thread->bt_name, name, sizeof(thread->bt_name)-1);
 
 	if (!stack_base) {
 		assert(stack_size == 0);
-		stack_size = BMK_THREAD_STACKSIZE;
-		stack_base = stackalloc();
+		stackalloc(&stack_base, &stack_size);
 	} else {
 		thread->bt_flags = THREAD_EXTSTACK;
 	}
 	thread->bt_stackbase = stack_base;
-
 	if (joinable)
 		thread->bt_flags |= THREAD_MUSTJOIN;
 
 	bmk_cpu_sched_create(&thread->bt_tcb, f, data, stack_base, stack_size);
 
 	thread->bt_cookie = cookie;
-
-	bmk_strncpy(thread->bt_name, name, sizeof(thread->bt_name)-1);
 
 	thread->bt_wakeup_time = -1;
 
@@ -321,10 +318,9 @@ bmk_sched_exit(void)
 	/* Put onto exited list */
 	TAILQ_INSERT_HEAD(&zombies, thread, bt_entries);
 
-	/* Schedule will free the resources */
-	for (;;) {
-		bmk_sched();
-	}
+	/* bye */
+	bmk_sched();
+	bmk_ops->bmk_halt("schedule() returned for a dead thread!\n");
 }
 
 void
@@ -336,8 +332,7 @@ bmk_sched_join(struct bmk_thread *joinable)
 	assert(joinable->bt_flags & THREAD_MUSTJOIN);
 
 	/* wait for exiting thread to hit thread_exit() */
-	while (! (joinable->bt_flags & THREAD_JOINED)) {
-
+	while ((joinable->bt_flags & THREAD_JOINED) == 0) {
 		jw.jw_thread = thread;
 		jw.jw_wanted = joinable;
 		TAILQ_INSERT_TAIL(&joinwq, &jw, jw_entries);
@@ -437,8 +432,9 @@ void
 bmk_sched_settls(struct bmk_thread *thread, unsigned int which, void *value)
 {
 
-	if (which >= TLS_COUNT)
-		panic("out of bmk sched tls space");
+	if (which >= TLS_COUNT) {
+		bmk_ops->bmk_halt("out of bmk sched tls space");
+	}
 	thread->bt_tls[which] = value;
 }
 
@@ -446,7 +442,8 @@ void *
 bmk_sched_gettls(struct bmk_thread *thread, unsigned int which)
 {
 
-	if (which >= TLS_COUNT)
-		panic("out of bmk sched tls space");
+	if (which >= TLS_COUNT) {
+		bmk_ops->bmk_halt("out of bmk sched tls space");
+	}
 	return thread->bt_tls[which];
 }

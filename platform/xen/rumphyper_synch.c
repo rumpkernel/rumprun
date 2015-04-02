@@ -46,7 +46,7 @@
 
 TAILQ_HEAD(waithead, waiter);
 struct waiter {
-	struct thread *who;
+	struct bmk_thread *who;
 	TAILQ_ENTRY(waiter) entries;
 	int onlist;
 };
@@ -102,10 +102,10 @@ int
 rumpuser_thread_create(void *(*f)(void *), void *arg, const char *thrname,
 	int joinable, int pri, int cpuidx, void **tptr)
 {
-	struct thread *thr;
+	struct bmk_thread *thr;
 
 	thr = minios_create_thread(thrname, NULL, joinable,
-	    (void (*)(void *))f, arg, NULL);
+	    (void (*)(void *))f, arg, NULL, 0);
 	if (!thr)
 		return BMK_EINVAL;
 
@@ -457,7 +457,7 @@ rumpuser_cv_has_waiters(struct rumpuser_cv *cv, int *rvp)
 void
 rumpuser_curlwpop(int enum_rumplwpop, struct lwp *l)
 {
-	struct thread *thread;
+	struct bmk_thread *thread;
 	enum rumplwpop op = enum_rumplwpop;
 
 	switch (op) {

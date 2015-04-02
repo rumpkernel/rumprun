@@ -151,7 +151,7 @@ void _minios_start_kernel(start_info_t *si)
     init_xenbus();
 
     /* Call (possibly overridden) app_main() */
-    minios_create_thread("main", NULL, 0, _app_main, &start_info, NULL);
+    minios_create_thread("main", NULL, 0, _app_main, &start_info, NULL, 0);
 
     /* Everything initialised, start idle thread */
     run_idle_thread();

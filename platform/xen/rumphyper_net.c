@@ -31,6 +31,7 @@
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
 #include <bmk-core/string.h>
+#include <bmk-core/sched.h>
 
 #include "rumphyper.h"
 #include <rump/rumpuser.h>
@@ -52,8 +53,8 @@ struct onepkt {
 #define NBUF 64
 struct virtif_user {
 	struct netfront_dev *viu_dev;
-	struct thread *viu_rcvr;
-	struct thread *viu_thr;
+	struct bmk_thread *viu_rcvr;
+	struct bmk_thread *viu_thr;
 	struct virtif_sc *viu_vifsc;
 
 	int viu_read;
@@ -103,7 +104,7 @@ pusher(void *arg)
 	struct virtif_user *viu = arg;
 	struct iovec iov;
 	struct onepkt *mypkt;
-	struct thread *me;
+	struct bmk_thread *me;
 	int flags;
 
 	mypkt = bmk_xmalloc(sizeof(*mypkt));
@@ -168,7 +169,7 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 	}
 
 	viu->viu_thr = minios_create_thread("xenifp",
-	    NULL, 1, pusher, viu, NULL);
+	    NULL, 1, pusher, viu, NULL, 0);
 	if (viu->viu_thr == NULL) {
 		minios_printk("fatal thread creation failure\n"); /* XXX */
 		minios_do_exit();

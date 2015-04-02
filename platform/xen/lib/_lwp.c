@@ -30,6 +30,8 @@
 
 #include <bmk-base/netbsd_initfini.h>
 
+#include <bmk-core/sched.h>
+
 #if 0
 #define DPRINTF(x) printf x
 #else
@@ -39,7 +41,7 @@
 struct schedulable {
 	struct tls_tcb scd_tls;
 
-	struct thread *scd_thread;
+	struct bmk_thread *scd_thread;
 	int scd_lwpid;
 
 	char *scd_name;
@@ -83,11 +85,11 @@ rumprunxen_makelwp(void (*start)(void *), void *arg, void *private,
 	scd->scd_lwpid = ++curlwpid;
 
 	/* XXX: stack_base is not guaranteed to be aligned */
-	thestack = (thestack & ~(STACK_SIZE-1)) + STACK_SIZE;
 	assert(stack_size == 2*STACK_SIZE);
+	thestack = (thestack & ~(STACK_SIZE-1)) + STACK_SIZE;
 
 	scd->scd_thread = minios_create_thread("lwp", scd, 0,
-	    start, arg, (void *)thestack);
+	    start, arg, (void *)thestack, STACK_SIZE);
 	if (scd->scd_thread == NULL)
 		return EBUSY; /* ??? */
 	*lid = scd->scd_lwpid;

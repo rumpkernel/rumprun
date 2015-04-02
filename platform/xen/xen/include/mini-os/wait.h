@@ -19,7 +19,7 @@ static inline void minios_init_waitqueue_head(struct wait_queue_head *h)
     STAILQ_INIT(h);
 }
 
-static inline void minios_init_waitqueue_entry(struct wait_queue *q, struct thread *thread)
+static inline void minios_init_waitqueue_entry(struct wait_queue *q, struct bmk_thread *thread)
 {
     q->thread = thread;
     q->waiting = 0;
@@ -78,7 +78,7 @@ static inline void minios_wake_up(struct wait_queue_head *head)
         minios_add_wait_queue(&wq, &__wait);                           \
         minios_block_timeout(get_current(), deadline);		\
         local_irq_restore(flags);                               \
-        if((condition) || (deadline && NOW() >= deadline))      \
+        if((condition) || (deadline != -1 && NOW() >= deadline))      \
             break;                                              \
         minios_schedule();                                             \
     }                                                           \
@@ -89,7 +89,7 @@ static inline void minios_wake_up(struct wait_queue_head *head)
     local_irq_restore(flags);                                   \
 } while(0) 
 
-#define minios_wait_event(wq, condition) minios_wait_event_deadline(wq, condition, 0) 
+#define minios_wait_event(wq, condition) minios_wait_event_deadline(wq, condition, -1)
 
 
 

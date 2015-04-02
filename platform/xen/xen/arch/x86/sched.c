@@ -87,10 +87,11 @@ static void stack_push(struct bmk_tcb *tcb, unsigned long value)
 
 /* Architecture specific setup of thread creation */
 void arch_create_thread(void *thread, struct bmk_tcb *tcb,
-	void (*function)(void *), void *data, void *stack)
+	void (*function)(void *), void *data,
+	void *stack, unsigned long stack_size)
 {
     
-    tcb->btcb_sp = (unsigned long)stack + STACK_SIZE;
+    tcb->btcb_sp = (unsigned long)stack + stack_size;
     /* Save pointer to the thread on the stack, used by current macro */
     *((unsigned long *)stack) = (unsigned long)thread;
     

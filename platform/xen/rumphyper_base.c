@@ -36,6 +36,7 @@
 
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/sched.h>
 #include <bmk-core/string.h>
 
 #include "rumphyper.h"
@@ -176,7 +177,7 @@ int
 rumpuser_clock_sleep(int enum_rumpclock, int64_t sec, long nsec)
 {
 	enum rumpclock rclk = enum_rumpclock;
-	struct thread *thread;
+	struct bmk_thread *thread;
 	uint32_t msec;
 	int nlocks;
 
@@ -456,7 +457,7 @@ rumpuser_bio(int fd, int op, void *data, size_t dlen, int64_t off,
 			bio_inited = 1;
 			rumpuser_mutex_exit(bio_mtx);
 			minios_create_thread("biopoll", NULL, 0,
-			    biothread, NULL, NULL);
+			    biothread, NULL, NULL, 0);
 		} else {
 			rumpuser_mutex_exit(bio_mtx);
 		}
