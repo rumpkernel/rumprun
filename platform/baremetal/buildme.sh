@@ -9,7 +9,7 @@ BUILDXENMETAL_MKCONF=".if defined(LIB) && \${LIB} == \"pthread\"
 .PATH:  $(pwd)/pthread
 PTHREAD_MAKELWP=_lwp.c
 CPPFLAGS+=      -D_PTHREAD_GETTCB_EXT=_lwp_rumpbaremetal_gettcb
-CPPFLAGS._lwp.c= -I$(pwd)/include
+CPPFLAGS._lwp.c= -I$(pwd)/include -I$(pwd)/../../include
 .endif  # LIB == pthread"
 unset IFS
 
