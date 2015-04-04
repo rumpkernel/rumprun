@@ -4,6 +4,7 @@
 #include <mini-os/sched.h>
 #include <mini-os/os.h>
 #include <mini-os/waittypes.h>
+#include <mini-os/time.h>
 
 #include <sys/queue.h>
 
