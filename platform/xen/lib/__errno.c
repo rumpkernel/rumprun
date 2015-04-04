@@ -9,5 +9,5 @@ int *
 __errno(void)
 {
 
-	return minios_sched_geterrno();
+	return bmk_sched_geterrno();
 }

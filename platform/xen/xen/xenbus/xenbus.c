@@ -111,7 +111,7 @@ static struct xenbus_event *await_event(struct xenbus_event_queue *queue)
     while (!(event = remove_event(queue))) {
         minios_add_waiter(w, queue->waitq);
         spin_unlock(&xenbus_req_lock);
-        minios_schedule();
+        bmk_sched();
         spin_lock(&xenbus_req_lock);
     }
     minios_remove_waiter(w, queue->waitq);
@@ -420,7 +420,7 @@ void init_xenbus(void)
     DEBUG("init_xenbus called.\n");
     xenbus_event_queue_init(&xenbus_default_watch_queue);
     xenstore_buf = mfn_to_virt(start_info.store_mfn);
-    minios_create_thread("xenstore", NULL, 0, xenbus_thread_func, NULL,
+    bmk_sched_create("xenstore", NULL, 0, xenbus_thread_func, NULL,
       NULL, 0);
     DEBUG("buf at %p.\n", xenstore_buf);
     err = minios_bind_evtchn(start_info.store_evtchn,

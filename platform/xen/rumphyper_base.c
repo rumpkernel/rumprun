@@ -25,6 +25,7 @@
 
 #include <mini-os/types.h>
 #include <mini-os/console.h>
+#include <mini-os/time.h>
 
 #include <xen/io/console.h>
 #include <mini-os/blkfront.h>
@@ -177,20 +178,18 @@ int
 rumpuser_clock_sleep(int enum_rumpclock, int64_t sec, long nsec)
 {
 	enum rumpclock rclk = enum_rumpclock;
-	struct bmk_thread *thread;
-	uint32_t msec;
+	bmk_time_t totnsec;
 	int nlocks;
 
 	rumpkern_unsched(&nlocks, NULL);
 	switch (rclk) {
 	case RUMPUSER_CLOCK_RELWALL:
-		msec = sec * 1000 + nsec / (1000*1000UL);
-		minios_msleep(msec);
+		totnsec = sec * 1000*1000*1000 + nsec;
+		bmk_sched_nanosleep(totnsec);
 		break;
 	case RUMPUSER_CLOCK_ABSMONO:
-		thread = get_current();
-		minios_block_timeout(thread, sec * (1000*1000*1000ULL) + nsec);
-		minios_schedule();
+		totnsec = sec * 1000*1000*1000 + nsec;
+		bmk_sched_nanosleep_abstime(totnsec);
 		break;
 	}
 	rumpkern_sched(nlocks, NULL);
@@ -432,7 +431,7 @@ biothread(void *arg)
 				break;
 			minios_add_waiter(w, blkfront_queue);
 			local_irq_restore(flags);
-			minios_schedule();
+			bmk_sched();
 			local_irq_save(flags);
 		}
 		local_irq_restore(flags);
@@ -456,7 +455,7 @@ rumpuser_bio(int fd, int op, void *data, size_t dlen, int64_t off,
 		if (!bio_inited) {
 			bio_inited = 1;
 			rumpuser_mutex_exit(bio_mtx);
-			minios_create_thread("biopoll", NULL, 0,
+			bmk_sched_create("biopoll", NULL, 0,
 			    biothread, NULL, NULL, 0);
 		} else {
 			rumpuser_mutex_exit(bio_mtx);

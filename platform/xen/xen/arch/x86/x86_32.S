@@ -287,7 +287,7 @@ ENTRY(thread_starter)
     xorl %ebp,%ebp
     pushl %eax
     call *%ebx
-    call minios_exit_thread
+    call bmk_sched_exit
     
 .globl arch__switch
 arch__switch:

@@ -48,7 +48,7 @@ LDFLAGS := -L$(abspath $(OBJ_DIR)/$(TARGET_ARCH_DIR))
 
 # Prefixes for global API names. All other symbols in mini-os are localised
 # before linking with rumprun applications.
-GLOBAL_PREFIXES := _minios_ minios_ HYPERVISOR_ blkfront_ netfront_ pcifront_ xenbus_ gntmap_
+GLOBAL_PREFIXES := _minios_ minios_ HYPERVISOR_ blkfront_ netfront_ pcifront_ xenbus_ gntmap_ bmk_
 GLOBAL_PREFIXES := $(patsubst %,-G %*, $(GLOBAL_PREFIXES))
 
 # Subdirectories common to mini-os

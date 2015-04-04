@@ -53,7 +53,7 @@ void dump_stack(struct thread *thread_md)
     unsigned long *bottom = (unsigned long *)(thread->stack + STACK_SIZE); 
     unsigned long *pointer = (unsigned long *)thread->thr_sp;
     int count;
-    if(thread == get_current())
+    if(thread == bmk_sched_current())
     {
 #ifdef __i386__    
         asm("movl %%esp,%0"

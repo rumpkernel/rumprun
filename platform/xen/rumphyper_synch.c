@@ -35,6 +35,7 @@
 #include <mini-os/types.h>
 #include <mini-os/console.h>
 #include <mini-os/sched.h>
+#include <mini-os/time.h>
 
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
@@ -57,15 +58,15 @@ wait(struct waithead *wh, uint64_t nsec)
 	struct waiter w;
 	uint64_t wakeup;
 
-	w.who = get_current();
+	w.who = bmk_sched_current();
 	TAILQ_INSERT_TAIL(wh, &w, entries);
 	w.onlist = 1;
 	if (nsec)
 		wakeup = minios_clock_monotonic() + nsec;
 	else
 		wakeup = 0;
-	minios_block_timeout(w.who, wakeup);
-	minios_schedule();
+	bmk_sched_block_timeout(w.who, wakeup);
+	bmk_sched();
 
 	/* woken up by timeout? */
 	if (w.onlist)
@@ -82,7 +83,7 @@ wakeup_one(struct waithead *wh)
 	if ((w = TAILQ_FIRST(wh)) != NULL) {
 		TAILQ_REMOVE(wh, w, entries);
 		w->onlist = 0;
-		minios_wake(w->who);
+		bmk_sched_wake(w->who);
 	}
 }
 
@@ -94,7 +95,7 @@ wakeup_all(struct waithead *wh)
 	while ((w = TAILQ_FIRST(wh)) != NULL) {
 		TAILQ_REMOVE(wh, w, entries);
 		w->onlist = 0;
-		minios_wake(w->who);
+		bmk_sched_wake(w->who);
 	}
 }
 
@@ -104,7 +105,7 @@ rumpuser_thread_create(void *(*f)(void *), void *arg, const char *thrname,
 {
 	struct bmk_thread *thr;
 
-	thr = minios_create_thread(thrname, NULL, joinable,
+	thr = bmk_sched_create(thrname, NULL, joinable,
 	    (void (*)(void *))f, arg, NULL, 0);
 	if (!thr)
 		return BMK_EINVAL;
@@ -117,14 +118,14 @@ void
 rumpuser_thread_exit(void)
 {
 
-	minios_exit_thread();
+	bmk_sched_exit();
 }
 
 int
 rumpuser_thread_join(void *p)
 {
 
-	minios_join_thread(p);
+	bmk_sched_join(p);
 	return 0;
 }
 
@@ -466,13 +467,13 @@ rumpuser_curlwpop(int enum_rumplwpop, struct lwp *l)
 		break;
 	case RUMPUSER_LWP_SET:
 		assert(rumpuser_curlwp() == NULL);
-		thread = get_current();
-		minios_sched_settls(thread, 0, l);
+		thread = bmk_sched_current();
+		bmk_sched_settls(thread, 0, l);
 		break;
 	case RUMPUSER_LWP_CLEAR:
 		assert(rumpuser_curlwp() == l);
-		thread = get_current();
-		minios_sched_settls(thread, 0, NULL);
+		thread = bmk_sched_current();
+		bmk_sched_settls(thread, 0, NULL);
 		break;
 	}
 }
@@ -481,5 +482,5 @@ struct lwp *
 rumpuser_curlwp(void)
 {
 
-	return minios_sched_gettls(get_current(), 0);
+	return bmk_sched_gettls(bmk_sched_current(), 0);
 }

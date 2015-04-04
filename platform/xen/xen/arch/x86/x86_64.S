@@ -294,7 +294,7 @@ ENTRY(thread_starter)
         pushq $0
         xorq %rbp,%rbp
         call *%rbx
-        call minios_exit_thread 
+        call bmk_sched_exit
         
 
 .globl arch__switch

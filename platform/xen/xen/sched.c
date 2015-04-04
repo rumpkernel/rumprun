@@ -161,13 +161,20 @@ sched_switch(struct bmk_thread *prev, struct bmk_thread *next)
 	arch_switch_threads(&prev->bt_tcb, &next->bt_tcb);
 }
 
+struct bmk_thread *
+bmk_sched_current(void)
+{
+
+	return arch_sched_current();
+}
+
 void
-minios_schedule(void)
+bmk_sched(void)
 {
 	struct bmk_thread *prev, *next, *thread, *tmp;
 	unsigned long flags;
 
-	prev = get_current();
+	prev = bmk_sched_current();
 	local_irq_save(flags); 
 
 	if (_minios_in_hypervisor_callback) {
@@ -189,7 +196,7 @@ minios_schedule(void)
 			    && thread->bt_wakeup_time >= 0) {
 				if (thread->bt_wakeup_time <= tm) {
 					thread->bt_flags |= THREAD_TIMEDOUT;
-					minios_wake(thread);
+					bmk_sched_wake(thread);
 				} else if (thread->bt_wakeup_time < wakeup)
 					wakeup = thread->bt_wakeup_time;
 			}
@@ -266,7 +273,7 @@ freeothertls(struct bmk_thread *thread)
 }
 
 struct bmk_thread *
-minios_create_thread(const char *name, void *cookie, int joinable,
+bmk_sched_create(const char *name, void *cookie, int joinable,
 	void (*f)(void *), void *data,
 	void *stack_base, unsigned long stack_size)
 {
@@ -312,10 +319,10 @@ struct join_waiter {
 static TAILQ_HEAD(, join_waiter) joinwq = TAILQ_HEAD_INITIALIZER(joinwq);
 
 void
-minios_exit_thread(void)
+bmk_sched_exit(void)
 {
 	unsigned long flags;
-	struct bmk_thread *thread = get_current();
+	struct bmk_thread *thread = bmk_sched_current();
 	struct join_waiter *jw_iter;
 
 	/* if joinable, gate until we are allowed to exit */
@@ -327,12 +334,12 @@ minios_exit_thread(void)
 		/* see if the joiner is already there */
 		TAILQ_FOREACH(jw_iter, &joinwq, jw_entries) {
 			if (jw_iter->jw_wanted == thread) {
-				minios_wake(jw_iter->jw_thread);
+				bmk_sched_wake(jw_iter->jw_thread);
 				break;
 			}
 		}
-		minios_block(thread);
-		minios_schedule();
+		bmk_sched_block(thread);
+		bmk_sched();
 		local_irq_save(flags);
 	}
 	freeothertls(thread);
@@ -345,16 +352,16 @@ minios_exit_thread(void)
 	local_irq_restore(flags);
 
 	/* bye */
-	minios_schedule();
+	bmk_sched();
 	bmk_ops->bmk_halt("schedule() returned for a dead thread!\n");
 }
 
 /* hmm, all of the interfaces here are namespaced "backwards" ... */
 void
-minios_join_thread(struct bmk_thread *joinable)
+bmk_sched_join(struct bmk_thread *joinable)
 {
 	struct join_waiter jw;
-	struct bmk_thread *thread = get_current();
+	struct bmk_thread *thread = bmk_sched_current();
 	unsigned long flags;
 
 	assert(joinable->bt_flags & THREAD_MUSTJOIN);
@@ -367,8 +374,8 @@ minios_join_thread(struct bmk_thread *joinable)
 		jw.jw_thread = thread;
 		jw.jw_wanted = joinable;
 		TAILQ_INSERT_TAIL(&joinwq, &jw, jw_entries);
-		minios_block(thread);
-		minios_schedule();
+		bmk_sched_block(thread);
+		bmk_sched();
 		TAILQ_REMOVE(&joinwq, &jw, jw_entries);
 
 		local_irq_save(flags);
@@ -379,11 +386,11 @@ minios_join_thread(struct bmk_thread *joinable)
 	joinable->bt_flags &= ~THREAD_MUSTJOIN;
 	local_irq_restore(flags);
 
-	minios_wake(joinable);
+	bmk_sched_wake(joinable);
 }
 
 void
-minios_block_timeout(struct bmk_thread *thread, uint64_t deadline)
+bmk_sched_block_timeout(struct bmk_thread *thread, bmk_time_t deadline)
 {
 
 	thread->bt_wakeup_time = deadline;
@@ -391,22 +398,22 @@ minios_block_timeout(struct bmk_thread *thread, uint64_t deadline)
 }
 
 void
-minios_block(struct bmk_thread *thread)
+bmk_sched_block(struct bmk_thread *thread)
 {
 
-	minios_block_timeout(thread, -1);
+	bmk_sched_block_timeout(thread, -1);
 }
 
 static int
 dosleep(s_time_t wakeuptime)
 {
-	struct bmk_thread *thread = get_current();
+	struct bmk_thread *thread = bmk_sched_current();
 	int rv;
 
 	thread->bt_wakeup_time = wakeuptime;
 	thread->bt_flags &= ~THREAD_TIMEDOUT;
 	clear_runnable(thread);
-	minios_schedule();
+	bmk_sched();
 
 	rv = !!(thread->bt_flags & THREAD_TIMEDOUT);
 	thread->bt_flags &= ~THREAD_TIMEDOUT;
@@ -414,27 +421,27 @@ dosleep(s_time_t wakeuptime)
 }
 
 int
-minios_msleep(uint64_t millisecs)
+bmk_sched_nanosleep(bmk_time_t nsec)
 {
 
-	return dosleep(NOW() + MILLISECS(millisecs));
+	return dosleep(NOW() + nsec);
 }
 
 int
-minios_absmsleep(uint64_t millisecs)
+bmk_sched_nanosleep_abstime(bmk_time_t nsec)
 {
-	uint32_t secs;
-	uint64_t nsecs;
+	uint32_t wall_secs;
+	uint64_t wall_nsecs;
 
-	/* oh the silliness! */
-	minios_clock_wall(&secs, &nsecs);
-	millisecs -= 1000ULL*(uint64_t)secs + nsecs/(1000ULL*1000);
+	/* well this is still stupid */
+	minios_clock_wall(&wall_secs, &wall_nsecs);
+	nsec -= 1000ULL*1000*1000*(uint64_t)wall_secs + wall_nsecs;
 
-	return dosleep(MILLISECS(millisecs) + NOW());
+	return dosleep(NOW() + nsec);
 }
 
 void
-minios_wake(struct bmk_thread *thread)
+bmk_sched_wake(struct bmk_thread *thread)
 {
 
 	thread->bt_wakeup_time = -1;
@@ -446,32 +453,32 @@ idle_thread_fn(void *unused)
 {
 
 	for (;;) {
-		minios_block(get_current());
-		minios_schedule();
+		bmk_sched_block(bmk_sched_current());
+		bmk_sched();
 	}
 }
 
 void
-init_sched(void)
+bmk_sched_init(void)
 {
 	minios_printk("Initialising scheduler\n");
 
-	idle_thread = minios_create_thread("Idle", NULL, 0,
+	idle_thread = bmk_sched_create("Idle", NULL, 0,
 	    idle_thread_fn, NULL, NULL, 0);
 	idle_tcb = &idle_thread->bt_tcb;
 }
 
 void
-minios_set_sched_hook(void (*f)(void *, void *))
+bmk_sched_set_hook(void (*f)(void *, void *))
 {
 
 	scheduler_hook = f;
 }
 
 struct bmk_thread *
-minios_init_mainlwp(void *cookie)
+bmk_sched_init_mainlwp(void *cookie)
 {
-	struct bmk_thread *current = get_current();
+	struct bmk_thread *current = bmk_sched_current();
 
 	current->bt_cookie = cookie;
 	allocothertls(current);
@@ -486,15 +493,15 @@ minios_threadname(struct bmk_thread *thread)
 }
 
 int *
-minios_sched_geterrno(void)
+bmk_sched_geterrno(void)
 {
-	struct bmk_thread *thread = get_current();
+	struct bmk_thread *thread = bmk_sched_current();
 
 	return &thread->bt_errno;
 }
 
 void
-minios_sched_settls(struct bmk_thread *thread, unsigned int which, void *value)
+bmk_sched_settls(struct bmk_thread *thread, unsigned int which, void *value)
 {
 
 	if (which >= TLS_COUNT) {
@@ -504,7 +511,7 @@ minios_sched_settls(struct bmk_thread *thread, unsigned int which, void *value)
 }
 
 void *
-minios_sched_gettls(struct bmk_thread *thread, unsigned int which)
+bmk_sched_gettls(struct bmk_thread *thread, unsigned int which)
 {
 
 	if (which >= TLS_COUNT) {

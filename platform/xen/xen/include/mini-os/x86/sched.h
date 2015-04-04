@@ -6,7 +6,7 @@
 
 #include <bmk-core/sched.h>
 
-static inline struct bmk_thread *get_current(void)
+static inline struct bmk_thread *arch_sched_current(void)
 {
     struct bmk_thread **current;
 

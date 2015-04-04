@@ -9,7 +9,7 @@
 
 #define DEFINE_WAIT(name)                          \
 struct wait_queue name = {                         \
-    .thread       = get_current(),                 \
+    .thread       = bmk_sched_current(),           \
     .waiting      = 0,                             \
 }
 
@@ -47,7 +47,7 @@ static inline void minios_wake_up(struct wait_queue_head *head)
     struct wait_queue *curr, *tmp;
     local_irq_save(flags);
     STAILQ_FOREACH_SAFE(curr, head, thread_list, tmp)
-         minios_wake(curr->thread);
+         bmk_sched_wake(curr->thread);
     local_irq_restore(flags);
 }
 
@@ -55,7 +55,7 @@ static inline void minios_wake_up(struct wait_queue_head *head)
     unsigned long flags;        \
     local_irq_save(flags);      \
     minios_add_wait_queue(&wq, &w);    \
-    minios_block(get_current());       \
+    bmk_sched_block(bmk_sched_current());       \
     local_irq_restore(flags);   \
 } while (0)
 
@@ -76,15 +76,15 @@ static inline void minios_wake_up(struct wait_queue_head *head)
         /* protect the list */                                  \
         local_irq_save(flags);                                  \
         minios_add_wait_queue(&wq, &__wait);                           \
-        minios_block_timeout(get_current(), deadline);		\
+        bmk_sched_block_timeout(bmk_sched_current(), deadline);		\
         local_irq_restore(flags);                               \
         if((condition) || (deadline != -1 && NOW() >= deadline))      \
             break;                                              \
-        minios_schedule();                                             \
+        bmk_sched();                                             \
     }                                                           \
     local_irq_save(flags);                                      \
     /* need to wake up */                                       \
-    minios_wake(get_current());                                        \
+    bmk_sched_wake(bmk_sched_current());                                        \
     minios_remove_wait_queue(&wq, &__wait);                            \
     local_irq_restore(flags);                                   \
 } while(0) 

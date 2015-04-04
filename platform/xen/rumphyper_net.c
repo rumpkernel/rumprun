@@ -95,7 +95,7 @@ myrecv(struct netfront_dev *dev, unsigned char *data, int dlen)
 	viu->viu_write = nextw;
 
 	if (viu->viu_rcvr)
-		minios_wake(viu->viu_rcvr);
+		bmk_sched_wake(viu->viu_rcvr);
 }
 
 static void
@@ -114,16 +114,16 @@ pusher(void *arg)
 	rumpuser__hyp.hyp_lwproc_newlwp(0);
 	rumpuser__hyp.hyp_unschedule();
 
-	me = get_current();
+	me = bmk_sched_current();
 
 	local_irq_save(flags);
  again:
 	while (!viu->viu_dying) {
 		while (viu->viu_read == viu->viu_write) {
 			viu->viu_rcvr = me;
-			minios_block(viu->viu_rcvr);
+			bmk_sched_block(viu->viu_rcvr);
 			local_irq_restore(flags);
-			minios_schedule();
+			bmk_sched();
 			local_irq_save(flags);
 			viu->viu_rcvr = NULL;
 			goto again;
@@ -168,7 +168,7 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 		goto out;
 	}
 
-	viu->viu_thr = minios_create_thread("xenifp",
+	viu->viu_thr = bmk_sched_create("xenifp",
 	    NULL, 1, pusher, viu, NULL, 0);
 	if (viu->viu_thr == NULL) {
 		minios_printk("fatal thread creation failure\n"); /* XXX */
@@ -226,7 +226,7 @@ VIFHYPER_DYING(struct virtif_user *viu)
 
 	viu->viu_dying = 1;
 	if (viu->viu_rcvr)
-		minios_wake(viu->viu_rcvr);
+		bmk_sched_wake(viu->viu_rcvr);
 }
 
 void
@@ -235,7 +235,7 @@ VIFHYPER_DESTROY(struct virtif_user *viu)
 
 	ASSERT(viu->viu_dying == 1);
 
-	minios_join_thread(viu->viu_thr);
+	bmk_sched_join(viu->viu_thr);
 	netfront_shutdown(viu->viu_dev);
 	bmk_memfree(viu);
 }

@@ -88,7 +88,7 @@ rumprunxen_makelwp(void (*start)(void *), void *arg, void *private,
 	assert(stack_size == 2*STACK_SIZE);
 	thestack = (thestack & ~(STACK_SIZE-1)) + STACK_SIZE;
 
-	scd->scd_thread = minios_create_thread("lwp", scd, 0,
+	scd->scd_thread = bmk_sched_create("lwp", scd, 0,
 	    start, arg, (void *)thestack, STACK_SIZE);
 	if (scd->scd_thread == NULL)
 		return EBUSY; /* ??? */
@@ -119,7 +119,7 @@ _lwp_unpark(lwpid_t lid, const void *hint)
 		return -1;
 	}
 
-	minios_wake(scd->scd_thread);
+	bmk_sched_wake(scd->scd_thread);
 	return 0;
 }
 
@@ -171,8 +171,8 @@ void
 rumprun_lwp_init(void)
 {
 
-	minios_set_sched_hook(schedhook);
-	mainthread.scd_thread = minios_init_mainlwp(&mainthread.scd_tls);
+	bmk_sched_set_hook(schedhook);
+	mainthread.scd_thread = bmk_sched_init_mainlwp(&mainthread.scd_tls);
 	TAILQ_INSERT_TAIL(&scheds, &mainthread, entries);
 }
 
@@ -187,19 +187,19 @@ ___lwp_park60(clockid_t clock_id, int flags, const struct timespec *ts,
 		_lwp_unpark(unpark, unparkhint);
 
 	if (ts) {
-		uint64_t msecs = ts->tv_sec*1000 + ts->tv_nsec/(1000*1000);
+		bmk_time_t nsecs = ts->tv_sec*1000*1000*1000 + ts->tv_nsec;
 		
 		if (flags & TIMER_ABSTIME) {
-			rv = minios_absmsleep(msecs);
+			rv = bmk_sched_nanosleep_abstime(nsecs);
 		} else {
-			rv = minios_msleep(msecs);
+			rv = bmk_sched_nanosleep(nsecs);
 		}
 		if (rv) {
 			rv = ETIMEDOUT;
 		}
 	} else {
-		minios_block(mylwp->scd_thread);
-		minios_schedule();
+		bmk_sched_block(mylwp->scd_thread);
+		bmk_sched();
 		rv = 0;
 	}
 
@@ -217,7 +217,7 @@ _lwp_exit(void)
 
 	scd->scd_lwpctl.lc_curcpu = LWPCTL_CPU_EXITED;
 	TAILQ_REMOVE(&scheds, scd, entries);
-	minios_exit_thread();
+	bmk_sched_exit();
 
 	return 0;
 }
@@ -231,7 +231,7 @@ _lwp_continue(lwpid_t lid)
 		return ESRCH;
 	}
 
-	minios_wake(scd->scd_thread);
+	bmk_sched_wake(scd->scd_thread);
 	return 0;
 }
 
@@ -244,7 +244,7 @@ _lwp_suspend(lwpid_t lid)
 		return ESRCH;
 	}
 
-	minios_block(scd->scd_thread);
+	bmk_sched_block(scd->scd_thread);
 	return 0;
 }
 
@@ -256,7 +256,7 @@ _lwp_wakeup(lwpid_t lid)
 	if ((scd = lwpid2scd(lid)) == NULL)
 		return ESRCH;
 
-	minios_wake(scd->scd_thread);
+	bmk_sched_wake(scd->scd_thread);
 	return ENODEV;
 }
 
@@ -303,7 +303,7 @@ int
 _sys_sched_yield(void)
 {
 
-	minios_schedule();
+	bmk_sched();
 	return 0;
 }
 __weak_alias(sched_yield,_sys_sched_yield);

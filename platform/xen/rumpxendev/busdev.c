@@ -633,7 +633,7 @@ next_event_msg(struct xenbus_dev_data *d, struct file *fp, int *err_r,
 		mutex_exit(&d->lock);
 		rumpkern_unsched(&nlocks, 0);
 
-		minios_schedule();
+		bmk_sched();
 
 		rumpkern_sched(nlocks, 0);
 		mutex_enter(&d->lock);
