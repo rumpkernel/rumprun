@@ -158,7 +158,7 @@ rumprun_lwp_init(void)
 {
 
 	bmk_sched_set_hook(schedhook);
-	mainthread.scd_thread = bmk_sched_init_mainthread(&mainthread.scd_tls);
+	mainthread.scd_thread = bmk_sched_init_mainlwp(&mainthread.scd_tls);
 	TAILQ_INSERT_TAIL(&scheds, &mainthread, entries);
 }
 

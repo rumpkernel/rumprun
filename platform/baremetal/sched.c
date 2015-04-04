@@ -412,12 +412,13 @@ bmk_sched_set_hook(void (*f)(void *, void *))
 }
 
 struct bmk_thread *
-bmk_sched_init_mainthread(void *cookie)
+bmk_sched_init_mainlwp(void *cookie)
 {
+	struct bmk_thread *current = bmk_sched_current();
 
-	current_thread->bt_cookie = cookie;
-	allocothertls(current_thread);
-	return current_thread;
+	current->bt_cookie = cookie;
+	allocothertls(current);
+	return current;
 }
 
 int *

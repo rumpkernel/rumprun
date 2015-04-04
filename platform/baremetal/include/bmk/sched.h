@@ -33,7 +33,7 @@ void	bmk_cpu_sched_switch(struct bmk_tcb *, struct bmk_tcb *);
 
 void	bmk_sched_set_hook(void (*)(void *, void *));
 
-struct bmk_thread *bmk_sched_init_mainthread(void *);
+struct bmk_thread *bmk_sched_init_mainlwp(void *);
 
 struct bmk_thread *bmk_sched_current(void);
 int *bmk_sched_geterrno(void);
