@@ -348,22 +348,42 @@ bmk_sched_join(struct bmk_thread *joinable)
 	bmk_sched_wake(joinable);
 }
 
+void
+bmk_sched_block_timeout(struct bmk_thread *thread, bmk_time_t deadline)
+{
+
+	thread->bt_wakeup_time = deadline;
+	clear_runnable(thread);
+}
+
+void
+bmk_sched_block(struct bmk_thread *thread)
+{
+
+	bmk_sched_block_timeout(thread, -1);
+}
+
 int
-bmk_sched_nanosleep(bmk_time_t nsec)
+bmk_sched_nanosleep_abstime(bmk_time_t nsec)
 {
 	struct bmk_thread *thread = bmk_sched_current();
-	uint64_t now;
 	int rv;
 
 	thread->bt_flags &= ~THREAD_TIMEDOUT;
-	now = bmk_cpu_clock_now();
-	thread->bt_wakeup_time = now + nsec;
+	thread->bt_wakeup_time = nsec;
 	clear_runnable(thread);
 	bmk_sched();
 
 	rv = !!(thread->bt_flags & THREAD_TIMEDOUT);
 	thread->bt_flags &= ~THREAD_TIMEDOUT;
 	return rv;
+}
+
+int
+bmk_sched_nanosleep(bmk_time_t nsec)
+{
+
+	return bmk_sched_nanosleep_abstime(nsec + bmk_cpu_clock_now());
 }
 
 void
@@ -379,14 +399,6 @@ bmk_sched_wake(struct bmk_thread *thread)
 
 	thread->bt_wakeup_time = -1;
 	set_runnable(thread);
-}
-
-void
-bmk_sched_block(struct bmk_thread *thread)
-{
-
-	thread->bt_wakeup_time = -1;
-	clear_runnable(thread);
 }
 
 static struct bmk_thread init_thread;

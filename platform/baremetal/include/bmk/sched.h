@@ -17,11 +17,14 @@ void	bmk_sched_join(struct bmk_thread *);
 void	bmk_sched_exit(void) __attribute__((__noreturn__));
 
 void	bmk_sched_block(struct bmk_thread *);
+void	bmk_sched_block_timeout(struct bmk_thread *, bmk_time_t);
+
 void	bmk_sched_wake(struct bmk_thread *);
 void	bmk_sched_setwakeup(struct bmk_thread *, bmk_time_t);
 bmk_time_t bmk_cpu_clock_now(void);
 
 int	bmk_sched_nanosleep(bmk_time_t);
+int	bmk_sched_nanosleep_abstime(bmk_time_t);
 
 void	*bmk_sched_gettls(struct bmk_thread *, unsigned int);
 void	bmk_sched_settls(struct bmk_thread *, unsigned int, void *);
