@@ -40,7 +40,7 @@
 #include <bmk-core/sched.h>
 #include <bmk-core/string.h>
 
-#include "rumphyper.h"
+#include <bmk-rumpuser/rumpuser.h>
 
 struct rumpuser_hyperup rumpuser__hyp;
 

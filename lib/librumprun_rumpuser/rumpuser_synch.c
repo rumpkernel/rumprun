@@ -37,8 +37,8 @@
 #include <bmk-core/sched.h>
 #include <bmk-core/string.h>
 
-#include "rumpuser_core_types.h"
-#include "rumphyper.h"
+#include <bmk-rumpuser/core_types.h>
+#include <bmk-rumpuser/rumpuser.h>
 
 TAILQ_HEAD(waithead, waiter);
 struct waiter {

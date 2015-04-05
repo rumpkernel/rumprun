@@ -33,8 +33,7 @@
 #include <bmk-core/string.h>
 #include <bmk-core/sched.h>
 
-#include "rumphyper.h"
-#include <rump/rumpuser.h>
+#include <bmk-rumpuser/rumpuser.h>
 
 #include <rumpxenif/if_virt.h>
 #include <rumpxenif/if_virt_user.h>

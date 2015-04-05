@@ -58,7 +58,8 @@
 __KERNEL_RCSID(0, "$NetBSD: $");
 
 #include "rumpxen_xendev.h"
-#include "rumphyper.h"
+
+#include <bmk-rumpuser/rumpuser.h>
 
 #define BUFFER_SIZE (XENSTORE_PAYLOAD_MAX+sizeof(struct xsd_sockmsg))
 

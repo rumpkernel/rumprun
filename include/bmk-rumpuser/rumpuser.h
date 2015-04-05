@@ -26,7 +26,6 @@
  */
 
 #define LIBRUMPUSER
-
 #include <rump/rumpuser.h>
 
 extern struct rumpuser_hyperup rumpuser__hyp;
