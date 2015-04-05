@@ -8,10 +8,10 @@ IFS=' '
 BUILDXENMETAL_MKCONF="# maxphys = 32k is a Xen limitation (64k - overhead)
 CPPFLAGS+=-DMAXPHYS=32768
 .if defined(LIB) && \${LIB} == \"pthread\"
-.PATH:	$(pwd)
-PTHREAD_MAKELWP=pthread_makelwp_rumprunxen.c
+.PATH:	$(pwd)/../../lib/librumprun_base/pthread
+PTHREAD_MAKELWP=pthread_makelwp_rumprun.c
 CPPFLAGS+=      -D_PTHREAD_GETTCB_EXT=_lwp_rumprun_gettcb
-CPPFLAGS.pthread_makelwp_rumprunxen.c+= -I$(pwd)/../../include
+CPPFLAGS.pthread_makelwp_rumprun.c= -I$(pwd)/../../include
 .endif  # LIB == pthread
 CFLAGS+=-fno-stack-protector -fno-builtin-sin -fno-builtin-cos
 CFLAGS+=-fno-builtin-sinf -fno-builtin-cosf"
