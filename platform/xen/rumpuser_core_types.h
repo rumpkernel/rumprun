@@ -1,7 +1,5 @@
-/*	$NetBSD: rumpuser_int.h,v 1.8 2013/04/30 12:39:20 pooka Exp $	*/
-
-/*
- * Copyright (c) 2008 Antti Kantee.  All Rights Reserved.
+/*-
+ * Copyright (c) 2015 Antti Kantee.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -25,22 +23,27 @@
  * SUCH DAMAGE.
  */
 
-#define LIBRUMPUSER
+/*
+ * Unfortunately, the rumpuser interface uses a small number
+ * of constructs not defined by the compiler.  To avoid pulling
+ * in a can of worms, we define just those constructs here.
+ */
 
-#include <rump/rumpuser.h>
+#ifdef _LP64
+typedef long int64_t;
+typedef unsigned long uint64_t;
+#else
+typedef long long int64_t;
+typedef unsigned long long uint64_t;
+#endif /* _LP64 */
 
-extern struct rumpuser_hyperup rumpuser__hyp;
+typedef int pid_t;
+typedef unsigned long size_t;
 
-static inline void
-rumpkern_unsched(int *nlocks, void *interlock)
-{
-
-	rumpuser__hyp.hyp_backend_unschedule(0, nlocks, interlock);
-}
-
-static inline void
-rumpkern_sched(int nlocks, void *interlock)
-{
-
-	rumpuser__hyp.hyp_backend_schedule(nlocks, interlock);
-}
+#ifdef __GNUC__
+#define __dead __attribute__((__noreturn__))
+#define __printflike(a,b) __attribute__((__format__ (__printf__,a,b)))
+#else /* __GNUC__ */
+#define __dead
+#define __printflike(a,b)
+#endif /* __GNUC__ */
