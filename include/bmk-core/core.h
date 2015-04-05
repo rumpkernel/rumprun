@@ -30,4 +30,11 @@
 
 int bmk_core_init(long, long, const struct bmk_ops *);
 
+#define bmk_assert(x)							\
+  do {									\
+	if (!(x)) {							\
+		bmk_ops->bmk_halt("assert \"" #x "\" FAILED\n");	\
+	}								\
+  } while (0)
+
 #endif /* _BMK_CORE_CORE_H_ */
