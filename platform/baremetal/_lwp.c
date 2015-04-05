@@ -15,6 +15,8 @@
 #include <sys/tls.h>
 
 #include <errno.h>
+#include <lwp.h>
+#include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,7 +24,8 @@
 
 #include <bmk/sched.h>
 
-#include "pthread_makelwp.h"
+#include <bmk-base/netbsd_initfini.h>
+#include <bmk-base/rumprun_makelwp.h>
 
 #if 0
 #define DPRINTF(x) printf x
@@ -66,7 +69,7 @@ _lwp_ctl(int ctl, struct lwpctl **data)
 }
 
 int
-pthread__makelwp(void (*start)(void *), void *arg, void *private,
+rumprun_makelwp(void (*start)(void *), void *arg, void *private,
 	void *stack_base, size_t stack_size, unsigned long flag, lwpid_t *lid)
 {
 	struct schedulable *scd = private;
@@ -277,15 +280,16 @@ _lwp_self(void)
 	return current->scd_lwpid;
 }
 
+/* XXX: messy.  see sched.h, libc, libpthread, and all over */
+int _sys_sched_yield(void);
 int
-sched_yield(void)
+_sys_sched_yield(void)
 {
 
 	bmk_sched();
 	return 0;
 }
-__strong_alias(_sched_yield,sched_yield);
-__strong_alias(_sys_sched_yield,_sched_yield);
+__weak_alias(sched_yield,_sys_sched_yield);
 
 struct tls_tcb *
 _rtld_tls_allocate(void)
@@ -304,12 +308,19 @@ _rtld_tls_free(struct tls_tcb *arg)
 void _lwpnullop(void);
 void _lwpnullop(void) { }
 
-__strong_alias(_sys_setcontext,_lwpnullop);
-__strong_alias(___sigprocmask14,_lwpnullop);
+void _lwpabort(void);
+void __dead
+_lwpabort(void)
+{
+
+        printf("_lwpabort() called\n");
+        _exit(1);
+}
+
+__strong_alias(_sys_setcontext,_lwpabort);
+__strong_alias(_lwp_kill,_lwpabort);
 
 __strong_alias(_sys___sigprocmask14,_lwpnullop);
-
-__strong_alias(pthread__cancel_stub_binder,_lwpnullop);
 
 __strong_alias(__libc_static_tls_setup,_lwpnullop);
 

@@ -76,7 +76,7 @@ RUMPKERN_LIB=	${LIBS_VIO_NET}					\
 COREDIR:=	$(shell pwd)/../../lib/librumprun_core
 BASEDIR:=	$(shell pwd)/../../lib/librumprun_base
 
-OBJS_BMK+=	libc_errno.o
+OBJS_BMK+=	libc_errno.o _lwp.o
 OBJS_BMK+=	init.o
 LIBS_USER=	-L${BASEDIR}/baremetal -L${COREDIR}/baremetal --start-group -lrumprun_base -lpthread -lc --end-group -lrumprun_core
 RUMP_LDLIBS=	--whole-archive ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USER}
