@@ -70,4 +70,6 @@ struct bmk_thread *bmk_sched_init_mainlwp(void *);
 struct bmk_thread *bmk_sched_current(void);
 int *bmk_sched_geterrno(void);
 
+bmk_time_t	bmk_clock_monotonic(void);
+
 #endif /* _BMK_CORE_SCHED_H_ */
