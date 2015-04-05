@@ -55,6 +55,7 @@ GLOBAL_PREFIXES := $(patsubst %,-G %*, $(GLOBAL_PREFIXES))
 SUBDIRS := console xenbus
 
 src-y += blkfront.c
+src-y += clock.c
 src-y += events.c
 src-y += gntmap.c
 src-y += gnttab.c
