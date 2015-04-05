@@ -22,14 +22,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <mini-os/sched.h>
-#include <mini-os/os.h>
-#include <mini-os/mm.h>
-
 #include "rumprunxen_makelwp.h"
 
 #include <bmk-base/netbsd_initfini.h>
 
+#include <bmk-core/bmk_ops.h>
 #include <bmk-core/sched.h>
 
 #if 0
@@ -85,11 +82,11 @@ rumprunxen_makelwp(void (*start)(void *), void *arg, void *private,
 	scd->scd_lwpid = ++curlwpid;
 
 	/* XXX: stack_base is not guaranteed to be aligned */
-	assert(stack_size == 2*STACK_SIZE);
-	thestack = (thestack & ~(STACK_SIZE-1)) + STACK_SIZE;
+	assert(stack_size == 2*bmk_stacksize);
+	thestack = (thestack & ~(bmk_stacksize-1)) + bmk_stacksize;
 
 	scd->scd_thread = bmk_sched_create("lwp", scd, 0,
-	    start, arg, (void *)thestack, STACK_SIZE);
+	    start, arg, (void *)thestack, bmk_stacksize);
 	if (scd->scd_thread == NULL)
 		return EBUSY; /* ??? */
 	*lid = scd->scd_lwpid;
@@ -260,7 +257,6 @@ _lwp_wakeup(lwpid_t lid)
 	return ENODEV;
 }
 
-/* XXX: should call minios */
 int
 _lwp_setname(lwpid_t lid, const char *name)
 {
@@ -329,7 +325,8 @@ void _lwpabort(void);
 void __dead
 _lwpabort(void)
 {
-	minios_printk("_lwpabort() called\n");
+
+	printf("_lwpabort() called\n");
 	_exit(1);
 }
 
