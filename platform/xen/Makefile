@@ -50,7 +50,6 @@ RUMP_LDLIBS := ${RUMP_LDLIBS} -L${BASEDIR}/xen -L${COREDIR}/xen --start-group -l
 
 LDFLAGS := -L$(abspath rump/lib)
 
-rump-src-y += lib/__errno.c
 rump-src-y += lib/libc_stubs.c
 
 rump-src-y += rumphyper_base.c

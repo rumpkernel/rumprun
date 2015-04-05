@@ -6,7 +6,7 @@ LIB=		rumprun_base
 LIBISPRIVATE=	# defined
 
 SRCS=		malloc.c netbsd_initfini.c syscall_misc.c
-SRCS+=		_lwp.c
+SRCS+=		__errno.c _lwp.c
 
 CPPFLAGS+=	-I${.CURDIR}/../../include
 
