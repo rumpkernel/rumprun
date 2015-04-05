@@ -22,9 +22,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "rumprunxen_makelwp.h"
-
 #include <bmk-base/netbsd_initfini.h>
+#include <bmk-base/rumprun_makelwp.h>
 
 #include <bmk-core/bmk_ops.h>
 #include <bmk-core/sched.h>
@@ -74,7 +73,7 @@ _lwp_ctl(int ctl, struct lwpctl **data)
 }
 
 int
-rumprunxen_makelwp(void (*start)(void *), void *arg, void *private,
+rumprun_makelwp(void (*start)(void *), void *arg, void *private,
 	void *stack_base, size_t stack_size, unsigned long flag, lwpid_t *lid)
 {
 	struct schedulable *scd = private;

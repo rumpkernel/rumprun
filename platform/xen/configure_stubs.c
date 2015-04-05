@@ -119,7 +119,7 @@ STUB(_sys_sched_yield);
 STUB(sched_yield);
 STUB(rasctl);
 STUB(__libc_static_tls_setup);
-STUB(rumprunxen_makelwp);
+STUB(rumprun_makelwp);
 STUB(_sched_setaffinity);
 
 STUB(posix_spawn);
