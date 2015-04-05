@@ -1,9 +1,29 @@
-/* 
- * Copyright (c) 2014 Antti Kantee.  See COPYING.
+/*-
+ * Copyright (c) 2014 Antti Kantee.  All Rights Reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  */
 
 #define _lwp_park ___lwp_park60
-
 #include <sys/cdefs.h>
 
 #include <sys/param.h>
@@ -39,7 +59,6 @@ struct schedulable {
 
 	struct bmk_thread *scd_thread;
 	int scd_lwpid;
-
 	char *scd_name;
 
 	struct lwpctl scd_lwpctl;
@@ -55,9 +74,9 @@ static struct schedulable mainthread = {
 };
 struct tls_tcb *curtcb = &mainthread.scd_tls;
 
-struct tls_tcb *_lwp_rumpxen_gettcb(void);
+struct tls_tcb *_lwp_rumprun_gettcb(void);
 struct tls_tcb *
-_lwp_rumpxen_gettcb(void)
+_lwp_rumprun_gettcb(void)
 {
 
 	return curtcb;
@@ -90,6 +109,7 @@ rumprun_makelwp(void (*start)(void *), void *arg, void *private,
 		return EBUSY; /* ??? */
 	*lid = scd->scd_lwpid;
 	TAILQ_INSERT_TAIL(&scheds, scd, entries);
+
 	return 0;
 }
 
@@ -173,7 +193,7 @@ rumprun_lwp_init(void)
 }
 
 int
-___lwp_park60(clockid_t clock_id, int flags, const struct timespec *ts,
+_lwp_park(clockid_t clock_id, int flags, const struct timespec *ts,
 	lwpid_t unpark, const void *hint, const void *unparkhint)
 {
 	struct schedulable *mylwp = (struct schedulable *)curtcb;
@@ -184,7 +204,7 @@ ___lwp_park60(clockid_t clock_id, int flags, const struct timespec *ts,
 
 	if (ts) {
 		bmk_time_t nsecs = ts->tv_sec*1000*1000*1000 + ts->tv_nsec;
-		
+
 		if (flags & TIMER_ABSTIME) {
 			rv = bmk_sched_nanosleep_abstime(nsecs);
 		} else {

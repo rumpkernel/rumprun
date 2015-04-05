@@ -1,10 +1,29 @@
-/* 
- * Copyright (c) 2014 Antti Kantee
+/*-
+ * Copyright (c) 2014 Antti Kantee.  All Rights Reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
  */
 
-/* XXX: silly */
 #define _lwp_park ___lwp_park60
-
 #include <sys/cdefs.h>
 
 #include <sys/param.h>
@@ -14,6 +33,7 @@
 #include <sys/time.h>
 #include <sys/tls.h>
 
+#include <assert.h>
 #include <errno.h>
 #include <lwp.h>
 #include <sched.h>
@@ -22,10 +42,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <bmk/sched.h>
-
 #include <bmk-base/netbsd_initfini.h>
 #include <bmk-base/rumprun_makelwp.h>
+
+#include <bmk-core/bmk_ops.h>
+#include <bmk-core/sched.h>
 
 #if 0
 #define DPRINTF(x) printf x
@@ -46,14 +67,16 @@ struct schedulable {
 };
 static TAILQ_HEAD(, schedulable) scheds = TAILQ_HEAD_INITIALIZER(scheds);
 
+#define FIRST_LWPID 1
+static int curlwpid = FIRST_LWPID;
 static struct schedulable mainthread = {
-	.scd_lwpid = 1,
+	.scd_lwpid = FIRST_LWPID,
 };
 struct tls_tcb *curtcb = &mainthread.scd_tls;
 
-struct tls_tcb *_lwp_rumpbaremetal_gettcb(void);
+struct tls_tcb *_lwp_rumprun_gettcb(void);
 struct tls_tcb *
-_lwp_rumpbaremetal_gettcb(void)
+_lwp_rumprun_gettcb(void)
 {
 
 	return curtcb;
@@ -73,14 +96,18 @@ rumprun_makelwp(void (*start)(void *), void *arg, void *private,
 	void *stack_base, size_t stack_size, unsigned long flag, lwpid_t *lid)
 {
 	struct schedulable *scd = private;
-	static int nextlid = 2;
-	*lid = nextlid++;
+	unsigned long thestack = (unsigned long)stack_base;
+	scd->scd_lwpid = ++curlwpid;
 
-	scd->scd_lwpid = *lid;
-	scd->scd_thread = bmk_sched_create("lwp", scd, 0, start, arg,
-	    stack_base, stack_size);
+	/* XXX: stack_base is not guaranteed to be aligned */
+	assert(stack_size == 2*bmk_stacksize);
+	thestack = (thestack & ~(bmk_stacksize-1)) + bmk_stacksize;
+
+	scd->scd_thread = bmk_sched_create("lwp", scd, 0,
+	    start, arg, (void *)thestack, bmk_stacksize);
 	if (scd->scd_thread == NULL)
 		return EBUSY; /* ??? */
+	*lid = scd->scd_lwpid;
 	TAILQ_INSERT_TAIL(&scheds, scd, entries);
 
 	return 0;
@@ -121,7 +148,7 @@ _lwp_unpark_all(const lwpid_t *targets, size_t ntargets, const void *hint)
 		return 1024;
 
 	/*
-	 * XXX: this it not 100% correct (unmarking has memory), but good
+	 * XXX: this it not 100% correct (unparking has memory), but good
 	 * enuf for now
 	 */
 	rv = ntargets;
@@ -169,20 +196,25 @@ int
 _lwp_park(clockid_t clock_id, int flags, const struct timespec *ts,
 	lwpid_t unpark, const void *hint, const void *unparkhint)
 {
-	struct schedulable *current = (struct schedulable *)curtcb;
+	struct schedulable *mylwp = (struct schedulable *)curtcb;
 	int rv;
 
 	if (unpark)
 		_lwp_unpark(unpark, unparkhint);
 
 	if (ts) {
-		long nsec = ts->tv_sec*1000*1000*1000 + ts->tv_nsec;
-		if (bmk_sched_nanosleep(nsec))
+		bmk_time_t nsecs = ts->tv_sec*1000*1000*1000 + ts->tv_nsec;
+
+		if (flags & TIMER_ABSTIME) {
+			rv = bmk_sched_nanosleep_abstime(nsecs);
+		} else {
+			rv = bmk_sched_nanosleep(nsecs);
+		}
+		if (rv) {
 			rv = ETIMEDOUT;
-		else
-			rv = 0;
+		}
 	} else {
-		bmk_sched_block(current->scd_thread);
+		bmk_sched_block(mylwp->scd_thread);
 		bmk_sched();
 		rv = 0;
 	}
@@ -275,9 +307,9 @@ _lwp_setname(lwpid_t lid, const char *name)
 lwpid_t
 _lwp_self(void)
 {
-	struct schedulable *current = (struct schedulable *)curtcb;
+	struct schedulable *mylwp = (struct schedulable *)curtcb;
 
-	return current->scd_lwpid;
+	return mylwp->scd_lwpid;
 }
 
 /* XXX: messy.  see sched.h, libc, libpthread, and all over */
@@ -313,8 +345,8 @@ void __dead
 _lwpabort(void)
 {
 
-        printf("_lwpabort() called\n");
-        _exit(1);
+	printf("_lwpabort() called\n");
+	_exit(1);
 }
 
 __strong_alias(_sys_setcontext,_lwpabort);

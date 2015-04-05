@@ -10,7 +10,7 @@ CPPFLAGS+=-DMAXPHYS=32768
 .if defined(LIB) && \${LIB} == \"pthread\"
 .PATH:	$(pwd)
 PTHREAD_MAKELWP=pthread_makelwp_rumprunxen.c
-CPPFLAGS+=      -D_PTHREAD_GETTCB_EXT=_lwp_rumpxen_gettcb
+CPPFLAGS+=      -D_PTHREAD_GETTCB_EXT=_lwp_rumprun_gettcb
 CPPFLAGS.pthread_makelwp_rumprunxen.c+= -I$(pwd)/../../include
 .endif  # LIB == pthread
 CFLAGS+=-fno-stack-protector -fno-builtin-sin -fno-builtin-cos
