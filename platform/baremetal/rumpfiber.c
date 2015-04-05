@@ -29,6 +29,7 @@
 #include <bmk/queue.h>
 #include <bmk/sched.h>
 
+#include <bmk-core/core.h>
 #include <bmk-core/memalloc.h>
 #include <bmk-core/string.h>
 
@@ -207,7 +208,7 @@ void
 rumpuser_mutex_exit(struct rumpuser_mtx *mtx)
 {
 
-	assert(mtx->v > 0);
+	bmk_assert(mtx->v > 0);
 	if (--mtx->v == 0) {
 		mtx->o = NULL;
 		wakeup_one(&mtx->waiters);
@@ -218,7 +219,7 @@ void
 rumpuser_mutex_destroy(struct rumpuser_mtx *mtx)
 {
 
-	assert(TAILQ_EMPTY(&mtx->waiters) && mtx->o == NULL);
+	bmk_assert(TAILQ_EMPTY(&mtx->waiters) && mtx->o == NULL);
 	bmk_memfree(mtx);
 }
 
@@ -348,7 +349,7 @@ void
 rumpuser_rw_downgrade(struct rumpuser_rw *rw)
 {
 
-	assert(rw->o == rumpuser_curlwp());
+	bmk_assert(rw->o == rumpuser_curlwp());
 	rw->v = -1;
 }
 
@@ -385,7 +386,7 @@ void
 rumpuser_cv_destroy(struct rumpuser_cv *cv)
 {
 
-	assert(cv->nwaiters == 0);
+	bmk_assert(cv->nwaiters == 0);
 	bmk_memfree(cv);
 }
 
@@ -487,12 +488,12 @@ rumpuser_curlwpop(int enum_rumplwpop, struct lwp *l)
 	case RUMPUSER_LWP_DESTROY:
 		break;
 	case RUMPUSER_LWP_SET:
-		assert(rumpuser_curlwp() == NULL);
+		bmk_assert(rumpuser_curlwp() == NULL);
 		thread = bmk_sched_current();
 		bmk_sched_settls(thread, BMK_TLS_RUMPLWP, l);
 		break;
 	case RUMPUSER_LWP_CLEAR:
-		assert(rumpuser_curlwp() == l);
+		bmk_assert(rumpuser_curlwp() == l);
 		thread = bmk_sched_current();
 		bmk_sched_settls(thread, BMK_TLS_RUMPLWP, NULL);
 		break;

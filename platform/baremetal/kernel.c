@@ -87,7 +87,7 @@ parsemem(uint32_t addr, uint32_t len)
 			break;
 		}
 	}
-	assert(off < len);
+	bmk_assert(off < len);
 
 	memsize = mbm->len;
 	osbegin = (unsigned long)_begin;

@@ -11,13 +11,6 @@
 #define round_page(x) (((x) + (PAGE_SIZE-1)) & ~(PAGE_SIZE-1))
 #define trunc_page(x) ((x) & ~(PAGE_SIZE-1))
 
-#define assert(x) \
-  do { \
-    if (!(x)) { \
-        bmk_cons_puts("assert \"" #x "\" FAILED\n"); for (;;); \
-    } \
-  } while (0)
-
 void *bmk_allocpg(size_t);
 
 #define panic(x) do { bmk_cons_puts(x "\n"); for (;;); } while (0)

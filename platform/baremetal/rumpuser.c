@@ -27,6 +27,7 @@
 #include <bmk/kernel.h>
 #include <bmk/sched.h>
 
+#include <bmk-core/core.h>
 #include <bmk-core/string.h>
 #include <bmk-core/memalloc.h>
 
@@ -67,11 +68,11 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 		char *res = buf;
 		unsigned i, j;
 
-		assert(bmk_memsize > BMK_MEMRESERVE);
+		bmk_assert(bmk_memsize > BMK_MEMRESERVE);
 		memsize = bmk_memsize - BMK_MEMRESERVE;
 
 		for (i = 0; memsize > 0; i++) {
-			assert(i < sizeof(tmp)-1);
+			bmk_assert(i < sizeof(tmp)-1);
 			tmp[i] = (memsize % 10) + '0';
 			memsize = memsize / 10;
 		}
