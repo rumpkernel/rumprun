@@ -82,7 +82,7 @@ wait(struct waithead *wh, uint64_t nsec)
 	w.onlist = 1;
 	bmk_sched_block(w.who);
 	if (nsec)
-		bmk_sched_setwakeup(w.who, bmk_cpu_clock_now() + nsec);
+		bmk_sched_setwakeup(w.who, bmk_clock_monotonic() + nsec);
 	bmk_sched();
 
 	/* woken up by timeout? */

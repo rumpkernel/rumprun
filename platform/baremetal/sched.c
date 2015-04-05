@@ -170,7 +170,7 @@ bmk_sched(void)
 
 	/* could do time management a bit better here */
 	do {
-		tm = bmk_cpu_clock_now();
+		tm = bmk_clock_monotonic();
 		next = NULL;
 		TAILQ_FOREACH_SAFE(thread, &threads, bt_entries, tmp) {
 			if (!is_runnable(thread)
@@ -383,7 +383,7 @@ int
 bmk_sched_nanosleep(bmk_time_t nsec)
 {
 
-	return bmk_sched_nanosleep_abstime(nsec + bmk_cpu_clock_now());
+	return bmk_sched_nanosleep_abstime(nsec + bmk_clock_monotonic());
 }
 
 void
