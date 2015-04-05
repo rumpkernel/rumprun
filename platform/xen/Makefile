@@ -56,7 +56,6 @@ rump-src-y += rumphyper_base.c
 rump-src-y += rumphyper_net.c
 rump-src-y += rumphyper_pci.c
 rump-src-y += rumphyper_synch.c
-rump-src-y += rumphyper_stubs.c
 
 rump-src-y += callmain.c
 rump-src-y += rumpconfig.c
