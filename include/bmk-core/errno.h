@@ -19,6 +19,7 @@
 #define BMK_EINVAL		22
 #define BMK_EROFS		30
 #define BMK_ETIMEDOUT		60
+#define BMK_ENOSYS		78
 
 #define BMK_EGENERIC		BMK_EINVAL
 
