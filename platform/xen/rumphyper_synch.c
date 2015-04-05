@@ -30,20 +30,15 @@
  * anything fancy.
  */
 
-#include <sys/queue.h>
-
-#include <mini-os/types.h>
-#include <mini-os/console.h>
-#include <mini-os/sched.h>
-#include <mini-os/time.h>
-
+#include <bmk-core/core.h>
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/queue.h>
+#include <bmk-core/sched.h>
 #include <bmk-core/string.h>
 
+#include "rumpuser_core_types.h"
 #include "rumphyper.h"
-
-#define assert(a) ASSERT(a)
 
 TAILQ_HEAD(waithead, waiter);
 struct waiter {
@@ -62,7 +57,7 @@ wait(struct waithead *wh, uint64_t nsec)
 	TAILQ_INSERT_TAIL(wh, &w, entries);
 	w.onlist = 1;
 	if (nsec)
-		wakeup = minios_clock_monotonic() + nsec;
+		wakeup = bmk_clock_monotonic() + nsec;
 	else
 		wakeup = 0;
 	bmk_sched_block_timeout(w.who, wakeup);
@@ -168,7 +163,7 @@ rumpuser_mutex_enter_nowrap(struct rumpuser_mtx *mtx)
 	rv = rumpuser_mutex_tryenter(mtx);
 	/* one VCPU supported, no preemption => must succeed */
 	if (rv != 0) {
-		minios_printk("no voi ei\n");
+		bmk_ops->bmk_halt("rumpuser mutex error");
 	}
 }
 
@@ -190,7 +185,7 @@ void
 rumpuser_mutex_exit(struct rumpuser_mtx *mtx)
 {
 
-	assert(mtx->v > 0);
+	bmk_assert(mtx->v > 0);
 	if (--mtx->v == 0) {
 		mtx->o = NULL;
 		wakeup_one(&mtx->waiters);
@@ -201,7 +196,7 @@ void
 rumpuser_mutex_destroy(struct rumpuser_mtx *mtx)
 {
 
-	assert(TAILQ_EMPTY(&mtx->waiters) && mtx->o == NULL);
+	bmk_assert(TAILQ_EMPTY(&mtx->waiters) && mtx->o == NULL);
 	bmk_memfree(mtx);
 }
 
@@ -328,7 +323,7 @@ void
 rumpuser_rw_downgrade(struct rumpuser_rw *rw)
 {
 
-	assert(rw->o == rumpuser_curlwp());
+	bmk_assert(rw->o == rumpuser_curlwp());
 	rw->v = -1;
 }
 
@@ -364,7 +359,7 @@ void
 rumpuser_cv_destroy(struct rumpuser_cv *cv)
 {
 
-	assert(cv->nwaiters == 0);
+	bmk_assert(cv->nwaiters == 0);
 	bmk_memfree(cv);
 }
 
@@ -466,12 +461,12 @@ rumpuser_curlwpop(int enum_rumplwpop, struct lwp *l)
 	case RUMPUSER_LWP_DESTROY:
 		break;
 	case RUMPUSER_LWP_SET:
-		assert(rumpuser_curlwp() == NULL);
+		bmk_assert(rumpuser_curlwp() == NULL);
 		thread = bmk_sched_current();
 		bmk_sched_settls(thread, 0, l);
 		break;
 	case RUMPUSER_LWP_CLEAR:
-		assert(rumpuser_curlwp() == l);
+		bmk_assert(rumpuser_curlwp() == l);
 		thread = bmk_sched_current();
 		bmk_sched_settls(thread, 0, NULL);
 		break;
