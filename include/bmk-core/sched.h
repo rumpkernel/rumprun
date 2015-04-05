@@ -1,6 +1,8 @@
 #ifndef _BMK_CORE_SCHED_H_
 #define _BMK_CORE_SCHED_H_
 
+#include <bmk-core/types.h>
+
 struct bmk_tcb {
 	unsigned long btcb_sp;		/* stack pointer	*/
 	unsigned long btcb_ip;		/* program counter	*/

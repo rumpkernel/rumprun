@@ -3,8 +3,6 @@
 
 #include <mini-os/types.h>
 
-typedef int64_t bmk_time_t;
-
 #include <mini-os/machine/sched.h>
 
 #include <bmk-core/sched.h>

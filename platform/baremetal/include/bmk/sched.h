@@ -1,5 +1,4 @@
-#include <bmk/bmk_types.h>
-
+#include <bmk-core/types.h>
 #include <bmk-core/sched.h>
 
 #define BMK_THREAD_STACKSIZE (1<<16)

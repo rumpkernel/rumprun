@@ -1,9 +1,8 @@
 #ifndef _BMK_TYPES_H_
 #define _BMK_TYPES_H_
 
+#include <bmk-core/types.h>
 #include <bmk/machine/types.h>
-
-#include <bmk/bmk_types.h>
 
 /*
  * MI types
