@@ -52,7 +52,6 @@ LDFLAGS := -L$(abspath rump/lib)
 
 rump-src-y += lib/__errno.c
 rump-src-y += lib/libc_stubs.c
-rump-src-y += lib/_lwp.c
 
 rump-src-y += rumphyper_base.c
 rump-src-y += rumphyper_net.c
