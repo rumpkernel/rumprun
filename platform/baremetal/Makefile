@@ -37,7 +37,7 @@ endif
 all: app-tools include/bmk/machine rumprun.o tests
 
 OBJS_BMK-y+=		intr.o clock.o kernel.o undefs.o sched.o
-OBJS_BMK-y+=		rumpuser.o rumpfiber.o rumpconfig.o
+OBJS_BMK-y+=		rumpuser.o rumpconfig.o
 OBJS_BMK-${HASPCI}+=	rumppci.o
 
 OBJS_BMK+= ${OBJS_BMK-y}

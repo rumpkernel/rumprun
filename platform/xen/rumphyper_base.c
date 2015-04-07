@@ -424,11 +424,3 @@ rumpuser_bio(int fd, int op, void *data, size_t dlen, int64_t off,
 
 	rumpkern_sched(nlocks, NULL);
 }
-
-void
-rumpuser_seterrno(int err)
-{
-	int *threrr = bmk_sched_geterrno();
-
-	*threrr = err;
-}

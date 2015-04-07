@@ -25,6 +25,7 @@
 
 #include <bmk-core/bmk_ops.h>
 #include <bmk-core/null.h>
+#include <bmk-core/sched.h>
 
 #include <bmk-rumpuser/core_types.h>
 #include <bmk-rumpuser/rumpuser.h>
@@ -52,4 +53,12 @@ rumpuser_exit(int value)
 {
 
 	bmk_ops->bmk_halt(value == 0 ? NULL : "rumpuser panic");
+}
+
+void
+rumpuser_seterrno(int err)
+{
+	int *threrr = bmk_sched_geterrno();
+
+	*threrr = err;
 }
