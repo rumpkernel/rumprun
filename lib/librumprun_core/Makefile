@@ -7,4 +7,6 @@ SRCS+=		rumpuser_stubs.c
 
 CPPFLAGS+=	-I${.CURDIR}/../../include
 
+.include "${.CURDIR}/arch/${MACHINE}/Makefile.inc"
+
 .include <bsd.lib.mk>

@@ -1,6 +1,4 @@
-/* from Xen MiniOS, with following copyright */
-
-/* 
+/*-
  ****************************************************************************
  * (C) 2005 - Grzegorz Milos - Intel Research Cambridge
  ****************************************************************************
@@ -37,30 +35,36 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include <bmk/types.h>
-#include <bmk/sched.h>
+#include <bmk-core/amd64/asm.h>
 
-static void
-stack_push(void **stackp, unsigned long value)
-{
-	unsigned long *stack = *stackp;
+ENTRY(bmk_cpu_sched_bouncer)
+	popq %rdi
+	popq %rbx
+	pushq $0			/* correct stack alignment for SSE */
+	pushq $0
+	xorq %rbp,%rbp
+	call *%rbx
+	call bmk_sched_exit
+END(bmk_cpu_sched_bouncer)
 
-	stack--;
-	*stack = value;
-	*stackp = stack;
-}
-
-void
-bmk_cpu_sched_create(struct bmk_tcb *tcb,
-	void (*f)(void *), void *arg,
-	void *stack_base, unsigned long stack_size)
-{
-	void *stack_top = (char *)stack_base + stack_size;
-
-	/* these values are used by bmk_cpu_sched_bouncer() */
-	stack_push(&stack_top, (unsigned long)f);
-	stack_push(&stack_top, (unsigned long)arg);
-
-	tcb->btcb_sp = (unsigned long)stack_top;
-	tcb->btcb_ip = (unsigned long)bmk_cpu_sched_bouncer;
-}
+ENTRY(bmk__cpu_switch)
+	pushq %rbp
+	pushq %rbx
+	pushq %r12
+	pushq %r13
+	pushq %r14
+	pushq %r15
+	movq %rsp, (%rdi)               /* save ESP */
+	movq (%rsi), %rsp               /* restore ESP */
+	movq $1f, 8(%rdi)               /* save EIP */
+	pushq 8(%rsi)                   /* restore EIP */
+	ret
+1:
+	popq %r15
+	popq %r14
+	popq %r13
+	popq %r12
+	popq %rbx
+	popq %rbp
+	ret
+END(bmk__cpu_switch)

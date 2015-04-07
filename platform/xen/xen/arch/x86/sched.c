@@ -97,7 +97,7 @@ void arch_create_thread(void *thread, struct bmk_tcb *tcb,
     
     stack_push(tcb, (unsigned long) function);
     stack_push(tcb, (unsigned long) data);
-    tcb->btcb_ip = (unsigned long) _minios_entry_thread_starter;
+    tcb->btcb_ip = (unsigned long) bmk_cpu_sched_bouncer;
 }
 
 void run_idle_thread(void)
@@ -118,9 +118,8 @@ void run_idle_thread(void)
 #endif
 }
 
-void arch__switch(unsigned long *, unsigned long *);
 void
-arch_switch_threads(struct bmk_tcb *prev, struct bmk_tcb *next)
+bmk_cpu_switch(struct bmk_tcb *prev, struct bmk_tcb *next)
 {
 
 /* XXX: TLS is available only on x86_64 currently */
@@ -128,5 +127,5 @@ arch_switch_threads(struct bmk_tcb *prev, struct bmk_tcb *next)
     wrmsrl(0xc0000100, next->btcb_tp);
 #endif
 
-    arch__switch(&prev->btcb_sp, &next->btcb_sp);
+    bmk__cpu_switch(&prev->btcb_sp, &next->btcb_sp);
 }

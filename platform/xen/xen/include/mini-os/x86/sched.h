@@ -14,8 +14,4 @@ static inline struct bmk_thread *arch_sched_current(void)
     return *current;
 };
 
-extern void _minios_entry_arch_switch_threads(struct bmk_tcb *prevctx, struct bmk_tcb *nextctx);
-
-#define arch_switch_threads(prev,next) _minios_entry_arch_switch_threads(prev, next)
-
 #endif /* __ARCH_SCHED_H__ */

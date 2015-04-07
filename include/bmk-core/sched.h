@@ -72,4 +72,9 @@ int *bmk_sched_geterrno(void);
 
 bmk_time_t	bmk_clock_monotonic(void);
 
+/* XXX: coming up with better names considered useful */
+void	bmk_cpu_sched_bouncer(void);
+void	bmk_cpu_switch(struct bmk_tcb *, struct bmk_tcb *);
+void	bmk__cpu_switch(void *, void *);
+
 #endif /* _BMK_CORE_SCHED_H_ */

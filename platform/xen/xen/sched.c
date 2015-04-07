@@ -158,7 +158,7 @@ sched_switch(struct bmk_thread *prev, struct bmk_thread *next)
 
 	if (scheduler_hook)
 		scheduler_hook(prev->bt_cookie, next->bt_cookie);
-	arch_switch_threads(&prev->bt_tcb, &next->bt_tcb);
+	bmk_cpu_switch(&prev->bt_tcb, &next->bt_tcb);
 }
 
 struct bmk_thread *

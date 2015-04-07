@@ -277,34 +277,3 @@ ENTRY(spurious_interrupt_bug)
 	pushl $0
 	pushl $do_spurious_interrupt_bug
 	jmp do_exception
-
-
-
-ENTRY(thread_starter)
-    popl %eax
-    popl %ebx
-    pushl $0
-    xorl %ebp,%ebp
-    pushl %eax
-    call *%ebx
-    call bmk_sched_exit
-    
-.globl arch__switch
-arch__switch:
-    movl 4(%esp), %ecx		/* prev */
-    movl 8(%esp), %edx		/* next */
-    pushl %ebp
-    pushl %ebx
-    pushl %esi
-    pushl %edi
-    movl %esp, (%ecx)		/* save ESP */
-    movl (%edx), %esp		/* restore ESP */
-    movl $1f, 4(%ecx)		/* save EIP */
-    pushl 4(%edx)		/* restore EIP */
-    ret
-1:
-    popl %edi
-    popl %esi
-    popl %ebx
-    popl %ebp
-    ret

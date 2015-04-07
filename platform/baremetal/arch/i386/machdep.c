@@ -257,7 +257,6 @@ bmk_cpu_nanohlt(void)
 	outb(PIC1_DATA, 0xff & ~(1<<2));
 }
 
-void bmk__cpu_switch(struct bmk_tcb *, struct bmk_tcb *);
 void
 bmk_cpu_sched_switch(struct bmk_tcb *prev, struct bmk_tcb *next)
 {

@@ -1,6 +1,4 @@
-/* from Xen MiniOS, with following copyright */
-
-/* 
+/*-
  ****************************************************************************
  * (C) 2005 - Grzegorz Milos - Intel Research Cambridge
  ****************************************************************************
@@ -37,30 +35,39 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include <bmk/types.h>
-#include <bmk/sched.h>
+#include <bmk-core/i386/asm.h>
 
-static void
-stack_push(void **stackp, unsigned long value)
-{
-	unsigned long *stack = *stackp;
+ENTRY(bmk_cpu_sched_bouncer)
+	popl %eax
+	popl %ebx
+	pushl $0
+	xorl %ebp,%ebp
+	pushl %eax
+	call *%ebx
+	call bmk_sched_exit
+END(bmk_cpu_sched_bouncer)
 
-	stack--;
-	*stack = value;
-	*stackp = stack;
-}
+ENTRY(bmk__cpu_switch)
+	movl 4(%esp), %ecx		/* prev */
+	movl 8(%esp), %edx		/* next */
 
-void
-bmk_cpu_sched_create(struct bmk_tcb *tcb,
-	void (*f)(void *), void *arg,
-	void *stack_base, unsigned long stack_size)
-{
-	void *stack_top = (char *)stack_base + stack_size;
+	/* reload tls for new thread */
+	movl $0x18, %eax
+	movl %eax, %gs
 
-	/* these values are used by bmk_cpu_sched_bouncer() */
-	stack_push(&stack_top, (unsigned long)f);
-	stack_push(&stack_top, (unsigned long)arg);
-
-	tcb->btcb_sp = (unsigned long)stack_top;
-	tcb->btcb_ip = (unsigned long)bmk_cpu_sched_bouncer;
-}
+	pushl %ebp
+	pushl %ebx
+	pushl %esi
+	pushl %edi
+	movl %esp, (%ecx)		/* save ESP */
+	movl (%edx), %esp		/* restore ESP */
+	movl $1f, 4(%ecx)		/* save EIP */
+	pushl 4(%edx)			/* restore EIP */
+	ret
+1:
+	popl %edi
+	popl %esi
+	popl %ebx
+	popl %ebp
+	ret
+END(bmk__cpu_switch)
