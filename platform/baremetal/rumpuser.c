@@ -37,6 +37,15 @@
 
 #include "rumpuser_int.h"
 
+#include <bmk-rumpuser/rumpuser.h>
+
+int
+rumprun_platform_rumpuser_init(void)
+{
+
+	return 0;
+}
+
 void
 rumpuser_putchar(int c)
 {
@@ -91,34 +100,6 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 	}
 
 	return rv;
-}
-
-int
-rumpuser_malloc(size_t howmuch, int alignment, void **memp)
-{
-	void *rv;
-
-	if (howmuch == PAGE_SIZE)
-		rv = bmk_allocpg(1);
-	else
-		rv = bmk_memalloc(howmuch, alignment);
-
-	if (rv) {
-		*memp = rv;
-		return 0;
-	}
-	return BMK_ENOMEM;
-}
-
-void
-rumpuser_free(void *mem, size_t len)
-{
-
-	if (len == PAGE_SIZE) {
-		/* XXX: TODO */
-	} else {
-		bmk_memfree(mem);
-	}
 }
 
 /* ok, this isn't really random, but let's make-believe */

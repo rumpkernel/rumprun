@@ -1,7 +1,9 @@
 LIB=		rumprun_rumpuser
 LIBISPRIVATE=	# defined
 
-SRCS=		rumpuser_synch.c
+SRCS=		rumpuser_base.c
+SRCS+=		rumpuser_mem.c
+SRCS+=		rumpuser_synch.c
 
 CPPFLAGS+=	-I${.CURDIR}/../../include
 

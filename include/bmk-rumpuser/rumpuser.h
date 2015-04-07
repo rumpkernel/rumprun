@@ -25,6 +25,8 @@
  * SUCH DAMAGE.
  */
 
+int rumprun_platform_rumpuser_init(void);
+
 #define LIBRUMPUSER
 #include <rump/rumpuser.h>
 

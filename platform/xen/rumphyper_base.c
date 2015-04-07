@@ -42,25 +42,13 @@
 
 #include <bmk-rumpuser/rumpuser.h>
 
-struct rumpuser_hyperup rumpuser__hyp;
-
 static struct rumpuser_mtx *bio_mtx;
 static struct rumpuser_cv *bio_cv;
 static int bio_outstanding_total;
 
-#define RUMPHYPER_MYVERSION 17
-
 int
-rumpuser_init(int version, const struct rumpuser_hyperup *hyp)
+rumprun_platform_rumpuser_init(void)
 {
-
-	if (version != RUMPHYPER_MYVERSION) {
-		minios_printk("Unsupported hypercall versions requested, %d vs %d\n",
-		    version, RUMPHYPER_MYVERSION);
-		return 1;
-	}
-
-	rumpuser__hyp = *hyp;
 
 	rumpuser_mutex_init(&bio_mtx, RUMPUSER_MTX_SPIN);
 	rumpuser_cv_init(&bio_cv);
@@ -197,49 +185,6 @@ rumpuser_clock_sleep(int enum_rumpclock, int64_t sec, long nsec)
 	return 0;
 }
 
-int
-rumpuser_malloc(size_t len, int alignment, void **retval)
-{
-
-	/*
-	 * If we are allocating precisely a page-sized chunk
-	 * (the common case), use the Mini-OS page allocator directly.
-	 * This avoids the malloc header overhead for this very
-	 * common allocation, leading to 50% better memory use.
-	 * We can't easily use the page allocator for larger chucks
-	 * of memory, since those allocations might have stricter
-	 * alignment restrictions, and therefore it's just
-	 * easier to use memalloc() in those rare cases; it's not
-	 * as wasteful for larger chunks anyway.
-	 *
-	 * XXX: how to make sure that rump kernel's and our
-	 * page sizes are the same?  Could be problematic especially
-	 * for architectures which support multiple page sizes.
-	 * Note that the code will continue to work, but the optimization
-	 * will not trigger for the common case.
-	 */
-	if (len == PAGE_SIZE) {
-		ASSERT(alignment <= PAGE_SIZE);
-		*retval = (void *)minios_alloc_page();
-	} else {
-		*retval = bmk_memalloc(len, alignment);
-	}
-	if (*retval)
-		return 0;
-	else
-		return BMK_ENOMEM;
-}
-
-void
-rumpuser_free(void *buf, size_t buflen)
-{
-
-	if (buflen == PAGE_SIZE)
-		minios_free_page(buf);
-	else
-		bmk_memfree(buf);
-}
-
 /* Not very random */
 int
 rumpuser_getrandom(void *buf, size_t buflen, int flags, size_t *retp)
@@ -251,13 +196,6 @@ rumpuser_getrandom(void *buf, size_t buflen, int flags, size_t *retp)
 	}
 
 	return 0;
-}
-
-void
-rumpuser_exit(int value)
-{
-	minios_stop_kernel();
-	minios_do_halt(MINIOS_HALT_POWEROFF);
 }
 
 #define NBLKDEV 10

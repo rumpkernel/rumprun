@@ -31,20 +31,6 @@
 
 extern struct rumpuser_hyperup rumpuser__hyp;
 
-static inline void
-rumpkern_unsched(int *nlocks, void *interlock)
-{
-
-	rumpuser__hyp.hyp_backend_unschedule(0, nlocks, interlock);
-}
-
-static inline void
-rumpkern_sched(int nlocks, void *interlock)
-{
-
-	rumpuser__hyp.hyp_backend_schedule(nlocks, interlock);
-}
-
 #define KLOCK_WRAP(a)							\
 do {									\
 	int nlocks;							\

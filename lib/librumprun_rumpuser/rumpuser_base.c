@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2014 Antti Kantee.  All Rights Reserved.
+ * Copyright (c) 2013 Antti Kantee.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,56 +23,33 @@
  * SUCH DAMAGE.
  */
 
-#include <bmk/kernel.h>
+#include <bmk-core/bmk_ops.h>
+#include <bmk-core/null.h>
 
-/*
- * Stubs for unused rump kernel hypercalls
- */
+#include <bmk-rumpuser/core_types.h>
+#include <bmk-rumpuser/rumpuser.h>
 
-#define NOTHING(name) \
-    int name(void); int name(void) \
-    {bmk_cons_puts("unimplemented: " #name "\n"); for (;;);}
+struct rumpuser_hyperup rumpuser__hyp;
 
-#define REALNOTHING(name) \
-    int name(void); int name(void) {return 1;}
+#define RUMPHYPER_MYVERSION 17
 
-NOTHING(rumpuser_open)
-NOTHING(rumpuser_close)
-REALNOTHING(rumpuser_getfileinfo)
-NOTHING(rumpuser_bio)
-
-/* libc */
-
-REALNOTHING(__sigaction14);
-NOTHING(__getrusage50);
-//REALNOTHING(__sigprocmask14);
-REALNOTHING(sigqueueinfo);
-//REALNOTHING(rasctl);
-//NOTHING(_lwp_self);
-
-//NOTHING(__libc_static_tls_setup);
-
-NOTHING(__fork);
-NOTHING(__vfork14);
-NOTHING(kill);
-NOTHING(getpriority);
-NOTHING(setpriority);
-
-int execve(const char *, char *const[], char *const[]);
 int
-execve(const char *file, char *const argv[], char *const envp[])
+rumpuser_init(int version, const struct rumpuser_hyperup *hyp)
 {
 
-	bmk_cons_puts("execve not implemented\n");
-	return -1;
+	if (version != RUMPHYPER_MYVERSION) {
+		bmk_ops->bmk_halt("rump kernel hypercall revision mismatch\n");
+		/* NOTREACHED */
+	}
+
+	rumpuser__hyp = *hyp;
+
+	return rumprun_platform_rumpuser_init();
 }
 
-NOTHING(_sys_mq_send);
-NOTHING(_sys_mq_receive);
-NOTHING(_sys___mq_timedsend50);
-NOTHING(_sys___mq_timedreceive50);
-NOTHING(_sys_msgrcv);
-NOTHING(_sys_msgsnd);
-NOTHING(_sys___msync13);
-NOTHING(_sys___wait450);
-NOTHING(_sys___sigsuspend14);
+void
+rumpuser_exit(int value)
+{
+
+	bmk_ops->bmk_halt(value == 0 ? NULL : "rumpuser panic");
+}

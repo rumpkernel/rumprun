@@ -41,20 +41,6 @@
 #define BMK_TLS_RUMPLWP		0
 #define BMK_TLS_USERLWP		1
 
-struct rumpuser_hyperup rumpuser__hyp;
-int
-rumpuser_init(int version, const struct rumpuser_hyperup *hyp)
-{
-
-	if (version != RUMPUSER_VERSION) {
-		return BMK_EINVAL;
-	}
-
-        rumpuser__hyp = *hyp;
-
-        return 0;
-}
-
 void
 rumpuser_seterrno(int error)
 {
