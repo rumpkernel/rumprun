@@ -128,7 +128,7 @@ ENTRY(bmk_cpu_sched_bouncer)
 	xorl %ebp,%ebp
 	pushl %eax
 	call *%ebx
-	/* call exit_thread  */		/* hope no threads exit ;) */
+	call bmk_sched_exit
 END(bmk_cpu_sched_bouncer)
 
 ENTRY(bmk__cpu_switch)
