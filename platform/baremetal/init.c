@@ -52,16 +52,6 @@ rumpkern_config(void)
 	bmk_havenet = rv == 0;
 }
 
-int __nopmain(void);
-int
-__nopmain(void)
-{
-
-	printf("THIS IS NOT MAIN\n");
-	return 0;
-}
-__weak_alias(main,__nopmain);
-
 void
 bmk_beforemain(void)
 {
