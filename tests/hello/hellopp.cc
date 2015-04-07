@@ -1,7 +1,9 @@
 #include <iostream>
 
-int main()
+int
+main()
 {
-    std::cout << "hello, c++" << std::endl;
-    return 0;
+
+	std::cout << "hello, c++" << std::endl;
+	return 0;
 }
