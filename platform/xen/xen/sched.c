@@ -430,14 +430,8 @@ bmk_sched_nanosleep(bmk_time_t nsec)
 int
 bmk_sched_nanosleep_abstime(bmk_time_t nsec)
 {
-	uint32_t wall_secs;
-	uint64_t wall_nsecs;
 
-	/* well this is still stupid */
-	minios_clock_wall(&wall_secs, &wall_nsecs);
-	nsec -= 1000ULL*1000*1000*(uint64_t)wall_secs + wall_nsecs;
-
-	return dosleep(NOW() + nsec);
+	return dosleep(nsec);
 }
 
 void
