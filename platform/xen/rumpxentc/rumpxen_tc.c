@@ -37,6 +37,7 @@ MODULE(MODULE_CLASS_MISC, rumpxen_tc, NULL);
 static u_int
 rumpxen_tc_get(struct timecounter *tc)
 {
+
 	return (u_int)minios_clock_monotonic();
 }
 
@@ -52,6 +53,7 @@ static struct timecounter rumpxen_tc = {
 static int
 rumpxen_tc_modcmd(modcmd_t cmd, void *arg)
 {
+
 	switch (cmd) {
 	case MODULE_CMD_INIT:
 		tc_init(&rumpxen_tc);
@@ -62,7 +64,8 @@ rumpxen_tc_modcmd(modcmd_t cmd, void *arg)
 		break;
 
 	default:
-	return ENOTTY;
+		return ENOTTY;
 	}
+
 	return 0;
 }
