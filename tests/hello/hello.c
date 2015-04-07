@@ -23,7 +23,9 @@ int main (int argc, char *argv[])
 
 	printf("Sleeping 5s...\n");
 	sleep(5);
-	printf("Goodbye, world!\n");
+
+	now = time(NULL);
+	printf("Goodbye, world, precisely at:\n%s", ctime(&now));
 
 	return 0;
 }
