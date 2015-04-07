@@ -95,6 +95,7 @@ allocpg2(int shift)
 
 static const struct bmk_ops myops = {
 	.bmk_allocpg2 = allocpg2,
+	.bmk_freepg2 = minios_free_pages,
 	.bmk_halt = stopandhalt,
 };
 

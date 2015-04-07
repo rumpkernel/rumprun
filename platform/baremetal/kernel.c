@@ -67,6 +67,13 @@ bmk_allocpg2(int shift)
 	return bmk_allocpg(1<<shift);
 }
 
+static void
+bmk_freepg2(void *mem, int shift)
+{
+
+	bmk_cons_puts("WARNING: freepg2 called!\n");
+}
+
 static int
 parsemem(uint32_t addr, uint32_t len)
 {
@@ -102,6 +109,7 @@ parsemem(uint32_t addr, uint32_t len)
 
 static const struct bmk_ops myops = {
 	.bmk_allocpg2 = bmk_allocpg2,
+	.bmk_freepg2 = bmk_freepg2,
 	.bmk_halt = bmk_halt,
 };
 

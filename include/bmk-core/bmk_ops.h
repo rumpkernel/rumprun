@@ -28,6 +28,7 @@
 
 struct bmk_ops {
 	void *(*bmk_allocpg2)(int);
+	void (*bmk_freepg2)(void *, int);
 	void (*bmk_halt)(const char *) __attribute__((noreturn));
 };
 
