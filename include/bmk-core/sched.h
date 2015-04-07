@@ -71,6 +71,7 @@ struct bmk_thread *bmk_sched_current(void);
 int *bmk_sched_geterrno(void);
 
 bmk_time_t	bmk_clock_monotonic(void);
+bmk_time_t	bmk_clock_epochoffset(void);
 
 /* XXX: coming up with better names considered useful */
 void	bmk_cpu_sched_bouncer(void);

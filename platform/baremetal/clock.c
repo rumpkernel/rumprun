@@ -33,3 +33,10 @@ bmk_clock_monotonic(void)
 
 	return bmk_cpu_clock_now();
 }
+
+bmk_time_t
+bmk_clock_epochoffset(void)
+{
+
+	return 0; /* needs more bits */
+}

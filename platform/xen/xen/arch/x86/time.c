@@ -39,6 +39,8 @@
 #include <mini-os/time.h>
 #include <mini-os/lib.h>
 
+#include <bmk-core/sched.h>
+
 /************************************************************************
  * Time functions
  *************************************************************************/
@@ -191,6 +193,18 @@ void minios_clock_wall(uint32_t *sec, uint64_t *nsec)
 
         *sec = shadow_ts.tv_sec + NSEC_TO_SEC(now);
         *nsec = shadow_ts.tv_nsec + (now / 1000000000UL);
+}
+
+/* return monotonic clock offset to wall epoch */
+bmk_time_t
+bmk_clock_epochoffset(void)
+{
+	struct timespec myts;
+
+	/* where to we pretend get a consistent copy? */
+	myts = shadow_ts;
+
+	return SECONDS(myts.tv_sec) + myts.tv_nsec;
 }
 
 void block_domain(s_time_t until)
