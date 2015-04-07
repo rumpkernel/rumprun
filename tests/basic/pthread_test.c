@@ -96,17 +96,34 @@ wakeupthread(void *arg)
 	return NULL;
 }
 
+static void *
+jointhread(void *arg)
+{
+
+	return (void *)37;
+}
+
 int
 main(void)
 {
 	struct timespec ts;
 	pthread_t pt;
+	void *rv;
 
 	pthread_key_create(&thrnumkey, NULL);
 
 	pthread_mutex_init(&mtx, NULL);
 	pthread_cond_init(&cv, NULL);
 	pthread_cond_init(&cv2, NULL);
+
+	printf("testing pthread_join\n");
+	if (pthread_create(&pt, NULL, jointhread, NULL) != 0)
+		errx(1, "pthread jointhread create");
+	if (pthread_join(pt, &rv) != 0)
+		errx(1, "pthread_join()");
+	if (rv != (void *)37)
+		errx(1, "joiner returned incorrect value");
+	printf("success\n");
 
 	if (pthread_create(&pt, NULL, mythread, (void *)0x01) != 0)
 		errx(1, "pthread_create()");
