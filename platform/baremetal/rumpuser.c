@@ -118,30 +118,6 @@ rumpuser_getrandom(void *buf, size_t buflen, int flags, size_t *retp)
 	return 0;
 }
 
-int
-rumpuser_clock_gettime(int enum_rumpclock, int64_t *sec, long *nsec)
-{
-	bmk_time_t now;
-
-	now = bmk_clock_monotonic();
-	*sec  = now / (1000*1000*1000ULL);
-	*nsec = now % (1000*1000*1000ULL);
-
-	return 0;
-}
-
-int
-rumpuser_clock_sleep(int enum_rumpclock, int64_t sec, long nsec)
-{
-	int nlocks;
-
-	rumpkern_unsched(&nlocks, NULL);
-	bmk_sched_nanosleep(sec * 1000*1000*1000ULL + nsec);
-	rumpkern_sched(nlocks, NULL);
-
-	return 0;
-}
-
 /*
  * currently, supports only printing fmt.  better than nothing ...
  */

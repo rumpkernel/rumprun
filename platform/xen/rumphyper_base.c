@@ -136,55 +136,6 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 	return rv;
 }
 
-/* Use same values both for absolute and relative clock. */
-int
-rumpuser_clock_gettime(int which, int64_t *sec, long *nsec)
-{
-	uint32_t outsec;
-	uint64_t outnsec;
-	uint64_t time;
-
-	switch (which) {
-	case RUMPUSER_CLOCK_RELWALL:
-		minios_clock_wall(&outsec, &outnsec);
-
-		*sec = outsec;
-		*nsec = outnsec;
-		break;
-	case RUMPUSER_CLOCK_ABSMONO:
-		time = minios_clock_monotonic();
-
-		*sec  = time / (1000*1000*1000ULL);
-		*nsec = time % (1000*1000*1000ULL);
-		break;
-	}
-
-	return 0;
-}
-
-int
-rumpuser_clock_sleep(int enum_rumpclock, int64_t sec, long nsec)
-{
-	enum rumpclock rclk = enum_rumpclock;
-	bmk_time_t totnsec;
-	int nlocks;
-
-	rumpkern_unsched(&nlocks, NULL);
-	switch (rclk) {
-	case RUMPUSER_CLOCK_RELWALL:
-		totnsec = sec * 1000*1000*1000 + nsec;
-		bmk_sched_nanosleep(totnsec);
-		break;
-	case RUMPUSER_CLOCK_ABSMONO:
-		totnsec = sec * 1000*1000*1000 + nsec;
-		bmk_sched_nanosleep_abstime(totnsec);
-		break;
-	}
-	rumpkern_sched(nlocks, NULL);
-
-	return 0;
-}
-
 /* Not very random */
 int
 rumpuser_getrandom(void *buf, size_t buflen, int flags, size_t *retp)
