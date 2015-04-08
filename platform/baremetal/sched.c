@@ -257,6 +257,7 @@ bmk_sched_create(const char *name, void *cookie, int joinable,
 	struct bmk_thread *thread;
 
 	thread = bmk_xmalloc(sizeof(*thread));
+	bmk_memset(thread, 0, sizeof(*thread));
 	bmk_strncpy(thread->bt_name, name, sizeof(thread->bt_name)-1);
 
 	if (!stack_base) {
