@@ -8,7 +8,7 @@ before_script:
   - sudo apt-get update -y
   - sudo apt-get install qemu-kvm -y
   - sudo apt-get install libxen-dev -y
-  - sudo apt-get install g++-4.8
+  - sudo apt-get install g++-4.8 -y
 
 env:
   - PLATFORM=xen NOTESTS=true EXTRAFLAGS=
