@@ -1,0 +1,83 @@
+/*-
+ * Copyright (c) 2015 Antti Kantee.  All Rights Reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+/*
+ * This is the guest side of a simple test framework, which just
+ * runs a test and writes the results to a given filename.  More
+ * often than not, the filename is a virtual disk device.
+ *
+ * This code runs in the application space.
+ */
+
+#include <sys/types.h>
+
+#include <err.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <unistd.h>
+
+#include <rumprun/tester.h>
+
+#define INITIAL "??   0\n"
+
+int
+main(int argc, char *argv[])
+{
+	char buf[sizeof(INITIAL)];
+	int fd, rv;
+
+	fd = open("/dev/ld0d", O_RDWR); /* XXX */
+	if (fd == -1) {
+		err(1, "rumprun_test: unable to open data device");
+	}
+
+	if (write(fd, INITIAL, sizeof(INITIAL)-1) != sizeof(INITIAL)-1) {
+		err(1, "rumprun_test: initial write failed\n");
+	}
+
+	if (dup2(fd, STDOUT_FILENO) == -1)
+		err(1, "rumprun_test: dup2 to stdout");
+	if (dup2(fd, STDERR_FILENO) == -1)
+		err(1, "rumprun_test: dup2 to stdout");
+
+	/*
+	 * Run the actual test.  This would of course be much nicer if
+	 * we had the ability to do something like dlsym(RTLD_NEXT),
+	 * but we don't for now, so let's not try about it.
+	 */
+	printf("=== FOE RUMPRUN 12345 TES-TER 54321 ===\n");
+	rv = rumprun_test(argc, argv);
+	printf("=== RUMPRUN 12345 TES-TER 54321 EOF ===\n");
+
+	snprintf(buf, sizeof(buf), "%s % 3d\n", rv == 0 ? "OK" : "NO", rv);
+	pwrite(fd, buf, sizeof(INITIAL)-1, 0);
+	close(fd);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+	sync();
+	return rv;
+}
