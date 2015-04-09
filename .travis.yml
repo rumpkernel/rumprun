@@ -9,12 +9,13 @@ before_script:
   - sudo apt-get install libxen-dev -y
 
 env:
-  - PLATFORM=xen EXTRAFLAGS=
-  - PLATFORM=xen EXTRAFLAGS='-- -F ACLFLAGS=-m32'
-  - PLATFORM=baremetal EXTRAFLAGS='-- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686'
+  - PLATFORM=xen NOTESTS=true EXTRAFLAGS=
+  - PLATFORM=xen NOTESTS=true EXTRAFLAGS='-- -F ACLFLAGS=-m32'
+  - PLATFORM=baremetal NOTESTS=false EXTRAFLAGS='-- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686'
 
 script:
   - ./build-rr.sh -qq ${PLATFORM} ${EXTRAFLAGS}
+  - ${NOTESTS} || ( cd tests && ./runtests.sh )
 
 notifications:
   irc:
