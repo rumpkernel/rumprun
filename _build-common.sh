@@ -50,7 +50,7 @@ ${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k \
     -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes "$@" \
     build kernelheaders install
 
-LIBS="$(stdlibs ${RUMPSRC})"
+LIBS="$(stdlibs ${RUMPSRC}) $(pwd)/../../lib/librumprun_tester"
 if [ "$(${RUMPMAKE} -f rumptools/mk.conf -V '${_BUILDRUMP_CXX}')" = 'yes' ]
 then
 	LIBS="${LIBS} $(stdlibsxx ${RUMPSRC})"
