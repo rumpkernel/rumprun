@@ -12,6 +12,8 @@
 
 STUB(__sigaction14);
 STUB(__sigaction_sigtramp);
+STUB(sigaction);
+STUB(sigprocmask);
 STUB(__getrusage50);
 
 STUB(__fork);
