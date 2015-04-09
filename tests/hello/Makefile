@@ -1,3 +1,5 @@
+include ../Makefile.inc
+
 ALL=hello
 
 ifeq ($(CONFIG_CXX),yes)

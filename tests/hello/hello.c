@@ -1,15 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
+
+#include <rumprun/tester.h>
 
 #if defined(__linux__) || !defined(__NetBSD__)
 # error compiler wrapper fail
 #endif
 
-int main (int argc, char *argv[])
+int
+rumprun_test(int argc, char *argv[])
 {
 	char *world = getenv("WORLD");
-	char buf[64];
 	time_t now;
 
 	if (world)

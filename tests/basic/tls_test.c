@@ -7,6 +7,8 @@
 #include <sched.h>
 #include <stdio.h>
 
+#include <rumprun/tester.h>
+
 #define NTHREADS 10
 #define LOOPCNT 1000
 #define IINITIAL 12345678
@@ -33,7 +35,7 @@ wrkthread(void *arg)
 }
 
 int
-main(void)
+rumprun_test(int argc, char *argv[])
 {
 	pthread_t threads[NTHREADS];
 	int n, rc;

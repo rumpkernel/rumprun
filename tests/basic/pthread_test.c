@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <rumprun/tester.h>
+
 static pthread_mutex_t mtx;
 static pthread_cond_t cv, cv2;
 
@@ -104,7 +106,7 @@ jointhread(void *arg)
 }
 
 int
-main(void)
+rumprun_test(int argc, char *argv[])
 {
 	struct timespec ts;
 	pthread_t pt;

@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 
+#include <rumprun/tester.h>
+
 /* Constructor test.  Checks that constructors run in the correct order */
 int myvalue = 2;
 static void __attribute__((constructor(2000),used))
@@ -29,7 +31,7 @@ dtor1(void)
 }
 
 int
-main(void)
+rumprun_test(int argc, char *argv[])
 {
 
 	if (myvalue != 8) {
