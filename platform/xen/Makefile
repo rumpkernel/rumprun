@@ -93,19 +93,16 @@ ${RUMPUSERDIR}/xen/librumprun_rumpuser.a:
 	    && ${RUMPMAKE} MAKEOBJDIR=xen dependall )
 
 .PHONY: rumprun
-rumprun: $(OBJ_DIR)/rumprun.o $(OBJ_DIR)/configure_stubs.o
+rumprun: $(OBJ_DIR)/rumprun.o
 
 $(OBJ_DIR)/rumprun.o: $(RUMP_OBJS) ${BASEDIR}/xen/librumprun_base.a ${COREDIR}/xen/librumprun_core.a ${RUMPUSERDIR}/xen/librumprun_rumpuser.a
 	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(RUMP_OBJS) -nostdlib -o $@
-
-$(OBJ_DIR)/configure_stubs.o: configure_stubs.c
 
 APP_TOOLS_TARGETARCH= $(TARGET_ARCH)
 APP_TOOLS_PLATFORM= xen
 APP_TOOLS_HEADOBJ= $(abspath $(OBJ_DIR)/xen/minios.o)
 APP_TOOLS_OBJS= $(abspath $(OBJ_DIR)/rumprun.o)
 APP_TOOLS_LDSCRIPT:= $(abspath $(OBJ_DIR)/xen/minios.lds)
-APP_TOOLS_STUBSOBJ= $(abspath $(OBJ_DIR)/configure_stubs.o)
 APP_TOOLS_DIR= $(abspath ../../app-tools)
 
 include $(APP_TOOLS_DIR)/Makefile.app-tools
