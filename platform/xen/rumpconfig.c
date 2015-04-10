@@ -23,6 +23,7 @@
  * SUCH DAMAGE.
  */
 
+#include <assert.h>
 #include <err.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -290,15 +291,15 @@ xs_read_blkconfig(const char *blk_index, char **type, char **mountpoint,
 		free(blk_type);
 		return 1;
 	}
+
 	snprintf(buf, sizeof buf, "rumprun/blk/%s/mountpoint", blk_index);
 	xberr = xenbus_read(txn, buf, &blk_mountpoint);
 	if (xberr) {
-		warnx("rumprun_config: xenblk%s: read %s failed: %s",
-			blk_index, buf, xberr);
-		xenbus_transaction_end(txn, 0, &xbretry);
-		free(blk_type);
-		return 1;
+		/* no mountpoint, hence we don't need fstype either */
+		assert(blk_mountpoint == NULL);
+		goto out;
 	}
+
 	snprintf(buf, sizeof buf, "rumprun/blk/%s/fstype", blk_index);
 	xberr = xenbus_read(txn, buf, &blk_fstype);
 	if (xberr) {
@@ -309,6 +310,8 @@ xs_read_blkconfig(const char *blk_index, char **type, char **mountpoint,
 		free(blk_mountpoint);
 		return 1;
 	}
+
+ out:
 	xberr = xenbus_transaction_end(txn, 0, &xbretry);
 	if (xberr) {
 		warnx("rumprun_config: xenbus_transaction_end() failed: %s",
@@ -338,25 +341,32 @@ rumprun_config_blk(const char *blk_index)
 		&blk_fstype);
 	if (rv != 0)
 		return;
+
+	snprintf(key, sizeof key, "/dev/xenblk%s", blk_index);
+	snprintf(hostpath, sizeof hostpath, "blk%s", blk_index);
+	/* XXX: will "leak" etfs registration if later step fails */
+	if ((rv = rump_pub_etfs_register(key, hostpath, RUMP_ETFS_BLK)) != 0) {
+		warnx("rumprun_config: etfs_register failed: %d", rv);
+		goto out;
+	}
+
+	if (blk_mountpoint == NULL)
+		goto out;
+
 	if ((strcmp(blk_fstype, "ffs") != 0) &&
 		(strcmp(blk_fstype, "cd9660") != 0)) {
 		warnx("rumprun_config: xenblk%s: unsupported fstype %s",
 			blk_index, blk_fstype);
 		goto out;
 	}
-	
+
 	printf("rumprun_config: mounting xenblk%s on %s as %s\n",
 		blk_index, blk_mountpoint, blk_fstype);
 	if ((rv = mkdir(blk_mountpoint, 0777)) != 0) {
 		warn("rumprun_config: mkdir failed");
 		goto out;
 	}
-	snprintf(key, sizeof key, "/dev/xenblk%s", blk_index);
-	snprintf(hostpath, sizeof hostpath, "blk%s", blk_index);
-	if ((rv = rump_pub_etfs_register(key, hostpath, RUMP_ETFS_BLK)) != 0) {
-		warnx("rumprun_config: etfs_register failed: %d", rv);
-		goto out;
-	}
+
 	if (strcmp(blk_fstype, "ffs") == 0) {
 		struct ufs_args mntargs = { .fspec = key };
 		if (mount(MOUNT_FFS, blk_mountpoint, 0, &mntargs, sizeof(mntargs)) != 0) {
@@ -392,11 +402,13 @@ rumprun_deconfig_blk(const char *blk_index)
 	if (rv != 0)
 		return;
 	
-	printf("rumprun_config: unmounting xenblk%s from %s\n",
-		blk_index, blk_mountpoint);
-	if (unmount(blk_mountpoint, 0) != 0) {
-		warn("rumprun_config: unmount failed");
-		goto out;
+	if (blk_mountpoint) {
+		printf("rumprun_config: unmounting xenblk%s from %s\n",
+			blk_index, blk_mountpoint);
+		if (unmount(blk_mountpoint, 0) != 0) {
+			warn("rumprun_config: unmount failed");
+			goto out;
+		}
 	}
 	snprintf(key, sizeof key, "/dev/xenblk%s", blk_index);
 	if ((rv = rump_pub_etfs_remove(key)) != 0) {
