@@ -29,11 +29,7 @@
 # TODO: use a more scalable way of specifying tests
 TESTS='hello/hello basic/ctor_test basic/pthread_test basic/tls_test'
 
-#
-# XXX: platform is currently hardcoded.  TODO: migrate to rumprun.
-#
-
-type qemu-system-i386 >/dev/null 2>&1 || die qemu-system-i386 required
+RUMPRUN=$(pwd)/../app-tools/rumprun
 
 STARTMAGIC='=== FOE RUMPRUN 12345 TES-TER 54321 ==='
 ENDMAGIC='=== RUMPRUN 12345 TES-TER 54321 EOF ==='
@@ -66,12 +62,11 @@ runguest ()
 
 	testprog=$1
 	img1=$2
-	img2=$3
+	# notyet
+	# img2=$3
 
 	[ -n "${img1}" ] || die runtest without a disk image
-	qemu-system-i386 -net none -no-kvm -display none -kernel ${testprog} \
-	    -drive if=virtio,file=${img1} \
-	    ${img2:+-drive if=virtio,file=${img2}} &
+	cookie=$(${RUMPRUN} qemu -b ${img1} ${testprog})
 
 	TEST_RESULT=TIMEOUT
 	TEST_ECODE=-1
@@ -100,8 +95,7 @@ runguest ()
 	done
 	echo ">> Result: ${TEST_RESULT} (${TEST_ECODE})"
 
-	kill %1
-	wait
+	kill ${cookie}
 }
 
 getoutput ()
