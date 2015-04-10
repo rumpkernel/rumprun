@@ -179,17 +179,21 @@ run_xen()
 			image=$(readlink -f ${image})
 			mountpoint=${OPTARG#*,}
 			[ -n "$image" ] || usage
-			[ -n "$mountpoint" ] || usage
 			[ -f "$image" ] || err File $image does not exist
 
-			fstype=$(detect_fstype $image)
-			[ $? -ne 0 ] && err File $image: unknown fstype
+			if [ -n "$mountpoint" ]; then
+				fstype=$(detect_fstype $image)
+				[ $? -ne 0 ] && err File $image: unknown fstype
+			fi
+
 			vdev=hd$(echo $bindex | tr '[0-9]' '[a-j]')
 			conf_disk="${conf_disk}'file:$image,$vdev,w',"
 			echo blk/${bindex}/type etfs >>${xenstore}
 			echo blk/${bindex}/fstype $fstype >>${xenstore}
-			echo blk/${bindex}/mountpoint $mountpoint\
-				>>${xenstore}
+			if [ -n "$mountpoint" ]; then
+				echo blk/${bindex}/mountpoint $mountpoint\
+					>>${xenstore}
+			fi
 			bindex=$(expr $bindex + 1)
 			;;
 		# -e: Set guest environment variable.
