@@ -162,7 +162,7 @@ run_xen()
 	opt_pause=
 	opt_interactive=
 	opt_destroy='on_poweroff="preserve"'
-	opt_mem=16
+	opt_mem=64
 	opt_name=
 	opt_debug=
 	sudo=''
