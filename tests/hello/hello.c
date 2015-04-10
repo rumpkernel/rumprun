@@ -24,8 +24,8 @@ rumprun_test(int argc, char *argv[])
 	printf("When you do not hear the beep the time will be exactly:\n%s",
 	    ctime(&now));
 
-	printf("Sleeping 5s...\n");
-	sleep(5);
+	printf("Sleeping 2s...\n");
+	sleep(2);
 
 	now = time(NULL);
 	printf("Goodbye, world, precisely at:\n%s", ctime(&now));
