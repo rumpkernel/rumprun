@@ -1,0 +1,27 @@
+#!/bin/sh
+
+die ()
+{
+        echo ">> ERROR:" 1>&2
+	echo ">> $@" 1>&2
+        exit 1
+}
+
+[ $# -eq 1 ] || die usage: rumpstop guest_spec
+
+stack=${1%%:*}
+guest=${1#*:}
+
+case "${stack}" in
+qemu)
+	kill ${guest}
+	;;
+xen)
+	xl destroy ${guest}
+	;;
+*)
+	die invalid stack spec \"${stack}\"
+	;;
+esac
+
+exit $?
