@@ -294,7 +294,7 @@ EOM
 	if [ -n "$opt_interactive" ]; then
 		exec ${sudo} xl console $domid
 	else
-		echo ${domid}
+		echo xen:${domid}
 	fi
 }
 
@@ -327,7 +327,7 @@ run_qemu()
 	else
 		qemucmd="${qemucmd} -display none"
 		${qemucmd} 1>/dev/null 2>&1 &
-		echo $!
+		echo qemu:$!
 	fi
 }
 
