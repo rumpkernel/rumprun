@@ -67,7 +67,7 @@ runguest ()
 	# img2=$3
 
 	[ -n "${img1}" ] || die runtest without a disk image
-	cookie=$(${RUMPRUN} qemu -b ${img1} ${testprog})
+	cookie=$(${RUMPRUN} ${STACK} -b ${img1} ${testprog})
 
 	TEST_RESULT=TIMEOUT
 	TEST_ECODE=-1
@@ -115,6 +115,9 @@ runtest ()
 	ddimage disk.img 1024
 	runtest tester disk.img
 }
+
+[ $# -eq 1 ] || die "usage: runtests.sh qemu|xen"
+STACK=$1
 
 TESTDIR=$(mktemp -d testrun.XXXXXX)
 [ $? -eq 0 ] || die failed to create datadir for testrun
