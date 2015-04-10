@@ -118,6 +118,7 @@ runtest ()
 
 [ $# -eq 1 ] || die "usage: runtests.sh qemu|xen"
 STACK=$1
+[ ${STACK} != none ] || exit 0
 
 TESTDIR=$(mktemp -d testrun.XXXXXX)
 [ $? -eq 0 ] || die failed to create datadir for testrun
