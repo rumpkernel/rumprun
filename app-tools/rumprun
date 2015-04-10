@@ -177,7 +177,7 @@ run_xen()
 		b)
 			image=${OPTARG%,*}
 			image=$(readlink -f ${image})
-			mountpoint=${OPTARG#*,}
+			mountpoint=$(echo $OPTARG | sed -n 's/.*,\(.*\)/\1/p')
 			[ -n "$image" ] || usage
 			[ -f "$image" ] || err File $image does not exist
 
