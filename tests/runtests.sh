@@ -30,6 +30,7 @@
 TESTS='hello/hello basic/ctor_test basic/pthread_test basic/tls_test'
 
 RUMPRUN=$(pwd)/../app-tools/rumprun
+RUMPSTOP=$(pwd)/../app-tools/rumpstop
 
 STARTMAGIC='=== FOE RUMPRUN 12345 TES-TER 54321 ==='
 ENDMAGIC='=== RUMPRUN 12345 TES-TER 54321 EOF ==='
@@ -95,7 +96,7 @@ runguest ()
 	done
 	echo ">> Result: ${TEST_RESULT} (${TEST_ECODE})"
 
-	kill ${cookie}
+	${RUMPSTOP} ${cookie}
 }
 
 getoutput ()
