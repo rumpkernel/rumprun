@@ -44,13 +44,27 @@
 
 #define INITIAL "??   0\n"
 
+static const char *trydisk[] = {
+	"/dev/ld0d",
+	"/dev/xenblk0",
+};
+
 int
 main(int argc, char *argv[])
 {
 	char buf[sizeof(INITIAL)];
-	int fd, rv;
+	int fd, rv, i;
 
-	fd = open("/dev/ld0d", O_RDWR); /* XXX */
+	/*
+	 * XXX: need a better way to determine disk device!
+	 * e.g. rumpconfig (which has currently not been
+	 * implemented for baremetal)
+	 */
+	for (i = 0; i < __arraycount(trydisk); i++) {
+		fd = open(trydisk[i], O_RDWR);
+		if (fd != -1)
+			break;
+	}
 	if (fd == -1) {
 		err(1, "rumprun_test: unable to open data device");
 	}
