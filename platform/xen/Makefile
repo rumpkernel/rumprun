@@ -111,7 +111,7 @@ include $(APP_TOOLS_DIR)/Makefile.app-tools
 # app-tools.
 .PHONY: tests
 tests:
-	$(APP_TOOLS_MAKE) RUMPRUN_TEST=no -C ../../tests
+	$(APP_TOOLS_MAKE) -C ../../tests
 
 .PHONY: clean arch_clean app-tools_clean
 
