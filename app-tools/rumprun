@@ -301,10 +301,34 @@ EOM
 run_qemu()
 {
 
+	opt_interactive=
+	opt_drivespec=
 	while getopts "${myoptstr}" opt; do
-		err qemu target does not support options yet
+		case "$opt" in
+		b)
+			image=$( ( IFS=, ; set -- $OPTARG ; \
+			    [ $# -gt 1 ] && die -b mountpoints not supported ; \
+			    echo $1) )
+			opt_drivespec="-drive if=virtio,file=${image}"
+			;;
+		i)
+			opt_interactive=1
+			;;
+		*)
+			err qemu stack like zathras: not so good
+			;;
+		esac
 	done
-	qemu-system-i386 -net none -kernel $1
+	shift $((${OPTIND}-1))
+
+	qemucmd="qemu-system-i386 -net none -no-kvm ${opt_drivespec} -kernel $1"
+	if [ -n "$opt_interactive" ]; then
+		${qemucmd}
+	else
+		qemucmd="${qemucmd} -display none"
+		${qemucmd} 1>/dev/null 2>&1 &
+		echo $!
+	fi
 }
 
 if [ $# -lt 2 ]; then
