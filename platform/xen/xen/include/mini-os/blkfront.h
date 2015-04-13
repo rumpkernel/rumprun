@@ -20,12 +20,14 @@ struct blkfront_aiocb
 
     void (*aio_cb)(struct blkfront_aiocb *aiocb, int ret);
 };
+
+enum blkfront_mode { BLKFRONT_RDONLY, BLKFRONT_RDWR };
 struct blkfront_info
 {
     uint64_t sectors;
     unsigned sector_size;
     int mode;
-    int info;
+    enum blkfront_mode info;
     int barrier;
     int flush;
 };

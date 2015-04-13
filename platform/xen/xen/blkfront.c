@@ -15,7 +15,6 @@
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
 
-#include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -177,9 +176,9 @@ done:
             goto error;
         }
         if (*c == 'w')
-            dev->info.mode = O_RDWR;
+            dev->info.mode = BLKFRONT_RDWR;
         else
-            dev->info.mode = O_RDONLY;
+            dev->info.mode = BLKFRONT_RDONLY;
         bmk_memfree(c);
 
         snprintf(path, sizeof(path), "%s/state", dev->backend);
@@ -430,7 +429,7 @@ void blkfront_sync(struct blkfront_dev *dev)
     unsigned long flags;
     DEFINE_WAIT(w);
 
-    if (dev->info.mode == O_RDWR) {
+    if (dev->info.mode == BLKFRONT_RDWR) {
         if (dev->info.barrier == 1)
             blkfront_push_operation(dev, BLKIF_OP_WRITE_BARRIER, 0);
 

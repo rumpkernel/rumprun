@@ -30,7 +30,6 @@
 #include <mini-os/blkfront.h>
 #include <mini-os/mm.h>
 
-#include <fcntl.h>
 #include <stdio.h>
 
 #include <bmk-core/errno.h>
@@ -119,7 +118,7 @@ rumpuser_open(const char *name, int mode, int *fdp)
 
 	acc = mode & RUMPUSER_OPEN_ACCMODE;
 	if (acc == RUMPUSER_OPEN_WRONLY || acc == RUMPUSER_OPEN_RDWR) {
-		if (blkinfos[num].mode != O_RDWR) {
+		if (blkinfos[num].mode != BLKFRONT_RDWR) {
 			/* XXX: unopen */
 			return BMK_EROFS;
 		}
