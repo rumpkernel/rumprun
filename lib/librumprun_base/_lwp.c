@@ -45,7 +45,7 @@
 #include <bmk-base/netbsd_initfini.h>
 #include <bmk-base/rumprun_makelwp.h>
 
-#include <bmk-core/bmk_ops.h>
+#include <bmk-core/core.h>
 #include <bmk-core/sched.h>
 
 #if 0

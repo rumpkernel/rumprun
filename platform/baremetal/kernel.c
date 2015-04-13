@@ -31,8 +31,8 @@
 
 #include <bmk-core/core.h>
 #include <bmk-core/string.h>
-#include <bmk-core/bmk_ops.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/platform.h>
 
 #include <bmk-base/netbsd_initfini.h>
 
@@ -60,15 +60,15 @@ bmk_allocpg(size_t howmany)
 	return (void *)rv;
 }
 
-static void *
-bmk_allocpg2(int shift)
+void *
+bmk_platform_allocpg2(int shift)
 {
 
 	return bmk_allocpg(1<<shift);
 }
 
-static void
-bmk_freepg2(void *mem, int shift)
+void
+bmk_platform_freepg2(void *mem, int shift)
 {
 
 	bmk_cons_puts("WARNING: freepg2 called!\n");
@@ -107,17 +107,11 @@ parsemem(uint32_t addr, uint32_t len)
 	return 0;
 }
 
-static const struct bmk_ops myops = {
-	.bmk_allocpg2 = bmk_allocpg2,
-	.bmk_freepg2 = bmk_freepg2,
-	.bmk_halt = bmk_halt,
-};
-
 void
 bmk_main(struct multiboot_info *mbi)
 {
 
-	bmk_core_init(BMK_THREAD_STACKSIZE, PAGE_SIZE, &myops);
+	bmk_core_init(BMK_THREAD_STACKSIZE, PAGE_SIZE);
 
 	bmk_cons_puts("rump kernel bare metal bootstrap\n\n");
 	if ((mbi->flags & MULTIBOOT_MEMORY_INFO) == 0) {
@@ -211,7 +205,7 @@ bmk_init(void)
 }
 
 void __attribute__((noreturn))
-bmk_halt(const char *panicstring)
+bmk_platform_halt(const char *panicstring)
 {
 
 	if (panicstring) {

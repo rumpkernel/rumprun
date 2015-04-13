@@ -76,8 +76,8 @@ _app_main(void *arg)
     app_main(si);
 }
 
-static void __attribute__((noreturn))
-stopandhalt(const char *panicstring)
+void
+bmk_platform_halt(const char *panicstring)
 {
 
 	if (panicstring)
@@ -86,18 +86,19 @@ stopandhalt(const char *panicstring)
 	minios_do_halt(MINIOS_HALT_POWEROFF);
 }
 
-static void *
-allocpg2(int shift)
+void *
+bmk_platform_allocpg2(int shift)
 {
 
 	return (void *)minios_alloc_pages(shift);
 }
 
-static const struct bmk_ops myops = {
-	.bmk_allocpg2 = allocpg2,
-	.bmk_freepg2 = minios_free_pages,
-	.bmk_halt = stopandhalt,
-};
+void
+bmk_platform_freepg2(void *p, int shift)
+{
+
+	minios_free_pages(p, shift);
+}
 
 /*
  * INITIAL C ENTRY POINT.
@@ -105,7 +106,7 @@ static const struct bmk_ops myops = {
 void _minios_start_kernel(start_info_t *si)
 {
 
-    bmk_core_init(STACK_SIZE, PAGE_SIZE, &myops);
+    bmk_core_init(STACK_SIZE, PAGE_SIZE);
 
     arch_init(si);
     trap_init();

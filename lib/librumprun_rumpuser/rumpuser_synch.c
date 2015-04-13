@@ -163,7 +163,7 @@ rumpuser_mutex_enter_nowrap(struct rumpuser_mtx *mtx)
 	rv = rumpuser_mutex_tryenter(mtx);
 	/* one VCPU supported, no preemption => must succeed */
 	if (rv != 0) {
-		bmk_ops->bmk_halt("rumpuser mutex error");
+		bmk_platform_halt("rumpuser mutex error");
 	}
 }
 

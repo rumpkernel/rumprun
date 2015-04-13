@@ -72,8 +72,8 @@
 
 #define assert(x) ASSERT(x)
 
-#include <bmk-core/bmk_ops.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/platform.h>
 #include <bmk-core/queue.h>
 #include <bmk-core/string.h>
 #include <bmk-core/sched.h>
@@ -352,7 +352,7 @@ bmk_sched_exit(void)
 
 	/* bye */
 	bmk_sched();
-	bmk_ops->bmk_halt("schedule() returned for a dead thread!\n");
+	bmk_platform_halt("schedule() returned for a dead thread!\n");
 }
 
 /* hmm, all of the interfaces here are namespaced "backwards" ... */
@@ -498,7 +498,7 @@ bmk_sched_settls(struct bmk_thread *thread, unsigned int which, void *value)
 {
 
 	if (which >= TLS_COUNT) {
-		bmk_ops->bmk_halt("out of bmk sched tls space");
+		bmk_platform_halt("out of bmk sched tls space");
 	}
 	thread->bt_tls[which] = value;
 }
@@ -508,7 +508,7 @@ bmk_sched_gettls(struct bmk_thread *thread, unsigned int which)
 {
 
 	if (which >= TLS_COUNT) {
-		bmk_ops->bmk_halt("out of bmk sched tls space");
+		bmk_platform_halt("out of bmk sched tls space");
 	}
 	return thread->bt_tls[which];
 }

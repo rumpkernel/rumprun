@@ -54,7 +54,7 @@ rumpuser_malloc(size_t len, int alignment, void **retval)
 	 */
 	if (len == bmk_pagesize) {
 		bmk_assert(alignment <= bmk_pagesize);
-		*retval = bmk_ops->bmk_allocpg2(0);
+		*retval = bmk_platform_allocpg2(0);
 	} else {
 		*retval = bmk_memalloc(len, alignment);
 	}
@@ -69,7 +69,7 @@ rumpuser_free(void *buf, size_t buflen)
 {
 
 	if (buflen == bmk_pagesize)
-		bmk_ops->bmk_freepg2(buf, 0);
+		bmk_platform_freepg2(buf, 0);
 	else
 		bmk_memfree(buf);
 }

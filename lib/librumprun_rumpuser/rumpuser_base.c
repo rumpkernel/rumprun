@@ -23,8 +23,8 @@
  * SUCH DAMAGE.
  */
 
-#include <bmk-core/bmk_ops.h>
 #include <bmk-core/null.h>
+#include <bmk-core/platform.h>
 #include <bmk-core/sched.h>
 
 #include <bmk-rumpuser/core_types.h>
@@ -39,7 +39,7 @@ rumpuser_init(int version, const struct rumpuser_hyperup *hyp)
 {
 
 	if (version != RUMPHYPER_MYVERSION) {
-		bmk_ops->bmk_halt("rump kernel hypercall revision mismatch\n");
+		bmk_platform_halt("rump kernel hypercall revision mismatch\n");
 		/* NOTREACHED */
 	}
 
@@ -52,7 +52,7 @@ void
 rumpuser_exit(int value)
 {
 
-	bmk_ops->bmk_halt(value == 0 ? NULL : "rumpuser panic");
+	bmk_platform_halt(value == 0 ? NULL : "rumpuser panic");
 }
 
 void

@@ -63,9 +63,10 @@
 
 #else
 
+#include <bmk-core/core.h>
 #include <bmk-core/string.h>
 #include <bmk-core/memalloc.h>
-#include <bmk-core/bmk_ops.h>
+#include <bmk-core/platform.h>
 
 #define NULL (void *)0
 #define ASSERT(x)
@@ -308,7 +309,7 @@ bmk_xmalloc(unsigned long howmuch)
 
 	rv = bmk_memalloc(howmuch, 0);
 	if (rv == NULL)
-		bmk_ops->bmk_halt("xmalloc failed");
+		bmk_platform_halt("xmalloc failed");
 	return rv;
 }
 
@@ -335,7 +336,7 @@ corealloc(int shift)
 #ifdef MEMALLOC_TESTING
 	v = malloc((1<<shift) * pagesz);
 #else
-	v = bmk_ops->bmk_allocpg2(shift);
+	v = bmk_platform_allocpg2(shift);
 #endif
 
 	return v;

@@ -115,5 +115,5 @@ _netbsd_fini(void)
 	runfini();
 	rump_sys_reboot(0, 0);
 	/* XXX: Should print something if we ever get here, but how? */
-	bmk_ops->bmk_halt(NULL);
+	bmk_platform_halt(NULL);
 }

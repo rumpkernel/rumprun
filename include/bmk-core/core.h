@@ -26,15 +26,17 @@
 #ifndef _BMK_CORE_CORE_H_
 #define _BMK_CORE_CORE_H_
 
-#include <bmk-core/bmk_ops.h>
+#include <bmk-core/platform.h>
 
-int bmk_core_init(long, long, const struct bmk_ops *);
+int bmk_core_init(long, long);
 
 #define bmk_assert(x)							\
   do {									\
 	if (!(x)) {							\
-		bmk_ops->bmk_halt("assert \"" #x "\" FAILED\n");	\
+		bmk_platform_halt("assert \"" #x "\" FAILED\n");	\
 	}								\
   } while (0)
+
+extern long bmk_stacksize, bmk_pagesize;
 
 #endif /* _BMK_CORE_CORE_H_ */

@@ -23,16 +23,11 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _BMK_CORE_BMK_OPS_H_
-#define _BMK_CORE_BMK_OPS_H_
+#ifndef _BMK_CORE_PLATFORM_H_
+#define _BMK_CORE_PLATFORM_H_
 
-struct bmk_ops {
-	void *(*bmk_allocpg2)(int);
-	void (*bmk_freepg2)(void *, int);
-	void (*bmk_halt)(const char *) __attribute__((noreturn));
-};
+void *bmk_platform_allocpg2(int);
+void bmk_platform_freepg2(void *, int);
+void bmk_platform_halt(const char *) __attribute__((noreturn));
 
-extern const struct bmk_ops *bmk_ops;
-extern long bmk_stacksize, bmk_pagesize;
-
-#endif /* _BMK_CORE_BMK_OPS_H_ */
+#endif /* _BMK_CORE_PLATFORM_H_ */
