@@ -72,10 +72,9 @@
 
 #define assert(x) ASSERT(x)
 
-#include <sys/queue.h>
-
 #include <bmk-core/bmk_ops.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/queue.h>
 #include <bmk-core/string.h>
 #include <bmk-core/sched.h>
 
