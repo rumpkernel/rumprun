@@ -29,8 +29,6 @@
 
 #include <xen/io/console.h>
 
-#include <fcntl.h>
-#include <inttypes.h>
 #include <stdio.h>
 
 #include <bmk-core/errno.h>
@@ -83,7 +81,7 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 
 	/* for memlimit, we have to implement int -> string ... */
 	} else if (bmk_strcmp(name, "RUMP_MEMLIMIT") == 0) {
-		uint64_t memsize;
+		unsigned long long memsize;
 		char tmp[64];
 		char *res = buf;
 		unsigned i, j;
@@ -92,7 +90,7 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 		memsize = minios_get_memsize() / 2;
 		if (memsize < (8 * 1024 * 1024)) {
 			minios_printk("rumphyper: warning: low on physical "
-				      "memory (%"PRIu64" bytes), "
+				      "memory (%llu bytes), "
 				      "suggest increasing domU allocation\n",
 				      memsize);
 			memsize = 8 * 1024 * 1024;

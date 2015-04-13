@@ -31,7 +31,6 @@
 #include <mini-os/mm.h>
 
 #include <fcntl.h>
-#include <inttypes.h>
 #include <stdio.h>
 
 #include <bmk-core/errno.h>
