@@ -25,9 +25,9 @@
 
 #include <bmk/kernel.h>
 #include <bmk/sched.h>
-#include <bmk/queue.h>
 
 #include <bmk-core/memalloc.h>
+#include <bmk-core/queue.h>
 
 #define LIBRUMPUSER
 #include "rumpuser_int.h"

@@ -62,13 +62,13 @@
  */
 
 #include <bmk/types.h>
-#include <bmk/queue.h>
 
 #include <bmk/kernel.h>
 #include <bmk/sched.h>
 
 #include <bmk-core/core.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/queue.h>
 #include <bmk-core/string.h>
 #include <bmk-core/sched.h>
 
