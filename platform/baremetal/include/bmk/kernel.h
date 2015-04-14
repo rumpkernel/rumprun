@@ -15,14 +15,6 @@ void *bmk_allocpg(size_t);
 
 #define panic(x) do { bmk_cons_puts(x "\n"); for (;;); } while (0)
 
-/* eh eh eh.  NOTE: callable only after rump_init() has run! */
-#define bmk_printf(x, ...) \
-    do { \
-	void rump_schedule(void); void rump_unschedule(void); \
-	int rumpns_printf(const char *, ...); \
-	rump_schedule(); rumpns_printf(x, __VA_ARGS__); rump_unschedule(); \
-    } while (0);
-
 struct multiboot_info;
 void bmk_init(void);
 void bmk_halt(const char *) __attribute__((noreturn));
