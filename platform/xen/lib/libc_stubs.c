@@ -1,13 +1,12 @@
-#include <mini-os/console.h>
-
 #include <errno.h>
+#include <stdio.h>
 
 #define STUB(name)				\
   int name(void); int name(void) {		\
 	static int done = 0;			\
 	errno = ENOTSUP;			\
 	if (done) return ENOTSUP; done = 1;	\
-	minios_printk("STUB ``%s'' called\n", #name);	\
+	printf("STUB ``%s'' called\n", #name);	\
 	return ENOTSUP;}
 
 STUB(__sigaction14);
