@@ -26,7 +26,8 @@
 #include <errno.h>
 #include <stdio.h>
 
-#define STUB(name)					\
+/* XXX: incorrect return value, need to fix other things first */
+#define STUB_ERRNO(name)				\
   int name(void); int name(void) {			\
 	static int done = 0;				\
 	errno = ENOTSUP;				\
@@ -34,31 +35,39 @@
 	fprintf(stderr, "STUB ``%s'' called\n", #name);	\
 	return ENOTSUP;}
 
-STUB(__sigaction14);
-STUB(__sigaction_sigtramp);
-STUB(sigaction);
-STUB(sigprocmask);
-STUB(__getrusage50);
+#define STUB_RETURN(name)				\
+  int name(void); int name(void) {			\
+	static int done = 0;				\
+	if (done) return ENOTSUP; done = 1;		\
+	fprintf(stderr, "STUB ``%s'' called\n", #name);	\
+	return ENOTSUP;}
 
-STUB(__fork);
-STUB(__vfork14);
-STUB(kill);
-STUB(getpriority);
-STUB(setpriority);
-STUB(posix_spawn);
+STUB_RETURN(posix_spawn);
 
-STUB(mlockall);
+STUB_ERRNO(__sigaction14);
+STUB_ERRNO(__sigaction_sigtramp);
+STUB_ERRNO(sigaction);
+STUB_ERRNO(sigprocmask);
+STUB_ERRNO(__getrusage50);
+
+STUB_ERRNO(__fork);
+STUB_ERRNO(__vfork14);
+STUB_ERRNO(kill);
+STUB_ERRNO(getpriority);
+STUB_ERRNO(setpriority);
+
+STUB_ERRNO(mlockall);
 
 /* for pthread_cancelstub */
-STUB(_sys_mq_send);
-STUB(_sys_mq_receive);
-STUB(_sys___mq_timedsend50);
-STUB(_sys___mq_timedreceive50);
-STUB(_sys_msgrcv);
-STUB(_sys_msgsnd);
-STUB(_sys___msync13);
-STUB(_sys___wait450);
-STUB(_sys___sigsuspend14);
+STUB_ERRNO(_sys_mq_send);
+STUB_ERRNO(_sys_mq_receive);
+STUB_ERRNO(_sys___mq_timedsend50);
+STUB_ERRNO(_sys___mq_timedreceive50);
+STUB_ERRNO(_sys_msgrcv);
+STUB_ERRNO(_sys_msgsnd);
+STUB_ERRNO(_sys___msync13);
+STUB_ERRNO(_sys___wait450);
+STUB_ERRNO(_sys___sigsuspend14);
 
 /* execve is open-coded to match the prototype to avoid a compiler warning */
 int execve(const char *, char *const[], char *const[]);
