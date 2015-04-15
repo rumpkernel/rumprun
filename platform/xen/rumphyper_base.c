@@ -46,24 +46,6 @@ rumpuser_putchar(int ch)
 	minios_console_print(NULL, &c, 1);
 }
 
-void
-rumpuser_dprintf(const char *fmt, ...)
-{
-	char *buf;
-	va_list va;
-
-	buf = (void *)minios_alloc_pages(0);
-	if (!buf)
-		return;
-
-	va_start(va, fmt);
-	vsnprintf(buf, PAGE_SIZE, fmt, va);
-	va_end(va);
-	minios_console_print(NULL, buf, bmk_strlen(buf));
-
-	minios_free_pages(buf, 0);
-}
-
 int
 rumpuser_getparam(const char *name, void *buf, size_t buflen)
 {

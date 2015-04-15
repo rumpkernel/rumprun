@@ -117,13 +117,3 @@ rumpuser_getrandom(void *buf, size_t buflen, int flags, size_t *retp)
 	}
 	return 0;
 }
-
-/*
- * currently, supports only printing fmt.  better than nothing ...
- */
-void
-rumpuser_dprintf(const char *fmt, ...)
-{
-
-	bmk_cons_puts(fmt);
-}
