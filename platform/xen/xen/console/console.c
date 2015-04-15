@@ -46,6 +46,7 @@
 
 #include <stdio.h>
 
+#include <bmk-core/printf.h>
 #include <bmk-core/string.h>
 
 
@@ -143,6 +144,14 @@ void print(int direct, const char *fmt, va_list args)
     }
 }
 
+/* XXX: should use a putc/flush combo ... later */
+static void minios_putc(int c)
+{
+    char cc = c;
+
+    (void)HYPERVISOR_console_io(CONSOLEIO_write, 1, &cc);
+}
+
 void minios_printk(const char *fmt, ...)
 {
     va_list       args;
@@ -160,6 +169,7 @@ void xprintk(const char *fmt, ...)
 }
 void init_console(void)
 {   
+    bmk_printf_init(minios_putc, NULL);
     minios_printk("Initialising console ... ");
     xencons_ring_init();    
     console_initialised = 1;
