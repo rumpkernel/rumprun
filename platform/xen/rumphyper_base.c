@@ -29,8 +29,6 @@
 
 #include <xen/io/console.h>
 
-#include <stdio.h>
-
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
 #include <bmk-core/sched.h>

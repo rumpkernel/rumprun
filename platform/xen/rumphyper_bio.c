@@ -30,10 +30,9 @@
 #include <mini-os/blkfront.h>
 #include <mini-os/mm.h>
 
-#include <stdio.h>
-
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/printf.h>
 #include <bmk-core/sched.h>
 #include <bmk-core/string.h>
 
@@ -73,7 +72,7 @@ devopen(int num)
 		return 1;
 	}
 
-	snprintf(buf, sizeof(buf), "device/vbd/%d", devnum);
+	bmk_snprintf(buf, sizeof(buf), "device/vbd/%d", devnum);
 
 	rumpkern_unsched(&nlocks, NULL);
 	blkdevs[num] = blkfront_init(buf, &blkinfos[num]);
