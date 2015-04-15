@@ -41,7 +41,7 @@ typedef __builtin_va_list va_list;
 
 void	bmk_vprintf(const char *, va_list)
 	__attribute__((__format__(__printf__,1,0)));
-int	bmk_vsnprintf(char *, unsigned long, const char *fmt, va_list)
+int	bmk_vsnprintf(char *, unsigned long, const char *, va_list)
 	__attribute__((__format__(__printf__,3,0)));
 #endif /* _BMK_PRINTF_VA */
 
