@@ -23,20 +23,49 @@
  * SUCH DAMAGE.
  */
 
-#include <bmk/kernel.h>
+#include <errno.h>
+#include <stdio.h>
 
-/*
- * Stubs for unused rump kernel hypercalls
- */
+#define STUB(name)				\
+  int name(void); int name(void) {		\
+	static int done = 0;			\
+	errno = ENOTSUP;			\
+	if (done) return ENOTSUP; done = 1;	\
+	printf("STUB ``%s'' called\n", #name);	\
+	return ENOTSUP;}
 
-#define NOTHING(name) \
-    int name(void); int name(void) \
-    {bmk_cons_puts("unimplemented: " #name "\n"); for (;;);}
+STUB(__sigaction14);
+STUB(__sigaction_sigtramp);
+STUB(sigaction);
+STUB(sigprocmask);
+STUB(__getrusage50);
 
-#define REALNOTHING(name) \
-    int name(void); int name(void) {return 1;}
+STUB(__fork);
+STUB(__vfork14);
+STUB(kill);
+STUB(getpriority);
+STUB(setpriority);
+STUB(posix_spawn);
 
-NOTHING(rumpuser_open)
-NOTHING(rumpuser_close)
-REALNOTHING(rumpuser_getfileinfo)
-NOTHING(rumpuser_bio)
+STUB(mlockall);
+
+/* for pthread_cancelstub */
+STUB(_sys_mq_send);
+STUB(_sys_mq_receive);
+STUB(_sys___mq_timedsend50);
+STUB(_sys___mq_timedreceive50);
+STUB(_sys_msgrcv);
+STUB(_sys_msgsnd);
+STUB(_sys___msync13);
+STUB(_sys___wait450);
+STUB(_sys___sigsuspend14);
+
+int execve(const char *, char *const[], char *const[]);
+int
+execve(const char *file, char *const argv[], char *const envp[])
+{
+
+	printf("execve not implemented\n");
+	errno = ENOTSUP;
+	return -1;
+}
