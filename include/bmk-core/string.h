@@ -28,6 +28,7 @@
 
 void *bmk_memcpy(void *, const void *, unsigned long);
 void *bmk_memset(void *, int, unsigned long);
+void *bmk_memchr(const void *, int, unsigned long);
 
 unsigned long bmk_strlen(const char *);
 char *bmk_strcpy(char *, const char *);

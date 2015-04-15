@@ -30,6 +30,7 @@
  * Some code from public domain implementations.
  */
 
+#include <bmk-core/null.h>
 #include <bmk-core/string.h>
 
 unsigned long
@@ -118,4 +119,17 @@ bmk_memcpy(void *d, const void *src, unsigned long n)
 		*dp++ = *sp++;
 
 	return d;
+}
+
+void *
+bmk_memchr(const void *d, int c, unsigned long n)
+{
+	const unsigned char *p = d;
+
+	while (n--) {
+		if (*p == (unsigned char)c)
+			return (void *)(unsigned long)p;
+		p++;
+	}
+	return NULL;
 }
