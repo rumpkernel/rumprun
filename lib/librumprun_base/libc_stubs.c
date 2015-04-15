@@ -26,12 +26,12 @@
 #include <errno.h>
 #include <stdio.h>
 
-#define STUB(name)				\
-  int name(void); int name(void) {		\
-	static int done = 0;			\
-	errno = ENOTSUP;			\
-	if (done) return ENOTSUP; done = 1;	\
-	printf("STUB ``%s'' called\n", #name);	\
+#define STUB(name)					\
+  int name(void); int name(void) {			\
+	static int done = 0;				\
+	errno = ENOTSUP;				\
+	if (done) return ENOTSUP; done = 1;		\
+	fprintf(stderr, "STUB ``%s'' called\n", #name);	\
 	return ENOTSUP;}
 
 STUB(__sigaction14);
@@ -60,12 +60,13 @@ STUB(_sys___msync13);
 STUB(_sys___wait450);
 STUB(_sys___sigsuspend14);
 
+/* execve is open-coded to match the prototype to avoid a compiler warning */
 int execve(const char *, char *const[], char *const[]);
 int
 execve(const char *file, char *const argv[], char *const envp[])
 {
 
-	printf("execve not implemented\n");
+	fprintf(stderr, "execve not implemented\n");
 	errno = ENOTSUP;
 	return -1;
 }
