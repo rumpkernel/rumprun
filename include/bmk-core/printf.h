@@ -39,6 +39,8 @@ typedef __builtin_va_list va_list;
 #define va_arg                  __builtin_va_arg
 #define va_end(ap)              __builtin_va_end(ap)
 
+void	bmk_vprintf(const char *, va_list)
+	__attribute__((__format__(__printf__,1,0)));
 int	bmk_vsnprintf(char *, unsigned long, const char *fmt, va_list)
 	__attribute__((__format__(__printf__,3,0)));
 #endif /* _BMK_PRINTF_VA */

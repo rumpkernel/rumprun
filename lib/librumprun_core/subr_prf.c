@@ -141,6 +141,20 @@ bmk_printf(const char *fmt, ...)
 }
 
 /*
+ * vprintf: print a message to the console and the log [already have
+ *      va_list]
+ */
+void
+bmk_vprintf(const char *fmt, va_list ap)
+{
+	kprintf_lock();
+
+	kprintf(fmt, TOCONS, NULL, NULL, ap);
+
+	kprintf_unlock();
+}
+
+/*
  * bmk_snprintf: print a message to a buffer
  */
 int
