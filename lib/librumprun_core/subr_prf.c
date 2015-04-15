@@ -124,7 +124,7 @@ kprintf_unlock(void)
 }
 
 /*
- * bmk_printf: print a message to the console and the log
+ * bmk_printf: print a message to the console
  */
 void
 bmk_printf(const char *fmt, ...)
@@ -141,7 +141,7 @@ bmk_printf(const char *fmt, ...)
 }
 
 /*
- * vprintf: print a message to the console and the log [already have
+ * bmk_vprintf: print a message to the console [already have
  *      va_list]
  */
 void
