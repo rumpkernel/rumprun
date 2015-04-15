@@ -33,6 +33,7 @@
 #include <bmk-core/string.h>
 #include <bmk-core/memalloc.h>
 #include <bmk-core/platform.h>
+#include <bmk-core/printf.h>
 
 #include <bmk-base/netbsd_initfini.h>
 
@@ -71,7 +72,7 @@ void
 bmk_platform_freepg2(void *mem, int shift)
 {
 
-	bmk_cons_puts("WARNING: freepg2 called!\n");
+	bmk_printf("WARNING: freepg2 called! (%p, %d)\n", mem, shift);
 }
 
 static int
@@ -111,11 +112,12 @@ void
 bmk_main(struct multiboot_info *mbi)
 {
 
+	bmk_printf_init(bmk_cons_putc, NULL);
 	bmk_core_init(BMK_THREAD_STACKSIZE, PAGE_SIZE);
 
-	bmk_cons_puts("rump kernel bare metal bootstrap\n\n");
+	bmk_printf("rump kernel bare metal bootstrap\n\n");
 	if ((mbi->flags & MULTIBOOT_MEMORY_INFO) == 0) {
-		bmk_cons_puts("multiboot memory info not available\n");
+		bmk_printf("multiboot memory info not available\n");
 		return;
 	}
 	if (parsemem(mbi->mmap_addr, mbi->mmap_length))
@@ -208,12 +210,9 @@ void __attribute__((noreturn))
 bmk_platform_halt(const char *panicstring)
 {
 
-	if (panicstring) {
-		bmk_cons_puts("PANIC: ");
-		bmk_cons_puts(panicstring);
-		bmk_cons_puts("\n");
-	}
-	bmk_cons_puts("baremetal halted (well, spinning ...)\n");
+	if (panicstring)
+		bmk_printf("PANIC: %s\n", panicstring);
+	bmk_printf("baremetal halted (well, spinning ...)\n");
 	for (;;)
 		continue;
 }
