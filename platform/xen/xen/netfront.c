@@ -16,8 +16,8 @@
 #include <mini-os/semaphore.h>
 
 #include <bmk-core/memalloc.h>
+#include <bmk-core/printf.h>
 
-#include <stdio.h>
 #include <string.h>
 
 #include <stdlib.h> /* XXX: strtoul() */
@@ -254,7 +254,7 @@ struct netfront_dev *netfront_init(char *_nodename, void (*thenetif_rx)(struct n
     static int netfrontends = 0;
 
     if (!_nodename)
-        snprintf(nodename, sizeof(nodename), "device/vif/%d", netfrontends);
+        bmk_snprintf(nodename, sizeof(nodename), "device/vif/%d", netfrontends);
     else
         strncpy(nodename, _nodename, strlen(nodename));
     netfrontends++;
@@ -278,7 +278,7 @@ struct netfront_dev *netfront_init(char *_nodename, void (*thenetif_rx)(struct n
         dev->rx_buffers[i].page = (char*)minios_alloc_page();
     }
 
-    snprintf(path, sizeof(path), "%s/backend-id", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/backend-id", nodename);
     dev->dom = xenbus_read_integer(path);
         minios_evtchn_alloc_unbound(dev->dom, netfront_handler, dev, &dev->evtchn);
 
@@ -340,7 +340,7 @@ again:
         goto abort_transaction;
     }
 
-    snprintf(path, sizeof(path), "%s/state", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/state", nodename);
     err = xenbus_switch_state(xbt, path, XenbusStateConnected);
     if (err) {
         message = "switching state";
@@ -364,9 +364,9 @@ abort_transaction:
 
 done:
 
-    snprintf(path, sizeof(path), "%s/backend", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/backend", nodename);
     msg = xenbus_read(XBT_NIL, path, &dev->backend);
-    snprintf(path, sizeof(path), "%s/mac", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/mac", nodename);
     msg = xenbus_read(XBT_NIL, path, &dev->mac);
 
     if ((dev->backend == NULL) || (dev->mac == NULL)) {
@@ -380,7 +380,7 @@ done:
     {
         XenbusState state;
         char path[strlen(dev->backend) + 1 + 5 + 1];
-        snprintf(path, sizeof(path), "%s/state", dev->backend);
+        bmk_snprintf(path, sizeof(path), "%s/state", dev->backend);
 
         xenbus_watch_path_token(XBT_NIL, path, path, &dev->events);
 
@@ -395,7 +395,7 @@ done:
         }
 
         if (ip) {
-            snprintf(path, sizeof(path), "%s/ip", dev->backend);
+            bmk_snprintf(path, sizeof(path), "%s/ip", dev->backend);
             xenbus_read(XBT_NIL, path, ip);
         }
     }
@@ -438,8 +438,8 @@ void netfront_shutdown(struct netfront_dev *dev)
 
     minios_printk("close network: backend at %s\n",dev->backend);
 
-    snprintf(path, sizeof(path), "%s/state", dev->backend);
-    snprintf(nodename, sizeof(nodename), "%s/state", dev->nodename);
+    bmk_snprintf(path, sizeof(path), "%s/state", dev->backend);
+    bmk_snprintf(nodename, sizeof(nodename), "%s/state", dev->nodename);
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateClosing)) != NULL) {
         minios_printk("shutdown_netfront: error changing state to %d: %s\n",
@@ -476,13 +476,13 @@ close:
     if (err) bmk_memfree(err);
     xenbus_unwatch_path_token(XBT_NIL, path, path);
 
-    snprintf(path, sizeof(path), "%s/tx-ring-ref", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/tx-ring-ref", nodename);
     xenbus_rm(XBT_NIL, path);
-    snprintf(path, sizeof(path), "%s/rx-ring-ref", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/rx-ring-ref", nodename);
     xenbus_rm(XBT_NIL, path);
-    snprintf(path, sizeof(path), "%s/event-channel", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/event-channel", nodename);
     xenbus_rm(XBT_NIL, path);
-    snprintf(path, sizeof(path), "%s/request-rx-copy", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/request-rx-copy", nodename);
     xenbus_rm(XBT_NIL, path);
 
     if (!err)

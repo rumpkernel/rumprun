@@ -30,6 +30,7 @@
 #include <string.h> /* XXX: strdup */
 
 #include <bmk-core/memalloc.h>
+#include <bmk-core/printf.h>
 #include <bmk-core/string.h>
 
 #define min(x,y) ({                       \
@@ -206,7 +207,7 @@ char *xenbus_switch_state(xenbus_transaction_t xbt, const char* path, XenbusStat
             goto exit;
         }
 
-        snprintf(value, 2, "%d", state);
+        bmk_snprintf(value, 2, "%d", state);
         msg = xenbus_write(xbt, path, value);
 
 exit:
@@ -395,7 +396,7 @@ void xenbus_watch_prepare(struct xenbus_watch *watch)
     BUG_ON(!watch->events);
     size_t size = sizeof(void*)*2 + 5;
     watch->token = bmk_memalloc(size, 0);
-    int r = snprintf(watch->token,size,"*%p",(void*)watch);
+    int r = bmk_snprintf(watch->token,size,"*%p",(void*)watch);
     BUG_ON(!(r > 0 && r < size));
     spin_lock(&xenbus_req_lock);
     MINIOS_LIST_INSERT_HEAD(&watches, watch, entry);
@@ -749,7 +750,7 @@ char *xenbus_set_perms(xenbus_transaction_t xbt, const char *path, domid_t dom, 
     };
     struct xsd_sockmsg *rep;
     char *msg;
-    snprintf(value, PERM_MAX_SIZE, "%c%hu", perm, dom);
+    bmk_snprintf(value, PERM_MAX_SIZE, "%c%hu", perm, dom);
     req[1].len = bmk_strlen(value) + 1;
     rep = xenbus_msg_reply(XS_SET_PERMS, xbt, req, ARRAY_SIZE(req));
     msg = errmsg(rep);

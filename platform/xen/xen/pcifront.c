@@ -11,13 +11,13 @@
 #include <mini-os/pcifront.h>
 #include <mini-os/sched.h>
 
-#include <stdio.h>
 #include <string.h>
 
 #include <stdlib.h> /* XXX: strtoul() */
 
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/printf.h>
 
 #define PCI_DEVFN(slot, func) ((((slot) & 0x1f) << 3) | ((func) & 0x07))
 
@@ -70,8 +70,8 @@ void pcifront_watches(void *opaque)
     struct xenbus_event_queue events;
     xenbus_event_queue_init(&events);
 
-    snprintf(path, sizeof(path), "%s/backend", nodename);
-    snprintf(fe_state, sizeof(fe_state), "%s/state", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/backend", nodename);
+    bmk_snprintf(fe_state, sizeof(fe_state), "%s/state", nodename);
 
     while (1) {
         minios_printk("pcifront_watches: waiting for backend path to appear %s\n", path);
@@ -83,7 +83,7 @@ void pcifront_watches(void *opaque)
         xenbus_unwatch_path_token(XBT_NIL, path, path);
         minios_printk("pcifront_watches: waiting for backend to get into the right state %s\n", be_path);
         be_state = (char *) bmk_memalloc(strlen(be_path) +  7, 0);
-        snprintf(be_state, strlen(be_path) +  7, "%s/state", be_path);
+        bmk_snprintf(be_state, strlen(be_path) +  7, "%s/state", be_path);
         xenbus_watch_path_token(XBT_NIL, be_state, be_state, &events);
         while ((err = xenbus_read(XBT_NIL, be_state, &msg)) != NULL || msg[0] > '4') {
             bmk_memfree(msg);
@@ -159,7 +159,7 @@ struct pcifront_dev *init_pcifront(char *_nodename)
     if (!_nodename && pcidev)
         return pcidev;
 
-    snprintf(path, sizeof(path), "%s/backend-id", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/backend-id", nodename);
     dom = xenbus_read_integer(path); 
     if (dom == -1) {
         minios_printk("no backend\n");
@@ -205,7 +205,7 @@ again:
         goto abort_transaction;
     }
 
-    snprintf(path, sizeof(path), "%s/state", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/state", nodename);
     err = xenbus_switch_state(xbt, path, XenbusStateInitialised);
     if (err) {
         message = "switching state";
@@ -229,7 +229,7 @@ abort_transaction:
 
 done:
 
-    snprintf(path, sizeof(path), "%s/backend", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/backend", nodename);
     msg = xenbus_read(XBT_NIL, path, &dev->backend);
     if (msg) {
         minios_printk("Error %s when reading the backend path %s\n", msg, path);
@@ -242,7 +242,7 @@ done:
         char path[strlen(dev->backend) + 1 + 5 + 1];
         char frontpath[strlen(nodename) + 1 + 5 + 1];
         XenbusState state;
-        snprintf(path, sizeof(path), "%s/state", dev->backend);
+        bmk_snprintf(path, sizeof(path), "%s/state", dev->backend);
 
         xenbus_watch_path_token(XBT_NIL, path, path, &dev->events);
 
@@ -256,7 +256,7 @@ done:
             goto error;
         }
 
-        snprintf(frontpath, sizeof(frontpath), "%s/state", nodename);
+        bmk_snprintf(frontpath, sizeof(frontpath), "%s/state", nodename);
         if ((err = xenbus_switch_state(XBT_NIL, frontpath, XenbusStateConnected))
             != NULL) {
             minios_printk("error switching state %s\n", err);
@@ -328,11 +328,11 @@ void pcifront_scan(struct pcifront_dev *dev, void (*func)(unsigned int domain, u
 
     len = strlen(dev->backend) + 1 + 5 + 10 + 1;
     path = (char *) bmk_memalloc(len, 0);
-    snprintf(path, len, "%s/num_devs", dev->backend);
+    bmk_snprintf(path, len, "%s/num_devs", dev->backend);
     n = xenbus_read_integer(path);
 
     for (i = 0; i < n; i++) {
-        snprintf(path, len, "%s/dev-%d", dev->backend, i);
+        bmk_snprintf(path, len, "%s/dev-%d", dev->backend, i);
         msg = xenbus_read(XBT_NIL, path, &s);
         if (msg) {
             minios_printk("Error %s when reading the PCI root name at %s\n", msg, path);
@@ -362,8 +362,8 @@ void shutdown_pcifront(struct pcifront_dev *dev)
 
     minios_printk("close pci: backend at %s\n",dev->backend);
 
-    snprintf(path, sizeof(path), "%s/state", dev->backend);
-    snprintf(nodename, sizeof(nodename), "%s/state", dev->nodename);
+    bmk_snprintf(path, sizeof(path), "%s/state", dev->backend);
+    bmk_snprintf(nodename, sizeof(nodename), "%s/state", dev->nodename);
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateClosing)) != NULL) {
         minios_printk("shutdown_pcifront: error changing state to %d: %s\n",
                 XenbusStateClosing, err);
@@ -399,9 +399,9 @@ close_pcifront:
     if (err) bmk_memfree(err);
     xenbus_unwatch_path_token(XBT_NIL, path, path);
 
-    snprintf(path, sizeof(path), "%s/info-ref", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/info-ref", nodename);
     xenbus_rm(XBT_NIL, path);
-    snprintf(path, sizeof(path), "%s/event-channel", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/event-channel", nodename);
     xenbus_rm(XBT_NIL, path);
 
     if (!err)
@@ -423,11 +423,11 @@ int pcifront_physical_to_virtual (struct pcifront_dev *dev,
     if (!dev)
         dev = pcidev;
 
-    snprintf(path, sizeof(path), "%s/num_devs", dev->backend);
+    bmk_snprintf(path, sizeof(path), "%s/num_devs", dev->backend);
     n = xenbus_read_integer(path);
 
     for (i = 0; i < n; i++) {
-        snprintf(path, sizeof(path), "%s/dev-%d", dev->backend, i);
+        bmk_snprintf(path, sizeof(path), "%s/dev-%d", dev->backend, i);
         msg = xenbus_read(XBT_NIL, path, &s);
         if (msg) {
             minios_printk("Error %s when reading the PCI root name at %s\n", msg, path);
@@ -440,7 +440,7 @@ int pcifront_physical_to_virtual (struct pcifront_dev *dev,
             continue;
 
         if (dom1 == *dom && bus1 == *bus && slot1 == *slot && fun1 == *fun) {
-            snprintf(path, sizeof(path), "%s/vdev-%d", dev->backend, i);
+            bmk_snprintf(path, sizeof(path), "%s/vdev-%d", dev->backend, i);
             msg = xenbus_read(XBT_NIL, path, &s);
             if (msg) {
                 minios_printk("Error %s when reading the PCI root name at %s\n", msg, path);

@@ -14,9 +14,9 @@
 
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/printf.h>
 
 #include <string.h>
-#include <stdio.h>
 
 #include <stdlib.h> /* XXX: strtoul() */
 
@@ -89,7 +89,7 @@ struct blkfront_dev *blkfront_init(char *_nodename, struct blkfront_info *info)
     dev = bmk_memcalloc(1, sizeof(*dev));
     dev->nodename = strdup(nodename);
 
-    snprintf(path, sizeof(path), "%s/backend-id", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/backend-id", nodename);
     dev->dom = xenbus_read_integer(path); 
     minios_evtchn_alloc_unbound(dev->dom, blkfront_handler, dev, &dev->evtchn);
 
@@ -130,7 +130,7 @@ again:
         goto abort_transaction;
     }
 
-    snprintf(path, sizeof(path), "%s/state", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/state", nodename);
     err = xenbus_switch_state(xbt, path, XenbusStateConnected);
     if (err) {
         message = "switching state";
@@ -155,7 +155,7 @@ abort_transaction:
 
 done:
 
-    snprintf(path, sizeof(path), "%s/backend", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/backend", nodename);
     msg = xenbus_read(XBT_NIL, path, &dev->backend);
     if (msg) {
         minios_printk("Error %s when reading the backend path %s\n", msg, path);
@@ -169,7 +169,7 @@ done:
     {
         XenbusState state;
         char path[strlen(dev->backend) + 1 + 19 + 1];
-        snprintf(path, sizeof(path), "%s/mode", dev->backend);
+        bmk_snprintf(path, sizeof(path), "%s/mode", dev->backend);
         msg = xenbus_read(XBT_NIL, path, &c);
         if (msg) {
             minios_printk("Error %s when reading the mode\n", msg);
@@ -181,7 +181,7 @@ done:
             dev->info.mode = BLKFRONT_RDONLY;
         bmk_memfree(c);
 
-        snprintf(path, sizeof(path), "%s/state", dev->backend);
+        bmk_snprintf(path, sizeof(path), "%s/state", dev->backend);
 
         xenbus_watch_path_token(XBT_NIL, path, path, &dev->events);
 
@@ -195,20 +195,20 @@ done:
             goto error;
         }
 
-        snprintf(path, sizeof(path), "%s/info", dev->backend);
+        bmk_snprintf(path, sizeof(path), "%s/info", dev->backend);
         dev->info.info = xenbus_read_integer(path);
 
-        snprintf(path, sizeof(path), "%s/sectors", dev->backend);
+        bmk_snprintf(path, sizeof(path), "%s/sectors", dev->backend);
         // FIXME: read_integer returns an int, so disk size limited to 1TB for now
         dev->info.sectors = xenbus_read_integer(path);
 
-        snprintf(path, sizeof(path), "%s/sector-size", dev->backend);
+        bmk_snprintf(path, sizeof(path), "%s/sector-size", dev->backend);
         dev->info.sector_size = xenbus_read_integer(path);
 
-        snprintf(path, sizeof(path), "%s/feature-barrier", dev->backend);
+        bmk_snprintf(path, sizeof(path), "%s/feature-barrier", dev->backend);
         dev->info.barrier = xenbus_read_integer(path);
 
-        snprintf(path, sizeof(path), "%s/feature-flush-cache", dev->backend);
+        bmk_snprintf(path, sizeof(path), "%s/feature-flush-cache", dev->backend);
         dev->info.flush = xenbus_read_integer(path);
 
         *info = dev->info;
@@ -238,8 +238,8 @@ void blkfront_shutdown(struct blkfront_dev *dev)
 
     minios_printk("blkfront detached: node=%s\n", dev->nodename);
 
-    snprintf(path, sizeof(path), "%s/state", dev->backend);
-    snprintf(nodename, sizeof(nodename), "%s/state", dev->nodename);
+    bmk_snprintf(path, sizeof(path), "%s/state", dev->backend);
+    bmk_snprintf(nodename, sizeof(nodename), "%s/state", dev->nodename);
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateClosing)) != NULL) {
         minios_printk("shutdown_blkfront: error changing state to %d: %s\n",
@@ -276,9 +276,9 @@ close:
     if (err) bmk_memfree(err);
     xenbus_unwatch_path_token(XBT_NIL, path, path);
 
-    snprintf(path, sizeof(path), "%s/ring-ref", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/ring-ref", nodename);
     xenbus_rm(XBT_NIL, path);
-    snprintf(path, sizeof(path), "%s/event-channel", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/event-channel", nodename);
     xenbus_rm(XBT_NIL, path);
 
     if (!err)

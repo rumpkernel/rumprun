@@ -14,9 +14,9 @@
 #include "console.h"
 
 #include <bmk-core/memalloc.h>
+#include <bmk-core/printf.h>
 #include <bmk-core/string.h>
 
-#include <stdio.h>
 #include <string.h> /* XXX: for strdup */
 
 void free_consfront(struct consfront_dev *dev)
@@ -27,8 +27,8 @@ void free_consfront(struct consfront_dev *dev)
     char path[bmk_strlen(dev->backend) + 1 + 5 + 1];
     char nodename[bmk_strlen(dev->nodename) + 1 + 5 + 1];
 
-    snprintf(path, sizeof(path), "%s/state", dev->backend);
-    snprintf(nodename, sizeof(nodename), "%s/state", dev->nodename);
+    bmk_snprintf(path, sizeof(path), "%s/state", dev->backend);
+    bmk_snprintf(nodename, sizeof(nodename), "%s/state", dev->nodename);
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateClosing)) != NULL) {
         minios_printk("free_consfront: error changing state to %d: %s\n",
@@ -75,7 +75,7 @@ struct consfront_dev *init_consfront(char *_nodename)
     int res;
 
     if (!_nodename)
-        snprintf(nodename, sizeof(nodename), "device/console/%d", consfrontends);
+        bmk_snprintf(nodename, sizeof(nodename), "device/console/%d", consfrontends);
     else
         bmk_strncpy(nodename, _nodename, sizeof(nodename));
 
@@ -85,7 +85,7 @@ struct consfront_dev *init_consfront(char *_nodename)
     dev = bmk_memcalloc(1, sizeof(*dev));
     dev->nodename = strdup(nodename);
 
-    snprintf(path, sizeof(path), "%s/backend-id", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/backend-id", nodename);
     if ((res = xenbus_read_integer(path)) < 0) 
         return NULL;
     else
@@ -130,7 +130,7 @@ again:
         goto abort_transaction;
     }
 
-    snprintf(path, sizeof(path), "%s/state", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/state", nodename);
     err = xenbus_switch_state(xbt, path, XenbusStateConnected);
     if (err) {
         message = "switching state";
@@ -155,7 +155,7 @@ abort_transaction:
 
 done:
 
-    snprintf(path, sizeof(path), "%s/backend", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/backend", nodename);
     msg = xenbus_read(XBT_NIL, path, &dev->backend);
     if (msg) {
         minios_printk("Error %s when reading the backend path %s\n", msg, path);
@@ -167,7 +167,7 @@ done:
     {
         XenbusState state;
         char path[bmk_strlen(dev->backend) + 1 + 19 + 1];
-        snprintf(path, sizeof(path), "%s/state", dev->backend);
+        bmk_snprintf(path, sizeof(path), "%s/state", dev->backend);
         
 	xenbus_watch_path_token(XBT_NIL, path, path, &dev->events);
         msg = NULL;
