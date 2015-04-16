@@ -89,6 +89,7 @@ main(int argc, char *argv[])
 
 	snprintf(buf, sizeof(buf), "%s % 3d\n", rv == 0 ? "OK" : "NO", rv);
 	pwrite(fd, buf, sizeof(INITIAL)-1, 0);
+	fflush(stdout);
 	close(fd);
 	close(STDOUT_FILENO);
 	close(STDERR_FILENO);
