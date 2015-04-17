@@ -52,9 +52,9 @@ static const struct xen_dev_info {
 	int (*xd_open)(struct file *fp, void **fdata_r);
 	const struct fileops *fo;
 } devs[] = {
-#define XDEV(cmin, leaf)						\
-	[cmin] = { DEV_XEN "/" #leaf, leaf##_dev_open, &leaf##_dev_fileops }
-	XDEV(0, xenbus),
+#define XDEV(cmin, path, component)					\
+	[cmin] = { path, component##_dev_open, &component##_dev_fileops }
+	XDEV(0, DEV_XEN "/xenbus", xenbus),
 #undef XDEV
 };
 
