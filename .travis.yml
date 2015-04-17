@@ -19,7 +19,7 @@ script:
   - export CC=gcc-4.8
   - export CXX=g++-4.8
   - ./build-rr.sh -qq ${PLATFORM} ${EXTRAFLAGS}
-  - ( cd tests && ./runtests.sh ${TESTS} )
+  - ./tests/runtests.sh ${TESTS}
 
 notifications:
   irc:
