@@ -29,9 +29,6 @@
 # TODO: use a more scalable way of specifying tests
 TESTS='hello/hello basic/ctor_test basic/pthread_test basic/tls_test'
 
-RUMPRUN=$(pwd)/../app-tools/rumprun
-RUMPSTOP=$(pwd)/../app-tools/rumpstop
-
 STARTMAGIC='=== FOE RUMPRUN 12345 TES-TER 54321 ==='
 ENDMAGIC='=== RUMPRUN 12345 TES-TER 54321 EOF ==='
 
@@ -115,6 +112,10 @@ runtest ()
 	ddimage disk.img 1024
 	runtest tester disk.img
 }
+
+cd $(dirname $0) || die 'could not enter test dir'
+RUMPRUN=$(pwd)/../app-tools/rumprun
+RUMPSTOP=$(pwd)/../app-tools/rumpstop
 
 [ $# -eq 1 ] || die "usage: runtests.sh qemu|xen"
 STACK=$1
