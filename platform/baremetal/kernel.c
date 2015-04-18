@@ -34,24 +34,42 @@
 #include <bmk-core/memalloc.h>
 #include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
+#include <bmk-core/queue.h>
 
 #include <bmk-base/netbsd_initfini.h>
 
 unsigned long bmk_membase;
 unsigned long bmk_memsize;
 
+LIST_HEAD(, stackcache) cacheofstacks = LIST_HEAD_INITIALIZER(cacheofstacks);
+struct stackcache {
+	void *sc_stack;
+	LIST_ENTRY(stackcache) sc_entries;
+};
+
 /*
- * we don't need freepg
- * (for the humour impaired: it was a joke, on the TODO ... but really,
+ * We don't need freepg.
+ *
+ * For the humour impaired: it was a joke, on the TODO ... but really,
  * it's not that urgent since the rump kernel uses its own caching
  * allocators, so once the backing pages are allocated, they tend to
- * never get freed)
+ * never get freed.  The only thing that in practical terms gets
+ * deallocated is thread stacks, and for now we simply cache those
+ * as a special case. (nb. even that holds only for native thread stacks,
+ * not pthread stacks).
  */
 void *
 bmk_allocpg(size_t howmany)
 {
+	struct stackcache *sc;
 	static size_t current = 0;
 	unsigned long rv;
+
+	if (howmany == 1<<BMK_THREAD_STACK_PAGE_ORDER &&
+	    (sc = LIST_FIRST(&cacheofstacks)) != NULL) {
+		LIST_REMOVE(sc, sc_entries);
+		return sc;
+	}
 
 	rv = bmk_membase + PAGE_SIZE*current;
 	current += howmany;
@@ -71,6 +89,13 @@ bmk_platform_allocpg2(int shift)
 void
 bmk_platform_freepg2(void *mem, int shift)
 {
+
+	if (shift == BMK_THREAD_STACK_PAGE_ORDER) {
+		struct stackcache *sc = mem;
+
+		LIST_INSERT_HEAD(&cacheofstacks, sc, sc_entries);
+		return;
+	}
 
 	bmk_printf("WARNING: freepg2 called! (%p, %d)\n", mem, shift);
 }
