@@ -113,7 +113,7 @@ cons_putchar(int c, int flags)
 {
 
 	bmk_dmesg[bmk_dmesgoff] = c;
-	if (++bmk_dmesgoff == sizeof(bmk_dmesg))
+	if (++bmk_dmesgoff == sizeof(bmk_dmesg)-1)
 		bmk_dmesgoff = 0;
 	(*v_putc)(c);
 }
