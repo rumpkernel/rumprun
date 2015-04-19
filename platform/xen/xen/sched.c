@@ -140,7 +140,7 @@ static void
 stackalloc(void **stack, unsigned long *ss)
 {
 
-	*stack = (void *)minios_alloc_pages(STACK_SIZE_PAGE_ORDER);
+	*stack = bmk_platform_allocpg2(STACK_SIZE_PAGE_ORDER);
 	*ss = STACK_SIZE;
 }
 
@@ -148,7 +148,7 @@ static void
 stackfree(struct bmk_thread *thread)
 {
 
-	minios_free_pages(thread->bt_stackbase, STACK_SIZE_PAGE_ORDER);
+	bmk_platform_freepg2(thread->bt_stackbase, STACK_SIZE_PAGE_ORDER);
 }
 
 void
