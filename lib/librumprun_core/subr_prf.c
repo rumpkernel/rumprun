@@ -94,6 +94,13 @@ static const char HEXDIGITS[] = "0123456789ABCDEF";
  * functions
  */
 
+/* dmesg ring buffer */
+#ifndef BMK_DMESG_SIZE
+#define BMK_DMESG_SIZE (16*1024)
+#endif
+static char bmk_dmesg[BMK_DMESG_SIZE];
+static int bmk_dmesgoff;
+
 /*
  * putchar: print a single character on console or user terminal.
  *
@@ -105,8 +112,10 @@ static void
 cons_putchar(int c, int flags)
 {
 
-	if (flags & TOCONS)
-		(*v_putc)(c);
+	bmk_dmesg[bmk_dmesgoff] = c;
+	if (++bmk_dmesgoff == sizeof(bmk_dmesg))
+		bmk_dmesgoff = 0;
+	(*v_putc)(c);
 }
 
 static void
