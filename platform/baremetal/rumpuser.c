@@ -46,13 +46,6 @@ rumprun_platform_rumpuser_init(void)
 	return 0;
 }
 
-void
-rumpuser_putchar(int c)
-{
-
-	bmk_cons_putc(c);
-}
-
 /* reserve 1MB for bmk */
 #define BMK_MEMRESERVE (1024*1024)
 

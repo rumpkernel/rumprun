@@ -36,14 +36,6 @@
 
 #include <bmk-rumpuser/rumpuser.h>
 
-void
-rumpuser_putchar(int ch)
-{
-	char c = (char)ch;
-
-	minios_console_print(NULL, &c, 1);
-}
-
 int
 rumpuser_getparam(const char *name, void *buf, size_t buflen)
 {
