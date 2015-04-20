@@ -40,6 +40,8 @@
 #include <bmk-rumpuser/core_types.h>
 #include <bmk-rumpuser/rumpuser.h>
 
+#define WAIT_NOTIMEOUT -1
+
 TAILQ_HEAD(waithead, waiter);
 struct waiter {
 	struct bmk_thread *who;
@@ -48,18 +50,16 @@ struct waiter {
 };
 
 static int
-wait(struct waithead *wh, uint64_t nsec)
+wait(struct waithead *wh, bmk_time_t nsec)
 {
 	struct waiter w;
-	uint64_t wakeup;
+	bmk_time_t wakeup;
 
 	w.who = bmk_sched_current();
 	TAILQ_INSERT_TAIL(wh, &w, entries);
 	w.onlist = 1;
-	if (nsec)
+	if (nsec != WAIT_NOTIMEOUT)
 		wakeup = bmk_clock_monotonic() + nsec;
-	else
-		wakeup = 0;
 	bmk_sched_block_timeout(w.who, wakeup);
 	bmk_sched();
 
@@ -150,7 +150,7 @@ rumpuser_mutex_enter(struct rumpuser_mtx *mtx)
 	if (rumpuser_mutex_tryenter(mtx) != 0) {
 		rumpkern_unsched(&nlocks, NULL);
 		while (rumpuser_mutex_tryenter(mtx) != 0)
-			wait(&mtx->waiters, 0);
+			wait(&mtx->waiters, WAIT_NOTIMEOUT);
 		rumpkern_sched(nlocks, NULL);
 	}
 }
@@ -245,7 +245,7 @@ rumpuser_rw_enter(int enum_rumprwlock, struct rumpuser_rw *rw)
 	if (rumpuser_rw_tryenter(enum_rumprwlock, rw) != 0) {
 		rumpkern_unsched(&nlocks, NULL);
 		while (rumpuser_rw_tryenter(enum_rumprwlock, rw) != 0)
-			wait(w, 0);
+			wait(w, WAIT_NOTIMEOUT);
 		rumpkern_sched(nlocks, NULL);
 	}
 }
@@ -393,7 +393,7 @@ rumpuser_cv_wait(struct rumpuser_cv *cv, struct rumpuser_mtx *mtx)
 
 	cv->nwaiters++;
 	cv_unsched(mtx, &nlocks);
-	wait(&cv->waiters, 0);
+	wait(&cv->waiters, WAIT_NOTIMEOUT);
 	cv_resched(mtx, nlocks);
 	cv->nwaiters--;
 }
@@ -404,7 +404,7 @@ rumpuser_cv_wait_nowrap(struct rumpuser_cv *cv, struct rumpuser_mtx *mtx)
 
 	cv->nwaiters++;
 	rumpuser_mutex_exit(mtx);
-	wait(&cv->waiters, 0);
+	wait(&cv->waiters, WAIT_NOTIMEOUT);
 	rumpuser_mutex_enter_nowrap(mtx);
 	cv->nwaiters--;
 }
