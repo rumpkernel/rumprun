@@ -100,6 +100,20 @@ bmk_platform_freepg2(void *mem, int shift)
 	bmk_printf("WARNING: freepg2 called! (%p, %d)\n", mem, shift);
 }
 
+unsigned long
+bmk_platform_splhigh(void)
+{
+
+	return 0; /* XXX */
+}
+
+void
+bmk_platform_splx(unsigned long x)
+{
+
+	return; /* XXX */
+}
+
 static int
 parsemem(uint32_t addr, uint32_t len)
 {

@@ -30,4 +30,7 @@ void *bmk_platform_allocpg2(int);
 void bmk_platform_freepg2(void *, int);
 void bmk_platform_halt(const char *) __attribute__((noreturn));
 
+unsigned long	bmk_platform_splhigh(void);
+void		bmk_platform_splx(unsigned long);
+
 #endif /* _BMK_CORE_PLATFORM_H_ */
