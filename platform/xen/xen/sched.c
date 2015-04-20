@@ -74,6 +74,7 @@
 
 #include <bmk-core/memalloc.h>
 #include <bmk-core/platform.h>
+#include <bmk-core/printf.h>
 #include <bmk-core/queue.h>
 #include <bmk-core/string.h>
 #include <bmk-core/sched.h>
@@ -151,6 +152,14 @@ stackfree(struct bmk_thread *thread)
 	bmk_platform_freepg2(thread->bt_stackbase, STACK_SIZE_PAGE_ORDER);
 }
 
+static void
+print_threadinfo(struct bmk_thread *thread)
+{
+
+	bmk_printf("thread \"%s\" at %p, flags 0x%x\n",
+	    thread->bt_name, thread, thread->bt_flags);
+}
+
 void
 sched_switch(struct bmk_thread *prev, struct bmk_thread *next)
 {
@@ -165,6 +174,18 @@ bmk_sched_current(void)
 {
 
 	return arch_sched_current();
+}
+
+void
+bmk_sched_dumpqueue(void)
+{
+	struct bmk_thread *thr;
+
+	bmk_printf("BEGIN schedqueue dump\n");
+	TAILQ_FOREACH(thr, &threads, bt_entries) {
+		print_threadinfo(thr);
+	}
+	bmk_printf("END schedqueue dump\n");
 }
 
 void

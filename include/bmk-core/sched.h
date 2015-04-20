@@ -42,6 +42,8 @@ void	bmk_sched_init(void);
 void	bmk_sched(void);
 void	bmk_sched_yield(void);
 
+void	bmk_sched_dumpqueue(void);
+
 struct bmk_thread *bmk_sched_create(const char *, void *, int,
 				    void (*)(void *), void *,
 				    void *, unsigned long);

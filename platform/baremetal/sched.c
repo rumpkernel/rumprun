@@ -68,6 +68,7 @@
 
 #include <bmk-core/core.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/printf.h>
 #include <bmk-core/queue.h>
 #include <bmk-core/string.h>
 #include <bmk-core/sched.h>
@@ -151,6 +152,14 @@ stackfree(struct bmk_thread *thread)
 }
 
 static void
+print_threadinfo(struct bmk_thread *thread)
+{
+
+	bmk_printf("thread \"%s\" at %p, flags 0x%x\n",
+	    thread->bt_name, thread, thread->bt_flags);
+}
+
+static void
 sched_switch(struct bmk_thread *prev, struct bmk_thread *next)
 {
 
@@ -158,6 +167,19 @@ sched_switch(struct bmk_thread *prev, struct bmk_thread *next)
 		scheduler_hook(prev->bt_cookie, next->bt_cookie);
 	current_thread = next;
 	bmk_cpu_sched_switch(&prev->bt_tcb, &next->bt_tcb);
+}
+
+
+void
+bmk_sched_dumpqueue(void)
+{
+	struct bmk_thread *thr;
+
+	bmk_printf("BEGIN schedqueue dump\n");
+	TAILQ_FOREACH(thr, &threads, bt_entries) {
+		print_threadinfo(thr);
+	}
+	bmk_printf("END schedqueue dump\n");
 }
 
 void
