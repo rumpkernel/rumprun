@@ -93,11 +93,11 @@ runguest ()
 
 			sleep 1
 		done
+
+		${RUMPSTOP} ${cookie}
 	fi
 
 	echo ">> Result: ${TEST_RESULT} (${TEST_ECODE})"
-
-	${RUMPSTOP} ${cookie}
 }
 
 getoutput ()
