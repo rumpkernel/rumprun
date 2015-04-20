@@ -10,7 +10,7 @@
 .long -(MULTIBOOT_HEADER_MAGIC+MYMULTIBOOT_FLAGS)
 
 .section bootstack
-.set stack_size, 65536
+.set stack_size, 4096
 .globl _bootstack
 .comm _bootstack, stack_size
 

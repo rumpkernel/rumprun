@@ -468,7 +468,7 @@ idle_thread_fn(void *unused)
 }
 
 void
-bmk_sched_init(void)
+bmk_sched_init(void (*notused)(void))
 {
 	minios_printk("Initialising scheduler\n");
 

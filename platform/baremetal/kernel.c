@@ -154,6 +154,15 @@ parsemem(uint32_t addr, uint32_t len)
 	return 0;
 }
 
+static void
+bmk_mainthread(void)
+{
+
+	_netbsd_init();
+	bmk_beforemain();
+	_netbsd_fini();
+}
+
 void
 bmk_main(struct multiboot_info *mbi)
 {
@@ -169,12 +178,10 @@ bmk_main(struct multiboot_info *mbi)
 	if (parsemem(mbi->mmap_addr, mbi->mmap_length))
 		return;
 	bmk_cpu_init();
-	bmk_sched_init();
 	bmk_isr_init();
 
-	_netbsd_init();
-	bmk_beforemain();
-	_netbsd_fini();
+	/* enough already, jump to main thread */
+	bmk_sched_init(bmk_mainthread);
 }
 
 /*

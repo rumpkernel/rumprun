@@ -452,19 +452,22 @@ bmk_sched_wake(struct bmk_thread *thread)
 	set_runnable(thread);
 }
 
-static struct bmk_thread init_thread;
-
 void
-bmk_sched_init(void)
+bmk_sched_init(void (*mainfun)(void))
 {
-	struct bmk_thread *thread = &init_thread;
+	struct bmk_thread *mainthread;
+	struct bmk_thread initthread;
 
-	bmk_strncpy(thread->bt_name, "init", sizeof(thread->bt_name)-1);
-	thread->bt_flags = 0;
-	thread->bt_wakeup_time = -1;
-	set_runnable(thread);
-	TAILQ_INSERT_TAIL(&threads, thread, bt_entries);
-	current_thread = thread;
+	mainthread = bmk_sched_create("main", NULL, 0,
+	    (void (*)(void *))mainfun, NULL, NULL, 0);
+	if (mainthread == NULL)
+		bmk_platform_halt("failed to create main thread");
+
+	bmk_memset(&initthread, 0, sizeof(initthread));
+	bmk_strcpy(initthread.bt_name, "init");
+	sched_switch(&initthread, mainthread);
+
+	bmk_platform_halt("bmk_sched_init unreachable");
 }
 
 void

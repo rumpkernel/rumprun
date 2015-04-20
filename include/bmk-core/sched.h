@@ -38,7 +38,7 @@ struct bmk_tcb {
 
 struct bmk_thread;
 
-void	bmk_sched_init(void);
+void	bmk_sched_init(void (*)(void));
 void	bmk_sched(void);
 void	bmk_sched_yield(void);
 
