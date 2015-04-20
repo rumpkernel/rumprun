@@ -68,6 +68,7 @@
 
 #include <bmk-core/core.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
 #include <bmk-core/queue.h>
 #include <bmk-core/string.h>
@@ -187,8 +188,10 @@ bmk_sched(void)
 {
 	struct bmk_thread *prev, *next, *thread, *tmp;
 	bmk_time_t tm, wakeup;
+	unsigned long flags;
 
 	prev = bmk_sched_current();
+	flags = bmk_platform_splhigh();
 
 	/* could do time management a bit better here */
 	do {
@@ -218,6 +221,8 @@ bmk_sched(void)
 		 */
 		bmk_cpu_nanohlt();
 	} while (1);
+
+	bmk_platform_splx(flags);
 
 	if (prev != next) {
 		sched_switch(prev, next);
@@ -277,6 +282,7 @@ bmk_sched_create(const char *name, void *cookie, int joinable,
 	void *stack_base, unsigned long stack_size)
 {
 	struct bmk_thread *thread;
+	unsigned long flags;
 
 	thread = bmk_xmalloc(sizeof(*thread));
 	bmk_memset(thread, 0, sizeof(*thread));
@@ -298,10 +304,12 @@ bmk_sched_create(const char *name, void *cookie, int joinable,
 
 	thread->bt_wakeup_time = -1;
 
-	set_runnable(thread);
+	flags = bmk_platform_splhigh();
 	TAILQ_INSERT_TAIL(&threads, thread, bt_entries);
+	bmk_platform_splx(flags);
 
 	allocothertls(thread);
+	set_runnable(thread);
 
 	return thread;
 }
@@ -318,10 +326,13 @@ bmk_sched_exit(void)
 {
 	struct bmk_thread *thread = bmk_sched_current();
 	struct join_waiter *jw_iter;
+	unsigned long flags;
 
 	/* if joinable, gate until we are allowed to exit */
+	flags = bmk_platform_splhigh();
 	while (thread->bt_flags & THREAD_MUSTJOIN) {
 		thread->bt_flags |= THREAD_JOINED;
+		bmk_platform_splx(flags);
 
 		/* see if the joiner is already there */
 		TAILQ_FOREACH(jw_iter, &joinwq, jw_entries) {
@@ -332,6 +343,7 @@ bmk_sched_exit(void)
 		}
 		bmk_sched_block(thread);
 		bmk_sched();
+		flags = bmk_platform_splhigh();
 	}
 	freeothertls(thread);
 
@@ -340,6 +352,7 @@ bmk_sched_exit(void)
 	clear_runnable(thread);
 	/* Put onto exited list */
 	TAILQ_INSERT_HEAD(&zombies, thread, bt_entries);
+	bmk_platform_splx(flags);
 
 	/* bye */
 	bmk_sched();
@@ -351,22 +364,29 @@ bmk_sched_join(struct bmk_thread *joinable)
 {
 	struct join_waiter jw;
 	struct bmk_thread *thread = bmk_sched_current();
+	unsigned long flags;
 
 	bmk_assert(joinable->bt_flags & THREAD_MUSTJOIN);
 
+	flags = bmk_platform_splhigh();
 	/* wait for exiting thread to hit thread_exit() */
 	while ((joinable->bt_flags & THREAD_JOINED) == 0) {
+		bmk_platform_splx(flags);
+
 		jw.jw_thread = thread;
 		jw.jw_wanted = joinable;
 		TAILQ_INSERT_TAIL(&joinwq, &jw, jw_entries);
 		bmk_sched_block(thread);
 		bmk_sched();
 		TAILQ_REMOVE(&joinwq, &jw, jw_entries);
+
+		flags = bmk_platform_splhigh();
 	}
 
 	/* signal exiting thread that we have seen it and it may now exit */
 	bmk_assert(joinable->bt_flags & THREAD_JOINED);
 	joinable->bt_flags &= ~THREAD_MUSTJOIN;
+	bmk_platform_splx(flags);
 
 	bmk_sched_wake(joinable);
 }
