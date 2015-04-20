@@ -108,14 +108,6 @@ static TAILQ_HEAD(, bmk_thread) threads = TAILQ_HEAD_INITIALIZER(threads);
 
 static void (*scheduler_hook)(void *, void *);
 
-static struct bmk_thread *current_thread = NULL;
-struct bmk_thread *
-bmk_sched_current(void)
-{
-
-	return current_thread;
-}
-
 static int
 is_runnable(struct bmk_thread *thread)
 {
@@ -166,10 +158,15 @@ sched_switch(struct bmk_thread *prev, struct bmk_thread *next)
 
 	if (scheduler_hook)
 		scheduler_hook(prev->bt_cookie, next->bt_cookie);
-	current_thread = next;
 	bmk_cpu_sched_switch(&prev->bt_tcb, &next->bt_tcb);
 }
 
+struct bmk_thread *
+bmk_sched_current(void)
+{
+
+	return bmk_cpu_sched_current();
+}
 
 void
 bmk_sched_dumpqueue(void)
@@ -313,7 +310,8 @@ bmk_sched_create(const char *name, void *cookie, int joinable,
 	if (joinable)
 		thread->bt_flags |= THREAD_MUSTJOIN;
 
-	bmk_cpu_sched_create(&thread->bt_tcb, f, data, stack_base, stack_size);
+	bmk_cpu_sched_create(thread, &thread->bt_tcb, f, data,
+	    stack_base, stack_size);
 
 	thread->bt_cookie = cookie;
 

@@ -58,32 +58,62 @@ struct stackcache {
  * as a special case. (nb. even that holds only for native thread stacks,
  * not pthread stacks).
  */
+static size_t currentpg;
+#define MAXPAGEALIGN (1<<BMK_THREAD_STACK_PAGE_ORDER)
 void *
 bmk_allocpg(size_t howmany)
 {
-	struct stackcache *sc;
-	static size_t current = 0;
 	unsigned long rv;
 
-	if (howmany == 1<<BMK_THREAD_STACK_PAGE_ORDER &&
+	rv = bmk_membase + PAGE_SIZE*currentpg;
+	currentpg += howmany;
+	if (currentpg*PAGE_SIZE > bmk_memsize)
+		return NULL;
+
+	return (void *)rv;
+}
+
+/*
+ * Allocate a 2^n chunk of pages, aligned at 2^n.  This is currently
+ * for the benefit of thread stack allocation, and should be going
+ * away in some time when the migration to TLS is complete.
+ */
+static void *
+alignedpgalloc(int shift)
+{
+	struct stackcache *sc;
+	int align = 1<<shift;
+	size_t alignedoff;
+	void *rv;
+
+	if (shift == BMK_THREAD_STACK_PAGE_ORDER &&
 	    (sc = LIST_FIRST(&cacheofstacks)) != NULL) {
 		LIST_REMOVE(sc, sc_entries);
 		return sc;
 	}
 
-	rv = bmk_membase + PAGE_SIZE*current;
-	current += howmany;
-	if (current*PAGE_SIZE > bmk_memsize)
-		return NULL;
+	if (align > MAXPAGEALIGN)
+		align = MAXPAGEALIGN;
 
-	return (void *)rv;
+	/* need to leave this much space until the next aligned alloc */
+	alignedoff = (bmk_membase + currentpg*PAGE_SIZE) % (align*PAGE_SIZE);
+	if (alignedoff)
+		currentpg += align - (alignedoff>>PAGE_SHIFT);
+
+	rv = bmk_allocpg(1<<shift);
+	if (((unsigned long)rv & (align*PAGE_SIZE-1)) != 0) {
+		bmk_printf("wanted %d aligned, got memory at %p\n",
+		    align, rv);
+		bmk_platform_halt("fail");
+	}
+	return rv;
 }
 
 void *
 bmk_platform_allocpg2(int shift)
 {
 
-	return bmk_allocpg(1<<shift);
+	return alignedpgalloc(shift);
 }
 
 void
@@ -150,6 +180,8 @@ parsemem(uint32_t addr, uint32_t len)
 
 	bmk_membase = mbm->addr + ossize;
 	bmk_memsize = memsize - ossize;
+
+	bmk_assert((bmk_membase & (PAGE_SIZE-1)) == 0);
 
 	return 0;
 }

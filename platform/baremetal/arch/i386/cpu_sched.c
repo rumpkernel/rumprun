@@ -38,7 +38,10 @@
  */
 
 #include <bmk/types.h>
+#include <bmk/kernel.h>
 #include <bmk/sched.h>
+
+#include <bmk-core/core.h>
 
 static void
 stack_push(void **stackp, unsigned long value)
@@ -51,11 +54,16 @@ stack_push(void **stackp, unsigned long value)
 }
 
 void
-bmk_cpu_sched_create(struct bmk_tcb *tcb,
+bmk_cpu_sched_create(struct bmk_thread *thread, struct bmk_tcb *tcb,
 	void (*f)(void *), void *arg,
 	void *stack_base, unsigned long stack_size)
 {
 	void *stack_top = (char *)stack_base + stack_size;
+
+	bmk_assert(stack_size == BMK_THREAD_STACKSIZE);
+
+	/* Save pointer to the thread on the stack, used by current macro */
+	*(unsigned long *)stack_base = (unsigned long)thread;
 
 	/* these values are used by bmk_cpu_sched_bouncer() */
 	stack_push(&stack_top, (unsigned long)f);
@@ -64,3 +72,12 @@ bmk_cpu_sched_create(struct bmk_tcb *tcb,
 	tcb->btcb_sp = (unsigned long)stack_top;
 	tcb->btcb_ip = (unsigned long)bmk_cpu_sched_bouncer;
 }
+
+struct bmk_thread *
+bmk_cpu_sched_current(void)
+{
+	struct bmk_thread **current;
+
+	current = (void *)((unsigned long)&current & ~(bmk_stacksize-1));
+	return *current;
+};

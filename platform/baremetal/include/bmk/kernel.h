@@ -5,7 +5,8 @@
 #include <bmk/types.h>
 
 #define MEMSTART 0x100000
-#define PAGE_SIZE 0x1000
+#define PAGE_SHIFT 12
+#define PAGE_SIZE (1<<PAGE_SHIFT)
 #define STACK_SIZE 0x2000
 
 #define round_page(x) (((x) + (PAGE_SIZE-1)) & ~(PAGE_SIZE-1))
