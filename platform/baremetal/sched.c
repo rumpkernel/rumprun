@@ -472,6 +472,13 @@ bmk_sched_init_mainlwp(void *cookie)
 	return current;
 }
 
+const char *
+bmk_sched_threadname(struct bmk_thread *thread)
+{
+
+	return thread->bt_name;
+}
+
 int *
 bmk_sched_geterrno(void)
 {

@@ -492,7 +492,7 @@ bmk_sched_init_mainlwp(void *cookie)
 }
 
 const char *
-minios_threadname(struct bmk_thread *thread)
+bmk_sched_threadname(struct bmk_thread *thread)
 {
 
 	return thread->bt_name;
