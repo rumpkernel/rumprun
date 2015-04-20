@@ -319,7 +319,7 @@ int
 _sys_sched_yield(void)
 {
 
-	bmk_sched();
+	bmk_sched_yield();
 	return 0;
 }
 __weak_alias(sched_yield,_sys_sched_yield);

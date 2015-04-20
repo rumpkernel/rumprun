@@ -512,3 +512,13 @@ bmk_sched_gettls(struct bmk_thread *thread, unsigned int which)
 	}
 	return thread->bt_tls[which];
 }
+
+void
+bmk_sched_yield(void)
+{
+	struct bmk_thread *current = bmk_sched_current();
+
+	TAILQ_REMOVE(&threads, current, bt_entries);
+	TAILQ_INSERT_TAIL(&threads, current, bt_entries);
+	bmk_sched();
+}
