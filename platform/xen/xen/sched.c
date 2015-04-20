@@ -159,7 +159,7 @@ print_threadinfo(struct bmk_thread *thread)
 	    thread->bt_name, thread, thread->bt_flags);
 }
 
-void
+static void
 sched_switch(struct bmk_thread *prev, struct bmk_thread *next)
 {
 
