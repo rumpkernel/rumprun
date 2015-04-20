@@ -100,6 +100,13 @@ bmk_platform_freepg2(void *mem, int shift)
 	bmk_printf("WARNING: freepg2 called! (%p, %d)\n", mem, shift);
 }
 
+void
+bmk_platform_block(bmk_time_t until)
+{
+
+	bmk_cpu_nanohlt();
+}
+
 unsigned long
 bmk_platform_splhigh(void)
 {

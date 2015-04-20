@@ -100,6 +100,14 @@ bmk_platform_freepg2(void *p, int shift)
 	minios_free_pages(p, shift);
 }
 
+void
+bmk_platform_block(bmk_time_t until)
+{
+
+	block_domain(until);
+	minios_force_evtchn_callback();
+}
+
 unsigned long
 bmk_platform_splhigh(void)
 {
