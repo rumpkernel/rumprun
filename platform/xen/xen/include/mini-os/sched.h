@@ -3,8 +3,6 @@
 
 #include <mini-os/types.h>
 
-#include <mini-os/machine/sched.h>
-
 #include <bmk-core/sched.h>
 
 extern struct bmk_tcb *idle_tcb;

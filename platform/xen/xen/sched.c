@@ -172,7 +172,7 @@ struct bmk_thread *
 bmk_sched_current(void)
 {
 
-	return arch_sched_current();
+	return bmk_cpu_sched_current();
 }
 
 void
