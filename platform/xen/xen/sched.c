@@ -196,13 +196,16 @@ bmk_sched(void)
 	prev = bmk_sched_current();
 	flags = bmk_platform_splhigh();
 
+#if 0
+	/* XXX */
 	if (_minios_in_hypervisor_callback) {
 		minios_printk("Must not call schedule() from a callback\n");
 		BUG();
 	}
+#endif
+
 	if (flags) {
-		minios_printk("Must not call schedule() with IRQs disabled\n");
-		BUG();
+		bmk_platform_halt("Must not call sched() with IRQs disabled\n");
 	}
 
 	/* could do time management a bit better here */
