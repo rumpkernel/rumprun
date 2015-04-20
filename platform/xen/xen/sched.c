@@ -340,9 +340,9 @@ static TAILQ_HEAD(, join_waiter) joinwq = TAILQ_HEAD_INITIALIZER(joinwq);
 void
 bmk_sched_exit(void)
 {
-	unsigned long flags;
 	struct bmk_thread *thread = bmk_sched_current();
 	struct join_waiter *jw_iter;
+	unsigned long flags;
 
 	/* if joinable, gate until we are allowed to exit */
 	flags = bmk_platform_splhigh();
@@ -375,7 +375,6 @@ bmk_sched_exit(void)
 	bmk_platform_halt("schedule() returned for a dead thread!\n");
 }
 
-/* hmm, all of the interfaces here are namespaced "backwards" ... */
 void
 bmk_sched_join(struct bmk_thread *joinable)
 {
