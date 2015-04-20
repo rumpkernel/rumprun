@@ -7,9 +7,9 @@
  *        File: events.c
  *      Author: Rolf Neugebauer (neugebar@dcs.gla.ac.uk)
  *     Changes: Grzegorz Milos (gm281@cam.ac.uk)
- *              
+ *
  *        Date: Jul 2003, changes Jun 2005
- * 
+ *
  * Environment: Xen Minimal OS
  * Description: Deals with events recieved on event channels
  *
@@ -26,8 +26,8 @@
 
 /* this represents a event handler. Chaining or sharing is not allowed */
 typedef struct _ev_action_t {
-	evtchn_handler_t handler;
-	void *data;
+    evtchn_handler_t handler;
+    void *data;
     uint32_t count;
 } ev_action_t;
 
@@ -44,20 +44,20 @@ void unbind_all_ports(void)
     vcpu_info_t   *vcpu_info = &s->vcpu_info[cpu];
     int rc;
 
-    for ( i = 0; i < NR_EVS; i++ )
+    for (i = 0; i < NR_EVS; i++)
     {
-        if ( i == start_info.console.domU.evtchn ||
-             i == start_info.store_evtchn)
+        if (i == start_info.console.domU.evtchn ||
+            i == start_info.store_evtchn)
             continue;
 
-        if ( test_and_clear_bit(i, bound_ports) )
+        if (test_and_clear_bit(i, bound_ports))
         {
             struct evtchn_close close;
             minios_printk("port %d still bound!\n", i);
             minios_mask_evtchn(i);
             close.port = i;
             rc = HYPERVISOR_event_channel_op(EVTCHNOP_close, &close);
-            if ( rc )
+            if (rc)
                 minios_printk("WARN: close_port %s failed rc=%d. ignored\n", i, rc);
             minios_clear_evtchn(i);
         }
@@ -75,7 +75,7 @@ int do_event(evtchn_port_t port, struct pt_regs *regs)
 
     minios_clear_evtchn(port);
 
-    if ( port >= NR_EVS )
+    if (port >= NR_EVS)
     {
         minios_printk("WARN: do_event(): Port number too large: %d\n", port);
         return 1;
@@ -85,84 +85,83 @@ int do_event(evtchn_port_t port, struct pt_regs *regs)
     action->count++;
 
     /* call the handler */
-	action->handler(port, regs, action->data);
+    action->handler(port, regs, action->data);
 
     return 1;
-
 }
 
 evtchn_port_t minios_bind_evtchn(evtchn_port_t port, evtchn_handler_t handler,
-						  void *data)
+                                 void *data)
 {
- 	if ( ev_actions[port].handler != default_handler )
+    if (ev_actions[port].handler != default_handler)
         minios_printk("WARN: Handler for port %d already registered, replacing\n",
-               port);
+                      port);
 
-	ev_actions[port].data = data;
-	wmb();
-	ev_actions[port].handler = handler;
-	set_bit(port, bound_ports);
+    ev_actions[port].data = data;
+    wmb();
+    ev_actions[port].handler = handler;
+    set_bit(port, bound_ports);
 
-	return port;
+    return port;
 }
 
-void minios_unbind_evtchn(evtchn_port_t port )
+void minios_unbind_evtchn(evtchn_port_t port)
 {
-	struct evtchn_close close;
-        int rc;
+    struct evtchn_close close;
+    int rc;
 
-	if ( ev_actions[port].handler == default_handler )
-		minios_printk("WARN: No handler for port %d when unbinding\n", port);
-	minios_mask_evtchn(port);
-	minios_clear_evtchn(port);
+    if (ev_actions[port].handler == default_handler)
+        minios_printk("WARN: No handler for port %d when unbinding\n", port);
+    minios_mask_evtchn(port);
+    minios_clear_evtchn(port);
 
-	ev_actions[port].handler = default_handler;
-	wmb();
-	ev_actions[port].data = NULL;
-	clear_bit(port, bound_ports);
+    ev_actions[port].handler = default_handler;
+    wmb();
+    ev_actions[port].data = NULL;
+    clear_bit(port, bound_ports);
 
-	close.port = port;
-	rc = HYPERVISOR_event_channel_op(EVTCHNOP_close, &close);
-        if ( rc )
-                minios_printk("WARN: close_port %s failed rc=%d. ignored\n", port, rc);
-        
+    close.port = port;
+    rc = HYPERVISOR_event_channel_op(EVTCHNOP_close, &close);
+    if (rc)
+        minios_printk("WARN: close_port %s failed rc=%d. ignored\n", port, rc);
 }
 
-evtchn_port_t minios_bind_virq(uint32_t virq, evtchn_handler_t handler, void *data)
+evtchn_port_t minios_bind_virq(uint32_t virq, evtchn_handler_t handler,
+                               void *data)
 {
-	evtchn_bind_virq_t op;
-        int rc;
+    evtchn_bind_virq_t op;
+    int rc;
 
-	/* Try to bind the virq to a port */
-	op.virq = virq;
-	op.vcpu = smp_processor_id();
+    /* Try to bind the virq to a port */
+    op.virq = virq;
+    op.vcpu = smp_processor_id();
 
-	if ( (rc = HYPERVISOR_event_channel_op(EVTCHNOP_bind_virq, &op)) != 0 )
-	{
-		minios_printk("Failed to bind virtual IRQ %d with rc=%d\n", virq, rc);
-		return -1;
-        }
-        minios_bind_evtchn(op.port, handler, data);
-	return op.port;
+    if ((rc = HYPERVISOR_event_channel_op(EVTCHNOP_bind_virq, &op)) != 0)
+    {
+        minios_printk("Failed to bind virtual IRQ %d with rc=%d\n", virq, rc);
+        return -1;
+    }
+    minios_bind_evtchn(op.port, handler, data);
+    return op.port;
 }
 
 evtchn_port_t minios_bind_pirq(uint32_t pirq, int will_share,
-                        evtchn_handler_t handler, void *data)
+                               evtchn_handler_t handler, void *data)
 {
-	evtchn_bind_pirq_t op;
-        int rc;
+    evtchn_bind_pirq_t op;
+    int rc;
 
-	/* Try to bind the pirq to a port */
-	op.pirq = pirq;
-	op.flags = will_share ? BIND_PIRQ__WILL_SHARE : 0;
+    /* Try to bind the pirq to a port */
+    op.pirq = pirq;
+    op.flags = will_share ? BIND_PIRQ__WILL_SHARE : 0;
 
-	if ( (rc = HYPERVISOR_event_channel_op(EVTCHNOP_bind_pirq, &op)) != 0 )
-	{
-		minios_printk("Failed to bind physical IRQ %d with rc=%d\n", pirq, rc);
-		return -1;
-	}
-	minios_bind_evtchn(op.port, handler, data);
-	return op.port;
+    if ((rc = HYPERVISOR_event_channel_op(EVTCHNOP_bind_pirq, &op)) != 0)
+    {
+        minios_printk("Failed to bind physical IRQ %d with rc=%d\n", pirq, rc);
+        return -1;
+    }
+    minios_bind_evtchn(op.port, handler, data);
+    return op.port;
 }
 
 #if defined(__x86_64__)
@@ -190,7 +189,7 @@ void init_events(void)
 #endif
     /* initialize event handler */
     for ( i = 0; i < NR_EVS; i++ )
-	{
+    {
         ev_actions[i].handler = default_handler;
         minios_mask_evtchn(i);
     }
@@ -218,7 +217,7 @@ void default_handler(evtchn_port_t port, struct pt_regs *regs, void *ignore)
    from inside mini-os. */
 
 int minios_evtchn_alloc_unbound(domid_t pal, evtchn_handler_t handler,
-						 void *data, evtchn_port_t *port)
+                                void *data, evtchn_port_t *port)
 {
     int rc;
 
@@ -226,10 +225,10 @@ int minios_evtchn_alloc_unbound(domid_t pal, evtchn_handler_t handler,
     op.dom = DOMID_SELF;
     op.remote_dom = pal;
     rc = HYPERVISOR_event_channel_op(EVTCHNOP_alloc_unbound, &op);
-    if ( rc )
+    if (rc)
     {
         minios_printk("ERROR: alloc_unbound failed with rc=%d", rc);
-		return rc;
+        return rc;
     }
     *port = minios_bind_evtchn(op.port, handler, data);
     return rc;
@@ -239,8 +238,8 @@ int minios_evtchn_alloc_unbound(domid_t pal, evtchn_handler_t handler,
    the pal. Returns the result of the hypervisor call. */
 
 int minios_evtchn_bind_interdomain(domid_t pal, evtchn_port_t remote_port,
-			    evtchn_handler_t handler, void *data,
-			    evtchn_port_t *local_port)
+                                   evtchn_handler_t handler, void *data,
+                                   evtchn_port_t *local_port)
 {
     int rc;
     evtchn_port_t port;
@@ -248,10 +247,10 @@ int minios_evtchn_bind_interdomain(domid_t pal, evtchn_port_t remote_port,
     op.remote_dom = pal;
     op.remote_port = remote_port;
     rc = HYPERVISOR_event_channel_op(EVTCHNOP_bind_interdomain, &op);
-    if ( rc )
+    if (rc)
     {
         minios_printk("ERROR: bind_interdomain failed with rc=%d", rc);
-		return rc;
+        return rc;
     }
     port = op.local_port;
     *local_port = minios_bind_evtchn(port, handler, data);
