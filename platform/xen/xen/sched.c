@@ -317,7 +317,7 @@ bmk_sched_create(const char *name, void *cookie, int joinable,
 	if (joinable)
 		thread->bt_flags |= THREAD_MUSTJOIN;
 
-	arch_create_thread(thread, &thread->bt_tcb, f, data,
+	bmk_cpu_sched_create(thread, &thread->bt_tcb, f, data,
 	    stack_base, stack_size);
 
 	thread->bt_cookie = cookie;

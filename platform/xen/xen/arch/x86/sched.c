@@ -78,28 +78,6 @@ void dump_stack(struct thread *thread_md)
    defined in x86_[32/64].S */
 extern void _minios_entry_thread_starter(void);
 
-/* Pushes the specified value onto the stack of the specified thread */
-static void stack_push(struct bmk_tcb *tcb, unsigned long value)
-{
-    tcb->btcb_sp -= sizeof(unsigned long);
-    *((unsigned long *)tcb->btcb_sp) = value;
-}
-
-/* Architecture specific setup of thread creation */
-void arch_create_thread(void *thread, struct bmk_tcb *tcb,
-	void (*function)(void *), void *data,
-	void *stack, unsigned long stack_size)
-{
-    
-    tcb->btcb_sp = (unsigned long)stack + stack_size;
-    /* Save pointer to the thread on the stack, used by current macro */
-    *((unsigned long *)stack) = (unsigned long)thread;
-    
-    stack_push(tcb, (unsigned long) function);
-    stack_push(tcb, (unsigned long) data);
-    tcb->btcb_ip = (unsigned long) bmk_cpu_sched_bouncer;
-}
-
 void run_idle_thread(void)
 {
     /* Switch stacks and run the thread */ 

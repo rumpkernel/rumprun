@@ -12,8 +12,4 @@ void idle_thread_fn(void *unused);
 
 void run_idle_thread(void);
 
-void arch_create_thread(void *thread, struct bmk_tcb *,
-			void (*function)(void *), void *data,
-			void *stack_base, unsigned long stack_size);
-
 #endif /* __MINIOS_SCHED_H__ */
