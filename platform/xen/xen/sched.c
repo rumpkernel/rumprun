@@ -423,14 +423,14 @@ bmk_sched_block(struct bmk_thread *thread)
 	bmk_sched_block_timeout(thread, -1);
 }
 
-static int
-dosleep(s_time_t wakeuptime)
+int
+bmk_sched_nanosleep_abstime(bmk_time_t nsec)
 {
 	struct bmk_thread *thread = bmk_sched_current();
 	int rv;
 
-	thread->bt_wakeup_time = wakeuptime;
 	thread->bt_flags &= ~THREAD_TIMEDOUT;
+	thread->bt_wakeup_time = nsec;
 	clear_runnable(thread);
 	bmk_sched();
 
@@ -443,14 +443,7 @@ int
 bmk_sched_nanosleep(bmk_time_t nsec)
 {
 
-	return dosleep(NOW() + nsec);
-}
-
-int
-bmk_sched_nanosleep_abstime(bmk_time_t nsec)
-{
-
-	return dosleep(nsec);
+	return bmk_sched_nanosleep_abstime(nsec + bmk_clock_monotonic());
 }
 
 void

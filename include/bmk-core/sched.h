@@ -54,7 +54,6 @@ void	bmk_sched_block(struct bmk_thread *);
 void	bmk_sched_block_timeout(struct bmk_thread *, bmk_time_t);
 
 void	bmk_sched_wake(struct bmk_thread *);
-void	bmk_sched_setwakeup(struct bmk_thread *, bmk_time_t);
 
 int	bmk_sched_nanosleep(bmk_time_t);
 int	bmk_sched_nanosleep_abstime(bmk_time_t);

@@ -433,13 +433,6 @@ bmk_sched_nanosleep(bmk_time_t nsec)
 }
 
 void
-bmk_sched_setwakeup(struct bmk_thread *thread, bmk_time_t abstime)
-{
-
-	thread->bt_wakeup_time = abstime;
-}
-
-void
 bmk_sched_wake(struct bmk_thread *thread)
 {
 
