@@ -70,8 +70,7 @@
 #include <mini-os/sched.h>
 #include <mini-os/semaphore.h>
 
-#define assert(x) ASSERT(x)
-
+#include <bmk-core/core.h>
 #include <bmk-core/memalloc.h>
 #include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
@@ -305,7 +304,7 @@ bmk_sched_create(const char *name, void *cookie, int joinable,
 	bmk_strncpy(thread->bt_name, name, sizeof(thread->bt_name)-1);
 
 	if (!stack_base) {
-		assert(stack_size == 0);
+		bmk_assert(stack_size == 0);
 		stackalloc(&stack_base, &stack_size);
 	} else {
 		thread->bt_flags = THREAD_EXTSTACK;
@@ -384,7 +383,7 @@ bmk_sched_join(struct bmk_thread *joinable)
 	struct bmk_thread *thread = bmk_sched_current();
 	unsigned long flags;
 
-	assert(joinable->bt_flags & THREAD_MUSTJOIN);
+	bmk_assert(joinable->bt_flags & THREAD_MUSTJOIN);
 
 	local_irq_save(flags);
 	/* wait for exiting thread to hit thread_exit() */
@@ -402,7 +401,7 @@ bmk_sched_join(struct bmk_thread *joinable)
 	}
 
 	/* signal exiting thread that we have seen it and it may now exit */
-	assert(joinable->bt_flags & THREAD_JOINED);
+	bmk_assert(joinable->bt_flags & THREAD_JOINED);
 	joinable->bt_flags &= ~THREAD_MUSTJOIN;
 	local_irq_restore(flags);
 
