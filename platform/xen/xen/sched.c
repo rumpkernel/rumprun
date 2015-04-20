@@ -207,8 +207,12 @@ bmk_sched(void)
 
 	/* could do time management a bit better here */
 	do {
-		s_time_t tm = NOW();
-		s_time_t wakeup = tm + SECONDS(10);
+		bmk_time_t tm, wakeup;
+
+		/* block domain for max 1s */
+		tm = bmk_clock_monotonic();
+		wakeup = tm + 1*1000*1000*1000ULL;
+
 		next = NULL;
 		TAILQ_FOREACH_SAFE(thread, &threads, bt_entries, tmp) {
 			if (!is_runnable(thread)
@@ -229,13 +233,10 @@ bmk_sched(void)
 		}
 		if (next)
 			break;
-		/*
-		 * no runnables.  hlt for a while.
-		 */
-		block_domain(wakeup);
-		/* handle pending events if any */
-		minios_force_evtchn_callback();
-	} while(1);
+
+		/* sleep for a while */
+		bmk_platform_block(wakeup);
+	} while (1);
 
 	bmk_platform_splx(flags);
 
