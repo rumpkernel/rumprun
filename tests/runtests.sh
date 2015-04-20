@@ -64,32 +64,37 @@ runguest ()
 
 	[ -n "${img1}" ] || die runtest without a disk image
 	cookie=$(${RUMPRUN} ${STACK} -b ${img1} ${testprog})
+	if [ $? -ne 0 -o -z "${cookie}" ]; then
+		TEST_RESULT=ERROR
+		TEST_ECODE=-2
+	else
+		TEST_RESULT=TIMEOUT
+		TEST_ECODE=-1
 
-	TEST_RESULT=TIMEOUT
-	TEST_ECODE=-1
+		for x in $(seq 10) ; do
+			echo ">> polling, round ${x} ..."
+			set -- $(sed 1q < ${img1})
 
-	for x in $(seq 10) ; do
-		echo ">> polling, round ${x} ..."
-		set -- $(sed 1q < ${img1})
+			case ${1} in
+			OK)
+				TEST_RESULT=SUCCESS
+				TEST_ECODE=$2
+				break
+				;;
+			NO)
+				TEST_RESULT=FAILED
+				TEST_ECODE=$2
+				break
+				;;
+			*)
+				# continue
+				;;
+			esac
 
-		case ${1} in
-		OK)
-			TEST_RESULT=SUCCESS
-			TEST_ECODE=$2
-			break
-			;;
-		NO)
-			TEST_RESULT=FAILED
-			TEST_ECODE=$2
-			break
-			;;
-		*)
-			# continue
-			;;
-		esac
+			sleep 1
+		done
+	fi
 
-		sleep 1
-	done
 	echo ">> Result: ${TEST_RESULT} (${TEST_ECODE})"
 
 	${RUMPSTOP} ${cookie}
@@ -148,7 +153,8 @@ done
 echo '>> TEST LOG'
 cat test.log
 
-awk '{res[$2]++}END{printf "Success: %d, Fail: %d, Timeout: %d\n",
-    res["SUCCESS"], res["FAILED"], res["TIMEOUT"]}' < test.log
+awk '{res[$2]++}
+    END{printf "Success: %d, Fail: %d, Timeout: %d, Internal error: %d\n",
+        res["SUCCESS"], res["FAILED"], res["TIMEOUT"], res["ERROR"]}' < test.log
 
 exit ${rv}
