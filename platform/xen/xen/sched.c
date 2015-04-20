@@ -194,7 +194,7 @@ bmk_sched(void)
 	unsigned long flags;
 
 	prev = bmk_sched_current();
-	local_irq_save(flags); 
+	flags = bmk_platform_splhigh();
 
 	if (_minios_in_hypervisor_callback) {
 		minios_printk("Must not call schedule() from a callback\n");
@@ -237,7 +237,7 @@ bmk_sched(void)
 		minios_force_evtchn_callback();
 	} while(1);
 
-	local_irq_restore(flags);
+	bmk_platform_splx(flags);
 
 	if (prev != next) {
 		sched_switch(prev, next);
@@ -320,9 +320,9 @@ bmk_sched_create(const char *name, void *cookie, int joinable,
 
 	thread->bt_wakeup_time = -1;
 
-	local_irq_save(flags);
+	flags = bmk_platform_splhigh();
 	TAILQ_INSERT_TAIL(&threads, thread, bt_entries);
-	local_irq_restore(flags);
+	bmk_platform_splx(flags);
 
 	allocothertls(thread);
 	set_runnable(thread);
@@ -345,10 +345,10 @@ bmk_sched_exit(void)
 	struct join_waiter *jw_iter;
 
 	/* if joinable, gate until we are allowed to exit */
-	local_irq_save(flags);
+	flags = bmk_platform_splhigh();
 	while (thread->bt_flags & THREAD_MUSTJOIN) {
 		thread->bt_flags |= THREAD_JOINED;
-		local_irq_restore(flags);
+		bmk_platform_splx(flags);
 
 		/* see if the joiner is already there */
 		TAILQ_FOREACH(jw_iter, &joinwq, jw_entries) {
@@ -359,7 +359,7 @@ bmk_sched_exit(void)
 		}
 		bmk_sched_block(thread);
 		bmk_sched();
-		local_irq_save(flags);
+		flags = bmk_platform_splhigh();
 	}
 	freeothertls(thread);
 
@@ -368,7 +368,7 @@ bmk_sched_exit(void)
 	clear_runnable(thread);
 	/* Put onto exited list */
 	TAILQ_INSERT_HEAD(&zombies, thread, bt_entries);
-	local_irq_restore(flags);
+	bmk_platform_splx(flags);
 
 	/* bye */
 	bmk_sched();
@@ -385,10 +385,10 @@ bmk_sched_join(struct bmk_thread *joinable)
 
 	bmk_assert(joinable->bt_flags & THREAD_MUSTJOIN);
 
-	local_irq_save(flags);
+	flags = bmk_platform_splhigh();
 	/* wait for exiting thread to hit thread_exit() */
 	while ((joinable->bt_flags & THREAD_JOINED) == 0) {
-		local_irq_restore(flags);
+		bmk_platform_splx(flags);
 
 		jw.jw_thread = thread;
 		jw.jw_wanted = joinable;
@@ -397,13 +397,13 @@ bmk_sched_join(struct bmk_thread *joinable)
 		bmk_sched();
 		TAILQ_REMOVE(&joinwq, &jw, jw_entries);
 
-		local_irq_save(flags);
+		flags = bmk_platform_splhigh();
 	}
 
 	/* signal exiting thread that we have seen it and it may now exit */
 	bmk_assert(joinable->bt_flags & THREAD_JOINED);
 	joinable->bt_flags &= ~THREAD_MUSTJOIN;
-	local_irq_restore(flags);
+	bmk_platform_splx(flags);
 
 	bmk_sched_wake(joinable);
 }
