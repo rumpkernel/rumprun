@@ -26,13 +26,14 @@
 #include <errno.h>
 #include <stdio.h>
 
+/* XXX: incorrect return value, need to fix other things first */
 #define STUB_ERRNO(name)				\
   int name(void); int name(void) {			\
 	static int done = 0;				\
 	errno = ENOTSUP;				\
-	if (done) return -1; done = 1;			\
+	if (done) return ENOTSUP; done = 1;		\
 	fprintf(stderr, "STUB ``%s'' called\n", #name);	\
-	return -1;}
+	return ENOTSUP;}
 
 #define STUB_RETURN(name)				\
   int name(void); int name(void) {			\
