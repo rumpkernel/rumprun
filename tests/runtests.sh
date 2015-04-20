@@ -1,5 +1,4 @@
-#!/bin/bash
-# ^ for job control
+#!/bin/sh
 
 #
 # Copyright (c) 2015 Antti Kantee <pooka@rumpkernel.org>
