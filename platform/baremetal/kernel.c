@@ -152,7 +152,7 @@ bmk_main(struct multiboot_info *mbi)
 {
 
 	bmk_printf_init(bmk_cons_putc, NULL);
-	bmk_core_init(BMK_THREAD_STACKSIZE, PAGE_SIZE);
+	bmk_core_init(BMK_THREAD_STACK_PAGE_ORDER, PAGE_SIZE);
 
 	bmk_printf("rump kernel bare metal bootstrap\n\n");
 	if ((mbi->flags & MULTIBOOT_MEMORY_INFO) == 0) {

@@ -28,7 +28,7 @@
 
 #include <bmk-core/platform.h>
 
-int bmk_core_init(long, long);
+int bmk_core_init(unsigned long, unsigned long);
 
 #define bmk_assert(x)							\
   do {									\
@@ -37,6 +37,6 @@ int bmk_core_init(long, long);
 	}								\
   } while (0)
 
-extern long bmk_stacksize, bmk_pagesize;
+extern unsigned long bmk_stackpageorder, bmk_stacksize, bmk_pagesize;
 
 #endif /* _BMK_CORE_CORE_H_ */

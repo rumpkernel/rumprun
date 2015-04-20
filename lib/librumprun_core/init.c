@@ -25,14 +25,16 @@
 
 #include <bmk-core/core.h>
 
-long bmk_stacksize;
-long bmk_pagesize;
+unsigned long bmk_stackpageorder;
+unsigned long bmk_stacksize;
+unsigned long bmk_pagesize;
 
 int
-bmk_core_init(long stacksize, long pagesize)
+bmk_core_init(unsigned long stackpageorder, unsigned long pagesize)
 {
 
-	bmk_stacksize = stacksize;
+	bmk_stackpageorder = stackpageorder;
+	bmk_stacksize = (1<<stackpageorder) * pagesize;
 	bmk_pagesize = pagesize;
 
 	return 0;

@@ -122,7 +122,7 @@ bmk_platform_splx(unsigned long x)
 void _minios_start_kernel(start_info_t *si)
 {
 
-    bmk_core_init(STACK_SIZE, PAGE_SIZE);
+    bmk_core_init(STACK_SIZE_PAGE_ORDER, PAGE_SIZE);
 
     arch_init(si);
     trap_init();
