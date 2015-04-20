@@ -141,15 +141,15 @@ static void
 stackalloc(void **stack, unsigned long *ss)
 {
 
-	*stack = bmk_platform_allocpg2(BMK_THREAD_STACK_PAGE_ORDER);
-	*ss = BMK_THREAD_STACKSIZE;
+	*stack = bmk_platform_allocpg2(bmk_stackpageorder);
+	*ss = bmk_stacksize;
 }
 
 static void
 stackfree(struct bmk_thread *thread)
 {
 
-	bmk_platform_freepg2(thread->bt_stackbase, BMK_THREAD_STACK_PAGE_ORDER);
+	bmk_platform_freepg2(thread->bt_stackbase, bmk_stackpageorder);
 }
 
 static void
