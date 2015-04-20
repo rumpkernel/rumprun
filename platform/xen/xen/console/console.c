@@ -147,9 +147,8 @@ void print(int direct, const char *fmt, va_list args)
 /* XXX: should use a putc/flush combo ... later */
 static void minios_putc(int c)
 {
-    char cc = c;
 
-    (void)HYPERVISOR_console_io(CONSOLEIO_write, 1, &cc);
+    minios_printk("%c", c);
 }
 
 void minios_printk(const char *fmt, ...)
