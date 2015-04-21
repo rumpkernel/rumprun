@@ -21,7 +21,7 @@ typedef struct {
 
 #define SPIN_LOCK_UNLOCKED ARCH_SPIN_LOCK_UNLOCKED
 
-#define spin_lock_init(x)	do { *(x) = SPIN_LOCK_UNLOCKED; } while(0)
+#define spin_lock_init(x)	do { *(x) = (spinlock_t)SPIN_LOCK_UNLOCKED; } while(0)
 
 /*
  * Simple spin lock operations.  There are two variants, one clears IRQ's
