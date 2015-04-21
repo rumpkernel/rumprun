@@ -110,6 +110,14 @@ minherit(void *addr, size_t len, int inherit)
 }
 
 int
+mlockall(int flags)
+{
+
+	/* no vm => everything is automatically locked */
+	return 0;
+}
+
+int
 munmap(void *addr, size_t len)
 {
 

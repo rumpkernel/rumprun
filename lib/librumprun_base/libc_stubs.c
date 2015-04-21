@@ -56,8 +56,6 @@ STUB_ERRNO(kill);
 STUB_ERRNO(getpriority);
 STUB_ERRNO(setpriority);
 
-STUB_ERRNO(mlockall);
-
 /* for pthread_cancelstub */
 STUB_ERRNO(_sys_mq_send);
 STUB_ERRNO(_sys_mq_receive);
