@@ -312,11 +312,11 @@ bmk_sched_create(const char *name, void *cookie, int joinable,
 
 	thread->bt_wakeup_time = -1;
 
+	allocothertls(thread);
+
 	flags = bmk_platform_splhigh();
 	TAILQ_INSERT_TAIL(&threads, thread, bt_entries);
 	bmk_platform_splx(flags);
-
-	allocothertls(thread);
 	set_runnable(thread);
 
 	return thread;
