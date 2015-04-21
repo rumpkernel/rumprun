@@ -55,6 +55,11 @@ void unbind_all_ports(void)
             struct evtchn_close close;
             minios_printk("port %d still bound!\n", i);
             minios_mask_evtchn(i);
+
+            ev_actions[i].handler = default_handler;
+            wmb();
+            ev_actions[i].data = NULL;
+
             close.port = i;
             rc = HYPERVISOR_event_channel_op(EVTCHNOP_close, &close);
             if (rc)
