@@ -36,7 +36,7 @@
 #include <bmk-core/printf.h>
 #include <bmk-core/queue.h>
 
-#include <bmk-base/netbsd_initfini.h>
+#include <rumprun-base/netbsd_initfini.h>
 
 unsigned long bmk_membase;
 unsigned long bmk_memsize;

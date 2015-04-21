@@ -25,7 +25,7 @@
 
 /* placeholder/stubs (in case it was unguessable) */
 
-#include <bmk-base/rumprun_config.h>
+#include <rumprun-base/config.h>
 
 void
 _rumprun_config(void)

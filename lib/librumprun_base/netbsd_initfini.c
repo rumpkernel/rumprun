@@ -38,8 +38,8 @@
 
 #include <bmk-core/core.h>
 
-#include <bmk-base/netbsd_initfini.h>
-#include <bmk-base/rumprun_config.h>
+#include <rumprun-base/netbsd_initfini.h>
+#include <rumprun-base/config.h>
 
 static char *the_env[1] = { NULL } ;
 extern void *environ;

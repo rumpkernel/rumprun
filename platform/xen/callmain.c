@@ -32,7 +32,7 @@
 
 #include <mini-os/os.h>
 
-#include <bmk-base/netbsd_initfini.h>
+#include <rumprun-base/netbsd_initfini.h>
 
 extern int main(int argc, char **argv);
 

@@ -46,7 +46,7 @@
 
 #include <bmk-core/core.h>
 
-#include <bmk-base/netbsd_initfini.h>
+#include <rumprun-base/netbsd_initfini.h>
 
 #ifdef RUMPRUN_MMAP_DEBUG
 #define MMAP_PRINTF(x) printf x

@@ -42,8 +42,8 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <bmk-base/netbsd_initfini.h>
-#include <bmk-base/rumprun_makelwp.h>
+#include <rumprun-base/netbsd_initfini.h>
+#include <rumprun-base/makelwp.h>
 
 #include <bmk-core/core.h>
 #include <bmk-core/sched.h>
