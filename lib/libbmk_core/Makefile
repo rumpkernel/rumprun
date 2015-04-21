@@ -3,6 +3,9 @@ LIBISPRIVATE=	# defined
 
 SRCS=		init.c bmk_string.c memalloc.c sched.c subr_prf.c
 
+# kernel-level source code
+CFLAGS+=	-fno-stack-protector
+
 CPPFLAGS+=	-I${.CURDIR}/../../include
 
 .include "${.CURDIR}/arch/${MACHINE}/Makefile.inc"
