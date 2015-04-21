@@ -171,7 +171,7 @@ void _minios_start_kernel(start_info_t *si)
     init_gnttab();
     
     /* Init scheduler. */
-    bmk_sched_init(NULL);
+    bmk_sched_init(NULL, NULL);
  
     /* Init XenBus */
     init_xenbus();

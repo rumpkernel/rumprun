@@ -451,13 +451,12 @@ bmk_sched_wake(struct bmk_thread *thread)
 }
 
 void
-bmk_sched_init(void (*mainfun)(void))
+bmk_sched_init(void (*mainfun)(void *), void *arg)
 {
 	struct bmk_thread *mainthread;
 	struct bmk_thread initthread;
 
-	mainthread = bmk_sched_create("main", NULL, 0,
-	    (void (*)(void *))mainfun, NULL, NULL, 0);
+	mainthread = bmk_sched_create("main", NULL, 0, mainfun, arg, NULL, 0);
 	if (mainthread == NULL)
 		bmk_platform_halt("failed to create main thread");
 

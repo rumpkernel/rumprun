@@ -187,7 +187,7 @@ parsemem(uint32_t addr, uint32_t len)
 }
 
 static void
-bmk_mainthread(void)
+bmk_mainthread(void *notused)
 {
 
 	_netbsd_init();
@@ -213,7 +213,7 @@ bmk_main(struct multiboot_info *mbi)
 	bmk_isr_init();
 
 	/* enough already, jump to main thread */
-	bmk_sched_init(bmk_mainthread);
+	bmk_sched_init(bmk_mainthread, NULL);
 }
 
 /*
