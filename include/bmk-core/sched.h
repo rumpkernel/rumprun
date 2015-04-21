@@ -64,7 +64,6 @@ void	bmk_sched_settls(struct bmk_thread *, unsigned int, void *);
 void	bmk_cpu_sched_create(struct bmk_thread *, struct bmk_tcb *,
 			     void (*)(void *), void *,
 			     void *, unsigned long);
-void	bmk_cpu_sched_switch(struct bmk_tcb *, struct bmk_tcb *);
 
 void	bmk_sched_set_hook(void (*)(void *, void *));
 struct bmk_thread *bmk_sched_init_mainlwp(void *);
@@ -79,7 +78,8 @@ bmk_time_t	bmk_clock_epochoffset(void);
 
 /* XXX: coming up with better names considered useful */
 void	bmk_cpu_sched_bouncer(void);
-void	bmk_cpu_switch(struct bmk_tcb *, struct bmk_tcb *);
 void	bmk__cpu_switch(void *, void *);
+
+void	bmk_platform_cpu_sched_switch(struct bmk_tcb *, struct bmk_tcb *);
 
 #endif /* _BMK_CORE_SCHED_H_ */

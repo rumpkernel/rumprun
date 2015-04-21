@@ -79,7 +79,7 @@ void dump_stack(struct thread *thread_md)
 extern void _minios_entry_thread_starter(void);
 
 void
-bmk_cpu_switch(struct bmk_tcb *prev, struct bmk_tcb *next)
+bmk_platform_cpu_sched_switch(struct bmk_tcb *prev, struct bmk_tcb *next)
 {
 
 /* XXX: TLS is available only on x86_64 currently */
