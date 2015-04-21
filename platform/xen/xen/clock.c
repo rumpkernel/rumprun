@@ -28,7 +28,7 @@
 #include <bmk-core/sched.h>
 
 bmk_time_t
-bmk_clock_monotonic(void)
+bmk_platform_clock_monotonic(void)
 {
 
 	return minios_clock_monotonic();

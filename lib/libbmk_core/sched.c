@@ -201,7 +201,7 @@ bmk_sched(void)
 		bmk_time_t tm, wakeup;
 
 		/* block domain for max 1s */
-		tm = bmk_clock_monotonic();
+		tm = bmk_platform_clock_monotonic();
 		wakeup = tm + 1*1000*1000*1000ULL;
 
 		next = NULL;
@@ -434,7 +434,8 @@ int
 bmk_sched_nanosleep(bmk_time_t nsec)
 {
 
-	return bmk_sched_nanosleep_abstime(nsec + bmk_clock_monotonic());
+	return bmk_sched_nanosleep_abstime(nsec
+	    + bmk_platform_clock_monotonic());
 }
 
 void

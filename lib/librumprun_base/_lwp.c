@@ -206,7 +206,7 @@ _lwp_park(clockid_t clock_id, int flags, const struct timespec *ts,
 		bmk_time_t nsecs = ts->tv_sec*1000*1000*1000 + ts->tv_nsec;
 
 		if (flags & TIMER_ABSTIME) {
-			nsecs -= bmk_clock_epochoffset();
+			nsecs -= bmk_platform_clock_epochoffset();
 			rv = bmk_sched_nanosleep_abstime(nsecs);
 		} else {
 			rv = bmk_sched_nanosleep(nsecs);

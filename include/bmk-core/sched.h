@@ -73,12 +73,13 @@ struct bmk_thread *bmk_cpu_sched_current(void);
 int *bmk_sched_geterrno(void);
 const char 	*bmk_sched_threadname(struct bmk_thread *);
 
-bmk_time_t	bmk_clock_monotonic(void);
-bmk_time_t	bmk_clock_epochoffset(void);
-
 /* XXX: coming up with better names considered useful */
 void	bmk_cpu_sched_bouncer(void);
 void	bmk__cpu_switch(void *, void *);
+
+
+bmk_time_t	bmk_platform_clock_monotonic(void);
+bmk_time_t	bmk_platform_clock_epochoffset(void);
 
 void	bmk_platform_cpu_sched_switch(struct bmk_tcb *, struct bmk_tcb *);
 

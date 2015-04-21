@@ -37,11 +37,11 @@ rumpuser_clock_gettime(int which, int64_t *sec, long *nsec)
 {
 	bmk_time_t time;
 
-	time = bmk_clock_monotonic();
+	time = bmk_platform_clock_monotonic();
 
 	switch (which) {
 	case RUMPUSER_CLOCK_RELWALL:
-		time += bmk_clock_epochoffset();
+		time += bmk_platform_clock_epochoffset();
 		break;
 	case RUMPUSER_CLOCK_ABSMONO:
 		break;

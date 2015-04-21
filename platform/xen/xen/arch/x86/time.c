@@ -197,7 +197,7 @@ void minios_clock_wall(uint32_t *sec, uint64_t *nsec)
 
 /* return monotonic clock offset to wall epoch */
 bmk_time_t
-bmk_clock_epochoffset(void)
+bmk_platform_clock_epochoffset(void)
 {
 	struct timespec myts;
 
