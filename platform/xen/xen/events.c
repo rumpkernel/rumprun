@@ -26,6 +26,7 @@
 
 /* this represents a event handler. Chaining or sharing is not allowed */
 typedef struct _ev_action_t {
+    spinlock_t lock;
     evtchn_handler_t handler;
     void *data;
     uint32_t count;
@@ -56,9 +57,11 @@ void unbind_all_ports(void)
             minios_printk("port %d still bound!\n", i);
             minios_mask_evtchn(i);
 
+            spin_lock(&ev_actions[i].lock);
             ev_actions[i].handler = default_handler;
             wmb();
             ev_actions[i].data = NULL;
+            spin_unlock(&ev_actions[i].lock);
 
             close.port = i;
             rc = HYPERVISOR_event_channel_op(EVTCHNOP_close, &close);
@@ -86,11 +89,13 @@ int do_event(evtchn_port_t port, struct pt_regs *regs)
         return 1;
     }
 
+    spin_lock(&ev_actions[port].lock);
     action = &ev_actions[port];
     action->count++;
 
     /* call the handler */
     action->handler(port, regs, action->data);
+    spin_unlock(&ev_actions[port].lock);
 
     return 1;
 }
@@ -98,6 +103,7 @@ int do_event(evtchn_port_t port, struct pt_regs *regs)
 evtchn_port_t minios_bind_evtchn(evtchn_port_t port, evtchn_handler_t handler,
                                  void *data)
 {
+    spin_lock(&ev_actions[port].lock);
     if (ev_actions[port].handler != default_handler)
         minios_printk("WARN: Handler for port %d already registered, replacing\n",
                       port);
@@ -105,6 +111,8 @@ evtchn_port_t minios_bind_evtchn(evtchn_port_t port, evtchn_handler_t handler,
     ev_actions[port].data = data;
     wmb();
     ev_actions[port].handler = handler;
+    spin_unlock(&ev_actions[port].lock);
+
     set_bit(port, bound_ports);
 
     return port;
@@ -115,6 +123,7 @@ void minios_unbind_evtchn(evtchn_port_t port)
     struct evtchn_close close;
     int rc;
 
+    spin_lock(&ev_actions[port].lock);
     if (ev_actions[port].handler == default_handler)
         minios_printk("WARN: No handler for port %d when unbinding\n", port);
     minios_mask_evtchn(port);
@@ -123,6 +132,8 @@ void minios_unbind_evtchn(evtchn_port_t port)
     ev_actions[port].handler = default_handler;
     wmb();
     ev_actions[port].data = NULL;
+    spin_unlock(&ev_actions[port].lock);
+
     clear_bit(port, bound_ports);
 
     close.port = port;
@@ -202,6 +213,7 @@ void init_events(void)
     for ( i = 0; i < NR_EVS; i++ )
     {
         ev_actions[i].handler = default_handler;
+        spin_lock_init(&ev_actions[i].lock);
         minios_mask_evtchn(i);
     }
 }
