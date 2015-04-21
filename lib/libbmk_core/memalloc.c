@@ -123,7 +123,7 @@ union	overhead {
 #define MINALIGN 16
 static	union overhead *nextf[NBUCKETS];
 
-static	long pagesz;			/* page size */
+static	unsigned long pagesz;		/* page size */
 static	int pagebucket;			/* page size bucket */
 
 #ifdef MSTATS

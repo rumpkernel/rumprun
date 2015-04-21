@@ -53,7 +53,7 @@ rumpuser_malloc(size_t len, int alignment, void **retval)
 	 * will not trigger for the common case.
 	 */
 	if (len == bmk_pagesize) {
-		bmk_assert(alignment <= bmk_pagesize);
+		bmk_assert((unsigned long)alignment <= bmk_pagesize);
 		*retval = bmk_platform_allocpg2(0);
 	} else {
 		*retval = bmk_memalloc(len, alignment);
