@@ -197,7 +197,7 @@ bmk_sched(void)
 	}
 
 	/* could do time management a bit better here */
-	do {
+	for (;;) {
 		bmk_time_t tm, wakeup;
 
 		/* block domain for max 1s */
@@ -227,7 +227,7 @@ bmk_sched(void)
 
 		/* sleep for a while */
 		bmk_platform_block(wakeup);
-	} while (1);
+	}
 
 	bmk_platform_splx(flags);
 
