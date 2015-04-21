@@ -21,6 +21,7 @@
 
 #include<xen/event_channel.h>
 
+struct pt_regs;
 typedef void (*evtchn_handler_t)(evtchn_port_t, struct pt_regs *, void *);
 
 /* prototypes */
@@ -38,12 +39,7 @@ int minios_evtchn_bind_interdomain(domid_t pal, evtchn_port_t remote_port,
 							evtchn_port_t *local_port);
 void unbind_all_ports(void);
 
-static inline int notify_remote_via_evtchn(evtchn_port_t port)
-{
-    evtchn_send_t op;
-    op.port = port;
-    return HYPERVISOR_event_channel_op(EVTCHNOP_send, &op);
-}
+int notify_remote_via_evtchn(evtchn_port_t port);
 
 void fini_events(void);
 

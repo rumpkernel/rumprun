@@ -258,6 +258,13 @@ int minios_evtchn_bind_interdomain(domid_t pal, evtchn_port_t remote_port,
     return rc;
 }
 
+int notify_remote_via_evtchn(evtchn_port_t port)
+{
+    evtchn_send_t op;
+    op.port = port;
+    return HYPERVISOR_event_channel_op(EVTCHNOP_send, &op);
+}
+
 /*
  * Local variables:
  * mode: C
