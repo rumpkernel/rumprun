@@ -78,24 +78,6 @@ void dump_stack(struct thread *thread_md)
    defined in x86_[32/64].S */
 extern void _minios_entry_thread_starter(void);
 
-void run_idle_thread(void)
-{
-    /* Switch stacks and run the thread */ 
-#if defined(__i386__)
-    __asm__ __volatile__("mov %0,%%esp\n\t"
-                         "push %1\n\t" 
-                         "ret"                                            
-                         :"=m" (idle_tcb->btcb_sp)
-                         :"m" (idle_tcb->btcb_ip));
-#elif defined(__x86_64__)
-    __asm__ __volatile__("mov %0,%%rsp\n\t"
-                         "push %1\n\t" 
-                         "ret"                                            
-                         :"=m" (idle_tcb->btcb_sp)
-                         :"m" (idle_tcb->btcb_ip));
-#endif
-}
-
 void
 bmk_cpu_switch(struct bmk_tcb *prev, struct bmk_tcb *next)
 {

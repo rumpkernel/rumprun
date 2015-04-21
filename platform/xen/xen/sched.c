@@ -107,9 +107,6 @@ struct bmk_thread {
 	TAILQ_ENTRY(bmk_thread) bt_entries;
 };
 
-static struct bmk_thread *idle_thread = NULL;
-struct bmk_tcb *idle_tcb;
-
 static TAILQ_HEAD(, bmk_thread) zombies = TAILQ_HEAD_INITIALIZER(zombies);
 static TAILQ_HEAD(, bmk_thread) threads = TAILQ_HEAD_INITIALIZER(threads);
 
@@ -458,23 +455,20 @@ bmk_sched_wake(struct bmk_thread *thread)
 }
 
 void
-idle_thread_fn(void *unused)
+bmk_sched_init(void (*mainfun)(void *), void *arg)
 {
+	struct bmk_thread *mainthread;
+	struct bmk_thread initthread;
 
-	for (;;) {
-		bmk_sched_block(bmk_sched_current());
-		bmk_sched();
-	}
-}
+	mainthread = bmk_sched_create("main", NULL, 0, mainfun, arg, NULL, 0);
+	if (mainthread == NULL)
+		bmk_platform_halt("failed to create main thread");
 
-void
-bmk_sched_init(void (*notused)(void *), void *arg)
-{
-	minios_printk("Initialising scheduler\n");
+	bmk_memset(&initthread, 0, sizeof(initthread));
+	bmk_strcpy(initthread.bt_name, "init");
+	sched_switch(&initthread, mainthread);
 
-	idle_thread = bmk_sched_create("Idle", NULL, 0,
-	    idle_thread_fn, NULL, NULL, 0);
-	idle_tcb = &idle_thread->bt_tcb;
+	bmk_platform_halt("bmk_sched_init unreachable");
 }
 
 void

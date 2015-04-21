@@ -169,18 +169,13 @@ void _minios_start_kernel(start_info_t *si)
 
     /* Init grant tables */
     init_gnttab();
-    
-    /* Init scheduler. */
-    bmk_sched_init(NULL, NULL);
  
     /* Init XenBus */
     init_xenbus();
 
-    /* Call (possibly overridden) app_main() */
-    bmk_sched_create("main", NULL, 0, _app_main, &start_info, NULL, 0);
-
-    /* Everything initialised, start idle thread */
-    run_idle_thread();
+    /* Init scheduler. */
+    bmk_sched_init(_app_main, &start_info);
+    bmk_platform_halt("unreachable");
 }
 
 void minios_stop_kernel(void)
