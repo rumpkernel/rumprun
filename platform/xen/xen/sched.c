@@ -61,15 +61,6 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-#include <mini-os/os.h>
-#include <mini-os/hypervisor.h>
-#include <mini-os/time.h>
-#include <mini-os/mm.h>
-#include <mini-os/types.h>
-#include <mini-os/lib.h>
-#include <mini-os/sched.h>
-#include <mini-os/semaphore.h>
-
 #include <bmk-core/core.h>
 #include <bmk-core/memalloc.h>
 #include <bmk-core/platform.h>
@@ -92,7 +83,7 @@ struct bmk_thread {
 
 	void *bt_tls[TLS_COUNT];
 
-	int64_t bt_wakeup_time;
+	bmk_time_t bt_wakeup_time;
 
 	int bt_flags;
 	int bt_errno;
@@ -267,10 +258,10 @@ extern const char _tbss_start[], _tbss_end[];
 static int
 allocothertls(struct bmk_thread *thread)
 {
-	const size_t tdatasize = _tdata_end - _tdata_start;
-	const size_t tbsssize = _tbss_end - _tbss_start;
+	const unsigned long tdatasize = _tdata_end - _tdata_start;
+	const unsigned long tbsssize = _tbss_end - _tbss_start;
 	struct bmk_tcb *tcb = &thread->bt_tcb;
-	uint8_t *tlsmem;
+	char *tlsmem;
 
 	tlsmem = bmk_memalloc(tdatasize + tbsssize, 0);
 
