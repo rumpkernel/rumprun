@@ -89,7 +89,7 @@ static inline void minios_wake_up(struct wait_queue_head *head)
     local_irq_restore(flags);                                   \
 } while(0) 
 
-#define minios_wait_event(wq, condition) minios_wait_event_deadline(wq, condition, -1)
+#define minios_wait_event(wq, condition) minios_wait_event_deadline(wq, condition, BMK_SCHED_BLOCK_INFTIME)
 
 
 
