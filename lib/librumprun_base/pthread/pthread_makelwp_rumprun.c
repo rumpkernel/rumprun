@@ -1,6 +1,6 @@
 #include "pthread_makelwp.h"
 
-#include <bmk-base/rumprun_makelwp.h>
+#include <rumprun-base/makelwp.h>
 
 int
 pthread__makelwp(void (*start)(void *), void *arg, void *private,
