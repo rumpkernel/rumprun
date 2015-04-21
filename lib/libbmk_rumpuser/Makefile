@@ -1,4 +1,4 @@
-LIB=		rumprun_rumpuser
+LIB=		bmk_rumpuser
 LIBISPRIVATE=	# defined
 
 SRCS=		rumpuser_base.c

@@ -74,11 +74,11 @@ RUMPKERN_LIB=	${LIBS_VIO_NET}					\
 		-lrumpdev -lrumpvfs -lrump
 
 COREDIR:=	$(shell pwd)/../../lib/libbmk_core
+RUMPUSERDIR:=	$(shell pwd)/../../lib/libbmk_rumpuser
 BASEDIR:=	$(shell pwd)/../../lib/librumprun_base
-RUMPUSERDIR:=	$(shell pwd)/../../lib/librumprun_rumpuser
 
 OBJS_BMK+=	init.o
-LIBS_USER=	-L${BASEDIR}/baremetal -L${COREDIR}/baremetal -L${RUMPUSERDIR}/baremetal -lrumprun_rumpuser --start-group -lrumprun_base -lpthread -lc --end-group -lbmk_core
+LIBS_USER=	-L${BASEDIR}/baremetal -L${COREDIR}/baremetal -L${RUMPUSERDIR}/baremetal --start-group -lrumprun_base -lpthread -lc --end-group -lbmk_rumpuser -lbmk_core
 RUMP_LDLIBS=	--whole-archive ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USER}
 
 OBJS= ${OBJS_BMK} ${OBJS_APP}
@@ -107,12 +107,12 @@ ${COREDIR}/baremetal/libbmk_core.a:
 	    && ${RUMPMAKE} MAKEOBJDIR=baremetal obj \
 	    && ${RUMPMAKE} MAKEOBJDIR=baremetal dependall )
 
-${RUMPUSERDIR}/baremetal/librumprun_rumpuser.a:
+${RUMPUSERDIR}/baremetal/libbmk_rumpuser.a:
 	( cd ${RUMPUSERDIR} \
 	    && ${RUMPMAKE} MAKEOBJDIR=baremetal obj \
 	    && ${RUMPMAKE} MAKEOBJDIR=baremetal dependall )
 
-rumprun.o: ${OBJS} ${BASEDIR}/baremetal/librumprun_base.a ${COREDIR}/baremetal/libbmk_core.a ${RUMPUSERDIR}/baremetal/librumprun_rumpuser.a
+rumprun.o: ${OBJS} ${BASEDIR}/baremetal/librumprun_base.a ${COREDIR}/baremetal/libbmk_core.a ${RUMPUSERDIR}/baremetal/libbmk_rumpuser.a
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@
 
 tests: rumprun.o app-tools
