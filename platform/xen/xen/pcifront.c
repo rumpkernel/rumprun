@@ -9,7 +9,6 @@
 #include <mini-os/gnttab.h>
 #include <mini-os/wait.h>
 #include <mini-os/pcifront.h>
-#include <mini-os/sched.h>
 
 #include <string.h>
 

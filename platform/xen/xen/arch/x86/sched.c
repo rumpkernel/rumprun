@@ -41,7 +41,6 @@
 #include <mini-os/mm.h>
 #include <mini-os/types.h>
 #include <mini-os/lib.h>
-#include <mini-os/sched.h>
 #include <mini-os/semaphore.h>
 
 #include <bmk-core/memalloc.h>

@@ -34,7 +34,6 @@
 #include <mini-os/time.h>
 #include <mini-os/types.h>
 #include <mini-os/lib.h>
-#include <mini-os/sched.h>
 #include <mini-os/xenbus.h>
 #include <mini-os/gnttab.h>
 #include <mini-os/netfront.h>

@@ -31,8 +31,8 @@
 #define __HYPERCALL_X86_32_H__
 
 #include <xen/xen.h>
-#include <xen/sched.h>
 #include <xen/nmi.h>
+#include <xen/sched.h>
 #include <mini-os/mm.h>
 
 #define __STR(x) #x

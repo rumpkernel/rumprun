@@ -2,7 +2,6 @@
 #define MINIOS_XENBUS_H__
 
 #include <xen/io/xenbus.h>
-#include <mini-os/sched.h>
 #include <mini-os/waittypes.h>
 #include <mini-os/queue.h>
 #include <mini-os/spinlock.h>

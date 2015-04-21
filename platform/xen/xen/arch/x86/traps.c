@@ -3,7 +3,6 @@
 #include <mini-os/hypervisor.h>
 #include <mini-os/mm.h>
 #include <mini-os/lib.h>
-#include <mini-os/sched.h>
 
 #include <mini-os/machine/traps.h>
 
