@@ -35,6 +35,15 @@
 	fprintf(stderr, "STUB ``%s'' called\n", #name);	\
 	return ENOTSUP;}
 
+#define STUB_SILENT_IGNORE(name)			\
+  int name(void); int name(void) {			\
+	static int done = 0;				\
+	errno = 0;					\
+	if (done) return 0;				\
+	done = 1;					\
+	fprintf(stderr, "``%s'' ignored\n", #name);	\
+	return 0;}
+
 #define STUB_RETURN(name)				\
   int name(void); int name(void) {			\
 	static int done = 0;				\
@@ -42,12 +51,10 @@
 	fprintf(stderr, "STUB ``%s'' called\n", #name);	\
 	return ENOTSUP;}
 
+STUB_SILENT_IGNORE(__sigaction_sigtramp);
+
 STUB_RETURN(posix_spawn);
 
-STUB_ERRNO(__sigaction14);
-STUB_ERRNO(__sigaction_sigtramp);
-STUB_ERRNO(sigaction);
-STUB_ERRNO(sigprocmask);
 STUB_ERRNO(__getrusage50);
 
 STUB_ERRNO(__fork);

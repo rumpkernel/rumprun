@@ -353,8 +353,6 @@ _lwpabort(void)
 __strong_alias(_sys_setcontext,_lwpabort);
 __strong_alias(_lwp_kill,_lwpabort);
 
-__strong_alias(_sys___sigprocmask14,_lwpnullop);
-
 __strong_alias(__libc_static_tls_setup,_lwpnullop);
 
 int rasctl(void);
