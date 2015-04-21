@@ -207,7 +207,8 @@ bmk_sched(void)
 		next = NULL;
 		TAILQ_FOREACH_SAFE(thread, &threads, bt_entries, tmp) {
 			if (!is_runnable(thread)
-			    && thread->bt_wakeup_time >= 0) {
+			    && thread->bt_wakeup_time
+			      != BMK_SCHED_BLOCK_INFTIME) {
 				if (thread->bt_wakeup_time <= tm) {
 					thread->bt_flags |= THREAD_TIMEDOUT;
 					bmk_sched_wake(thread);
@@ -310,7 +311,7 @@ bmk_sched_create(const char *name, void *cookie, int joinable,
 
 	thread->bt_cookie = cookie;
 
-	thread->bt_wakeup_time = -1;
+	thread->bt_wakeup_time = BMK_SCHED_BLOCK_INFTIME;
 
 	allocothertls(thread);
 
@@ -411,7 +412,7 @@ void
 bmk_sched_block(struct bmk_thread *thread)
 {
 
-	bmk_sched_block_timeout(thread, -1);
+	bmk_sched_block_timeout(thread, BMK_SCHED_BLOCK_INFTIME);
 }
 
 int
@@ -442,7 +443,7 @@ void
 bmk_sched_wake(struct bmk_thread *thread)
 {
 
-	thread->bt_wakeup_time = -1;
+	thread->bt_wakeup_time = BMK_SCHED_BLOCK_INFTIME;
 	set_runnable(thread);
 }
 

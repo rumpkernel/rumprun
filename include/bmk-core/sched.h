@@ -51,6 +51,7 @@ void	bmk_sched_join(struct bmk_thread *);
 void	bmk_sched_exit(void) __attribute__((__noreturn__));
 
 void	bmk_sched_block(struct bmk_thread *);
+#define BMK_SCHED_BLOCK_INFTIME -1
 void	bmk_sched_block_timeout(struct bmk_thread *, bmk_time_t);
 
 void	bmk_sched_wake(struct bmk_thread *);
