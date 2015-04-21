@@ -64,7 +64,6 @@ src-y += kernel.c
 src-y += mm.c
 src-y += netfront.c
 src-$(CONFIG_PCI) += pcifront.c
-src-y += sched.c
 src-$(CONFIG_XENBUS) += xenbus/xenbus.c
 src-y += console/console.c
 src-y += console/xencons_ring.c
