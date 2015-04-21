@@ -64,12 +64,10 @@
 #else
 
 #include <bmk-core/core.h>
+#include <bmk-core/null.h>
 #include <bmk-core/string.h>
 #include <bmk-core/memalloc.h>
 #include <bmk-core/platform.h>
-
-#define NULL (void *)0
-#define ASSERT(x)
 
 #endif
 
@@ -152,7 +150,7 @@ void mstats(const char *);
 #endif
 
 #if defined(RCHECK) || defined(MEMALLOC_TESTING)
-#define	ASSERT(p)   if (!(p)) botch(__STRING(p))
+#define	bmk_assert(p)   if (!(p)) botch(__STRING(p))
 #include <sys/uio.h>
 
 static void botch(const char *);
@@ -204,7 +202,7 @@ bmk_memalloc(unsigned long nbytes, unsigned long align)
 
 	if (pagesz == 0) {
 		pagesz = bmk_pagesize;
-		ASSERT(pagesz > 0);
+		bmk_assert(pagesz > 0);
 
 #if 0
 		op = (union overhead *)(void *)sbrk(0);
@@ -392,18 +390,18 @@ bmk_memfree(void *cp)
 	op = ((union overhead *)cp)-1;
 	if (op->ov_magic != MAGIC) {
 #ifdef MEMALLOC_TESTING
-		ASSERT(0);
+		bmk_assert(0);
 #endif
 		return;				/* sanity */
 	}
 
 #ifdef RCHECK
-  	ASSERT(op->ov_rmagic == RMAGIC);
-	ASSERT(*(unsigned short *)((char *)(op + 1) + op->ov_size) == RMAGIC);
+	bmk_assert(op->ov_rmagic == RMAGIC);
+	bmk_assert(*(unsigned short *)((char *)(op+1) + op->ov_size) == RMAGIC);
 #endif
   	size = op->ov_index;
 	alignpad = op->ov_alignpad;
-  	ASSERT(size < NBUCKETS);
+	bmk_assert(size < NBUCKETS);
 
 	malloc_lock();
 	origp = (unsigned char *)cp - alignpad;
@@ -415,7 +413,7 @@ bmk_memfree(void *cp)
 		for (i = 0;
 		    (unsigned char *)origp + i < (unsigned char *)op;
 		    i++) {
-			ASSERT(*((unsigned char *)origp + i) == MAGIC);
+			bmk_assert(*((unsigned char *)origp + i) == MAGIC);
 				
 		}
 	}
@@ -528,7 +526,7 @@ testalloc(void)
 	v = bmk_memalloc(size1, 1<<align);
 	if (!v)
 		return NULL;
-	ASSERT(((uintptr_t)v & (align-1)) == 0);
+	bmk_assert(((uintptr_t)v & (align-1)) == 0);
 	memset(v, UNMAGIC, size1);
 
 	size2 = random() % ((TEST_MAXALLOC-TEST_MINALLOC)+1) + TEST_MINALLOC;
