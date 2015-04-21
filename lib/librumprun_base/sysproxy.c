@@ -2192,7 +2192,6 @@ rumpuser_sp_fini(void *arg)
 {
 	struct spclient *spc = arg;
 	register_t retval[2] = {0, 0};
-	struct lwp *mylwp;
 	int nlocks;
 
 	/*
@@ -2208,7 +2207,6 @@ rumpuser_sp_fini(void *arg)
 	 */
 
 	rumpkern_unsched(&nlocks, NULL);
-	mylwp = lwproc_curlwp();
 	lwproc_newlwp(1);
 
 	if (spclist[0].spc_fd) {
