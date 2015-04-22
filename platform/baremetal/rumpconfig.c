@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2014 Martin Lucina.  All Rights Reserved.
+ * Copyright (c) 2015 Antti Kantee.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,14 +23,29 @@
  * SUCH DAMAGE.
  */
 
-/* placeholder/stubs (in case it was unguessable) */
+#include <bmk/types.h>
+
+#include <rump/rump.h>
+#include <rump/netconfig.h>
 
 #include <rumprun-base/config.h>
+
+/*
+ * Does not exactly implement the config interface fully, but
+ * at least we might get network configuration ...
+ */
 
 void
 _rumprun_config(void)
 {
 
+	/* le hack */
+	if (rump_pub_netconfig_ifup("wm0") == 0)
+		rump_pub_netconfig_dhcp_ipv4_oneshot("wm0");
+	else if (rump_pub_netconfig_ifup("pcn0") == 0)
+		rump_pub_netconfig_dhcp_ipv4_oneshot("pcn0");
+	else if (rump_pub_netconfig_ifup("vioif0") == 0)
+		rump_pub_netconfig_dhcp_ipv4_oneshot("vioif0");
 }
 
 void

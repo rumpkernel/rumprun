@@ -27,32 +27,9 @@
 
 #include <stdio.h>
 
-#include <rump/rump.h>
-#include <rump/netconfig.h>
-
 #include <bmk/app.h>
 
 #include <rumprun-base/netbsd_initfini.h>
-
-int bmk_havenet;
-
-/*
- * boot and configure rump kernel
- */
-static void
-rumpkern_config(void)
-{
-	int rv = 1;
-
-	/* le hack */
-	if (rump_pub_netconfig_ifup("wm0") == 0)
-		rv = rump_pub_netconfig_dhcp_ipv4_oneshot("wm0");
-	else if (rump_pub_netconfig_ifup("pcn0") == 0)
-		rv = rump_pub_netconfig_dhcp_ipv4_oneshot("pcn0");
-	else if (rump_pub_netconfig_ifup("vioif0") == 0)
-		rv = rump_pub_netconfig_dhcp_ipv4_oneshot("vioif0");
-	bmk_havenet = rv == 0;
-}
 
 void
 bmk_mainthread(void *notused)
@@ -61,7 +38,6 @@ bmk_mainthread(void *notused)
 	int rv;
 
 	_netbsd_init();
-	rumpkern_config();
 
 	printf("=== calling main() ===\n\n");
         rv = main(1, argv);
