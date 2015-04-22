@@ -1,2 +1,2 @@
-void bmk_beforemain(void);
+void bmk_mainthread(void *);
 int main(int, char **);

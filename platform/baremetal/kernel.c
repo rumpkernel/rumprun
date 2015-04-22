@@ -36,8 +36,6 @@
 #include <bmk-core/printf.h>
 #include <bmk-core/queue.h>
 
-#include <rumprun-base/netbsd_initfini.h>
-
 unsigned long bmk_membase;
 unsigned long bmk_memsize;
 
@@ -186,15 +184,6 @@ parsemem(uint32_t addr, uint32_t len)
 	return 0;
 }
 
-static void
-bmk_mainthread(void *notused)
-{
-
-	_netbsd_init();
-	bmk_beforemain();
-	_netbsd_fini();
-}
-
 void
 bmk_main(struct multiboot_info *mbi)
 {
@@ -212,7 +201,7 @@ bmk_main(struct multiboot_info *mbi)
 	bmk_cpu_init();
 	bmk_isr_init();
 
-	/* enough already, jump to main thread */
+	/* enough bootstrap already, jump to main thread */
 	bmk_sched_init(bmk_mainthread, NULL);
 }
 

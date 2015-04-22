@@ -32,6 +32,8 @@
 
 #include <bmk/app.h>
 
+#include <rumprun-base/netbsd_initfini.h>
+
 int bmk_havenet;
 
 /*
@@ -53,16 +55,17 @@ rumpkern_config(void)
 }
 
 void
-bmk_beforemain(void)
+bmk_mainthread(void *notused)
 {
         char *argv[] = {"bmk_main", 0};
 	int rv;
 
+	_netbsd_init();
 	rumpkern_config();
 
 	printf("=== calling main() ===\n\n");
         rv = main(1, argv);
 	printf("=== main() returned %d ===\n\n", rv);
 
-	/* XXX: just fall somewhere */
+	_netbsd_fini();
 }
