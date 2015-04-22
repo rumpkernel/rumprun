@@ -38,6 +38,7 @@
 #include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 #include <rumprun/tester.h>
@@ -48,12 +49,27 @@ static const char *trydisk[] = {
 	"/dev/ld0d",
 	"/dev/xenblk0",
 };
+static int logfd;
+static int logrv;
+
+static void
+logexit(void)
+{
+	char buf[sizeof(INITIAL)];
+
+	snprintf(buf, sizeof(buf), "%s % 3d\n", logrv == 0 ? "OK" : "NO",logrv);
+	pwrite(logfd, buf, sizeof(INITIAL)-1, 0);
+	fflush(stdout);
+	close(logfd);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+	sync();
+}
 
 int
 main(int argc, char *argv[])
 {
-	char buf[sizeof(INITIAL)];
-	int fd, rv, i;
+	unsigned int i;
 
 	/*
 	 * XXX: need a better way to determine disk device!
@@ -61,21 +77,21 @@ main(int argc, char *argv[])
 	 * implemented for baremetal)
 	 */
 	for (i = 0; i < __arraycount(trydisk); i++) {
-		fd = open(trydisk[i], O_RDWR);
-		if (fd != -1)
+		logfd = open(trydisk[i], O_RDWR);
+		if (logfd != -1)
 			break;
 	}
-	if (fd == -1) {
+	if (logfd == -1) {
 		err(1, "rumprun_test: unable to open data device");
 	}
 
-	if (write(fd, INITIAL, sizeof(INITIAL)-1) != sizeof(INITIAL)-1) {
+	if (write(logfd, INITIAL, sizeof(INITIAL)-1) != sizeof(INITIAL)-1) {
 		err(1, "rumprun_test: initial write failed\n");
 	}
 
-	if (dup2(fd, STDOUT_FILENO) == -1)
+	if (dup2(logfd, STDOUT_FILENO) == -1)
 		err(1, "rumprun_test: dup2 to stdout");
-	if (dup2(fd, STDERR_FILENO) == -1)
+	if (dup2(logfd, STDERR_FILENO) == -1)
 		err(1, "rumprun_test: dup2 to stdout");
 
 	/*
@@ -84,15 +100,9 @@ main(int argc, char *argv[])
 	 * but we don't for now, so let's not try about it.
 	 */
 	printf("=== FOE RUMPRUN 12345 TES-TER 54321 ===\n");
-	rv = rumprun_test(argc, argv);
+	atexit(logexit);
+	logrv = rumprun_test(argc, argv);
 	printf("=== RUMPRUN 12345 TES-TER 54321 EOF ===\n");
 
-	snprintf(buf, sizeof(buf), "%s % 3d\n", rv == 0 ? "OK" : "NO", rv);
-	pwrite(fd, buf, sizeof(INITIAL)-1, 0);
-	fflush(stdout);
-	close(fd);
-	close(STDOUT_FILENO);
-	close(STDERR_FILENO);
-	sync();
-	return rv;
+	exit(logrv);
 }
