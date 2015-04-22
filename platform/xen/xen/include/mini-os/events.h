@@ -41,6 +41,8 @@ void unbind_all_ports(void);
 
 int minios_notify_remote_via_evtchn(evtchn_port_t port);
 
+int minios_event_channel_op(int cmd, void *op);
+
 void fini_events(void);
 
 #endif /* _MINIOS_EVENTS_H_ */

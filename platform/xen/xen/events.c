@@ -179,6 +179,12 @@ static struct pda
 } cpu0_pda;
 #endif
 
+/* Just a simple wrapper for event channel hypercall. */
+int minios_event_channel_op(int cmd, void *op)
+{
+    return HYPERVISOR_event_channel_op(cmd, op);
+}
+
 /*
  * Initially all events are without a handler and disabled
  */
