@@ -307,6 +307,8 @@ run_qemu()
 
 	opt_interactive=
 	opt_drivespec=
+	opt_debug=
+	opt_pause=
 	while getopts "${myoptstr}" opt; do
 		case "$opt" in
 		b)
@@ -318,6 +320,13 @@ run_qemu()
 		i)
 			opt_interactive=1
 			;;
+		p)
+			opt_pause="-S"
+			;;
+		D)
+			opt_debug="-gdb tcp::${OPTARG}"
+			opt_pause="-S"
+			;;
 		*)
 			err qemu stack like zathras: not so good
 			;;
@@ -325,7 +334,8 @@ run_qemu()
 	done
 	shift $((${OPTIND}-1))
 
-	qemucmd="qemu-system-i386 -net none -no-kvm ${opt_drivespec} -kernel $1"
+	qemucmd="qemu-system-i386 -net none -no-kvm ${opt_drivespec} \
+	    ${opt_debug} ${opt_pause} -kernel $1"
 	if [ -n "$opt_interactive" ]; then
 		${qemucmd}
 	else
