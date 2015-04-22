@@ -114,6 +114,6 @@ _netbsd_fini(void)
 	_rumprun_deconfig();
 	runfini();
 	rump_sys_reboot(0, 0);
-	/* XXX: Should print something if we ever get here, but how? */
-	bmk_platform_halt(NULL);
+
+	bmk_platform_halt("reboot returned");
 }
