@@ -42,11 +42,12 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <rumprun-base/netbsd_initfini.h>
-#include <rumprun-base/makelwp.h>
-
 #include <bmk-core/core.h>
 #include <bmk-core/sched.h>
+
+#include <rumprun-base/makelwp.h>
+
+#include "rumprun-private.h"
 
 #if 0
 #define DPRINTF(x) printf x

@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2014 Antti Kantee.  All Rights Reserved.
+ * Copyright (c) 2015 Antti Kantee.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,11 +23,15 @@
  * SUCH DAMAGE.
  */
 
-#ifndef _BMK_BASE_NETBSD_INITFINI_H_
-#define _BMK_BASE_NETBSD_INITFINI_H_
+#ifndef _RUMPRUN_BASE_RUMPRUN_H_
+#define _RUMPRUN_BASE_RUMPRUN_H_
 
-void _netbsd_init(void);
-void __dead _netbsd_fini(void);
-void rumprun_lwp_init(void);
+void	rumprun_boot(void);
 
-#endif /* _BMK_BASE_NETBSD_INITFINI_H_ */
+void *	rumprun(int (*)(int, char *[]), int, char *[]);
+int	rumprun_wait(void *);
+void *	rumprun_get_finished(void);
+
+void	rumprun_reboot(void) __dead;
+
+#endif /* _RUMPRUN_BASE_RUMPRUN_H_ */

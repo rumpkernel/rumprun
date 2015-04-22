@@ -23,16 +23,12 @@
  * SUCH DAMAGE.
  */
 
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <unistd.h>
-
+#include <mini-os/types.h>
 #include <xen/xen.h>
 
-#include <mini-os/os.h>
+#include <bmk-core/memalloc.h>
 
-#include <rumprun-base/netbsd_initfini.h>
+#include <rumprun-base/rumprun.h>
 
 extern int main(int argc, char **argv);
 
@@ -83,27 +79,28 @@ static void parseargs(void *cmdline, int *nargs, char **outarray) {
 	}
 }
 
-int __default_app_main(start_info_t *);
-int
+void __default_app_main(start_info_t *);
+void
 __default_app_main(start_info_t *si)
 {
 	char argv0[] = "rumprun-xen";
-	int nargs, r;
+	int nargs;
 	char **argv;
-
-        _netbsd_init();
+	void *cookie;
 
 	parseargs(si->cmd_line, &nargs, 0);
-	argv = malloc(sizeof(*argv) * (nargs+3));
+	argv = bmk_xmalloc(sizeof(*argv) * (nargs+3));
 	argv[0] = argv0;
 	parseargs(si->cmd_line, &nargs, argv+1);
 	argv[nargs+1] = 0;
 	argv[nargs+2] = 0;
 
-	fprintf(stderr,"=== calling main() ===\n\n");
-	r = main(nargs+1, argv);
-	fprintf(stderr,"\n=== main() returned %d ===\n", r);
-	_exit(r);
+	rumprun_boot();
+
+	cookie = rumprun(main, nargs+1, argv);
+	rumprun_wait(cookie);
+
+	rumprun_reboot();
 }
 
 __weak_alias(app_main,__default_app_main)

@@ -38,6 +38,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <lwp.h>
+#include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -45,8 +46,9 @@
 #include <unistd.h>
 
 #include <bmk-core/core.h>
+#include <bmk-core/sched.h>
 
-#include <rumprun-base/netbsd_initfini.h>
+#include <rump/rump.h>
 
 #ifdef RUMPRUN_MMAP_DEBUG
 #define MMAP_PRINTF(x) printf x
@@ -133,10 +135,9 @@ _exit(int eval)
 	} else {
 		printf("\n=== _exit(%d) called ===\n", eval);
 	}
-	/* XXX: work around the console being slow to attach */
-	sleep(1);
 
-	_netbsd_fini();
+	rump_pub_lwproc_releaselwp();
+	pthread_exit((void *)(uintptr_t)eval);
 }
 
 /* XXX: manual proto.  plug into libc internals some other day */

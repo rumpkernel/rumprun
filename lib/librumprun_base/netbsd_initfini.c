@@ -33,13 +33,11 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <rump/rump.h>
-#include <rump/rump_syscalls.h>
-
 #include <bmk-core/core.h>
 
-#include <rumprun-base/netbsd_initfini.h>
 #include <rumprun-base/config.h>
+
+#include "rumprun-private.h"
 
 static char *the_env[1] = { NULL } ;
 extern void *environ;
@@ -79,41 +77,23 @@ runfini(void)
 }
 
 void
-_netbsd_init(void)
+_netbsd_userlevel_init(void)
 {
 	thestrings.ps_argvstr = (void *)((char *)&myaux - 2);
 	__ps_strings = &thestrings;
 	pthread__stacksize = 2*bmk_stacksize;
 
-	rump_boot_setsigmodel(RUMP_SIGMODEL_IGNORE);
-	rump_init();
-
 	environ = the_env;
-	rumprun_lwp_init();
 	runinit();
 	_libc_init();
 
 	/* XXX: we should probably use csu, but this is quicker for now */
 	__progname = "rumprun";
-
-#ifdef RUMP_SYSPROXY
-	rump_init_server("tcp://0:12345");
-#endif
-	_rumprun_config();
-
-	/*
-	 * give all threads a chance to run, and ensure that the main
-	 * thread has gone through a context switch
-	 */
-	sched_yield();
 }
 
-void __dead
-_netbsd_fini(void)
+void
+_netbsd_userlevel_fini(void)
 {
-	_rumprun_deconfig();
-	runfini();
-	rump_sys_reboot(0, 0);
 
-	bmk_platform_halt("reboot returned");
+	runfini();
 }

@@ -23,24 +23,12 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/types.h>
+#ifndef _RUMPRUN_BASE_RUMPRUN_PRIVATE_H_
+#define _RUMPRUN_BASE_RUMPRUN_PRIVATE_H_
 
-#include <stdio.h>
+void _netbsd_userlevel_init(void);
+void _netbsd_userlevel_fini(void);
 
-#include <bmk/app.h>
+void rumprun_lwp_init(void);
 
-#include <rumprun-base/rumprun.h>
-
-void
-bmk_mainthread(void *notused)
-{
-        char *argv[] = {"bmk_main", 0};
-	void *cookie;
-
-	rumprun_boot();
-
-	cookie = rumprun(main, 1, argv);
-	rumprun_wait(cookie);
-
-	rumprun_reboot();
-}
+#endif /* _RUMPRUN_BASE_RUMPRUN_PRIVATE_H_ */
