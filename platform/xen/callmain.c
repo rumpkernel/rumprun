@@ -87,7 +87,7 @@ int __default_app_main(start_info_t *);
 int
 __default_app_main(start_info_t *si)
 {
-	char argv0[] = "rumpuser-xen";
+	char argv0[] = "rumprun-xen";
 	int nargs, r;
 	char **argv;
 
