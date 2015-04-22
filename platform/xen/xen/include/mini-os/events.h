@@ -39,7 +39,7 @@ int minios_evtchn_bind_interdomain(domid_t pal, evtchn_port_t remote_port,
 							evtchn_port_t *local_port);
 void unbind_all_ports(void);
 
-int notify_remote_via_evtchn(evtchn_port_t port);
+int minios_notify_remote_via_evtchn(evtchn_port_t port);
 
 void fini_events(void);
 

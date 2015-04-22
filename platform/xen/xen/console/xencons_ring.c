@@ -22,9 +22,9 @@ static inline void notify_daemon(struct consfront_dev *dev)
 
 	/* Use evtchn: this is called early, before irq is set up. */
 	if (!dev)
-		notify_remote_via_evtchn(start_info.console.domU.evtchn);
+		minios_notify_remote_via_evtchn(start_info.console.domU.evtchn);
 	else
-		notify_remote_via_evtchn(dev->evtchn);
+		minios_notify_remote_via_evtchn(dev->evtchn);
 }
 
 static inline struct xencons_interface *xencons_interface(void)

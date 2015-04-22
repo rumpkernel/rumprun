@@ -364,7 +364,7 @@ void blkfront_aio(struct blkfront_aiocb *aiocbp, int write)
     wmb();
     RING_PUSH_REQUESTS_AND_CHECK_NOTIFY(&dev->ring, notify);
 
-    if(notify) notify_remote_via_evtchn(dev->evtchn);
+    if(notify) minios_notify_remote_via_evtchn(dev->evtchn);
 }
 
 static void blkfront_aio_cb(struct blkfront_aiocb *aiocbp, int ret)
@@ -415,7 +415,7 @@ static void blkfront_push_operation(struct blkfront_dev *dev, uint8_t op, uint64
     dev->ring.req_prod_pvt = i + 1;
     wmb();
     RING_PUSH_REQUESTS_AND_CHECK_NOTIFY(&dev->ring, notify);
-    if (notify) notify_remote_via_evtchn(dev->evtchn);
+    if (notify) minios_notify_remote_via_evtchn(dev->evtchn);
 }
 
 void blkfront_aio_push_operation(struct blkfront_aiocb *aiocbp, uint8_t op)

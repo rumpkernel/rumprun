@@ -465,7 +465,7 @@ void pcifront_op(struct pcifront_dev *dev, struct xen_pci_op *op)
     /* Make sure info is written before the flag */
     wmb();
     set_bit(_XEN_PCIF_active, (void*) &dev->info->flags);
-    notify_remote_via_evtchn(dev->evtchn);
+    minios_notify_remote_via_evtchn(dev->evtchn);
 
     minios_wait_event(pcifront_queue, !test_bit(_XEN_PCIF_active, (void*) &dev->info->flags));
 
