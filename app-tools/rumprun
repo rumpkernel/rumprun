@@ -281,7 +281,7 @@ EOM
 	# Write provisioning information for domain to xenstore.
 	prefix=/local/domain/${domid}/rumprun
 	cat ${xenstore} | while read key value; do
-		xenstore-write "${prefix}/${key}" "${value}"
+		${sudo} xenstore-write "${prefix}/${key}" "${value}"
 	done
 	rm ${xenstore}
 	# Attach debugger if requested.
