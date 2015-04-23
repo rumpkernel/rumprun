@@ -31,6 +31,8 @@ TESTS='hello/hello basic/ctor_test basic/pthread_test basic/tls_test'
 STARTMAGIC='=== FOE RUMPRUN 12345 TES-TER 54321 ==='
 ENDMAGIC='=== RUMPRUN 12345 TES-TER 54321 EOF ==='
 
+OPT_SUDO=
+
 die ()
 {
 
@@ -63,7 +65,7 @@ runguest ()
 	# img2=$3
 
 	[ -n "${img1}" ] || die runtest without a disk image
-	cookie=$(${RUMPRUN} ${STACK} -S -b ${img1} ${testprog})
+	cookie=$(${RUMPRUN} ${STACK} ${OPT_SUDO} -b ${img1} ${testprog})
 	if [ $? -ne 0 -o -z "${cookie}" ]; then
 		TEST_RESULT=ERROR
 		TEST_ECODE=-2
@@ -121,7 +123,13 @@ cd $(dirname $0) || die 'could not enter test dir'
 RUMPRUN=$(pwd)/../app-tools/rumprun
 RUMPSTOP=$(pwd)/../app-tools/rumpstop
 
-[ $# -eq 1 ] || die "usage: runtests.sh qemu|xen"
+[ $# -ge 1 ] || die "usage: runtests.sh [-S] qemu|xen"
+
+if [ "$1" = '-S' ]; then
+	shift
+	[ $(id -u) -ne 0 ] && OPT_SUDO=sudo
+fi
+
 STACK=$1
 [ ${STACK} != none ] || exit 0
 
