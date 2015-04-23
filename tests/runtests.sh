@@ -63,7 +63,7 @@ runguest ()
 	# img2=$3
 
 	[ -n "${img1}" ] || die runtest without a disk image
-	cookie=$(${RUMPRUN} ${STACK} -b ${img1} ${testprog})
+	cookie=$(${RUMPRUN} ${STACK} -S -b ${img1} ${testprog})
 	if [ $? -ne 0 -o -z "${cookie}" ]; then
 		TEST_RESULT=ERROR
 		TEST_ECODE=-2
