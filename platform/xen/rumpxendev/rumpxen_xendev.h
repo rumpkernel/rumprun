@@ -40,7 +40,9 @@
 
 
 /* nicked from NetBSD sys/dev/pci/cxgb/cxgb_adapter.h */
+#ifndef container_of
 #define container_of(p, stype, field) ((stype *)(((uint8_t *)(p)) - offsetof(stype, field)))
+#endif
 
 //#define RUMP_DEV_XEN_DEBUG 1
 
