@@ -7,6 +7,12 @@ die ()
         exit 1
 }
 
+unset sudo
+if [ "$1" = '-S' ]; then
+        shift
+        [ $(id -u) -ne 0 ] && sudo=sudo
+fi
+
 [ $# -eq 1 ] || die usage: rumpstop guest_spec
 
 stack=${1%%:*}
@@ -17,7 +23,7 @@ qemu)
 	kill ${guest}
 	;;
 xen)
-	xl destroy ${guest}
+	${sudo} xl destroy ${guest}
 	;;
 *)
 	die invalid stack spec \"${stack}\"
