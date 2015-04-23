@@ -238,6 +238,8 @@ bmk_cons_putc(int c)
 		doclear = 1;
 	} else if (c == '\r') {
 		cons_x = 0;
+	} else if (c == '\t') {
+		cons_x = (cons_x+8) & ~7;
 	} else {
 		cons_putat(c, cons_x++, cons_y);
 	}
