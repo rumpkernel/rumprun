@@ -57,6 +57,7 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 		memset(oact, 0, sizeof(*oact));
 	return 0;
 }
+__strong_alias(sigaction,__sigaction14);
 
 int _sys___sigprocmask14(int, const sigset_t *, sigset_t *); /* XXX */
 int
@@ -71,4 +72,5 @@ _sys___sigprocmask14(int how, const sigset_t *set, sigset_t *oset)
 		memset(oset, 0, sizeof(*oset));
 	return 0;
 }
+__strong_alias(sigprocmask,__sigprocmask14);
 __weak_alias(__sigprocmask14,_sys___sigprocmask14);
