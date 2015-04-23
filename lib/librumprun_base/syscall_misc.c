@@ -34,6 +34,8 @@
 
 #include <sys/cdefs.h>
 #include <sys/mman.h>
+#include <sys/resource.h>
+#include <sys/time.h>
 
 #include <errno.h>
 #include <fcntl.h>
@@ -42,6 +44,7 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -158,4 +161,31 @@ ____sigtimedwait50(const sigset_t *set, siginfo_t *info,
 	}
 
 	return -1;
+}
+
+/* XXX: manual proto.  plug into libc internals some other day */
+int __getrusage50(int, struct rusage *);
+int
+__getrusage50(int who, struct rusage *usage)
+{
+
+	/* We fake something.  We should query the scheduler some day */
+	memset(usage, 0, sizeof(*usage));
+	if (who == RUSAGE_SELF) {
+		usage->ru_utime.tv_sec = 1;
+		usage->ru_utime.tv_usec = 1;
+		usage->ru_stime.tv_sec = 1;
+		usage->ru_stime.tv_usec = 1;
+	}
+
+	usage->ru_maxrss = 1024;
+	usage->ru_ixrss = 1024;
+	usage->ru_idrss = 1024;
+	usage->ru_isrss = 1024;
+
+	usage->ru_nvcsw = 1;
+	usage->ru_nivcsw = 1;
+
+	/* XXX: wrong in many ways */
+	return ENOTSUP;
 }

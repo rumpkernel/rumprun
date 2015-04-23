@@ -55,8 +55,6 @@ STUB_SILENT_IGNORE(__sigaction_sigtramp);
 
 STUB_RETURN(posix_spawn);
 
-STUB_ERRNO(__getrusage50);
-
 STUB_ERRNO(__fork);
 STUB_ERRNO(__vfork14);
 STUB_ERRNO(kill);
