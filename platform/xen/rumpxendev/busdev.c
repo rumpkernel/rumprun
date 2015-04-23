@@ -837,7 +837,7 @@ xenbus_dev_close(struct file *fp)
 		LIST_FOREACH_SAFE(trans, &d->transactions, entry, trans_tmp) {
 			DPRINTF(("/dev/xen/xenbus: close transaction"
 				 " %p %"PRIx32"\n",
-				 trans, trans->tx_id));
+				 trans, (unsigned int)trans->tx_id));
 			/* mirrors process_request XS_TRANSACTION_END */
 			trans->destroy.req_type = XS_TRANSACTION_END;
 			trans->destroy.u.trans = trans;
@@ -863,8 +863,8 @@ xenbus_dev_close(struct file *fp)
 	KASSERT(LIST_EMPTY(&d->transactions));
 	KASSERT(LIST_EMPTY(&d->watches));
 
-	DPRINTF(("/dev/xen/xenbus: close seldestroy\n",
-		 d->outstanding_requests));
+	DPRINTF(("/dev/xen/xenbus: close seldestroy outstanding=%d\n",
+                d->outstanding_requests));
 	seldestroy(&d->selinfo);
 	xbd_free(d);
 
