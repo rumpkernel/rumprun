@@ -1,5 +1,6 @@
 /*-
  * Copyright (c) 2015 Antti Kantee.  All Rights Reserved.
+ * Copyright (c) 2014 Martin Lucina.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,33 +24,256 @@
  * SUCH DAMAGE.
  */
 
-#include <bmk/types.h>
+/*
+ * NOTE: this implementation is currently a sketch of what things
+ * should looks like.
+ */
+
+#include <sys/param.h>
+
+#include <err.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include <rump/rump.h>
 #include <rump/netconfig.h>
 
 #include <rumprun-base/config.h>
 
-/*
- * Does not exactly implement the config interface fully, but
- * at least we might get network configuration ...
- */
+#include <bmk-core/jsmn.h>
+
+/* helper macros */
+#define T_SIZE(t) ((t)->end - (t)->start)
+#define T_STR(t,d) ((t)->start + d)
+#define T_PRINTFSTAR(t,d) T_SIZE(t), T_STR(t,d)
+#define T_STREQ(t, d, str) (strncmp(T_STR(t,d), str, T_SIZE(t)) == 0)
+
+#define T_STRCPY(dest, destsize, t, d)					\
+  do {									\
+	unsigned long strsize = MIN(destsize-1,T_SIZE(t));		\
+	strncpy(dest, T_STR(t, d), strsize);				\
+	dest[strsize] = '\0';						\
+  } while (/*CONSTCOND*/0)
+
+#define T_CHECKTYPE(t, data, exp, fun)					\
+  do {									\
+	if (t->type != exp) {						\
+		errx(1, "unexpected type for token \"%.*s\" "		\
+		    "in \"%s\"", T_PRINTFSTAR(t,data), fun);		\
+	}								\
+  } while (/*CONSTCOND*/0)
+
+#define T_CHECKSIZE(t, data, exp, fun)					\
+  do {									\
+	if (t->size != exp) {						\
+		errx(1, "unexpected size for token \"%.*s\" "		\
+		    "in \"%s\"", T_PRINTFSTAR(t,data), fun);		\
+	}								\
+  } while (/*CONSTCOND*/0)
+
+static int
+handle_cmdline(jsmntok_t *t, int left, const char *data)
+{
+
+	T_CHECKTYPE(t, data, JSMN_STRING, __func__);
+	printf("command line is: %.*s\n", T_PRINTFSTAR(t, data));
+
+	return 1;
+}
+
+static int
+handle_env(jsmntok_t *t, int left, const char *data)
+{
+	char buf[128];
+
+	T_CHECKTYPE(t, data, JSMN_STRING, __func__);
+
+	if (T_SIZE(t) > sizeof(buf)-1) {
+		warnx("env string of size %d too large, ignoring", T_SIZE(t));
+		return 1;
+	}
+
+	T_STRCPY(buf, sizeof(buf), t, data);
+	/*
+	 * XXX: this doesn't work(?) since we need to putenv() into the
+	 * env of the application process, not this bootstrap process
+	 * doing the config.
+	 */
+	putenv(buf);
+
+	return 1;
+}
+
+static int
+handle_net(jsmntok_t *t, int left, const char *data)
+{
+	char ifname[16], type[16], method[16];
+	jsmntok_t *key, *value;
+	int rv, i, objsize;
+	static int configured;
+
+	T_CHECKTYPE(t, data, JSMN_OBJECT, __func__);
+
+	/* we expect straight key-value pairs (at least for now) */
+	objsize = t->size;
+	if (left < 2*objsize + 1) {
+		return -1;
+	}
+	t++;
+
+	if (configured) {
+		errx(1, "currently only 1 \"net\" configuration is supported");
+	}
+
+	ifname[0] = type[0] = method[0] = '\0';
+
+	for (i = 0; i < objsize; i++, t+=2) {
+		key = t;
+		value = t+1;
+
+		T_CHECKTYPE(key, data, JSMN_STRING, __func__);
+		T_CHECKSIZE(key, data, 1, __func__);
+
+		T_CHECKTYPE(value, data, JSMN_STRING, __func__);
+		T_CHECKSIZE(value, data, 0, __func__);
+
+		if (T_STREQ(key, data, "if")) {
+			T_STRCPY(ifname, sizeof(ifname), value, data);
+		} else if (T_STREQ(key, data, "type")) {
+			T_STRCPY(type, sizeof(type), value, data);
+		} else if (T_STREQ(key, data, "method")) {
+			T_STRCPY(method, sizeof(method), value, data);
+		} else {
+			errx(1, "unexpected key \"%.*s\" in \"%s\", ignoring",
+			    T_PRINTFSTAR(key, data), __func__);
+		}
+	}
+
+	if (!ifname[0] || !type[0] || !method[0]) {
+		errx(1, "net cfg missing vital data, not configuring");
+	}
+
+	if (strcmp(type, "inet") != 0 || strcmp(method, "dhcp") != 0) {
+		errx(1, "only inet/dhcp is supported currently, got: "
+		    "\"%s/%s\"", type, method);
+	}
+
+	if ((rv = rump_pub_netconfig_dhcp_ipv4_oneshot(ifname)) != 0)
+		errx(1, "configuring dhcp for %s failed: %d",
+		    ifname, rv);
+
+	return 2*objsize + 1;
+}
+
+static int
+handle_blk(jsmntok_t *t, int left, const char *data)
+{
+	jsmntok_t *key, *value;
+	int i, objsize;
+
+	T_CHECKTYPE(t, data, JSMN_OBJECT, __func__);
+
+	/* we expect straight key-value pairs */
+	objsize = t->size;
+	if (left < 2*objsize + 1) {
+		return -1;
+	}
+	t++;
+
+	for (i = 0; i < objsize; i++, t+=2) {
+		key = t;
+		value = t+1;
+
+		T_CHECKTYPE(key, data, JSMN_STRING, __func__);
+		T_CHECKSIZE(key, data, 1, __func__);
+
+		T_CHECKTYPE(value, data, JSMN_STRING, __func__);
+		T_CHECKSIZE(value, data, 0, __func__);
+
+		if (T_STREQ(key, data, "type")) {
+			printf("\tblk type: %.*s\n", T_PRINTFSTAR(value, data));
+		} else if (T_STREQ(key, data, "fstype")) {
+			printf("\tblk fst: %.*s\n", T_PRINTFSTAR(value, data));
+		} else if (T_STREQ(key, data, "mountpoint")) {
+			printf("\tblk mp: %.*s\n", T_PRINTFSTAR(value, data));
+		} else {
+			errx(1, "unexpected key \"%.*s\" in \"%s\"",
+			    T_PRINTFSTAR(key, data), __func__);
+		}
+	}
+
+	return 2*objsize + 1;
+}
+
+struct {
+	const char *name;
+	int (*handler)(jsmntok_t *, int, const char *);
+} parsers[] = {
+	{ "cmdline", handle_cmdline },
+	{ "env", handle_env },
+	{ "blk", handle_blk },
+	{ "net", handle_net },
+};
 
 void
 _rumprun_config(const char *cmdline)
 {
+	jsmn_parser p;
+	jsmntok_t *tokens = NULL;
+	jsmntok_t *t;
+	size_t cmdline_len = strlen(cmdline);
+	int i, ntok;
 
-	/* le hack */
-	if (rump_pub_netconfig_ifup("wm0") == 0)
-		rump_pub_netconfig_dhcp_ipv4_oneshot("wm0");
-	else if (rump_pub_netconfig_ifup("pcn0") == 0)
-		rump_pub_netconfig_dhcp_ipv4_oneshot("pcn0");
-	else if (rump_pub_netconfig_ifup("vioif0") == 0)
-		rump_pub_netconfig_dhcp_ipv4_oneshot("vioif0");
+	while (*cmdline != '{') {
+		if (*cmdline == '\0') {
+			warnx("could not find start of json.  no config?");
+			return;
+		}
+		cmdline++;
+	}
+
+	jsmn_init(&p);
+	ntok = jsmn_parse(&p, cmdline, cmdline_len, NULL, 0);
+
+	if (ntok <= 0) {
+		errx(1, "command line json parse failed");
+	}
+
+	tokens = malloc(ntok * sizeof(*t));
+	if (!tokens) {
+		errx(1, "failed to allocate jsmn tokens");
+	}
+
+	jsmn_init(&p);
+	if ((ntok = jsmn_parse(&p, cmdline, cmdline_len, tokens, ntok)) < 1) {
+		errx(1, "command line json parse failed");
+	}
+
+	T_CHECKTYPE(tokens, cmdline, JSMN_OBJECT, __func__);
+
+	for (t = &tokens[1]; t < &tokens[ntok]; ) {
+		for (i = 0; i < __arraycount(parsers); i++) {
+			if (T_STREQ(t, cmdline, parsers[i].name)) {
+				int left;
+
+				t++;
+				left = &tokens[ntok] - t;
+				t += parsers[i].handler(t, left, cmdline);
+				break;
+			}
+		}
+		if (i == __arraycount(parsers))
+			errx(1, "no match for key \"%.*s\"",
+			    T_PRINTFSTAR(t, cmdline));
+	}
+
+	free(tokens);
 }
 
 void
 _rumprun_deconfig(void)
 {
 
+	return; /* TODO */
 }

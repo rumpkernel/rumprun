@@ -187,9 +187,14 @@ parsemem(uint32_t addr, uint32_t len)
 void
 bmk_main(struct multiboot_info *mbi)
 {
+	static char cmdline[2048];
 
 	bmk_printf_init(bmk_cons_putc, NULL);
 	bmk_core_init(BMK_THREAD_STACK_PAGE_ORDER, PAGE_SIZE);
+
+	if (bmk_strlen((char *)mbi->cmdline) > sizeof(cmdline)-1)
+		bmk_platform_halt("command line too long"); /* XXX */
+	bmk_memcpy(cmdline, (char *)mbi->cmdline, sizeof(cmdline));
 
 	bmk_printf("rump kernel bare metal bootstrap\n\n");
 	if ((mbi->flags & MULTIBOOT_MEMORY_INFO) == 0) {
@@ -202,7 +207,7 @@ bmk_main(struct multiboot_info *mbi)
 	bmk_isr_init();
 
 	/* enough bootstrap already, jump to main thread */
-	bmk_sched_init(bmk_mainthread, (void *)mbi->cmdline);
+	bmk_sched_init(bmk_mainthread, cmdline);
 }
 
 /*
