@@ -47,7 +47,7 @@ static pthread_mutex_t w_mtx;
 static pthread_cond_t w_cv;
 
 void
-rumprun_boot(void)
+rumprun_boot(const char *cmdline)
 {
 
 	rump_boot_setsigmodel(RUMP_SIGMODEL_IGNORE);
@@ -69,7 +69,7 @@ rumprun_boot(void)
 #ifdef RUMP_SYSPROXY
 	rump_init_server("tcp://0:12345");
 #endif
-	_rumprun_config();
+	_rumprun_config(cmdline);
 
 	/*
 	 * give all threads a chance to run, and ensure that the main

@@ -26,7 +26,7 @@
 #ifndef _RUMPRUN_BASE_RUMPRUN_H_
 #define _RUMPRUN_BASE_RUMPRUN_H_
 
-void	rumprun_boot(void);
+void	rumprun_boot(const char *);
 
 void *	rumprun(int (*)(int, char *[]), int, char *[]);
 int	rumprun_wait(void *);

@@ -36,7 +36,7 @@
  */
 
 void
-_rumprun_config(void)
+_rumprun_config(const char *cmdline)
 {
 
 	/* le hack */

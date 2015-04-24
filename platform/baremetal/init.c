@@ -32,12 +32,12 @@
 #include <rumprun-base/rumprun.h>
 
 void
-bmk_mainthread(void *notused)
+bmk_mainthread(void *cmdline)
 {
         char *argv[] = {"bmk_main", 0};
 	void *cookie;
 
-	rumprun_boot();
+	rumprun_boot(cmdline);
 
 	cookie = rumprun(main, 1, argv);
 	rumprun_wait(cookie);

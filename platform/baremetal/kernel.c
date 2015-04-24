@@ -202,7 +202,7 @@ bmk_main(struct multiboot_info *mbi)
 	bmk_isr_init();
 
 	/* enough bootstrap already, jump to main thread */
-	bmk_sched_init(bmk_mainthread, NULL);
+	bmk_sched_init(bmk_mainthread, (void *)mbi->cmdline);
 }
 
 /*

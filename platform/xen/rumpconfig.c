@@ -475,7 +475,7 @@ out:
 }
 
 void
-_rumprun_config(void)
+_rumprun_config(const char *cmdline_unused)
 {
 	char *err = NULL;
 	xenbus_transaction_t txn;

@@ -95,7 +95,7 @@ __default_app_main(start_info_t *si)
 	argv[nargs+1] = 0;
 	argv[nargs+2] = 0;
 
-	rumprun_boot();
+	rumprun_boot(NULL); /* Xen doesn't use cmdline the same way (yet?) */
 
 	cookie = rumprun(main, nargs+1, argv);
 	rumprun_wait(cookie);

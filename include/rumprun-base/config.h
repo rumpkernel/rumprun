@@ -26,7 +26,7 @@
 #ifndef _BMKCOMMON_RUMPRUN_CONFIG_H_
 #define _BMKCOMMON_RUMPRUN_CONFIG_H_
 
-void _rumprun_config(void);
+void _rumprun_config(const char *);
 void _rumprun_deconfig(void);
 
 #endif /* _BMKCOMMON_RUMPRUN_CONFIG_H_ */
