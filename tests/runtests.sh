@@ -127,7 +127,7 @@ RUMPSTOP=$(pwd)/../app-tools/rumpstop
 
 if [ "$1" = '-S' ]; then
 	shift
-	[ $(id -u) -ne 0 ] && OPT_SUDO=sudo
+	[ $(id -u) -ne 0 ] && OPT_SUDO=-S
 fi
 
 STACK=$1
