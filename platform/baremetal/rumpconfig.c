@@ -30,8 +30,13 @@
  */
 
 #include <sys/param.h>
+#include <sys/stat.h>
+
+#include <ufs/ufs/ufsmount.h>
+#include <isofs/cd9660/cd9660_mount.h>
 
 #include <err.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -169,6 +174,8 @@ handle_net(jsmntok_t *t, int left, const char *data)
 static int
 handle_blk(jsmntok_t *t, int left, const char *data)
 {
+	char devname[64], fstype[16];
+	char *mp;
 	jsmntok_t *key, *value;
 	int i, objsize;
 
@@ -181,6 +188,9 @@ handle_blk(jsmntok_t *t, int left, const char *data)
 	}
 	t++;
 
+	fstype[0] = devname[0] = '\0';
+	mp = NULL;
+
 	for (i = 0; i < objsize; i++, t+=2) {
 		key = t;
 		value = t+1;
@@ -191,16 +201,53 @@ handle_blk(jsmntok_t *t, int left, const char *data)
 		T_CHECKTYPE(value, data, JSMN_STRING, __func__);
 		T_CHECKSIZE(value, data, 0, __func__);
 
-		if (T_STREQ(key, data, "type")) {
-			printf("\tblk type: %.*s\n", T_PRINTFSTAR(value, data));
+		if (T_STREQ(key, data, "dev")) {
+			T_STRCPY(devname, sizeof(devname), value, data);
 		} else if (T_STREQ(key, data, "fstype")) {
-			printf("\tblk fst: %.*s\n", T_PRINTFSTAR(value, data));
+			T_STRCPY(fstype, sizeof(fstype), value, data);
 		} else if (T_STREQ(key, data, "mountpoint")) {
-			printf("\tblk mp: %.*s\n", T_PRINTFSTAR(value, data));
+			size_t mplen = T_SIZE(t);
+
+			mp = malloc(mplen+1);
+			if (mp == NULL)
+				errx(1, "failed to allocate mountpoint path");
+
+			T_STRCPY(mp, mplen+1, value, data);
 		} else {
 			errx(1, "unexpected key \"%.*s\" in \"%s\"",
 			    T_PRINTFSTAR(key, data), __func__);
 		}
+	}
+
+	if (!devname[0] || !fstype[0]) {
+		errx(1, "blk cfg missing vital data");
+	}
+
+	/* we only need to do something only if a mountpoint is specified */
+	if (mp) {
+		/* XXX: handles only one component */
+		if (mkdir(mp, 0777) == -1)
+			errx(1, "creating mountpoint \"%s\" failed", mp);
+
+		if (strcmp(fstype, "ffs") == 0) {
+			struct ufs_args mntargs = { .fspec = devname };
+
+			if (mount(MOUNT_FFS, mp, 0,
+			    &mntargs, sizeof(mntargs)) == -1) {
+				errx(1, "rumprun_config: mount_ffs failed");
+			}
+		} else if(strcmp(fstype, "cd9660") == 0) {
+			struct iso_args mntargs = { .fspec = devname };
+
+			if (mount(MOUNT_CD9660, mp, MNT_RDONLY,
+			    &mntargs, sizeof(mntargs)) == -1) {
+				errx(1, "rumprun_config: mount_cd9660 failed");
+			}
+		} else {
+			errx(1, "unknown fstype \"%s\"", fstype);
+		}
+
+		free(mp);
 	}
 
 	return 2*objsize + 1;
