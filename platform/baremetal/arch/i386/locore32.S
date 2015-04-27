@@ -31,9 +31,16 @@ ENTRY(_start32)
 	jmp haltme
 
 nomultiboot:
-	pushl $nomultimesg
-	call bmk_cons_puts
-	hlt
+	/* we don't have printf available yet, just output manually */
+	mov $nomultimesg, %ebx
+1:
+	movsbl (%ebx), %eax
+	test %al, %al
+	je haltme
+	movl %eax, 0(%esp)
+	call bmk_cons_putc
+	inc %ebx
+	jmp 1b
 
 haltme:
 	cli

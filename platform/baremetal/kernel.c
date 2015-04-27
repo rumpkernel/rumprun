@@ -265,15 +265,6 @@ bmk_cons_putc(int c)
 	}
 }
  
-/* display a string */
-void
-bmk_cons_puts(const char *str)
-{
-
-	for (; *str; str++)
-		bmk_cons_putc(*str);
-}
-
 /*
  * init.  currently just clears the console.
  * rest is done in bmk_main()

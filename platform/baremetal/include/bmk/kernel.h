@@ -14,14 +14,11 @@
 
 void *bmk_allocpg(size_t);
 
-#define panic(x) do { bmk_cons_puts(x "\n"); for (;;); } while (0)
-
 struct multiboot_info;
 void bmk_init(void);
 void bmk_halt(const char *) __attribute__((noreturn));
 void bmk_main(struct multiboot_info *);
 
-void bmk_cons_puts(const char *);
 void bmk_cons_putc(int);
 
 void bmk_cpu_init(void);

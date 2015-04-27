@@ -23,7 +23,7 @@
  * SUCH DAMAGE.
  */
 
-#include <bmk/kernel.h>
+#include <bmk-core/printf.h>
 
 /*
  * Stubs for unused rump kernel hypercalls
@@ -31,7 +31,7 @@
 
 #define NOTHING(name) \
     int name(void); int name(void) \
-    {bmk_cons_puts("unimplemented: " #name "\n"); for (;;);}
+    {bmk_printf("unimplemented: " #name "\n"); for (;;);}
 
 #define REALNOTHING(name) \
     int name(void); int name(void) {return 1;}

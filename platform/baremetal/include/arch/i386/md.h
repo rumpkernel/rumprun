@@ -11,6 +11,8 @@ struct region_descriptor;
 void bmk_cpu_lidt(struct region_descriptor *);
 void bmk_cpu_lgdt(struct region_descriptor *);
 
+#include <bmk-core/platform.h>
+
 static inline uint8_t
 inb(uint16_t port)
 {
@@ -60,7 +62,7 @@ spl0(void)
 {
 
 	if (bmk_spldepth == 0)
-		panic("out of interrupt depth!");
+		bmk_platform_halt("out of interrupt depth!");
 	if (--bmk_spldepth == 0)
 		__asm__ __volatile__("sti");
 }

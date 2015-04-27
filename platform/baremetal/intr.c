@@ -27,6 +27,7 @@
 #include <bmk/sched.h>
 
 #include <bmk-core/memalloc.h>
+#include <bmk-core/printf.h>
 #include <bmk-core/queue.h>
 
 #define LIBRUMPUSER
@@ -87,7 +88,7 @@ isr(void *arg)
 
 			bmk_cpu_intr_ack();
 			if (!rv) {
-				bmk_cons_puts("stray interrupt\n");
+				bmk_printf("stray interrupt\n");
 			}
 		} else {
 			/* no interrupts left. block until the next one. */
