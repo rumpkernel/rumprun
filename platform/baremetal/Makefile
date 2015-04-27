@@ -58,6 +58,7 @@ endif
 LIBS_NETINET=	-lrumpnet_config -lrumpnet_netinet -lrumpnet_net -lrumpnet
 LIBS_NETBPF=	-lrumpdev_bpf
 LIBS_NETUNIX=	-lrumpnet_local
+LIBS_FS=	-lrumpfs_ffs -lrumpfs_cd9660
 
 RUMPKERN_LIB=	${LIBS_VIO_NET}					\
 		${LIBS_VIO_LD}					\
@@ -70,6 +71,7 @@ RUMPKERN_LIB=	${LIBS_VIO_NET}					\
 		${LIBS_PCI}					\
 		${LIBS_NETINET}					\
 		${LIBS_NETBPF}					\
+		${LIBS_FS}					\
 		${LIBS_SYSPROXY}				\
 		-lrumpdev -lrumpvfs -lrump
 
