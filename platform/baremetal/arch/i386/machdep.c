@@ -116,6 +116,8 @@ adjustgs(uintptr_t p, size_t s)
 #define ICW1_INIT	0x10
 #define ICW4_8086	0x01	/* use 8086 mode */
 
+static int pic2mask = 0xff;
+
 static void
 initpic(void)
 {
@@ -134,7 +136,7 @@ initpic(void)
 	outb(PIC2_DATA, 32+8);	/* interrupts start from 40 in IDT */
 	outb(PIC2_DATA, 2);	/* interrupt at irq 2 */
 	outb(PIC2_DATA, ICW4_8086);
-	outb(PIC2_DATA, 0xff);	/* all masked for now */
+	outb(PIC2_DATA, pic2mask);
 }
 
 #define TIMER_CNTR	0x40
@@ -212,7 +214,8 @@ bmk_cpu_intr_init(int intr)
 	}
 
 	/* unmask interrupt in PIC */
-	outb(PIC2_DATA, 0xff & ~(1<<(intr-8)));
+	pic2mask &= ~(1<<(intr-8));
+	outb(PIC2_DATA, pic2mask);
 
 	return 0;
 }
