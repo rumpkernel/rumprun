@@ -35,6 +35,7 @@
 #include <ufs/ufs/ufsmount.h>
 #include <isofs/cd9660/cd9660_mount.h>
 
+#include <assert.h>
 #include <err.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -45,6 +46,7 @@
 #include <rump/netconfig.h>
 
 #include <rumprun-base/config.h>
+#include <rumprun-base/parseargs.h>
 
 #include <bmk-core/jsmn.h>
 
@@ -77,12 +79,44 @@
 	}								\
   } while (/*CONSTCOND*/0)
 
+int rumprun_cmdline_argc;
+char **rumprun_cmdline_argv;
+
+static void
+makeargv(char *argvstr)
+{
+	char **argv;
+	int nargs;
+
+	assert(rumprun_cmdline_argc == 0 && rumprun_cmdline_argv == NULL);
+
+	rumprun_parseargs(argvstr, &nargs, 0);
+	argv = malloc(sizeof(*argv) * (nargs+2));
+	if (argv == NULL)
+		errx(1, "could not allocate argv");
+
+	rumprun_parseargs(argvstr, &nargs, argv);
+	argv[nargs] = argv[nargs+1] = '\0';
+	rumprun_cmdline_argv = argv;
+	rumprun_cmdline_argc = nargs;
+}
+
 static int
 handle_cmdline(jsmntok_t *t, int left, const char *data)
 {
+	char *argvstr;
+	size_t argvstrlen;
 
 	T_CHECKTYPE(t, data, JSMN_STRING, __func__);
-	printf("command line is: %.*s\n", T_PRINTFSTAR(t, data));
+
+	/* allocate memory for argv element storage */
+	argvstrlen = T_SIZE(t)+1;
+	argvstr = malloc(argvstrlen);
+	if (argvstr == NULL)
+		errx(1, "could not allocate argv storage");
+
+	T_STRCPY(argvstr, argvstrlen, t, data);
+	makeargv(argvstr);
 
 	return 1;
 }
@@ -275,6 +309,7 @@ _rumprun_config(const char *cmdline)
 	while (*cmdline != '{') {
 		if (*cmdline == '\0') {
 			warnx("could not find start of json.  no config?");
+			makeargv("rumprun");
 			return;
 		}
 		cmdline++;

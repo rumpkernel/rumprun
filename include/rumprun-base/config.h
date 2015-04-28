@@ -26,6 +26,9 @@
 #ifndef _BMKCOMMON_RUMPRUN_CONFIG_H_
 #define _BMKCOMMON_RUMPRUN_CONFIG_H_
 
+extern int rumprun_cmdline_argc;
+extern char **rumprun_cmdline_argv;
+
 void _rumprun_config(const char *);
 void _rumprun_deconfig(void);
 
