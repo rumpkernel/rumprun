@@ -24,17 +24,23 @@
  */
 
 #include <sys/types.h>
+#include <sys/mount.h>
 #include <sys/queue.h>
 
 #include <assert.h>
+#include <err.h>
+#include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <sched.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <rump/rump.h>
 #include <rump/rump_syscalls.h>
+
+#include <fs/tmpfs/tmpfs_args.h>
 
 #include <bmk-core/platform.h>
 
@@ -49,9 +55,19 @@ static pthread_cond_t w_cv;
 void
 rumprun_boot(const char *cmdline)
 {
+	struct tmpfs_args ta = {
+		.ta_version = TMPFS_ARGS_VERSION,
+		.ta_size_max = 1*1024*1024,
+		.ta_root_mode = 01777,
+	};
+	int tmpfserrno;
 
 	rump_boot_setsigmodel(RUMP_SIGMODEL_IGNORE);
 	rump_init();
+
+	/* mount /tmp before we let any userspace bits run */
+	rump_sys_mount(MOUNT_TMPFS, "/tmp", 0, &ta, sizeof(ta));
+	tmpfserrno = errno;
 
 	/*
 	 * XXX: _netbsd_userlevel_init() should technically be called
@@ -65,6 +81,13 @@ rumprun_boot(const char *cmdline)
 	 */
 	rumprun_lwp_init();
 	_netbsd_userlevel_init();
+
+	/* print tmpfs result only after we bootstrapped userspace */
+	if (tmpfserrno == 0) {
+		fprintf(stderr, "mounted tmpfs on /tmp\n");
+	} else {
+		warnx("FAILED: mount tmpfs on /tmp: %s", strerror(tmpfserrno));
+	}
 
 #ifdef RUMP_SYSPROXY
 	rump_init_server("tcp://0:12345");
