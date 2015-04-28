@@ -32,8 +32,9 @@
 
 extern int main(int argc, char **argv);
 
-static void parseargs(void *cmdline, int *nargs, char **outarray) {
-	char *p = cmdline;
+static void
+parseargs(char *p, int *nargs, char **outarray)
+{
 	char *out = 0;
 	int quote = -1; /* -1 means outside arg, 0 or '"' or '\'' inside */
 
@@ -84,14 +85,15 @@ void
 __default_app_main(start_info_t *si)
 {
 	char argv0[] = "rumprun-xen";
+	char *rawcmdline = (char *)si->cmd_line;
 	int nargs;
 	char **argv;
 	void *cookie;
 
-	parseargs(si->cmd_line, &nargs, 0);
+	parseargs(rawcmdline, &nargs, 0);
 	argv = bmk_xmalloc(sizeof(*argv) * (nargs+3));
 	argv[0] = argv0;
-	parseargs(si->cmd_line, &nargs, argv+1);
+	parseargs(rawcmdline, &nargs, argv+1);
 	argv[nargs+1] = 0;
 	argv[nargs+2] = 0;
 
