@@ -69,8 +69,7 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 		}
 
 		for (i = 0; memsize > 0; i++) {
-			if (i >= sizeof(tmp)-1)
-				return BMK_E2BIG;
+			bmk_assert(i < sizeof(tmp)-1);
 			tmp[i] = (memsize % 10) + '0';
 			memsize = memsize / 10;
 		}
