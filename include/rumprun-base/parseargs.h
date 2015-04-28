@@ -23,49 +23,9 @@
  * SUCH DAMAGE.
  */
 
-#include <mini-os/types.h>
-#include <xen/xen.h>
+#ifndef _RUMPRUN_BASE_PARSEARGS_H_
+#define _RUMPRUN_BASE_PARSEARGS_H_
 
-#include <bmk-core/memalloc.h>
+void rumprun_parseargs(char *, int *, char **);
 
-#include <rumprun-base/rumprun.h>
-#include <rumprun-base/parseargs.h>
-
-extern int main(int argc, char **argv);
-
-void __default_app_main(start_info_t *);
-void
-__default_app_main(start_info_t *si)
-{
-	char argv0[] = "rumprun-xen";
-	char *rawcmdline = (char *)si->cmd_line;
-	int nargs;
-	char **argv;
-	void *cookie;
-
-	rumprun_parseargs(rawcmdline, &nargs, 0);
-	argv = bmk_xmalloc(sizeof(*argv) * (nargs+3));
-	argv[0] = argv0;
-	rumprun_parseargs(rawcmdline, &nargs, argv+1);
-	argv[nargs+1] = 0;
-	argv[nargs+2] = 0;
-
-	rumprun_boot(NULL); /* Xen doesn't use cmdline the same way (yet?) */
-
-	cookie = rumprun(main, nargs+1, argv);
-	rumprun_wait(cookie);
-
-	rumprun_reboot();
-}
-
-__weak_alias(app_main,__default_app_main)
-
-/*
- * Local variables:
- *  c-file-style: "linux"
- *  indent-tabs-mode: t
- *  c-indent-level: 8
- *  c-basic-offset: 8
- *  tab-width: 8
- * End:
- */
+#endif /* _RUMPRUN_BASE_PARSEARGS_H_ */

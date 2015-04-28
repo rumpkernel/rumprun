@@ -23,49 +23,52 @@
  * SUCH DAMAGE.
  */
 
-#include <mini-os/types.h>
-#include <xen/xen.h>
-
-#include <bmk-core/memalloc.h>
-
-#include <rumprun-base/rumprun.h>
 #include <rumprun-base/parseargs.h>
 
-extern int main(int argc, char **argv);
-
-void __default_app_main(start_info_t *);
 void
-__default_app_main(start_info_t *si)
+rumprun_parseargs(char *p, int *nargs, char **outarray)
 {
-	char argv0[] = "rumprun-xen";
-	char *rawcmdline = (char *)si->cmd_line;
-	int nargs;
-	char **argv;
-	void *cookie;
+	char *out = 0;
+	int quote = -1; /* -1 means outside arg, 0 or '"' or '\'' inside */
 
-	rumprun_parseargs(rawcmdline, &nargs, 0);
-	argv = bmk_xmalloc(sizeof(*argv) * (nargs+3));
-	argv[0] = argv0;
-	rumprun_parseargs(rawcmdline, &nargs, argv+1);
-	argv[nargs+1] = 0;
-	argv[nargs+2] = 0;
+	*nargs = 0;
 
-	rumprun_boot(NULL); /* Xen doesn't use cmdline the same way (yet?) */
-
-	cookie = rumprun(main, nargs+1, argv);
-	rumprun_wait(cookie);
-
-	rumprun_reboot();
+	for (;;) {
+		int ac = *p++;
+		int rc = ac;
+		if (ac == '\\')
+			rc = *p++;
+		if (!rc || ac==' ' || ac=='\n' || ac=='\t') {
+			/* any kind of delimiter */
+			if (!rc || quote==0) {
+				/* ending an argument */
+				if (out)
+					*out++ = 0;
+				quote = -1;
+			}
+			if (!rc)
+				/* definitely quit then */
+				break;
+			if (quote<0)
+				/* not in an argument now */
+				continue;
+		}
+		if (quote<0) {
+			/* starting an argument */
+			if (outarray)
+				outarray[*nargs] = out = p-1;
+			(*nargs)++;
+			quote = 0;
+		}
+		if (quote > 0 && ac == quote) {
+			quote = 0;
+			continue;
+		}
+		if (ac == '\'' || ac == '"') {
+			quote = ac;
+			continue;
+		}
+		if (out)
+			*out++ = rc;
+	}
 }
-
-__weak_alias(app_main,__default_app_main)
-
-/*
- * Local variables:
- *  c-file-style: "linux"
- *  indent-tabs-mode: t
- *  c-indent-level: 8
- *  c-basic-offset: 8
- *  tab-width: 8
- * End:
- */
