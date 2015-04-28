@@ -30,16 +30,16 @@
 #include <bmk/app.h>
 
 #include <rumprun-base/rumprun.h>
+#include <rumprun-base/config.h>
 
 void
 bmk_mainthread(void *cmdline)
 {
-        char *argv[] = {"bmk_main", 0};
 	void *cookie;
 
 	rumprun_boot(cmdline);
 
-	cookie = rumprun(main, 1, argv);
+	cookie = rumprun(main, rumprun_cmdline_argc, rumprun_cmdline_argv);
 	rumprun_wait(cookie);
 
 	rumprun_reboot();
