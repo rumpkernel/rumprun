@@ -41,7 +41,8 @@ RUMP_LIBS_SYSPROXY = -lrumpkern_sysproxy
 endif
 
 RUMP_LIBS_PCI = -lrumpdev_pci -lrumpdev_pci_if_wm -lrumpdev_miiphy
-RUMP_LIBS_FS = -lrumpfs_ffs -lrumpfs_cd9660 -lrumpdev_disk -lrumpdev -lrumpvfs
+RUMP_LIBS_FS = -lrumpfs_ffs -lrumpfs_cd9660 -lrumpfs_tmpfs
+RUMP_LIBS_FS+= -lrumpdev_disk -lrumpdev -lrumpvfs
 RUMP_LIBS_NET = -lrumpnet_config -lrumpdev_bpf -lrumpnet_xenif -lrumpnet_netinet
 RUMP_LIBS_NET+= -lrumpnet_local -lrumpnet_net -lrumpxen_xendev -lrumpnet
 
