@@ -101,7 +101,7 @@ rumprun: $(OBJ_DIR)/rumprun.o
 $(OBJ_DIR)/rumprun.o: $(RUMP_OBJS) ${BASEDIR}/xen/librumprun_base.a ${COREDIR}/xen/libbmk_core.a ${RUMPUSERDIR}/xen/libbmk_rumpuser.a
 	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(RUMP_OBJS) -nostdlib -o $@
 
-commonlibs: ${BASEDIR}/baremetal/librumprun_base.a ${COREDIR}/baremetal/libbmk_core.a ${RUMPUSERDIR}/baremetal/libbmk_rumpuser.a
+commonlibs: ${BASEDIR}/xen/librumprun_base.a ${COREDIR}/xen/libbmk_core.a ${RUMPUSERDIR}/xen/libbmk_rumpuser.a
 
 buildtest: ../../tests/hello/hello.c $(OBJ_DIR)/rumprun.o commonlibs app-tools
 	$(APP_TOOLS_CC) -DRUMPRUN_TESTER_JUSTMAIN -o $@ $<
