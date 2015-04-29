@@ -67,7 +67,7 @@ $(OBJ_DIR)/%.o: %.c $(HDRS) $(EXTRA_DEPS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 .PHONY: default
-default: prepare mini-os commonlibs rumprun app-tools tests buildtest
+default: prepare mini-os commonlibs rumprun app-tools buildtest
 
 .PHONY: prepare
 prepare:
@@ -115,18 +115,16 @@ APP_TOOLS_DIR= $(abspath ../../app-tools)
 
 include $(APP_TOOLS_DIR)/Makefile.app-tools
 
-# New demos each have their own Makefile under ../../tests/ and are built using
-# app-tools.
 .PHONY: tests
 tests:
-	$(APP_TOOLS_MAKE) -C ../../tests
+	RUMPRUN_PLATFORM=xen ../../tests/buildtests.sh
+	../../tests/runtests.sh xen
 
 .PHONY: clean arch_clean app-tools_clean
 
 clean:	app-tools_clean
 	$(MAKE) -C xen OBJ_DIR=$(OBJ_DIR)/xen clean
 	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/lib/*.o buildtest
-	$(MAKE) -C ../../tests clean
 	( cd ${BASEDIR} && ${RUMPMAKE} MAKEOBJDIR=xen cleandir )
 	( cd ${COREDIR} && ${RUMPMAKE} MAKEOBJDIR=xen cleandir )
 	( cd ${RUMPUSERDIR} && ${RUMPMAKE} MAKEOBJDIR=xen cleandir )
@@ -136,3 +134,4 @@ cleanrump: clean
 
 distcleanrump: cleanrump
 	rm -f config.mk
+	$(MAKE) -C ../../tests clean
