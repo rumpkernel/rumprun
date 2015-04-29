@@ -19,6 +19,7 @@ script:
   - export CC=gcc-4.8
   - export CXX=g++-4.8
   - ./build-rr.sh -qq ${PLATFORM} ${EXTRAFLAGS}
+  - RUMPRUN_PLATFORM=$(echo ${PLATFORM} | sed 's/baremetal/bmk/') ./tests/buildtests.sh
   - ./tests/runtests.sh ${TESTS}
 
 notifications:
