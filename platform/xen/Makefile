@@ -67,7 +67,7 @@ $(OBJ_DIR)/%.o: %.c $(HDRS) $(EXTRA_DEPS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 .PHONY: default
-default: prepare mini-os rumprun app-tools tests
+default: prepare mini-os commonlibs rumprun app-tools tests buildtest
 
 .PHONY: prepare
 prepare:
@@ -101,6 +101,11 @@ rumprun: $(OBJ_DIR)/rumprun.o
 $(OBJ_DIR)/rumprun.o: $(RUMP_OBJS) ${BASEDIR}/xen/librumprun_base.a ${COREDIR}/xen/libbmk_core.a ${RUMPUSERDIR}/xen/libbmk_rumpuser.a
 	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(RUMP_OBJS) -nostdlib -o $@
 
+commonlibs: ${BASEDIR}/baremetal/librumprun_base.a ${COREDIR}/baremetal/libbmk_core.a ${RUMPUSERDIR}/baremetal/libbmk_rumpuser.a
+
+buildtest: ../../tests/hello/hello.c $(OBJ_DIR)/rumprun.o commonlibs app-tools
+	$(APP_TOOLS_CC) -DRUMPRUN_TESTER_JUSTMAIN -o $@ $<
+
 APP_TOOLS_TARGETARCH= $(TARGET_ARCH)
 APP_TOOLS_PLATFORM= xen
 APP_TOOLS_HEADOBJ= $(abspath $(OBJ_DIR)/xen/minios.o)
@@ -120,7 +125,7 @@ tests:
 
 clean:	app-tools_clean
 	$(MAKE) -C xen OBJ_DIR=$(OBJ_DIR)/xen clean
-	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/lib/*.o
+	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/lib/*.o buildtest
 	$(MAKE) -C ../../tests clean
 	( cd ${BASEDIR} && ${RUMPMAKE} MAKEOBJDIR=xen cleandir )
 	( cd ${COREDIR} && ${RUMPMAKE} MAKEOBJDIR=xen cleandir )

@@ -34,7 +34,7 @@ ifeq (${CONFIG_SYSPROXY},yes)
 LIBS_SYSPROXY=	-lrumpkern_sysproxy
 endif
 
-all: app-tools include/bmk/machine rumprun.o commonlibs tests
+all: app-tools include/bmk/machine rumprun.o commonlibs buildtest tests
 
 OBJS_BMK-y+=		intr.o clock.o kernel.o undefs.o
 OBJS_BMK-y+=		rumpuser.o rumpconfig.o
@@ -122,11 +122,14 @@ rumprun.o: ${OBJS}
 
 commonlibs: ${BASEDIR}/baremetal/librumprun_base.a ${COREDIR}/baremetal/libbmk_core.a ${RUMPUSERDIR}/baremetal/libbmk_rumpuser.a
 
+buildtest: ../../tests/hello/hello.c rumprun.o commonlibs app-tools
+	$(APP_TOOLS_CC) -DRUMPRUN_TESTER_JUSTMAIN -o $@ $<
+
 tests: rumprun.o commonlibs app-tools
 	$(APP_TOOLS_MAKE) -C ../../tests
 
 clean: app-tools_clean
-	rm -f ${OBJS} include/bmk/machine
+	rm -f ${OBJS} include/bmk/machine buildtest
 	$(MAKE) -C ../../tests clean
 	( cd ${BASEDIR} && ${RUMPMAKE} MAKEOBJDIR=baremetal cleandir )
 	( cd ${COREDIR} && ${RUMPMAKE} MAKEOBJDIR=baremetal cleandir )
