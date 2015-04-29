@@ -7,3 +7,4 @@ all-tests:
 clean:
 	$(MAKE) -C hello clean
 	$(MAKE) -C basic clean
+	[ ! -f configure/Makefile ] || $(MAKE) -C configure distclean
