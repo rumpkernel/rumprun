@@ -77,6 +77,5 @@ unsigned long minios_alloc_contig_pages(int order, unsigned int addr_bits);
 
 int free_physical_pages(xen_pfn_t *mfns, int n);
 void fini_mm(void);
-uint64_t minios_get_memsize(void);
 
 #endif /* _MINIOS_MM_H_ */

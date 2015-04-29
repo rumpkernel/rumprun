@@ -41,6 +41,7 @@
 #include <mini-os/types.h>
 #include <mini-os/lib.h>
 
+#include <bmk-core/platform.h>
 #include <bmk-core/string.h>
 
 #ifdef MM_DEBUG
@@ -375,8 +376,8 @@ int free_physical_pages(xen_pfn_t *mfns, int n)
 }
 #endif
 
-static uint64_t memsize = 0;
-uint64_t minios_get_memsize(void)
+static unsigned long memsize = 0;
+unsigned long bmk_platform_memsize(void)
 {
     return memsize;
 }

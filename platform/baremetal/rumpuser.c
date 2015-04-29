@@ -66,13 +66,13 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 
 	/* for memlimit, we have to implement int -> string ... */
 	} else if (bmk_strcmp(name, "RUMP_MEMLIMIT") == 0) {
-		unsigned long memsize;
+		unsigned long memsize = bmk_platform_memsize();
 		char tmp[64];
 		char *res = buf;
 		unsigned i, j;
 
-		bmk_assert(bmk_memsize > BMK_MEMRESERVE);
-		memsize = bmk_memsize - BMK_MEMRESERVE;
+		bmk_assert(memsize > BMK_MEMRESERVE);
+		memsize -= BMK_MEMRESERVE;
 
 		for (i = 0; memsize > 0; i++) {
 			bmk_assert(i < sizeof(tmp)-1);

@@ -33,8 +33,6 @@ void bmk_isr(int);
 int bmk_isr_init(void);
 int bmk_isr_netinit(int (*)(void *), void *, int);
 
-extern unsigned long bmk_membase, bmk_memsize;
-
 #endif /* _LOCORE */
 
 #include <bmk-core/errno.h>

@@ -60,7 +60,7 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 		unsigned i, j;
 
 		/* use up to 50% memory for rump kernel */
-		memsize = minios_get_memsize() / 2;
+		memsize = bmk_platform_memsize() / 2;
 		if (memsize < (8 * 1024 * 1024)) {
 			minios_printk("rumphyper: warning: low on physical "
 				      "memory (%llu bytes), "

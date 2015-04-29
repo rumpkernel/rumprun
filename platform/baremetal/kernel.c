@@ -36,8 +36,8 @@
 #include <bmk-core/printf.h>
 #include <bmk-core/queue.h>
 
-unsigned long bmk_membase;
-unsigned long bmk_memsize;
+static unsigned long bmk_membase;
+static unsigned long bmk_memsize;
 
 LIST_HEAD(, stackcache) cacheofstacks = LIST_HEAD_INITIALIZER(cacheofstacks);
 struct stackcache {
@@ -126,6 +126,13 @@ bmk_platform_freepg2(void *mem, int shift)
 	}
 
 	bmk_printf("WARNING: freepg2 called! (%p, %d)\n", mem, shift);
+}
+
+unsigned long
+bmk_platform_memsize(void)
+{
+
+	return bmk_memsize;
 }
 
 void
