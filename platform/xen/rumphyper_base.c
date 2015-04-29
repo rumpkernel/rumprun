@@ -27,11 +27,10 @@
 #include <mini-os/console.h>
 #include <mini-os/time.h>
 
-#include <xen/io/console.h>
-
 #include <bmk-core/core.h>
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/printf.h>
 #include <bmk-core/sched.h>
 #include <bmk-core/string.h>
 
@@ -62,10 +61,9 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 		/* use up to 50% memory for rump kernel */
 		memsize = bmk_platform_memsize() / 2;
 		if (memsize < (8 * 1024 * 1024)) {
-			minios_printk("rumphyper: warning: low on physical "
-				      "memory (%llu bytes), "
-				      "suggest increasing domU allocation\n",
-				      memsize);
+			bmk_printf("rumphyper: warning: low on physical "
+			    "memory (%llu bytes), "
+			    "suggest increasing domU allocation\n", memsize);
 			memsize = 8 * 1024 * 1024;
 		}
 
