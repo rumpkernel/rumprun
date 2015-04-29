@@ -17,6 +17,11 @@
 #error Could not find select.  Was ist los?
 #endif
 
+/* make sure we offer compat symbols that can be found by autoconf */
+#ifndef HAVE_SIGACTION
+#error sigaction not found.  libc problem.
+#endif
+
 int
 main()
 {

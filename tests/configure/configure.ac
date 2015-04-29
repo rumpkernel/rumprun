@@ -17,7 +17,7 @@ AC_PROG_CC_C_O
 AC_PROG_LIBTOOL
 
 AC_CHECK_HEADERS([sys/epoll.h])
-AC_CHECK_FUNCS([select])
+AC_CHECK_FUNCS([select sigaction])
 
 AC_CONFIG_FILES([Makefile])
 AC_OUTPUT
