@@ -52,7 +52,7 @@ void
 rumpuser_exit(int value)
 {
 
-	bmk_platform_halt(value == 0 ? NULL : "rumpuser panic");
+	bmk_platform_halt(value == RUMPUSER_PANIC ? "rumpuser panic" : NULL);
 }
 
 void
