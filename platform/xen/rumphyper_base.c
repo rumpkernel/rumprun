@@ -75,14 +75,13 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 			memsize = memsize / 10;
 		}
 		if (i >= buflen) {
-			rv = 1;
+			rv = BMK_EINVAL;
 		} else {
 			res[i] = '\0';
 			for (j = i; i > 0; i--) {
 				res[j-i] = tmp[i-1];
 			}
 		}
-
 	} else {
 		rv = BMK_ENOENT;
 	}

@@ -55,7 +55,7 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 	int rv = 0;
 
 	if (buflen <= 1)
-		return 1;
+		return BMK_EINVAL;
 
 	if (bmk_strcmp(name, RUMPUSER_PARAM_NCPU) == 0
 	    || bmk_strcmp(name, "RUMP_VERBOSE") == 0) {
@@ -80,7 +80,7 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 			memsize = memsize / 10;
 		}
 		if (i >= buflen) {
-			rv = 1;
+			rv = BMK_EINVAL;
 		} else {
 			res[i] = '\0';
 			for (j = i; i > 0; i--) {
@@ -89,7 +89,7 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 		}
 
 	} else {
-		rv = 1;
+		rv = BMK_ENOENT;
 	}
 
 	return rv;
