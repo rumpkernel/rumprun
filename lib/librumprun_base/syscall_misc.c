@@ -72,7 +72,7 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 		return MAP_FAILED;
 	}
 
-	if ((error = posix_memalign(&v, len, bmk_pagesize)) != 0) {
+	if ((error = posix_memalign(&v, bmk_pagesize, len)) != 0) {
 		errno = error;
 		return MAP_FAILED;
 	}
