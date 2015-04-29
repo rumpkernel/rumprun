@@ -52,6 +52,13 @@ rumpuser_init(int version, const struct rumpuser_hyperup *hyp)
 	return rumprun_platform_rumpuser_init();
 }
 
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
+
+/* attempt to give at least this much to the rump kernel */
+#define MEMSIZE_WARNLIMIT (8*1024*1024)
+/* give at most this much */
+#define MEMSIZE_HILIMIT (64*1024*1024)
+
 int
 rumpuser_getparam(const char *name, void *buf, size_t buflen)
 {
@@ -74,13 +81,13 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 		char *res = buf;
 		unsigned i, j;
 
-		/* use up to 50% memory for rump kernel */
-		memsize = bmk_platform_memsize() / 2;
-		if (memsize < (8 * 1024 * 1024)) {
-			bmk_printf("rumphyper: warning: low on physical "
-			    "memory (%lu bytes), "
-			    "suggest increasing guest allocation\n", memsize);
-			memsize = 8 * 1024 * 1024;
+		/* use 50% memory for rump kernel, with an upper limit */
+		memsize = MIN(MEMSIZE_HILIMIT, bmk_platform_memsize()/2);
+		if (memsize < MEMSIZE_WARNLIMIT) {
+			bmk_printf("rump kernel warning: low on physical "
+			    "memory quota (%lu bytes)\n", memsize);
+			bmk_printf("rump kernel warning: "
+			    "suggest increasing guest allocation\n");
 		}
 
 		for (i = 0; memsize > 0; i++) {
