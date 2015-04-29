@@ -28,6 +28,7 @@
 #include <bmk/sched.h>
 
 #include <bmk-core/core.h>
+#include <bmk-core/printf.h>
 #include <bmk-core/sched.h>
 #include <bmk-core/string.h>
 #include <bmk-core/memalloc.h>
@@ -46,9 +47,6 @@ rumprun_platform_rumpuser_init(void)
 	return 0;
 }
 
-/* reserve 1MB for bmk */
-#define BMK_MEMRESERVE (1024*1024)
-
 int
 rumpuser_getparam(const char *name, void *buf, size_t buflen)
 {
@@ -62,17 +60,23 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 		bmk_strncpy(buf, "1", buflen-1);
 
 	} else if (bmk_strcmp(name, RUMPUSER_PARAM_HOSTNAME) == 0) {
-		bmk_strncpy(buf, "rump-baremetal", buflen-1);
+		bmk_strncpy(buf, "rumprun", buflen-1);
 
 	/* for memlimit, we have to implement int -> string ... */
 	} else if (bmk_strcmp(name, "RUMP_MEMLIMIT") == 0) {
-		unsigned long memsize = bmk_platform_memsize();
+		unsigned long memsize;
 		char tmp[64];
 		char *res = buf;
 		unsigned i, j;
 
-		bmk_assert(memsize > BMK_MEMRESERVE);
-		memsize -= BMK_MEMRESERVE;
+		/* use up to 50% memory for rump kernel */
+		memsize = bmk_platform_memsize() / 2;
+		if (memsize < (8 * 1024 * 1024)) {
+			bmk_printf("rumphyper: warning: low on physical "
+			    "memory (%lu bytes), "
+			    "suggest increasing guest allocation\n", memsize);
+			memsize = 8 * 1024 * 1024;
+		}
 
 		for (i = 0; memsize > 0; i++) {
 			bmk_assert(i < sizeof(tmp)-1);
@@ -87,7 +91,6 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 				res[j-i] = tmp[i-1];
 			}
 		}
-
 	} else {
 		rv = BMK_ENOENT;
 	}

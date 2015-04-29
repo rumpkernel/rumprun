@@ -49,11 +49,11 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 		bmk_strncpy(buf, "1", buflen-1);
 
 	} else if (bmk_strcmp(name, RUMPUSER_PARAM_HOSTNAME) == 0) {
-		bmk_strncpy(buf, "rump-xen", buflen-1);
+		bmk_strncpy(buf, "rumprun", buflen-1);
 
 	/* for memlimit, we have to implement int -> string ... */
 	} else if (bmk_strcmp(name, "RUMP_MEMLIMIT") == 0) {
-		unsigned long long memsize;
+		unsigned long memsize;
 		char tmp[64];
 		char *res = buf;
 		unsigned i, j;
@@ -62,8 +62,8 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 		memsize = bmk_platform_memsize() / 2;
 		if (memsize < (8 * 1024 * 1024)) {
 			bmk_printf("rumphyper: warning: low on physical "
-			    "memory (%llu bytes), "
-			    "suggest increasing domU allocation\n", memsize);
+			    "memory (%lu bytes), "
+			    "suggest increasing guest allocation\n", memsize);
 			memsize = 8 * 1024 * 1024;
 		}
 
