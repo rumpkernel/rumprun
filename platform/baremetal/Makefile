@@ -34,7 +34,7 @@ ifeq (${CONFIG_SYSPROXY},yes)
 LIBS_SYSPROXY=	-lrumpkern_sysproxy
 endif
 
-all: app-tools include/bmk/machine rumprun.o tests
+all: app-tools include/bmk/machine rumprun.o commonlibs tests
 
 OBJS_BMK-y+=		intr.o clock.o kernel.o undefs.o
 OBJS_BMK-y+=		rumpuser.o rumpconfig.o
@@ -99,25 +99,30 @@ include $(APP_TOOLS_DIR)/Makefile.app-tools
 include/bmk/machine:
 	ln -s ../arch/${MACHINE} include/bmk/machine
 
+.PHONY: ${BASEDIR}/baremetal/librumprun_base.a
 ${BASEDIR}/baremetal/librumprun_base.a:
 	( cd ${BASEDIR} \
 	    && ${RUMPMAKE} MAKEOBJDIR=baremetal obj \
 	    && ${RUMPMAKE} MAKEOBJDIR=baremetal dependall )
 
+.PHONY: ${COREDIR}/baremetal/libbmk_core.a
 ${COREDIR}/baremetal/libbmk_core.a:
 	( cd ${COREDIR} \
 	    && ${RUMPMAKE} MAKEOBJDIR=baremetal obj \
 	    && ${RUMPMAKE} MAKEOBJDIR=baremetal dependall )
 
+.PHONY: ${RUMPUSERDIR}/baremetal/libbmk_rumpuser.a
 ${RUMPUSERDIR}/baremetal/libbmk_rumpuser.a:
 	( cd ${RUMPUSERDIR} \
 	    && ${RUMPMAKE} MAKEOBJDIR=baremetal obj \
 	    && ${RUMPMAKE} MAKEOBJDIR=baremetal dependall )
 
-rumprun.o: ${OBJS} ${BASEDIR}/baremetal/librumprun_base.a ${COREDIR}/baremetal/libbmk_core.a ${RUMPUSERDIR}/baremetal/libbmk_rumpuser.a
+rumprun.o: ${OBJS}
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@
 
-tests: rumprun.o app-tools
+commonlibs: ${BASEDIR}/baremetal/librumprun_base.a ${COREDIR}/baremetal/libbmk_core.a ${RUMPUSERDIR}/baremetal/libbmk_rumpuser.a
+
+tests: rumprun.o commonlibs app-tools
 	$(APP_TOOLS_MAKE) -C ../../tests
 
 clean: app-tools_clean

@@ -77,16 +77,19 @@ prepare:
 mini-os:
 	$(MAKE) -C xen OBJ_DIR=$(OBJ_DIR)/xen
 
+.PHONY: ${BASEDIR}/xen/librumprun_base.a
 ${BASEDIR}/xen/librumprun_base.a:
 	( cd ${BASEDIR} \
 	    && ${RUMPMAKE} MAKEOBJDIR=xen obj \
 	    && ${RUMPMAKE} MAKEOBJDIR=xen dependall )
 
+.PHONY: ${COREDIR}/xen/libbmk_core.a
 ${COREDIR}/xen/libbmk_core.a:
 	( cd ${COREDIR} \
 	    && ${RUMPMAKE} MAKEOBJDIR=xen obj \
 	    && ${RUMPMAKE} MAKEOBJDIR=xen dependall )
 
+.PHONY: ${RUMPUSERDIR}/xen/libbmk_rumpuser.a
 ${RUMPUSERDIR}/xen/libbmk_rumpuser.a:
 	( cd ${RUMPUSERDIR} \
 	    && ${RUMPMAKE} MAKEOBJDIR=xen obj \
