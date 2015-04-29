@@ -31,7 +31,7 @@
 #include <bmk-core/memalloc.h>
 
 int
-posix_memalign(void **rv, size_t nbytes, size_t align)
+posix_memalign(void **rv, size_t align, size_t nbytes)
 {
 	void *v;
 	int error = BMK_ENOMEM;
