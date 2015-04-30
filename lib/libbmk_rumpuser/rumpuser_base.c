@@ -110,6 +110,19 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 	return rv;
 }
 
+/* ok, this isn't really random, but let's make-believe */
+int
+rumpuser_getrandom(void *buf, size_t buflen, int flags, size_t *retp)
+{
+	unsigned char *rndbuf;
+
+	for (*retp = 0, rndbuf = buf; *retp < buflen; (*retp)++) {
+		*rndbuf++ = bmk_platform_clock_monotonic() & 0xff;
+	}
+
+	return 0;
+}
+
 void
 rumpuser_exit(int value)
 {

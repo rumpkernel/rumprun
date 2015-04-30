@@ -40,16 +40,3 @@ rumprun_platform_rumpuser_init(void)
 
 	return 0;
 }
-
-/* ok, this isn't really random, but let's make-believe */
-int
-rumpuser_getrandom(void *buf, size_t buflen, int flags, size_t *retp)
-{
-	uint8_t *rndbuf;
-
-	for (*retp = 0, rndbuf = buf; *retp < buflen; (*retp)++) {
-		*rndbuf++ = bmk_platform_clock_monotonic() & 0xff;
-	}
-
-	return 0;
-}
