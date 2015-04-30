@@ -40,3 +40,5 @@ NOTHING(rumpuser_open)
 NOTHING(rumpuser_close)
 REALNOTHING(rumpuser_getfileinfo)
 NOTHING(rumpuser_bio)
+
+REALNOTHING(rumprun_platform_rumpuser_init);
