@@ -76,7 +76,7 @@ bmk_cons_putc(int c)
 }
 
 void
-bmk_init(void)
+bmk_cons_clear(void)
 {
 	int x;
 

@@ -17,8 +17,6 @@ void *bmk_allocpg(size_t);
 
 void bmk_halt(const char *) __attribute__((noreturn));
 
-void bmk_init(void);
-
 struct multiboot_info;
 void bmk_multiboot(struct multiboot_info *);
 

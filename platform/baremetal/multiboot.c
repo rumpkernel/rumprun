@@ -76,7 +76,6 @@ bmk_multiboot(struct multiboot_info *mbi)
 {
 	unsigned long cmdlinelen;
 
-	bmk_init(); /* XXX: convert to cons_clear */
 	bmk_printf_init(bmk_cons_putc, NULL);
 	bmk_core_init(BMK_THREAD_STACK_PAGE_ORDER, PAGE_SIZE);
 

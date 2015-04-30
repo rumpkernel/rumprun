@@ -45,7 +45,7 @@ ENTRY(_start32)
 
 	pushl %ebx
 	pushl %eax
-	call bmk_init
+	call bmk_cons_clear
 	popl %eax
 
 	/* only multiboot is supported for now */
