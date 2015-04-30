@@ -6,6 +6,12 @@
 #define ENTRY(x)        .text; .globl x; .type x,@function; x:
 #define END(x)          .size x, . - x
 
+#define PAGE_SHIFT 12
+#define PAGE_SIZE (1<<PAGE_SHIFT)
+
+#define BMK_THREAD_STACK_PAGE_ORDER 4
+#define BMK_THREAD_STACKSIZE ((1<<BMK_THREAD_STACK_PAGE_ORDER) * PAGE_SIZE)
+
 #ifndef _LOCORE
 struct region_descriptor;
 void bmk_cpu_lidt(struct region_descriptor *);

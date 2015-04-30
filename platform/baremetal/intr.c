@@ -24,11 +24,11 @@
  */
 
 #include <bmk/kernel.h>
-#include <bmk/sched.h>
 
 #include <bmk-core/memalloc.h>
 #include <bmk-core/printf.h>
 #include <bmk-core/queue.h>
+#include <bmk-core/sched.h>
 
 #define LIBRUMPUSER
 #include "rumpuser_int.h"

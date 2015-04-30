@@ -6,10 +6,6 @@
 
 extern unsigned long bmk_memsize, bmk_membase;
 
-#define PAGE_SHIFT 12
-#define PAGE_SIZE (1<<PAGE_SHIFT)
-#define STACK_SIZE 0x2000
-
 #define round_page(x) (((x) + (PAGE_SIZE-1)) & ~(PAGE_SIZE-1))
 #define trunc_page(x) ((x) & ~(PAGE_SIZE-1))
 

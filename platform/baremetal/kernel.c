@@ -26,7 +26,6 @@
 #include <bmk/types.h>
 #include <bmk/multiboot.h>
 #include <bmk/kernel.h>
-#include <bmk/sched.h>
 #include <bmk/app.h>
 
 #include <bmk-core/core.h>
@@ -35,6 +34,7 @@
 #include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
 #include <bmk-core/queue.h>
+#include <bmk-core/sched.h>
 
 unsigned long bmk_membase;
 unsigned long bmk_memsize;

@@ -25,7 +25,6 @@
 
 #include <bmk/types.h>
 #include <bmk/kernel.h>
-#include <bmk/sched.h>
 
 #include <bmk-core/sched.h>
 
