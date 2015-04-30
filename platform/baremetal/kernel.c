@@ -26,7 +26,6 @@
 #include <bmk/types.h>
 #include <bmk/multiboot.h>
 #include <bmk/kernel.h>
-#include <bmk/app.h>
 
 #include <bmk-core/core.h>
 #include <bmk-core/string.h>
