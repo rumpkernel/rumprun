@@ -73,6 +73,9 @@ hlt(void)
 
 	__asm__ __volatile__("hlt");
 }
+
+struct multiboot_info;
+void bmk_cpu_boot(struct multiboot_info *);
 #endif /* !_LOCORE */
 
 #endif /* _BMK..._H_ */

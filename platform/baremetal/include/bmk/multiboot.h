@@ -1,3 +1,11 @@
+#ifndef MULTIBOOT_HEADER
+#define MULTIBOOT_HEADER 1
+
+#define BMK_MULTIBOOT_CMDLINE_SIZE 4096
+#ifndef _LOCORE
+extern char bmk_multiboot_cmdline[];
+#endif
+
 /*
  * from multiboot.h, source:
  * https://www.gnu.org/software/grub/manual/multiboot/multiboot.html
@@ -23,9 +31,6 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR
  * IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-#ifndef MULTIBOOT_HEADER
-#define MULTIBOOT_HEADER 1
      
 /* How many bytes from the start of the file we search for the header. */
 #define MULTIBOOT_SEARCH		8192

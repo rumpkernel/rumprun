@@ -214,9 +214,6 @@ bmk_cpu_init(void)
 	outb(TIMER_MODE, TIMER_RATEGEN | TIMER_16BIT);
 	outb(TIMER_CNTR, (TIMER_HZ/HZ) & 0xff);
 	outb(TIMER_CNTR, (TIMER_HZ/HZ) >> 8);
-
-	/* aaand we're good to interrupt */
-	spl0();
 }
 
 int

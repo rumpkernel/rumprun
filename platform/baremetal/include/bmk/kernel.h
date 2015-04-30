@@ -4,7 +4,8 @@
 
 #include <bmk/types.h>
 
-#define MEMSTART 0x100000
+extern unsigned long bmk_memsize, bmk_membase;
+
 #define PAGE_SHIFT 12
 #define PAGE_SIZE (1<<PAGE_SHIFT)
 #define STACK_SIZE 0x2000
@@ -14,11 +15,16 @@
 
 void *bmk_allocpg(size_t);
 
-struct multiboot_info;
-void bmk_init(void);
 void bmk_halt(const char *) __attribute__((noreturn));
-void bmk_main(struct multiboot_info *);
 
+void bmk_init(void);
+
+struct multiboot_info;
+void bmk_multiboot(struct multiboot_info *);
+
+void bmk_run(char *);
+
+void bmk_cons_clear(void);
 void bmk_cons_putc(int);
 
 void bmk_cpu_init(void);

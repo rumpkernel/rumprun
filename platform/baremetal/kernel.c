@@ -36,8 +36,8 @@
 #include <bmk-core/printf.h>
 #include <bmk-core/queue.h>
 
-static unsigned long bmk_membase;
-static unsigned long bmk_memsize;
+unsigned long bmk_membase;
+unsigned long bmk_memsize;
 
 LIST_HEAD(, stackcache) cacheofstacks = LIST_HEAD_INITIALIZER(cacheofstacks);
 struct stackcache {
@@ -156,67 +156,6 @@ bmk_platform_splx(unsigned long x)
 	return; /* XXX */
 }
 
-static int
-parsemem(uint32_t addr, uint32_t len)
-{
-	struct multiboot_mmap_entry *mbm;
-	unsigned long memsize;
-	unsigned long ossize, osbegin, osend;
-	extern char _end[], _begin[];
-	uint32_t off;
-
-	/*
-	 * Look for our memory.  We assume it's just in one chunk
-	 * starting at MEMSTART.
-	 */
-	for (off = 0; off < len; off += mbm->size + sizeof(mbm->size)) {
-		mbm = (void *)(addr + off);
-		if (mbm->addr == MEMSTART
-		    && mbm->type == MULTIBOOT_MEMORY_AVAILABLE) {
-			break;
-		}
-	}
-	bmk_assert(off < len);
-
-	memsize = mbm->len;
-	osbegin = (unsigned long)_begin;
-	osend = round_page((unsigned long)_end);
-	ossize = osend - osbegin;
-
-	bmk_membase = mbm->addr + ossize;
-	bmk_memsize = memsize - ossize;
-
-	bmk_assert((bmk_membase & (PAGE_SIZE-1)) == 0);
-
-	return 0;
-}
-
-void
-bmk_main(struct multiboot_info *mbi)
-{
-	static char cmdline[2048];
-
-	bmk_printf_init(bmk_cons_putc, NULL);
-	bmk_core_init(BMK_THREAD_STACK_PAGE_ORDER, PAGE_SIZE);
-
-	if (bmk_strlen((char *)mbi->cmdline) > sizeof(cmdline)-1)
-		bmk_platform_halt("command line too long"); /* XXX */
-	bmk_memcpy(cmdline, (char *)mbi->cmdline, sizeof(cmdline));
-
-	bmk_printf("rump kernel bare metal bootstrap\n\n");
-	if ((mbi->flags & MULTIBOOT_MEMORY_INFO) == 0) {
-		bmk_printf("multiboot memory info not available\n");
-		return;
-	}
-	if (parsemem(mbi->mmap_addr, mbi->mmap_length))
-		return;
-	bmk_cpu_init();
-	bmk_isr_init();
-
-	/* enough bootstrap already, jump to main thread */
-	bmk_sched_init(bmk_mainthread, cmdline);
-}
-
 /*
  * console.  quick, cheap, dirty, etc.
  * Should eventually keep an in-memory log.  printf-debugging is currently
@@ -283,6 +222,14 @@ bmk_init(void)
 
 	for (x = 0; x < CONS_HEIGHT * CONS_WIDTH; x++)
 		cons_putat(' ', x % CONS_WIDTH, x / CONS_WIDTH);
+}
+
+void
+bmk_run(char *cmdline)
+{
+
+	/* initialize scheduler and jump to main thread */
+	bmk_sched_init(bmk_mainthread, cmdline);
 }
 
 void __attribute__((noreturn))

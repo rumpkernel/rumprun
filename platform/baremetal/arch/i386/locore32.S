@@ -52,7 +52,7 @@ ENTRY(_start32)
 	cmpl $MULTIBOOT_BOOTLOADER_MAGIC, %eax
 	jne nomultiboot
 
-	call bmk_main
+	call bmk_cpu_boot
 	jmp haltme
 
 nomultiboot:
