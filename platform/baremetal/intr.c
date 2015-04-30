@@ -30,8 +30,7 @@
 #include <bmk-core/queue.h>
 #include <bmk-core/sched.h>
 
-#define LIBRUMPUSER
-#include "rumpuser_int.h"
+#include <bmk-rumpuser/rumpuser.h>
 
 struct intrhand {
 	int (*ih_fun)(void *);
