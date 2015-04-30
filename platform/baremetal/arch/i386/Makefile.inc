@@ -1,4 +1,5 @@
 OBJS_BMK+=	arch/i386/locore32.o arch/i386/machdep.o arch/i386/boot.o
+OBJS_BMK+=	arch/i386/vgacons.o
 LDSCRIPT=	arch/i386/kern.ldscript
 
 CFLAGS+=	-mno-sse -mno-mmx -march=i686
