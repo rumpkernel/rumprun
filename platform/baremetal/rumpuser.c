@@ -32,11 +32,6 @@
 #include <bmk-core/string.h>
 #include <bmk-core/memalloc.h>
 
-#define LIBRUMPUSER
-#include <rump/rumpuser.h>
-
-#include "rumpuser_int.h"
-
 #include <bmk-rumpuser/rumpuser.h>
 
 int
@@ -50,14 +45,11 @@ rumprun_platform_rumpuser_init(void)
 int
 rumpuser_getrandom(void *buf, size_t buflen, int flags, size_t *retp)
 {
-	static unsigned seed = 12345;
-	unsigned *v = buf;
+	uint8_t *rndbuf;
 
-	*retp = buflen;
-	while (buflen >= 4) {
-		buflen -= 4;
-		*v++ = seed;
-		seed = (seed * 1103515245 + 12345) % (0x80000000L);
+	for (*retp = 0, rndbuf = buf; *retp < buflen; (*retp)++) {
+		*rndbuf++ = bmk_platform_clock_monotonic() & 0xff;
 	}
+
 	return 0;
 }
