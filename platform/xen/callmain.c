@@ -24,6 +24,8 @@
  */
 
 #include <mini-os/types.h>
+#include <mini-os/hypervisor.h>
+#include <mini-os/kernel.h>
 #include <xen/xen.h>
 
 #include <bmk-core/memalloc.h>
@@ -31,11 +33,8 @@
 #include <rumprun-base/rumprun.h>
 #include <rumprun-base/parseargs.h>
 
-extern int main(int argc, char **argv);
-
-void __default_app_main(start_info_t *);
-void
-__default_app_main(start_info_t *si)
+int
+app_main(start_info_t *si)
 {
 	char argv0[] = "rumprun-xen";
 	char *rawcmdline = (char *)si->cmd_line;
@@ -57,8 +56,6 @@ __default_app_main(start_info_t *si)
 
 	rumprun_reboot();
 }
-
-__weak_alias(app_main,__default_app_main)
 
 /*
  * Local variables:
