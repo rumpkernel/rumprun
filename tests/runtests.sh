@@ -26,7 +26,8 @@
 #
 
 # TODO: use a more scalable way of specifying tests
-TESTS='hello/hello basic/ctor_test basic/pthread_test basic/tls_test'
+TESTS='hello/hello basic/ctor_test basic/pthread_test basic/tls_test
+	crypto/md5'
 
 STARTMAGIC='=== FOE RUMPRUN 12345 TES-TER 54321 ==='
 ENDMAGIC='=== RUMPRUN 12345 TES-TER 54321 EOF ==='
