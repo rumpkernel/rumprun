@@ -52,7 +52,6 @@ RUMP_LDLIBS := ${RUMP_LDLIBS} -L${BASEDIR}/xen -L${COREDIR}/xen -L${RUMPUSERDIR}
 
 LDFLAGS := -L$(abspath rump/lib)
 
-rump-src-y += rumphyper_base.c
 rump-src-y += rumphyper_bio.c
 rump-src-y += rumphyper_net.c
 rump-src-y += rumphyper_pci.c
