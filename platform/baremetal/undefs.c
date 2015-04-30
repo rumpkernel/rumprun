@@ -23,6 +23,7 @@
  * SUCH DAMAGE.
  */
 
+#include <bmk-core/errno.h>
 #include <bmk-core/printf.h>
 
 /*
@@ -33,12 +34,13 @@
     int name(void); int name(void) \
     {bmk_printf("unimplemented: " #name "\n"); for (;;);}
 
-#define REALNOTHING(name) \
-    int name(void); int name(void) {return 1;}
+#define REALNOTHING(name, rv) \
+    int name(void); int name(void) {return rv;}
 
 NOTHING(rumpuser_open)
 NOTHING(rumpuser_close)
-REALNOTHING(rumpuser_getfileinfo)
 NOTHING(rumpuser_bio)
 
-REALNOTHING(rumprun_platform_rumpuser_init);
+REALNOTHING(rumpuser_getfileinfo, BMK_ENOSYS)
+
+REALNOTHING(rumprun_platform_rumpuser_init, 0);
