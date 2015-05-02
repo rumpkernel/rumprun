@@ -134,6 +134,7 @@ mainbouncer(void *arg)
 
 	fprintf(stderr,"\n=== calling \"%s\" main() ===\n\n", progname);
 	rv = rr->rr_mainfun(rr->rr_argc, rr->rr_argv);
+	fflush(stdout);
 	fprintf(stderr,"\n=== main() of \"%s\" returned %d ===\n",
 	    progname, rv);
 
