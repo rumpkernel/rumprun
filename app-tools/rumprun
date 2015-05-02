@@ -61,7 +61,7 @@ usage: rumprun STACK [ -ipd ] [ -D PORT ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] 
     -i attaches to domain console on startup
     -p creates the domain but leaves it paused
     -d destroys the domain on poweroff
-    -D PORT attaches a GDB server on PORT to the domain, implies -p
+    -D PORT attaches a GDB server on PORT to the domain
     
     When run without -i the local domain id is printed to standard output
 EOM
@@ -238,7 +238,6 @@ run_xen()
 				err "'gdbsx' is required for -D, please install it."
 			fi
 			opt_debug=${OPTARG}
-			opt_pause=1
 			;;
 		S)
 			opt_cansudo=true
@@ -329,7 +328,6 @@ run_qemu()
 			;;
 		D)
 			opt_debug="-gdb tcp::${OPTARG}"
-			opt_pause="-S"
 			;;
 		S)
 			# ignored for now
