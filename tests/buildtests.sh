@@ -6,16 +6,30 @@
 
 set -e
 
-[ -z "${RUMPRUN_PLATFORM}" ] && { echo '>> set $RUMPRUN_PLATFORM' ; exit 1; }
+[ -n "${1}" ] || { echo '>> need platform' ; exit 1; }
 
 cd "$(dirname $0)"
 APPTOOLSDIR=$(pwd)/../app-tools
-export MAKE=${APPTOOLSDIR}/rumprun-${RUMPRUN_PLATFORM}-make
+PLATFORM=$1
+
+case ${PLATFORM} in
+baremetal)
+	TOOLS_PLATFORM=bmk
+	;;
+xen)
+	TOOLS_PLATFORM=xen
+	;;
+*)
+	echo ">> unknown platform \"$PLATFORM\""
+	exit 1
+esac
+
+export MAKE=${APPTOOLSDIR}/rumprun-${TOOLS_PLATFORM}-make
 
 ${MAKE}
 
 cd configure
-${APPTOOLSDIR}/rumprun-${RUMPRUN_PLATFORM}-configure ./configure
+${APPTOOLSDIR}/rumprun-${TOOLS_PLATFORM}-configure ./configure
 ${MAKE}
 
 exit 0
