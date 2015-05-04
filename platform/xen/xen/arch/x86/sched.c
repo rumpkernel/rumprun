@@ -73,10 +73,6 @@ void dump_stack(struct thread *thread_md)
 }
 #endif
 
-/* Gets run when a new thread is scheduled the first time ever, 
-   defined in x86_[32/64].S */
-extern void _minios_entry_thread_starter(void);
-
 void
 bmk_platform_cpu_sched_switch(struct bmk_tcb *prev, struct bmk_tcb *next)
 {
