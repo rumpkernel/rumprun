@@ -44,6 +44,7 @@
 #include <xen/version.h>
 
 #include <bmk-core/core.h>
+#include <bmk-core/printf.h>
 
 uint8_t _minios_xen_features[XENFEAT_NR_SUBMAPS * 32];
 
@@ -129,6 +130,7 @@ bmk_platform_splx(unsigned long x)
 void _minios_start_kernel(start_info_t *si)
 {
 
+    bmk_printf_init(minios_putc, NULL);
     bmk_core_init(STACK_SIZE_PAGE_ORDER, PAGE_SIZE);
 
     arch_init(si);

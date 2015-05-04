@@ -64,6 +64,7 @@ struct consfront_dev {
 
 void print(int direct, const char *fmt, va_list args);
 void minios_printk(const char *fmt, ...);
+void minios_putc(int);
 void xprintk(const char *fmt, ...);
 void panic(const char *fmt, ...);
 

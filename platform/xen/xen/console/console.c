@@ -143,7 +143,7 @@ void print(int direct, const char *fmt, va_list args)
 }
 
 /* XXX: should use a putc/flush combo ... later */
-static void minios_putc(int c)
+void minios_putc(int c)
 {
 
     minios_printk("%c", c);
@@ -166,7 +166,6 @@ void xprintk(const char *fmt, ...)
 }
 void init_console(void)
 {   
-    bmk_printf_init(minios_putc, NULL);
     minios_printk("Initialising console ... ");
     xencons_ring_init();    
     console_initialised = 1;
