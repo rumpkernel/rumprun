@@ -44,11 +44,9 @@
 #include <mini-os/xenbus.h>
 #include <xen/io/console.h>
 
-#include <stdio.h>
-
-#include <bmk-core/printf.h>
 #include <bmk-core/string.h>
-
+#define _BMK_PRINTF_VA
+#include <bmk-core/printf.h>
 
 /* Copies all print output to the Xen emergency console apart
    of standard dom0 handled console */
@@ -128,7 +126,7 @@ void print(int direct, const char *fmt, va_list args)
 {
     static char   buf[1024];
     
-    (void)vsnprintf(buf, sizeof(buf), fmt, args);
+    bmk_vsnprintf(buf, sizeof(buf), fmt, args);
  
     if(direct)
     {
