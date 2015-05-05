@@ -51,10 +51,6 @@ ENTRY(bmk__cpu_switch)
 	movl 4(%esp), %ecx		/* prev */
 	movl 8(%esp), %edx		/* next */
 
-	/* reload tls for new thread */
-	movl $0x18, %eax
-	movl %eax, %gs
-
 	pushl %ebp
 	pushl %ebx
 	pushl %esi

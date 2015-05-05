@@ -82,10 +82,8 @@ ENTRY(bmk_cpu_lgdt)
 	movl $0x10, %eax
 	movl %eax, %ds
 	movl %eax, %es
-	movl %eax, %ss
 	movl %eax, %fs
-
-	movl $0x18, %eax
+	movl %eax, %ss
 	movl %eax, %gs
 
 	popl %eax

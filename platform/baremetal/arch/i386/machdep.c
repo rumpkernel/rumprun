@@ -130,6 +130,8 @@ adjustgs(uintptr_t p, size_t s)
 	sd->sd_lobase = p & 0xffffff;
 	sd->sd_hibase = (p >> 24) & 0xff;
 	sd->sd_lolimit = s;
+
+	__asm__ __volatile__("mov %0, %%gs" :: "r"(8*SEGMENT_GS));
 }
 
 #define PIC1_CMD	0x20
