@@ -28,6 +28,7 @@
 
 #include <bmk-core/types.h>
 
+#define BMK_TLS_EXTRA (6 * sizeof(unsigned long))
 struct bmk_tcb {
 	unsigned long btcb_sp;		/* stack pointer	*/
 	unsigned long btcb_ip;		/* program counter	*/

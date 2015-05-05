@@ -265,7 +265,7 @@ allocothertls(struct bmk_thread *thread)
 	unsigned long *tcbptr;
 	char *tlsmem;
 
-	tlsmem = bmk_memalloc(tdatasize + tbsssize + sizeof(unsigned long), 0);
+	tlsmem = bmk_memalloc(tdatasize + tbsssize + BMK_TLS_EXTRA, 0);
 
 	bmk_memcpy(tlsmem, _tdata_start, tdatasize);
 	bmk_memset(tlsmem + tdatasize, 0, tbsssize);
