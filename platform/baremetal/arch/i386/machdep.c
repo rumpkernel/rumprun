@@ -291,6 +291,6 @@ void
 bmk_platform_cpu_sched_switch(struct bmk_tcb *prev, struct bmk_tcb *next)
 {
 
-	adjustgs(next->btcb_tp, next->btcb_tpsize);
+	adjustgs(next->btcb_tp, next->btcb_tpsize + BMK_TLS_EXTRA);
 	bmk__cpu_switch(prev, next);
 }
