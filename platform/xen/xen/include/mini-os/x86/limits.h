@@ -7,7 +7,8 @@
 #ifdef __ASSEMBLY__
 #define __PAGE_SIZE       (1 << __PAGE_SHIFT)
 #else
-#define __PAGE_SIZE       (1UL << __PAGE_SHIFT)
+/* XXX: must be ULL for correct integer promotion in pte calculations */
+#define __PAGE_SIZE       (1ULL << __PAGE_SHIFT)
 #endif
 
 #define __STACK_SIZE_PAGE_ORDER  6
