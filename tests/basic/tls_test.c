@@ -19,10 +19,16 @@ static __thread unsigned long i = IINITIAL;
 static void *
 wrkthread(void *arg)
 {
+	unsigned long *ip = &i;
 
 	printf("Thread %d starting\n", (int)(uintptr_t)arg);
 	if (i != IINITIAL) {
 		printf("initial i incorrect: %lu vs. %d\n", i, IINITIAL);
+		return NULL;
+	}
+	i++;
+	if (*ip != IINITIAL+1) {
+		printf("initial *ip incorrect: %lu vs. %d\n", i, IINITIAL+1);
 		return NULL;
 	}
 	i++;
