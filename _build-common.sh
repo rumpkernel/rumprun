@@ -35,8 +35,7 @@ set -e
 # build tools
 ${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k \
     -V MKPIC=no -s ${RUMPSRC} -T rumptools -o rumpobj \
-    -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes \
-    -V RUMP_CURLWP=__thread "$@" tools
+    -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes "$@" tools
 
 [ -n "${BUILDXENMETAL_MKCONF}" ] \
     && echo "${BUILDXENMETAL_MKCONF}" >> rumptools/mk.conf
@@ -48,8 +47,8 @@ MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
 # build rump kernel
 ${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k \
     -V MKPIC=no -s ${RUMPSRC} -T rumptools -o rumpobj \
-    -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes \
-    -V RUMP_CURLWP=__thread "$@" build kernelheaders install
+    -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes "$@" \
+    build kernelheaders install
 
 LIBS="$(stdlibs ${RUMPSRC}) $(pwd)/../../lib/librumprun_tester"
 if [ "$(${RUMPMAKE} -f rumptools/mk.conf -V '${_BUILDRUMP_CXX}')" = 'yes' ]
