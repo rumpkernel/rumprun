@@ -26,6 +26,7 @@
 #include <bmk/types.h>
 #include <bmk/kernel.h>
 
+#include <bmk-core/core.h>
 #include <bmk-core/sched.h>
 
 /* enter the kernel with interrupts disabled */
@@ -127,9 +128,12 @@ adjustgs(uintptr_t p, size_t s)
 {
 	struct segment_descriptor *sd = &gdt[SEGMENT_GS];
 
+	bmk_assert(s <= 0xfffff);
+
 	sd->sd_lobase = p & 0xffffff;
 	sd->sd_hibase = (p >> 24) & 0xff;
-	sd->sd_lolimit = s;
+	sd->sd_lolimit = s & 0xffff;
+	sd->sd_hilimit = (s >> 16) & 0xf;
 
 	__asm__ __volatile__("mov %0, %%gs" :: "r"(8*SEGMENT_GS));
 }
