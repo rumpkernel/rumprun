@@ -262,14 +262,19 @@ allocothertls(struct bmk_thread *thread)
 	const unsigned long tdatasize = _tdata_end - _tdata_start;
 	const unsigned long tbsssize = _tbss_end - _tbss_start;
 	struct bmk_tcb *tcb = &thread->bt_tcb;
+	unsigned long *tcbptr;
 	char *tlsmem;
 
-	tlsmem = bmk_memalloc(tdatasize + tbsssize, 0);
+	tlsmem = bmk_memalloc(tdatasize + tbsssize + sizeof(unsigned long), 0);
 
 	bmk_memcpy(tlsmem, _tdata_start, tdatasize);
 	bmk_memset(tlsmem + tdatasize, 0, tbsssize);
 
-	tcb->btcb_tp = (unsigned long)(tlsmem + tdatasize + tbsssize);
+	/* assumes TLS variant 2 for now */
+	tcbptr = (unsigned long *)(tlsmem + tdatasize + tbsssize);
+	*tcbptr = (unsigned long)tcbptr;
+
+	tcb->btcb_tp = (unsigned long)tcbptr;
 	tcb->btcb_tpsize = tdatasize + tbsssize;
 
 	return 0;
