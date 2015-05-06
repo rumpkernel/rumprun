@@ -103,7 +103,7 @@ $(OBJ_DIR)/rumprun.o: $(RUMP_OBJS) ${BASEDIR}/xen/librumprun_base.a ${COREDIR}/x
 commonlibs: ${BASEDIR}/xen/librumprun_base.a ${COREDIR}/xen/libbmk_core.a ${RUMPUSERDIR}/xen/libbmk_rumpuser.a
 
 buildtest: ../../tests/hello/hello.c $(OBJ_DIR)/rumprun.o commonlibs app-tools
-	$(APP_TOOLS_CC) -DRUMPRUN_TESTER_JUSTMAIN -o $@ $<
+	$(APP_TOOLS_CC) -o $@ $< -lrumprun_tester
 
 APP_TOOLS_TARGETARCH= $(TARGET_ARCH)
 APP_TOOLS_PLATFORM= xen

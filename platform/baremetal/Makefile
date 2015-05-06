@@ -123,7 +123,7 @@ rumprun.o: ${OBJS}
 commonlibs: ${BASEDIR}/baremetal/librumprun_base.a ${COREDIR}/baremetal/libbmk_core.a ${RUMPUSERDIR}/baremetal/libbmk_rumpuser.a
 
 buildtest: ../../tests/hello/hello.c rumprun.o commonlibs app-tools
-	$(APP_TOOLS_CC) -DRUMPRUN_TESTER_JUSTMAIN -o $@ $<
+	$(APP_TOOLS_CC) -o $@ $< -lrumprun_tester
 
 tests: rumprun.o commonlibs app-tools
 	RUMPRUN_PLATFORM=bmk ../../tests/buildtests.sh
