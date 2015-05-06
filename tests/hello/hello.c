@@ -30,5 +30,6 @@ rumprun_test(int argc, char *argv[])
 	now = time(NULL);
 	printf("Goodbye, world, precisely at:\n%s", ctime(&now));
 
-	return 0;
+	/* test that exit() works */
+	exit(0);
 }
