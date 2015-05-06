@@ -124,11 +124,9 @@ fillsegment(struct segment_descriptor *sd, int type, int gran)
 }
 
 static void
-adjustgs(uintptr_t p, size_t s)
+adjustgs(uintptr_t p)
 {
 	struct segment_descriptor *sd = &gdt[SEGMENT_GS];
-
-	bmk_assert(s <= 0xfffff);
 
 	sd->sd_lobase = p & 0xffffff;
 	sd->sd_hibase = (p >> 24) & 0xff;
@@ -289,6 +287,6 @@ void
 bmk_platform_cpu_sched_switch(struct bmk_tcb *prev, struct bmk_tcb *next)
 {
 
-	adjustgs(next->btcb_tp, next->btcb_tpsize + BMK_TLS_EXTRA);
+	adjustgs(next->btcb_tp);
 	bmk__cpu_switch(prev, next);
 }
