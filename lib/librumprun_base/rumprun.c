@@ -123,6 +123,20 @@ struct rumprunner {
 static LIST_HEAD(,rumprunner) rumprunners = LIST_HEAD_INITIALIZER(&rumprunners);
 static int rumprun_done;
 
+/* XXX: does not yet nuke any pthread that mainfun creates */
+static void
+releaseme(void *arg)
+{
+	struct rumprunner *rr = arg;
+
+	rr->rr_done = 1;
+
+	pthread_mutex_lock(&w_mtx);
+	rumprun_done++;
+	pthread_cond_broadcast(&w_cv);
+	pthread_mutex_unlock(&w_mtx);
+}
+
 static void *
 mainbouncer(void *arg)
 {
@@ -132,24 +146,20 @@ mainbouncer(void *arg)
 
 	rump_pub_lwproc_rfork(RUMP_RFFDG);
 
+	pthread_cleanup_push(releaseme, rr);
+
 	fprintf(stderr,"\n=== calling \"%s\" main() ===\n\n", progname);
 	rv = rr->rr_mainfun(rr->rr_argc, rr->rr_argv);
 	fflush(stdout);
 	fprintf(stderr,"\n=== main() of \"%s\" returned %d ===\n",
 	    progname, rv);
 
+	pthread_cleanup_pop(1);
+
 	/*
 	 * XXX: missing _netbsd_userlevel_fini().  See comment in
 	 * rumprun_boot()
 	 */
-
-	/* XXX: does not yet nuke any pthread that mainfun creates */
-	rr->rr_done = 1;
-
-	pthread_mutex_lock(&w_mtx);
-	rumprun_done++;
-	pthread_cond_broadcast(&w_cv);
-	pthread_mutex_unlock(&w_mtx);
 
 	/* exit() calls rumprun_pub_lwproc_releaselwp() (via _exit()) */
 	exit(rv);
