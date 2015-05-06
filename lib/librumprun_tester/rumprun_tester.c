@@ -71,6 +71,10 @@ main(int argc, char *argv[])
 {
 	unsigned int i;
 
+	/* were we ran via the test framework? */
+	if (argc < 2 || strcmp(argv[1], "__test") != 0)
+		return rumprun_test(argc, argv);
+
 	/*
 	 * XXX: need a better way to determine disk device!
 	 * e.g. rumpconfig (which has currently not been
@@ -101,7 +105,7 @@ main(int argc, char *argv[])
 	 */
 	printf("=== FOE RUMPRUN 12345 TES-TER 54321 ===\n");
 	atexit(logexit);
-	logrv = rumprun_test(argc, argv);
+	logrv = rumprun_test(argc+1, argv-1);
 	printf("=== RUMPRUN 12345 TES-TER 54321 EOF ===\n");
 
 	exit(logrv);
