@@ -132,8 +132,6 @@ adjustgs(uintptr_t p, size_t s)
 
 	sd->sd_lobase = p & 0xffffff;
 	sd->sd_hibase = (p >> 24) & 0xff;
-	sd->sd_lolimit = s & 0xffff;
-	sd->sd_hilimit = (s >> 16) & 0xf;
 
 	__asm__ __volatile__("mov %0, %%gs" :: "r"(8*SEGMENT_GS));
 }
@@ -188,7 +186,7 @@ bmk_cpu_init(void)
 
 	fillsegment(&gdt[SEGMENT_CODE], SDT_MEMERA, SEG_PAGEGRAN);
 	fillsegment(&gdt[SEGMENT_DATA], SDT_MEMRWA, SEG_PAGEGRAN);
-	fillsegment(&gdt[SEGMENT_GS], SDT_MEMRWA, SEG_BYTEGRAN);
+	fillsegment(&gdt[SEGMENT_GS], SDT_MEMRWA, SEG_PAGEGRAN);
 
 	region.rd_limit = sizeof(gdt)-1;
 	region.rd_base = (unsigned int)(uintptr_t)(void *)gdt;
