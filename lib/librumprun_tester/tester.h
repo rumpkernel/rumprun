@@ -26,9 +26,6 @@
 #ifndef _BMK_BASE_RUMPRUN_TEST_H_
 #define _BMK_BASE_RUMPRUN_TEST_H_
 
-#ifdef RUMPRUN_TESTER_JUSTMAIN
-#define rumprun_test(_a1_,_a2_) main(_a1_,_a2_)
-#endif
 int rumprun_test(int, char **);
 
 #endif /* _BMK_BASE_RUMPRUN_TEST_H_ */
