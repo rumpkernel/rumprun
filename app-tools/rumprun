@@ -338,14 +338,15 @@ run_qemu()
 		esac
 	done
 	shift $((${OPTIND}-1))
+	cmdline="{ \"cmdline\": \""$@"\" }"
 
 	qemucmd="qemu-system-i386 -net none -no-kvm ${opt_drivespec} \
 	    ${opt_debug} ${opt_pause} -kernel $1"
 	if [ -n "$opt_interactive" ]; then
-		${qemucmd}
+		${qemucmd} -append "${cmdline}"
 	else
 		qemucmd="${qemucmd} -display none"
-		${qemucmd} 1>/dev/null 2>&1 &
+		${qemucmd} -append "${cmdline}" 1>/dev/null 2>&1 &
 		echo qemu:$!
 	fi
 }
