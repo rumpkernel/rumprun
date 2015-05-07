@@ -128,6 +128,7 @@ struct rumpuser_mtx {
 	int v;
 	int flags;
 	struct lwp *o;
+	struct bmk_thread *bmk_o;
 };
 
 void
@@ -170,12 +171,17 @@ int
 rumpuser_mutex_tryenter(struct rumpuser_mtx *mtx)
 {
 	struct lwp *l = rumpuser_curlwp();
+	struct bmk_thread *current = bmk_sched_current();
 
-	if (mtx->v && mtx->o != l)
+	if (mtx->bmk_o == current) {
+		bmk_platform_halt("rumpuser mutex: locking against myself");
+	}
+	if (mtx->v)
 		return BMK_EBUSY;
 
-	mtx->v++;
+	mtx->v = 1;
 	mtx->o = l;
+	mtx->bmk_o = current;
 
 	return 0;
 }
@@ -184,11 +190,11 @@ void
 rumpuser_mutex_exit(struct rumpuser_mtx *mtx)
 {
 
-	bmk_assert(mtx->v > 0);
-	if (--mtx->v == 0) {
-		mtx->o = NULL;
-		wakeup_one(&mtx->waiters);
-	}
+	bmk_assert(mtx->v == 1);
+	mtx->v = 0;
+	mtx->o = NULL;
+	mtx->bmk_o = NULL;
+	wakeup_one(&mtx->waiters);
 }
 
 void
