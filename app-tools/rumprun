@@ -101,15 +101,11 @@ cidr2mask()
 
 parse_netspec()
 {
-	# Call ourselves recursively to split $@ on ,
-	if [ "$IFS" != "," ]; then
-		OLDIFS=$IFS
-		IFS=, parse_netspec "$@"
-		return $?
-	else
-		set -- $1
-		IFS=$OLDIFS
-	fi
+
+	IFS=,
+	set -- $1
+	unset IFS
+
 	[ $# -lt 2 ] && usage
 	iftype=$1
 	ifmethod=$2
