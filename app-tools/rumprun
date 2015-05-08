@@ -68,6 +68,21 @@ EOM
 	exit 1
 }
 
+store_netspec=usage
+nindex=0
+
+json_append()
+{
+
+	json="${json} $*"
+}
+
+json_finalize_block()
+{
+
+	json_append '},'
+}
+
 # Detect the filesystem type of the image at $1.
 detect_fstype()
 {
@@ -91,7 +106,45 @@ detect_fstype()
 	esac
 }
 
-parse_xen_netspec()
+xen_store_netspec()
+{
+
+	echo net/${nindex}/type ${iftype} >>${xenstore}
+	echo net/${nindex}/method ${ifmethod} >>${xenstore}
+	if [ -n "${ifaddr}" ]; then
+		echo net/${nindex}/addr ${ifaddr} >>${xenstore}
+		echo net/${nindex}/netmask ${ifmask} >>${xenstore}
+	fi
+	if [ -n "${ifgw}" ]; then
+		echo net/${nindex}/gw ${ifgw} >>${xenstore}
+	fi
+}
+
+json_store_netspec()
+{
+
+	json_append '"net" : {'
+
+	# XXX: should not assume vioif or -net user
+	opt_netif="${opt_netif} -net nic,model=virtio -net user"
+	json_append	'"if":		"'vioif${nindex}'",'
+
+	json_append	'"type":	"'${iftype}'",'
+	json_append	'"method":	"'${ifmethod}'",'
+
+	[ -n "${ifaddr}" ] || { json_finalize_block ; return ; }
+
+	json_append	'"addr":	"'${ifaddr}'",'
+	json_append	'"mask":	"'${ifmask}'",'
+
+	[ -n "${ifgw}" ] || { json_finalize_block ; return ; }
+
+	json_append	'"gw":		"'${ifgw}'",'
+
+	json_finalize_block
+}
+
+parse_netspec()
 {
 
 	IFS=,
@@ -105,24 +158,22 @@ parse_xen_netspec()
 	conf_vif="${conf_vif}'',"
 	case ${ifmethod} in
 		dhcp)
-			echo net/${nindex}/type inet >>${xenstore}
-			echo net/${nindex}/method dhcp >>${xenstore}
 			;;
 		static)
 			ifaddr=${3%/*}
 			ifmask=${3#*/}
+			[ -n "${ifaddr}" ] || usage
+			[ -n "${ifmask}" ] || usage
 			ifgw=$4
-			echo net/${nindex}/type inet >>${xenstore}
-			echo net/${nindex}/method static >>${xenstore}
-			echo net/${nindex}/addr ${ifaddr} >>${xenstore}
-			echo net/${nindex}/netmask ${ifmask} >>${xenstore}
-			[ -n "${ifgw}" ] &&
-				echo net/${nindex}/gw ${ifgw} >>${xenstore}
 			;;
 		*)
 			return 1
 			;;
 	esac
+
+	${store_netspec}
+	nindex=$(expr $nindex + 1)
+
 	return 0
 }
 
@@ -143,7 +194,6 @@ run_xen()
 	>${conf}
 	>${xenstore}
 	OPTIND=1
-	nindex=0
 	bindex=0
 	conf_disk=
 	conf_vif=
@@ -159,8 +209,8 @@ run_xen()
 		case "$opt" in
 		# -n: NETSPEC
 		n)
-			parse_xen_netspec "${OPTARG}" || usage
-			nindex=$(expr $nindex + 1)
+			store_netspec=xen_store_netspec
+			parse_netspec "${OPTARG}" || usage
 			;;
 		# -b: BLKSPEC: hostpath,mountpoint
 		b)
@@ -300,6 +350,8 @@ run_qemu()
 	opt_drivespec=
 	opt_debug=
 	opt_pause=
+	opt_netif=
+	json_append '{'
 	while getopts "${myoptstr}" opt; do
 		case "$opt" in
 		b)
@@ -310,6 +362,10 @@ run_qemu()
 			;;
 		i)
 			opt_interactive=1
+			;;
+		n)
+			store_netspec=json_store_netspec
+			parse_netspec "${OPTARG}" || usage
 			;;
 		p)
 			opt_pause="-S"
@@ -326,15 +382,21 @@ run_qemu()
 		esac
 	done
 	shift $((${OPTIND}-1))
-	cmdline="{ \"cmdline\": \""$@"\" }"
 
-	qemucmd="qemu-system-i386 -net none -no-kvm ${opt_drivespec} \
+	json_append "\"cmdline\": \""$@"\""
+	json_append '}'
+	json_coma="$(echo ${json} | sed 's/,/,,/g')"
+
+	[ -n "${opt_netif}" ] || opt_netif="-net none"
+
+	echo $json_coma
+	qemucmd="qemu-system-i386 ${opt_netif} -no-kvm ${opt_drivespec} \
 	    ${opt_debug} ${opt_pause} -kernel $1"
 	if [ -n "$opt_interactive" ]; then
-		${qemucmd} -append "${cmdline}"
+		${qemucmd} -append "${json_coma}"
 	else
 		qemucmd="${qemucmd} -display none"
-		${qemucmd} -append "${cmdline}" 1>/dev/null 2>&1 &
+		${qemucmd} -append "${json_coma}" 1>/dev/null 2>&1 &
 		echo qemu:$!
 	fi
 }
