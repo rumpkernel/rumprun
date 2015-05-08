@@ -389,7 +389,6 @@ run_qemu()
 
 	[ -n "${opt_netif}" ] || opt_netif="-net none"
 
-	echo $json_coma
 	qemucmd="qemu-system-i386 ${opt_netif} -no-kvm ${opt_drivespec} \
 	    ${opt_debug} ${opt_pause} -kernel $1"
 	if [ -n "$opt_interactive" ]; then
