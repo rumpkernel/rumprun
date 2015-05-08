@@ -27,7 +27,8 @@ shift $((${OPTIND} - 1))
 platform=$1
 case ${platform} in
 'baremetal')
-	USETLS='-V RUMP_CURLWP=__thread'
+	# XXX: still something wrong here
+	#USETLS='-V RUMP_CURLWP=__thread'
 	script=buildme.sh
 	;;
 'xen')
