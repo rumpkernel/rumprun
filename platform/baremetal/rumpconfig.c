@@ -193,6 +193,7 @@ handle_net(jsmntok_t *t, int left, const char *data)
 		} else if (T_STREQ(key, data, "addr")) {
 			T_STRCPY(addr, sizeof(addr), value, data);
 		} else if (T_STREQ(key, data, "mask")) {
+			/* XXX: we could also pass mask as a number ... */
 			T_STRCPY(mask, sizeof(mask), value, data);
 		} else if (T_STREQ(key, data, "gw")) {
 			T_STRCPY(gw, sizeof(gw), value, data);
@@ -224,8 +225,8 @@ handle_net(jsmntok_t *t, int left, const char *data)
 			errx(1, "static net cfg missing addr or mask");
 		}
 
-		if ((rv = rump_pub_netconfig_ipv4_ifaddr(ifname,
-		    addr, mask)) != 0) {
+		if ((rv = rump_pub_netconfig_ipv4_ifaddr_cidr(ifname,
+		    addr, atoi(mask))) != 0) {
 			errx(1, "ifconfig \"%s\" for \"%s/%s\" failed",
 			    ifname, addr, mask);
 		}
