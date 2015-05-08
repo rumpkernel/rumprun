@@ -124,22 +124,16 @@ handle_cmdline(jsmntok_t *t, int left, const char *data)
 static int
 handle_env(jsmntok_t *t, int left, const char *data)
 {
-	char buf[128];
+	char *envstr;
 
 	T_CHECKTYPE(t, data, JSMN_STRING, __func__);
 
-	if (T_SIZE(t) > sizeof(buf)-1) {
-		warnx("env string of size %d too large, ignoring", T_SIZE(t));
-		return 1;
-	}
-
-	T_STRCPY(buf, sizeof(buf), t, data);
-	/*
-	 * XXX: this doesn't work(?) since we need to putenv() into the
-	 * env of the application process, not this bootstrap process
-	 * doing the config.
-	 */
-	putenv(buf);
+	envstr = malloc(T_SIZE(t)+1);
+	if (envstr == NULL)
+		err(1, "allocate env string");
+	T_STRCPY(envstr, T_SIZE(t)+1, t, data);
+	if (putenv(envstr) == -1)
+		err(1, "putenv");
 
 	return 1;
 }
