@@ -397,6 +397,9 @@ run_qemu()
 		b)
 			parse_blkspec "${OPTARG}" || usage
 			;;
+		e)
+			json_append "\"env\": \"${OPTARG}\","
+			;;
 		i)
 			opt_interactive=1
 			;;
