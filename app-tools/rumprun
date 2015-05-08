@@ -277,12 +277,12 @@ run_xen()
 			case "${OPTARG}" in
 			*=*)
 				key=${OPTARG%%=*}
-					value=${OPTARG#*=}
-					;;
-				*)
-					key=${OPTARG}
-					value=
-					;;
+				value=${OPTARG#*=}
+				;;
+			*)
+				key=${OPTARG}
+				value=
+				;;
 			esac
 			[ -n "$key" ] || usage
 			echo environ/${key} "${value}" >>${xenstore}
