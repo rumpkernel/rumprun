@@ -167,8 +167,8 @@ rumprun_config_net(const char *if_index)
 			    buf);
 			goto out;
 		}
-		if ((rv = rump_pub_netconfig_ipv4_ifaddr(buf, if_addr,
-			if_mask)) != 0) {
+		if ((rv = rump_pub_netconfig_ipv4_ifaddr_cidr(buf, if_addr,
+			atoi(if_mask))) != 0) {
 			warnx("rumprun_config: %s: ipv4_ifaddr failed: %s",
 				buf, strerror(rv));
 			goto out;
