@@ -70,6 +70,7 @@ EOM
 
 store_netspec=usage
 nindex=0
+bindex=0
 
 json_append()
 {
@@ -125,8 +126,10 @@ json_store_netspec()
 
 	json_append '"net" : {'
 
-	# XXX: should not assume vioif or -net user
+	# XXX: should not generate the interface here
 	opt_netif="${opt_netif} -net nic,model=virtio -net user"
+
+	# XXX: should not assume vioif or -net user
 	json_append	'"if":		"'vioif${nindex}'",'
 
 	json_append	'"type":	"'${iftype}'",'
@@ -177,6 +180,57 @@ parse_netspec()
 	return 0
 }
 
+xen_store_blkspec()
+{
+
+	vdev=hd$(echo ${bindex} | tr '[0-9]' '[a-j]')
+	conf_disk="${conf_disk}'file:$image,$vdev,w',"
+	echo blk/${bindex}/type etfs >>${xenstore}
+	echo blk/${bindex}/fstype $fstype >>${xenstore}
+	if [ -n "$mountpoint" ]; then
+		echo blk/${bindex}/mountpoint $mountpoint\
+		>>${xenstore}
+	fi
+}
+
+json_store_blkspec()
+{
+
+	# XXX: should not generate the interface here
+	opt_drivespec="${opt_drivespec} -drive if=virtio,file=${image}"
+
+	# if the image does not need to be mounted, we're done
+	[ -n "${mountpoint}" ] || return
+
+	json_append '"blk" : {'
+
+	# XXX: should not assume ld (virtio)
+	json_append	'"dev":		"'/dev/ld${bindex}a'",'
+	json_append	'"fstype":	"'${fstype}'",'
+	json_append	'"mountpoint":	"'${mountpoint}'",'
+
+	json_finalize_block
+}
+
+parse_blkspec()
+{
+	spec=$1
+
+	image=${spec%,*}
+	image=$(readlink -f ${image})
+	mountpoint=$(echo ${spec} | sed -n 's/.*,\(.*\)/\1/p')
+	[ -n "$image" ] || usage
+	[ -f "$image" ] || err File $image does not exist
+
+	if [ -n "$mountpoint" ]; then
+		fstype=$(detect_fstype $image)
+		[ $? -ne 0 ] && err File $image: unknown fstype
+	fi
+
+	${store_blkspec}
+	bindex=$(expr $bindex + 1)
+}
+
 # run_xen: Generate Xen configuration and run application stack.
 run_xen()
 {
@@ -189,12 +243,14 @@ run_xen()
 		fi
 	done
 
+	store_blkspec=xen_store_blkspec
+	store_netspec=xen_store_netspec
+
 	conf=/tmp/xr.conf.$$
 	xenstore=/tmp/xr.store.$$
 	>${conf}
 	>${xenstore}
 	OPTIND=1
-	bindex=0
 	conf_disk=
 	conf_vif=
 	opt_pause=
@@ -205,35 +261,16 @@ run_xen()
 	opt_debug=
 	opt_cansudo=false
 	sudo=''
+
 	while getopts "${myoptstr}" opt; do
 		case "$opt" in
 		# -n: NETSPEC
 		n)
-			store_netspec=xen_store_netspec
 			parse_netspec "${OPTARG}" || usage
 			;;
 		# -b: BLKSPEC: hostpath,mountpoint
 		b)
-			image=${OPTARG%,*}
-			image=$(readlink -f ${image})
-			mountpoint=$(echo $OPTARG | sed -n 's/.*,\(.*\)/\1/p')
-			[ -n "$image" ] || usage
-			[ -f "$image" ] || err File $image does not exist
-
-			if [ -n "$mountpoint" ]; then
-				fstype=$(detect_fstype $image)
-				[ $? -ne 0 ] && err File $image: unknown fstype
-			fi
-
-			vdev=hd$(echo $bindex | tr '[0-9]' '[a-j]')
-			conf_disk="${conf_disk}'file:$image,$vdev,w',"
-			echo blk/${bindex}/type etfs >>${xenstore}
-			echo blk/${bindex}/fstype $fstype >>${xenstore}
-			if [ -n "$mountpoint" ]; then
-				echo blk/${bindex}/mountpoint $mountpoint\
-					>>${xenstore}
-			fi
-			bindex=$(expr $bindex + 1)
+			parse_blkspec "${OPTARG}" || usage
 			;;
 		# -e: Set guest environment variable.
 		e)
@@ -346,6 +383,9 @@ EOM
 run_qemu()
 {
 
+	store_blkspec=json_store_blkspec
+	store_netspec=json_store_netspec
+
 	opt_interactive=
 	opt_drivespec=
 	opt_debug=
@@ -355,16 +395,12 @@ run_qemu()
 	while getopts "${myoptstr}" opt; do
 		case "$opt" in
 		b)
-			image=$( ( IFS=, ; set -- $OPTARG ; \
-			    [ $# -gt 1 ] && die -b mountpoints not supported ; \
-			    echo $1) )
-			opt_drivespec="-drive if=virtio,file=${image}"
+			parse_blkspec "${OPTARG}" || usage
 			;;
 		i)
 			opt_interactive=1
 			;;
 		n)
-			store_netspec=json_store_netspec
 			parse_netspec "${OPTARG}" || usage
 			;;
 		p)
