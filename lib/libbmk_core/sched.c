@@ -482,7 +482,6 @@ bmk_sched_init_mainlwp(void *cookie)
 	struct bmk_thread *current = bmk_sched_current();
 
 	current->bt_cookie = cookie;
-	allocothertls(current);
 	return current;
 }
 
