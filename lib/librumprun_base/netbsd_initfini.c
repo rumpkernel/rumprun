@@ -39,7 +39,7 @@
 
 #include "rumprun-private.h"
 
-static char *the_env[1] = { NULL } ;
+static char *the_env[1];
 extern void *environ;
 void _libc_init(void);
 extern char *__progname;
