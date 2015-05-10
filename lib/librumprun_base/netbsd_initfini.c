@@ -39,7 +39,8 @@
 
 #include "rumprun-private.h"
 
-static char *the_env[1];
+static char *empty_env[1];
+
 extern void *environ;
 void _libc_init(void);
 extern char *__progname;
@@ -83,7 +84,13 @@ _netbsd_userlevel_init(void)
 	__ps_strings = &thestrings;
 	pthread__stacksize = 2*bmk_stacksize;
 
-	environ = the_env;
+	/*
+	 * We get no "environ" from the kernel.  The initial
+	 * environment is created by rumprun_boot() depending on
+	 * what environ arguments were given (if any).
+	 */
+	environ = empty_env;
+
 	runinit();
 	_libc_init();
 
