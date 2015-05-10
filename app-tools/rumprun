@@ -57,7 +57,7 @@ usage: rumprun STACK [ -ipd ] [ -D PORT ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] 
     -n NETSPEC configures a network interface, using one of:
        inet,dhcp - IPv4 with DHCP
        inet,static,ADDR/MASK[,GATEWAY] - IPv4 with static IP
-       inet6,auto - IPv6 with SLAAC autoconfiguration
+       inet6,auto - IPv6 with stateless autoconfiguration
     -e set guest environment VAR to VALUE
     -i attaches to domain console on startup
     -p creates the domain but leaves it paused
