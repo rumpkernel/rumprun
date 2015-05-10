@@ -250,6 +250,20 @@ rumprun_deconfig_net(const char *if_index)
 			goto out;
 		}
 	}
+	else if (strcmp(if_type, "inet6") == 0 &&
+		 strcmp(if_method, "auto") == 0) {
+		snprintf(buf, sizeof buf, "xenif%s", if_index);
+		if ((rv = rump_pub_netconfig_ifdown(buf)) != 0) {
+			warnx("rumprun_deconfig: %s: ifdown failed: %s", buf,
+				strerror(rv));
+			goto out;
+		}
+		if ((rv = rump_pub_netconfig_ifdestroy(buf)) != 0) {
+			printf("rumprun_deconfig: %s: ifdestroy failed: %s",
+				buf, strerror(rv));
+			goto out;
+		}
+	}
 	else {
 		warnx("rumprun_config: %s: unknown type/method %s/%s",
 			buf, if_type, if_method);
