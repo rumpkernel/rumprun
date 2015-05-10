@@ -104,7 +104,7 @@ struct segment_descriptor {
 static struct segment_descriptor gdt[4];
 
 static void
-fillsegment(struct segment_descriptor *sd, int type, int gran)
+fillsegment(struct segment_descriptor *sd, int type)
 {
 
 	sd->sd_lobase = 0;
@@ -120,7 +120,7 @@ fillsegment(struct segment_descriptor *sd, int type, int gran)
 	sd->sd_p = 1;
 	sd->sd_xx = 0;
 	sd->sd_def32 = 1;
-	sd->sd_gran = gran;
+	sd->sd_gran = SEG_PAGEGRAN;
 }
 
 static void
@@ -182,9 +182,9 @@ bmk_cpu_init(void)
 	struct region_descriptor region;
 	int i;
 
-	fillsegment(&gdt[SEGMENT_CODE], SDT_MEMERA, SEG_PAGEGRAN);
-	fillsegment(&gdt[SEGMENT_DATA], SDT_MEMRWA, SEG_PAGEGRAN);
-	fillsegment(&gdt[SEGMENT_GS], SDT_MEMRWA, SEG_PAGEGRAN);
+	fillsegment(&gdt[SEGMENT_CODE], SDT_MEMERA);
+	fillsegment(&gdt[SEGMENT_DATA], SDT_MEMRWA);
+	fillsegment(&gdt[SEGMENT_GS], SDT_MEMRWA);
 
 	region.rd_limit = sizeof(gdt)-1;
 	region.rd_base = (unsigned int)(uintptr_t)(void *)gdt;
