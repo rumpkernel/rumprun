@@ -161,6 +161,8 @@ parse_netspec()
 	[ "${iftype}" != "inet" -a "${iftype}" != "inet6" ] && return 1
 	conf_vif="${conf_vif}'',"
 	case ${ifmethod} in
+		auto)
+			;;
 		dhcp)
 			;;
 		static)
@@ -169,10 +171,6 @@ parse_netspec()
 			[ -n "${ifaddr}" ] || usage
 			[ -n "${ifmask}" ] || usage
 			ifgw=$4
-			;;
-		auto)
-			echo net/${nindex}/type inet6 >>${xenstore}
-			echo net/${nindex}/method auto >>${xenstore}
 			;;
 		*)
 			return 1
