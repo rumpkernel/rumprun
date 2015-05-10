@@ -27,11 +27,16 @@ shift $((${OPTIND} - 1))
 platform=$1
 case ${platform} in
 'baremetal')
-	# XXX: still something wrong here
-	#USETLS='-V RUMP_CURLWP=__thread'
+	USETLS='-V RUMP_CURLWP=__thread'
 	script=buildme.sh
 	;;
 'xen')
+	# does not work on 32bit Xen yet, and at this stage we don't
+	# have any easy way to detect if we're building for x32 or x64
+	# since the compiler is determined by buildrump.sh and we haven't
+	# run that yet
+	#USETLS='-V RUMP_CURLWP=__thread'
+
 	script=buildxen.sh
 	;;
 *)
