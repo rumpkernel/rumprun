@@ -57,6 +57,7 @@ usage: rumprun STACK [ -ipd ] [ -D PORT ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] 
     -n NETSPEC configures a network interface, using one of:
        inet,dhcp - IPv4 with DHCP
        inet,static,ADDR/MASK[,GATEWAY] - IPv4 with static IP
+       inet6,auto - IPv6 with SLAAC autoconfiguration
     -e set guest environment VAR to VALUE
     -i attaches to domain console on startup
     -p creates the domain but leaves it paused
@@ -157,7 +158,7 @@ parse_netspec()
 	[ $# -lt 2 ] && usage
 	iftype=$1
 	ifmethod=$2
-	[ "${iftype}" != "inet" ] && return 1
+	[ "${iftype}" != "inet" -a "${iftype}" != "inet6" ] && return 1
 	conf_vif="${conf_vif}'',"
 	case ${ifmethod} in
 		dhcp)
@@ -168,6 +169,10 @@ parse_netspec()
 			[ -n "${ifaddr}" ] || usage
 			[ -n "${ifmask}" ] || usage
 			ifgw=$4
+			;;
+		auto)
+			echo net/${nindex}/type inet6 >>${xenstore}
+			echo net/${nindex}/method auto >>${xenstore}
 			;;
 		*)
 			return 1
