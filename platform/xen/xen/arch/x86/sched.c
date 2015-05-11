@@ -77,8 +77,9 @@ void
 bmk_platform_cpu_sched_switch(struct bmk_tcb *prev, struct bmk_tcb *next)
 {
 
-/* XXX: TLS is available only on x86_64 currently */
-#if defined(__x86_64__)
+#if defined(__i386__)
+    tlsswitch32(next->btcb_tp);
+#else /* x86_64 */
     wrmsrl(0xc0000100, next->btcb_tp);
 #endif
 

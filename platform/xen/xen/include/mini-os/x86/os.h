@@ -9,8 +9,19 @@
 
 #include <xen/xen.h>
 
+/*
+ * On i386 we need to load our own GDT for TLS.
+ * Therefore, we can't use the segments set up by Xen.
+ */
+#if defined(__i386__)
+#define __KERNEL_CS  ((1<<3) | 1)
+#define __KERNEL_DS  ((2<<3) | 1)
+#define __KERNEL_GS  ((3<<3) | 1)
+#else
 #define __KERNEL_CS  FLAT_KERNEL_CS
 #define __KERNEL_DS  FLAT_KERNEL_DS
+#endif
+
 #define __KERNEL_SS  FLAT_KERNEL_SS
 
 #define TRAP_divide_error      0
@@ -48,7 +59,10 @@ void arch_print_info(void);
 void arch_fini(void);
 
 
-
+#ifdef __i386__
+void gdtinit32(void);
+void tlsswitch32(unsigned long);
+#endif
 
 
 /* 

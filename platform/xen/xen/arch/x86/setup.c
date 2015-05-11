@@ -91,6 +91,7 @@ arch_init(start_info_t *si)
 
 	    /* Set up event and failsafe callback addresses. */
 #ifdef __i386__
+	gdtinit32();
 	HYPERVISOR_set_callbacks(
 		__KERNEL_CS, (unsigned long)_minios_entry_hypervisor_callback,
 		__KERNEL_CS, (unsigned long)_minios_entry_failsafe_callback);
