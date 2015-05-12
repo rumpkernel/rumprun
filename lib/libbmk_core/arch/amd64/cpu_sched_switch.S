@@ -47,7 +47,7 @@ ENTRY(bmk_cpu_sched_bouncer)
 	call bmk_sched_exit
 END(bmk_cpu_sched_bouncer)
 
-ENTRY(bmk__cpu_switch)
+ENTRY(bmk_cpu_sched_switch)
 	pushq %rbp
 	pushq %rbx
 	pushq %r12
@@ -67,4 +67,4 @@ ENTRY(bmk__cpu_switch)
 	popq %rbx
 	popq %rbp
 	ret
-END(bmk__cpu_switch)
+END(bmk_cpu_sched_switch)

@@ -74,7 +74,7 @@ void dump_stack(struct thread *thread_md)
 #endif
 
 void
-bmk_platform_cpu_sched_switch(struct bmk_tcb *prev, struct bmk_tcb *next)
+bmk_platform_cpu_sched_settls(struct bmk_tcb *next)
 {
 
 #if defined(__i386__)
@@ -82,6 +82,4 @@ bmk_platform_cpu_sched_switch(struct bmk_tcb *prev, struct bmk_tcb *next)
 #else /* x86_64 */
     wrmsrl(0xc0000100, next->btcb_tp);
 #endif
-
-    bmk__cpu_switch(&prev->btcb_sp, &next->btcb_sp);
 }

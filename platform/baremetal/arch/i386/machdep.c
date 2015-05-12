@@ -284,9 +284,8 @@ bmk_cpu_nanohlt(void)
 }
 
 void
-bmk_platform_cpu_sched_switch(struct bmk_tcb *prev, struct bmk_tcb *next)
+bmk_platform_cpu_sched_settls(struct bmk_tcb *next)
 {
 
 	adjustgs(next->btcb_tp);
-	bmk__cpu_switch(prev, next);
 }

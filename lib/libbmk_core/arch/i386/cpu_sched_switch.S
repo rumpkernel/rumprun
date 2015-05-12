@@ -47,7 +47,7 @@ ENTRY(bmk_cpu_sched_bouncer)
 	call bmk_sched_exit
 END(bmk_cpu_sched_bouncer)
 
-ENTRY(bmk__cpu_switch)
+ENTRY(bmk_cpu_sched_switch)
 	movl 4(%esp), %ecx		/* prev */
 	movl 8(%esp), %edx		/* next */
 
@@ -66,4 +66,4 @@ ENTRY(bmk__cpu_switch)
 	popl %ebx
 	popl %ebp
 	ret
-END(bmk__cpu_switch)
+END(bmk_cpu_sched_switch)
