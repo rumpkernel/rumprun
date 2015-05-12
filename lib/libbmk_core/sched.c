@@ -78,6 +78,13 @@
 #define THREAD_EXTSTACK	0x08
 #define THREAD_TIMEDOUT	0x10
 
+extern const char _tdata_start[], _tdata_end[];
+extern const char _tbss_start[], _tbss_end[];
+#define TDATASIZE (_tdata_end - _tdata_start)
+#define TBSSSIZE (_tbss_end - _tbss_start)
+#define TCBOFFSET ((TDATASIZE + TBSSSIZE + sizeof(void *))-1/sizeof(void *))
+#define TLSAREASIZE (TCBOFFSET + BMK_TLS_EXTRA)
+
 struct bmk_thread {
 	char bt_name[NAME_MAXLEN];
 
@@ -249,50 +256,47 @@ bmk_sched(void)
 
 /*
  * Allocate tls and initialize it.
- *
- * XXX: this needs to change in the future so that
- * we put the tcb in the same space instead of having multiple
- * random copies flying around.
  */
-extern const char _tdata_start[], _tdata_end[];
-extern const char _tbss_start[], _tbss_end[];
-static int
-allocothertls(struct bmk_thread *thread)
+void *
+bmk_sched_tls_alloc(void)
 {
-	const unsigned long tdatasize = _tdata_end - _tdata_start;
-	const unsigned long tbsssize = _tbss_end - _tbss_start;
-	struct bmk_tcb *tcb = &thread->bt_tcb;
 	unsigned long *tcbptr;
 	char *tlsmem;
 
-	tlsmem = bmk_memalloc(tdatasize + tbsssize + BMK_TLS_EXTRA, 0);
-
-	bmk_memcpy(tlsmem, _tdata_start, tdatasize);
-	bmk_memset(tlsmem + tdatasize, 0, tbsssize);
+	tlsmem = bmk_memalloc(TLSAREASIZE, 0);
+	bmk_memcpy(tlsmem, _tdata_start, TDATASIZE);
+	bmk_memset(tlsmem + TDATASIZE, 0, TBSSSIZE);
 
 	/* assumes TLS variant 2 for now */
-	tcbptr = (unsigned long *)(tlsmem + tdatasize + tbsssize);
+	tcbptr = (unsigned long *)(tlsmem + TCBOFFSET);
 	*tcbptr = (unsigned long)tcbptr;
 
-	tcb->btcb_tp = (unsigned long)tcbptr;
-	tcb->btcb_tpsize = tdatasize + tbsssize;
-
-	return 0;
+	return (void *)tcbptr;
 }
 
-static void
-freeothertls(struct bmk_thread *thread)
+/*
+ * Free tls
+ */
+void
+bmk_sched_tls_free(void *mem)
 {
-	void *mem;
 
-	mem = (void *)(thread->bt_tcb.btcb_tp-thread->bt_tcb.btcb_tpsize);
+	mem = (void *)((unsigned long)mem - TCBOFFSET);
 	bmk_memfree(mem);
 }
 
+void *
+bmk_sched_gettcb(void)
+{
+	struct bmk_thread *thread = bmk_sched_current();
+
+	return (void *)thread->bt_tcb.btcb_tp;
+}
+
 struct bmk_thread *
-bmk_sched_create(const char *name, void *cookie, int joinable,
+bmk_sched_create_withtls(const char *name, void *cookie, int joinable,
 	void (*f)(void *), void *data,
-	void *stack_base, unsigned long stack_size)
+	void *stack_base, unsigned long stack_size, void *tlsarea)
 {
 	struct bmk_thread *thread;
 	unsigned long flags;
@@ -318,7 +322,8 @@ bmk_sched_create(const char *name, void *cookie, int joinable,
 
 	thread->bt_wakeup_time = BMK_SCHED_BLOCK_INFTIME;
 
-	allocothertls(thread);
+	thread->bt_tcb.btcb_tp = (unsigned long)tlsarea;
+	thread->bt_tcb.btcb_tpsize = TCBOFFSET;
 
 	flags = bmk_platform_splhigh();
 	TAILQ_INSERT_TAIL(&threads, thread, bt_entries);
@@ -326,6 +331,18 @@ bmk_sched_create(const char *name, void *cookie, int joinable,
 	set_runnable(thread);
 
 	return thread;
+}
+
+struct bmk_thread *
+bmk_sched_create(const char *name, void *cookie, int joinable,
+	void (*f)(void *), void *data,
+	void *stack_base, unsigned long stack_size)
+{
+	void *tlsarea;
+
+	tlsarea = bmk_sched_tls_alloc();
+	return bmk_sched_create_withtls(name, cookie, joinable, f, data,
+	    stack_base, stack_size, tlsarea);
 }
 
 struct join_waiter {
@@ -336,7 +353,7 @@ struct join_waiter {
 static TAILQ_HEAD(, join_waiter) joinwq = TAILQ_HEAD_INITIALIZER(joinwq);
 
 void
-bmk_sched_exit(void)
+bmk_sched_exit_withtls(void)
 {
 	struct bmk_thread *thread = bmk_sched_current();
 	struct join_waiter *jw_iter;
@@ -359,7 +376,6 @@ bmk_sched_exit(void)
 		bmk_sched();
 		flags = bmk_platform_splhigh();
 	}
-	freeothertls(thread);
 
 	/* Remove from the thread list */
 	TAILQ_REMOVE(&threads, thread, bt_entries);
@@ -371,6 +387,15 @@ bmk_sched_exit(void)
 	/* bye */
 	bmk_sched();
 	bmk_platform_halt("schedule() returned for a dead thread!\n");
+}
+
+void
+bmk_sched_exit(void)
+{
+	struct bmk_thread *thread = bmk_sched_current();
+
+	bmk_sched_tls_free((void *)thread->bt_tcb.btcb_tp);
+	bmk_sched_exit_withtls();
 }
 
 void

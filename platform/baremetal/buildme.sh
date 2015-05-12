@@ -8,7 +8,6 @@ IFS=' '
 BUILDXENMETAL_MKCONF=".if defined(LIB) && \${LIB} == \"pthread\"
 .PATH:  $(pwd)/../../lib/librumprun_base/pthread
 PTHREAD_MAKELWP=pthread_makelwp_rumprun.c
-CPPFLAGS+=      -D_PTHREAD_GETTCB_EXT=_lwp_rumprun_gettcb
 CPPFLAGS.pthread_makelwp_rumprun.c= -I$(pwd)/../../include
 .endif  # LIB == pthread"
 unset IFS

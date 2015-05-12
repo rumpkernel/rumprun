@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2014 Antti Kantee.  All Rights Reserved.
+ * Copyright (c) 2014, 2015 Antti Kantee.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -49,46 +49,40 @@
 
 #include "rumprun-private.h"
 
-#if 0
-#define DPRINTF(x) printf x
-#else
-#define DPRINTF(x)
-#endif
+struct rumprun_lwp {
+	struct bmk_thread *rl_thread;
+	int rl_lwpid;
+	char rl_name[MAXCOMLEN+1];
 
-struct schedulable {
-	struct tls_tcb scd_tls;
+	struct lwpctl rl_lwpctl;
+	int rl_no_parking_hare;	/* a looney tunes reference ... finally! */
 
-	struct bmk_thread *scd_thread;
-	int scd_lwpid;
-	char *scd_name;
-
-	struct lwpctl scd_lwpctl;
-
-	TAILQ_ENTRY(schedulable) entries;
+	TAILQ_ENTRY(rumprun_lwp) rl_entries;
 };
-static TAILQ_HEAD(, schedulable) scheds = TAILQ_HEAD_INITIALIZER(scheds);
+static TAILQ_HEAD(, rumprun_lwp) all_lwp = TAILQ_HEAD_INITIALIZER(all_lwp);
+static __thread struct rumprun_lwp *me;
 
 #define FIRST_LWPID 1
 static int curlwpid = FIRST_LWPID;
-static struct schedulable mainthread = {
-	.scd_lwpid = FIRST_LWPID,
+
+static struct rumprun_lwp mainthread = {
+	.rl_lwpid = FIRST_LWPID,
 };
-struct tls_tcb *curtcb = &mainthread.scd_tls;
 
-struct tls_tcb *_lwp_rumprun_gettcb(void);
-struct tls_tcb *
-_lwp_rumprun_gettcb(void)
+static ptrdiff_t meoff;
+static void
+assignme(void *tcb, struct rumprun_lwp *value)
 {
+	struct rumprun_lwp **dst = (void *)((uintptr_t)tcb + meoff);
 
-	return curtcb;
+	*dst = value;
 }
 
 int
 _lwp_ctl(int ctl, struct lwpctl **data)
 {
-	struct schedulable *scd = (struct schedulable *)curtcb;
 
-	*data = (struct lwpctl *)&scd->scd_lwpctl;
+	*data = (struct lwpctl *)&me->rl_lwpctl;
 	return 0;
 }
 
@@ -96,32 +90,42 @@ int
 rumprun_makelwp(void (*start)(void *), void *arg, void *private,
 	void *stack_base, size_t stack_size, unsigned long flag, lwpid_t *lid)
 {
-	struct schedulable *scd = private;
+	struct rumprun_lwp *rl;
 	unsigned long thestack = (unsigned long)stack_base;
-	scd->scd_lwpid = ++curlwpid;
 
 	/* XXX: stack_base is not guaranteed to be aligned */
 	assert(stack_size == 2*bmk_stacksize);
 	thestack = (thestack & ~(bmk_stacksize-1)) + bmk_stacksize;
 
-	scd->scd_thread = bmk_sched_create("lwp", scd, 0,
-	    start, arg, (void *)thestack, bmk_stacksize);
-	if (scd->scd_thread == NULL)
+	rl = calloc(1, sizeof(*rl));
+	if (rl == NULL)
+		return errno;
+	assignme(private, rl);
+
+	rl->rl_lwpid = ++curlwpid;
+	rl->rl_thread = bmk_sched_create_withtls("lwp", rl, 0,
+	    start, arg, (void *)thestack, bmk_stacksize, private);
+	if (rl->rl_thread == NULL) {
+		free(rl);
 		return EBUSY; /* ??? */
-	*lid = scd->scd_lwpid;
-	TAILQ_INSERT_TAIL(&scheds, scd, entries);
+	}
+
+	*lid = rl->rl_lwpid;
+	TAILQ_INSERT_TAIL(&all_lwp, rl, rl_entries);
 
 	return 0;
 }
 
-static struct schedulable *
-lwpid2scd(lwpid_t lid)
+static struct rumprun_lwp *
+lwpid2rl(lwpid_t lid)
 {
-	struct schedulable *scd;
+	struct rumprun_lwp *rl;
 
-	TAILQ_FOREACH(scd, &scheds, entries) {
-		if (scd->scd_lwpid == lid)
-			return scd;
+	if (lid == 0)
+		return &mainthread;
+	TAILQ_FOREACH(rl, &all_lwp, rl_entries) {
+		if (rl->rl_lwpid == lid)
+			return rl;
 	}
 	return NULL;
 }
@@ -129,14 +133,13 @@ lwpid2scd(lwpid_t lid)
 int
 _lwp_unpark(lwpid_t lid, const void *hint)
 {
-	struct schedulable *scd;
+	struct rumprun_lwp *rl;
 
-	DPRINTF(("lwp unpark %d\n", lid));
-	if ((scd = lwpid2scd(lid)) == NULL) {
+	if ((rl = lwpid2rl(lid)) == NULL) {
 		return -1;
 	}
 
-	bmk_sched_wake(scd->scd_thread);
+	bmk_sched_wake(rl->rl_thread);
 	return 0;
 }
 
@@ -148,10 +151,6 @@ _lwp_unpark_all(const lwpid_t *targets, size_t ntargets, const void *hint)
 	if (targets == NULL)
 		return 1024;
 
-	/*
-	 * XXX: this it not 100% correct (unparking has memory), but good
-	 * enuf for now
-	 */
 	rv = ntargets;
 	while (ntargets--) {
 		if (_lwp_unpark(*targets, NULL) != 0)
@@ -169,39 +168,46 @@ _lwp_unpark_all(const lwpid_t *targets, size_t ntargets, const void *hint)
 static void
 schedhook(void *prevcookie, void *nextcookie)
 {
-	struct schedulable *prev, *scd;
+	struct rumprun_lwp *prev, *next;
 
-	scd = nextcookie;
-	curtcb = nextcookie;
 	prev = prevcookie;
+	next = nextcookie;
 
-	if (prev && prev->scd_lwpctl.lc_curcpu != LWPCTL_CPU_EXITED) {
-		prev->scd_lwpctl.lc_curcpu = LWPCTL_CPU_NONE;
+	if (prev && prev->rl_lwpctl.lc_curcpu != LWPCTL_CPU_EXITED) {
+		prev->rl_lwpctl.lc_curcpu = LWPCTL_CPU_NONE;
 	}
-	if (scd) {
-		scd->scd_lwpctl.lc_curcpu = 0;
-		scd->scd_lwpctl.lc_pctr++;
+	if (next) {
+		next->rl_lwpctl.lc_curcpu = 0;
+		next->rl_lwpctl.lc_pctr++;
 	}
 }
 
 void
 rumprun_lwp_init(void)
 {
+	void *tcb = bmk_sched_gettcb();
 
 	bmk_sched_set_hook(schedhook);
-	mainthread.scd_thread = bmk_sched_init_mainlwp(&mainthread.scd_tls);
-	TAILQ_INSERT_TAIL(&scheds, &mainthread, entries);
+
+	meoff = (uintptr_t)&me - (uintptr_t)tcb;
+	assignme(tcb, &mainthread);
+
+	TAILQ_INSERT_TAIL(&all_lwp, me, rl_entries);
 }
 
 int
 _lwp_park(clockid_t clock_id, int flags, const struct timespec *ts,
 	lwpid_t unpark, const void *hint, const void *unparkhint)
 {
-	struct schedulable *mylwp = (struct schedulable *)curtcb;
 	int rv;
 
 	if (unpark)
 		_lwp_unpark(unpark, unparkhint);
+
+	if (me->rl_no_parking_hare) {
+		me->rl_no_parking_hare = 0;
+		return 0;
+	}
 
 	if (ts) {
 		bmk_time_t nsecs = ts->tv_sec*1000*1000*1000 + ts->tv_nsec;
@@ -216,7 +222,7 @@ _lwp_park(clockid_t clock_id, int flags, const struct timespec *ts,
 			rv = ETIMEDOUT;
 		}
 	} else {
-		bmk_sched_block(mylwp->scd_thread);
+		bmk_sched_block(me->rl_thread);
 		bmk_sched();
 		rv = 0;
 	}
@@ -231,11 +237,14 @@ _lwp_park(clockid_t clock_id, int flags, const struct timespec *ts,
 int
 _lwp_exit(void)
 {
-	struct schedulable *scd = (struct schedulable *)curtcb;
 
-	scd->scd_lwpctl.lc_curcpu = LWPCTL_CPU_EXITED;
-	TAILQ_REMOVE(&scheds, scd, entries);
-	bmk_sched_exit();
+	me->rl_lwpctl.lc_curcpu = LWPCTL_CPU_EXITED;
+	TAILQ_REMOVE(&all_lwp, me, rl_entries);
+
+	/* could just assign it here, but for symmetry! */
+	assignme(bmk_sched_gettcb(), NULL);
+
+	bmk_sched_exit_withtls();
 
 	return 0;
 }
@@ -243,65 +252,49 @@ _lwp_exit(void)
 int
 _lwp_continue(lwpid_t lid)
 {
-	struct schedulable *scd;
+	struct rumprun_lwp *rl;
 
-	if ((scd = lwpid2scd(lid)) == NULL) {
+	if ((rl = lwpid2rl(lid)) == NULL) {
 		return ESRCH;
 	}
 
-	bmk_sched_wake(scd->scd_thread);
+	bmk_sched_wake(rl->rl_thread);
 	return 0;
 }
 
 int
 _lwp_suspend(lwpid_t lid)
 {
-	struct schedulable *scd;
+	struct rumprun_lwp *rl;
 
-	if ((scd = lwpid2scd(lid)) == NULL) {
+	if ((rl = lwpid2rl(lid)) == NULL) {
 		return ESRCH;
 	}
 
-	bmk_sched_block(scd->scd_thread);
+	bmk_sched_block(rl->rl_thread);
 	return 0;
 }
 
 int
 _lwp_wakeup(lwpid_t lid)
 {
-	struct schedulable *scd;
+	struct rumprun_lwp *rl;
 
-	if ((scd = lwpid2scd(lid)) == NULL)
+	if ((rl = lwpid2rl(lid)) == NULL)
 		return ESRCH;
 
-	bmk_sched_wake(scd->scd_thread);
-	return ENODEV;
+	bmk_sched_wake(rl->rl_thread);
+	return 0;
 }
 
 int
 _lwp_setname(lwpid_t lid, const char *name)
 {
-	struct schedulable *scd;
-	char *newname, *oldname;
-	size_t nlen;
+	struct rumprun_lwp *rl;
 
-	if ((scd = lwpid2scd(lid)) == NULL)
+	if ((rl = lwpid2rl(lid)) == NULL)
 		return ESRCH;
-
-	nlen = strlen(name)+1;
-	if (nlen > MAXCOMLEN)
-		nlen = MAXCOMLEN;
-	newname = malloc(nlen);
-	if (newname == NULL)
-		return ENOMEM;
-	memcpy(newname, name, nlen-1);
-	newname[nlen-1] = '\0';
-
-	oldname = scd->scd_name;
-	scd->scd_name = newname;
-	if (oldname) {
-		free(oldname);
-	}
+	strlcpy(rl->rl_name, name, sizeof(rl->rl_name));
 
 	return 0;
 }
@@ -309,9 +302,8 @@ _lwp_setname(lwpid_t lid, const char *name)
 lwpid_t
 _lwp_self(void)
 {
-	struct schedulable *mylwp = (struct schedulable *)curtcb;
 
-	return mylwp->scd_lwpid;
+	return me->rl_lwpid;
 }
 
 /* XXX: messy.  see sched.h, libc, libpthread, and all over */
@@ -329,14 +321,21 @@ struct tls_tcb *
 _rtld_tls_allocate(void)
 {
 
-	return malloc(sizeof(struct schedulable));
+	return bmk_sched_tls_alloc();
 }
 
 void
 _rtld_tls_free(struct tls_tcb *arg)
 {
 
-	free(arg);
+	return bmk_sched_tls_free(arg);
+}
+
+void *
+_lwp_getprivate(void)
+{
+
+	return bmk_sched_gettcb();
 }
 
 void _lwpnullop(void);
