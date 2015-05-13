@@ -82,7 +82,8 @@ extern const char _tdata_start[], _tdata_end[];
 extern const char _tbss_start[], _tbss_end[];
 #define TDATASIZE (_tdata_end - _tdata_start)
 #define TBSSSIZE (_tbss_end - _tbss_start)
-#define TCBOFFSET ((TDATASIZE + TBSSSIZE + sizeof(void *))-1/sizeof(void *))
+#define TCBOFFSET \
+    (((TDATASIZE + TBSSSIZE + sizeof(void *)-1)/sizeof(void *))*sizeof(void *))
 #define TLSAREASIZE (TCBOFFSET + BMK_TLS_EXTRA)
 
 struct bmk_thread {
