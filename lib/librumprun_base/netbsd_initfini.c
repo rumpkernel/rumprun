@@ -82,7 +82,9 @@ _netbsd_userlevel_init(void)
 {
 	thestrings.ps_argvstr = (void *)((char *)&myaux - 2);
 	__ps_strings = &thestrings;
-	pthread__stacksize = 2*bmk_stacksize;
+
+	/* XXX? */
+	pthread__stacksize = 32*bmk_pagesize;
 
 	/*
 	 * We get no "environ" from the kernel.  The initial

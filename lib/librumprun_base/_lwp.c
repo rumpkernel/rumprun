@@ -91,11 +91,6 @@ rumprun_makelwp(void (*start)(void *), void *arg, void *private,
 	void *stack_base, size_t stack_size, unsigned long flag, lwpid_t *lid)
 {
 	struct rumprun_lwp *rl;
-	unsigned long thestack = (unsigned long)stack_base;
-
-	/* XXX: stack_base is not guaranteed to be aligned */
-	assert(stack_size == 2*bmk_stacksize);
-	thestack = (thestack & ~(bmk_stacksize-1)) + bmk_stacksize;
 
 	rl = calloc(1, sizeof(*rl));
 	if (rl == NULL)
@@ -104,7 +99,7 @@ rumprun_makelwp(void (*start)(void *), void *arg, void *private,
 
 	rl->rl_lwpid = ++curlwpid;
 	rl->rl_thread = bmk_sched_create_withtls("lwp", rl, 0,
-	    start, arg, (void *)thestack, bmk_stacksize, private);
+	    start, arg, stack_base, stack_size, private);
 	if (rl->rl_thread == NULL) {
 		free(rl);
 		return EBUSY; /* ??? */
