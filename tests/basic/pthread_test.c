@@ -110,6 +110,7 @@ jointhread(void *arg)
 static void *
 fdthread(void *arg)
 {
+#if 0 /* Issue #15 */
 	int fd = *(int *)arg;
 	char buf[1];
 
@@ -117,6 +118,7 @@ fdthread(void *arg)
 		err(1, "fdthread read");
 	if (close(fd) != 0)
 		err(1, "fdthread close");
+#endif
 	return (void *)0;
 }
 
