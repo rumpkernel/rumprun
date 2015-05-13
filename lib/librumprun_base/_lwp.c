@@ -191,7 +191,7 @@ rumprun_lwp_init(void)
 
 	meoff = (uintptr_t)&me - (uintptr_t)tcb;
 	assignme(tcb, &mainthread);
-	mainthread.rl_thread = bmk_current;
+	mainthread.rl_thread = bmk_sched_init_mainlwp(&mainthread);
 
 	TAILQ_INSERT_TAIL(&all_lwp, me, rl_entries);
 }
