@@ -69,7 +69,6 @@
 #include <bmk-core/string.h>
 #include <bmk-core/sched.h>
 
-#define TLS_COUNT 2
 #define NAME_MAXLEN 16
 
 #define THREAD_RUNNABLE	0x01
@@ -89,8 +88,6 @@ extern const char _tbss_start[], _tbss_end[];
 
 struct bmk_thread {
 	char bt_name[NAME_MAXLEN];
-
-	void *bt_tls[TLS_COUNT];
 
 	bmk_time_t bt_wakeup_time;
 
@@ -187,14 +184,6 @@ bmk_sched(void)
 
 	prev = bmk_current;
 	flags = bmk_platform_splhigh();
-
-#if 0
-	/* XXX */
-	if (_minios_in_hypervisor_callback) {
-		minios_printk("Must not call schedule() from a callback\n");
-		BUG();
-	}
-#endif
 
 	if (flags) {
 		bmk_platform_halt("Must not call sched() with IRQs disabled\n");
