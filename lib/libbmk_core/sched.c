@@ -77,6 +77,7 @@
 #define THREAD_JOINED	0x04
 #define THREAD_EXTSTACK	0x08
 #define THREAD_TIMEDOUT	0x10
+#define THREAD_DEAD	0x20
 
 extern const char _tdata_start[], _tdata_end[];
 extern const char _tbss_start[], _tbss_end[];
@@ -181,7 +182,7 @@ bmk_sched_dumpqueue(void)
 void
 bmk_sched(void)
 {
-	struct bmk_thread *prev, *next, *thread, *tmp;
+	struct bmk_thread *prev, *next, *thread;
 	unsigned long flags;
 
 	prev = bmk_current;
@@ -208,7 +209,7 @@ bmk_sched(void)
 		wakeup = tm + 1*1000*1000*1000ULL;
 
 		next = NULL;
-		TAILQ_FOREACH_SAFE(thread, &threads, bt_entries, tmp) {
+		TAILQ_FOREACH(thread, &threads, bt_entries) {
 			if (!is_runnable(thread)
 			    && thread->bt_wakeup_time
 			      != BMK_SCHED_BLOCK_INFTIME) {
@@ -235,18 +236,21 @@ bmk_sched(void)
 
 	bmk_platform_splx(flags);
 
+	bmk_assert((next->bt_flags & THREAD_DEAD) == 0);
+
 	if (prev != next) {
 		sched_switch(prev, next);
 	}
 
-	/* reaper */
-	TAILQ_FOREACH_SAFE(thread, &zombies, bt_entries, tmp) {
-		if (thread != prev) {
-			TAILQ_REMOVE(&zombies, thread, bt_entries);
-			if ((thread->bt_flags & THREAD_EXTSTACK) == 0)
-				stackfree(thread);
-			bmk_memfree(thread);
-		}
+	/*
+	 * Reaper.  This always runs in the context of the first "non-virgin"
+	 * thread that was scheduled after the current thread decided to exit.
+	 */
+	while ((thread = TAILQ_FIRST(&zombies)) != NULL) {
+		TAILQ_REMOVE(&zombies, thread, bt_entries);
+		if ((thread->bt_flags & THREAD_EXTSTACK) == 0)
+			stackfree(thread);
+		bmk_memfree(thread);
 	}
 }
 
@@ -394,6 +398,8 @@ bmk_sched_exit_withtls(void)
 	/* Remove from the thread list */
 	TAILQ_REMOVE(&threads, thread, bt_entries);
 	clear_runnable(thread);
+	thread->bt_flags |= THREAD_DEAD;
+
 	/* Put onto exited list */
 	TAILQ_INSERT_HEAD(&zombies, thread, bt_entries);
 	bmk_platform_splx(flags);
