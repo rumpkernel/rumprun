@@ -34,7 +34,7 @@ void _minios_entry_machine_check(void);
 
 void dump_regs(struct pt_regs *regs)
 {
-    minios_printk("Thread: %s\n", bmk_sched_threadname(bmk_sched_current()));
+    minios_printk("Thread: %s\n", bmk_sched_threadname(bmk_current));
 #ifdef __i386__    
     minios_printk("EIP: %x, EFLAGS %x.\n", regs->eip, regs->eflags);
     minios_printk("EBX: %08x ECX: %08x EDX: %08x\n",

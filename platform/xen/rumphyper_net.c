@@ -113,13 +113,11 @@ pusher(void *arg)
 	rumpuser__hyp.hyp_lwproc_newlwp(0);
 	rumpuser__hyp.hyp_unschedule();
 
-	me = bmk_sched_current();
-
 	local_irq_save(flags);
  again:
 	while (!viu->viu_dying) {
 		while (viu->viu_read == viu->viu_write) {
-			viu->viu_rcvr = me;
+			viu->viu_rcvr = bmk_current;
 			bmk_sched_block(viu->viu_rcvr);
 			local_irq_restore(flags);
 			bmk_sched();

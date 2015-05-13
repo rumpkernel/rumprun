@@ -104,19 +104,12 @@ struct bmk_thread {
 
 	TAILQ_ENTRY(bmk_thread) bt_entries;
 };
+__thread struct bmk_thread *bmk_current;
 
 static TAILQ_HEAD(, bmk_thread) zombies = TAILQ_HEAD_INITIALIZER(zombies);
 static TAILQ_HEAD(, bmk_thread) threads = TAILQ_HEAD_INITIALIZER(threads);
 
 static void (*scheduler_hook)(void *, void *);
-
-static __thread struct bmk_thread *bmk_current;
-struct bmk_thread *
-bmk_sched_current(void)
-{
-
-	return bmk_current;
-}
 
 static int
 is_runnable(struct bmk_thread *thread)
@@ -190,7 +183,7 @@ bmk_sched(void)
 	struct bmk_thread *prev, *next, *thread, *tmp;
 	unsigned long flags;
 
-	prev = bmk_sched_current();
+	prev = bmk_current;
 	flags = bmk_platform_splhigh();
 
 #if 0
@@ -286,9 +279,8 @@ bmk_sched_tls_free(void *mem)
 void *
 bmk_sched_gettcb(void)
 {
-	struct bmk_thread *thread = bmk_sched_current();
 
-	return (void *)thread->bt_tcb.btcb_tp;
+	return (void *)bmk_current->bt_tcb.btcb_tp;
 }
 
 static void
@@ -376,7 +368,7 @@ static TAILQ_HEAD(, join_waiter) joinwq = TAILQ_HEAD_INITIALIZER(joinwq);
 void
 bmk_sched_exit_withtls(void)
 {
-	struct bmk_thread *thread = bmk_sched_current();
+	struct bmk_thread *thread = bmk_current;
 	struct join_waiter *jw_iter;
 	unsigned long flags;
 
@@ -413,9 +405,8 @@ bmk_sched_exit_withtls(void)
 void
 bmk_sched_exit(void)
 {
-	struct bmk_thread *thread = bmk_sched_current();
 
-	bmk_sched_tls_free((void *)thread->bt_tcb.btcb_tp);
+	bmk_sched_tls_free((void *)bmk_current->bt_tcb.btcb_tp);
 	bmk_sched_exit_withtls();
 }
 
@@ -423,7 +414,7 @@ void
 bmk_sched_join(struct bmk_thread *joinable)
 {
 	struct join_waiter jw;
-	struct bmk_thread *thread = bmk_sched_current();
+	struct bmk_thread *thread = bmk_current;
 	unsigned long flags;
 
 	bmk_assert(joinable->bt_flags & THREAD_MUSTJOIN);
@@ -469,7 +460,7 @@ bmk_sched_block(struct bmk_thread *thread)
 int
 bmk_sched_nanosleep_abstime(bmk_time_t nsec)
 {
-	struct bmk_thread *thread = bmk_sched_current();
+	struct bmk_thread *thread = bmk_current;
 	int rv;
 
 	thread->bt_flags &= ~THREAD_TIMEDOUT;
@@ -560,10 +551,9 @@ bmk_sched_set_hook(void (*f)(void *, void *))
 struct bmk_thread *
 bmk_sched_init_mainlwp(void *cookie)
 {
-	struct bmk_thread *current = bmk_sched_current();
 
-	current->bt_cookie = cookie;
-	return current;
+	bmk_current->bt_cookie = cookie;
+	return bmk_current;
 }
 
 const char *
@@ -576,9 +566,8 @@ bmk_sched_threadname(struct bmk_thread *thread)
 int *
 bmk_sched_geterrno(void)
 {
-	struct bmk_thread *thread = bmk_sched_current();
 
-	return &thread->bt_errno;
+	return &bmk_current->bt_errno;
 }
 
 void
@@ -604,7 +593,7 @@ bmk_sched_gettls(struct bmk_thread *thread, unsigned int which)
 void
 bmk_sched_yield(void)
 {
-	struct bmk_thread *current = bmk_sched_current();
+	struct bmk_thread *current = bmk_current;
 
 	TAILQ_REMOVE(&threads, current, bt_entries);
 	TAILQ_INSERT_TAIL(&threads, current, bt_entries);

@@ -9,7 +9,7 @@
 
 #define DEFINE_WAIT(name)                          \
 struct wait_queue name = {                         \
-    .thread       = bmk_sched_current(),           \
+    .thread       = bmk_current,	           \
     .waiting      = 0,                             \
 }
 
@@ -55,7 +55,7 @@ static inline void minios_wake_up(struct wait_queue_head *head)
     unsigned long flags;        \
     local_irq_save(flags);      \
     minios_add_wait_queue(&wq, &w);    \
-    bmk_sched_block(bmk_sched_current());       \
+    bmk_sched_block(bmk_current);       \
     local_irq_restore(flags);   \
 } while (0)
 
@@ -76,7 +76,7 @@ static inline void minios_wake_up(struct wait_queue_head *head)
         /* protect the list */                                  \
         local_irq_save(flags);                                  \
         minios_add_wait_queue(&wq, &__wait);                           \
-        bmk_sched_block_timeout(bmk_sched_current(), deadline);		\
+        bmk_sched_block_timeout(bmk_current, deadline);		\
         local_irq_restore(flags);                               \
         if((condition) || (deadline != -1 && NOW() >= deadline))      \
             break;                                              \
@@ -84,7 +84,7 @@ static inline void minios_wake_up(struct wait_queue_head *head)
     }                                                           \
     local_irq_save(flags);                                      \
     /* need to wake up */                                       \
-    bmk_sched_wake(bmk_sched_current());                                        \
+    bmk_sched_wake(bmk_current);                                        \
     minios_remove_wait_queue(&wq, &__wait);                            \
     local_irq_restore(flags);                                   \
 } while(0) 
