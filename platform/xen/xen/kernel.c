@@ -135,6 +135,7 @@ void _minios_start_kernel(start_info_t *si)
 
     arch_init(si);
     trap_init();
+    bmk_sched_init();
 
     /* print out some useful information  */
     minios_printk("  start_info: %p(VA)\n", si);
@@ -175,7 +176,7 @@ void _minios_start_kernel(start_info_t *si)
     init_xenbus();
 
     /* Init scheduler. */
-    bmk_sched_init(_app_main, &start_info);
+    bmk_sched_startmain(_app_main, &start_info);
     bmk_platform_halt("unreachable");
 }
 

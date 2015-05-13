@@ -39,7 +39,9 @@ struct bmk_tcb {
 
 struct bmk_thread;
 
-void	bmk_sched_init(void (*)(void *), void *);
+void	bmk_sched_init(void);
+void	bmk_sched_startmain(void (*)(void *), void *) __attribute__((noreturn));
+
 void	bmk_sched(void);
 void	bmk_sched_yield(void);
 
@@ -80,7 +82,7 @@ void	bmk_sched_set_hook(void (*)(void *, void *));
 struct bmk_thread *bmk_sched_init_mainlwp(void *);
 
 struct bmk_thread *bmk_sched_current(void);
-struct bmk_thread *bmk_cpu_sched_current(void);
+
 int *bmk_sched_geterrno(void);
 const char 	*bmk_sched_threadname(struct bmk_thread *);
 

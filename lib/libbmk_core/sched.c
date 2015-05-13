@@ -110,6 +110,14 @@ static TAILQ_HEAD(, bmk_thread) threads = TAILQ_HEAD_INITIALIZER(threads);
 
 static void (*scheduler_hook)(void *, void *);
 
+static __thread struct bmk_thread *bmk_current;
+struct bmk_thread *
+bmk_sched_current(void)
+{
+
+	return bmk_current;
+}
+
 static int
 is_runnable(struct bmk_thread *thread)
 {
@@ -162,13 +170,6 @@ sched_switch(struct bmk_thread *prev, struct bmk_thread *next)
 		scheduler_hook(prev->bt_cookie, next->bt_cookie);
 	bmk_platform_cpu_sched_settls(&next->bt_tcb);
 	bmk_cpu_sched_switch(&prev->bt_tcb, &next->bt_tcb);
-}
-
-struct bmk_thread *
-bmk_sched_current(void)
-{
-
-	return bmk_cpu_sched_current();
 }
 
 void
@@ -257,22 +258,18 @@ bmk_sched(void)
 
 /*
  * Allocate tls and initialize it.
+ * NOTE: does not initialize tcb, see inittcb().
  */
 void *
 bmk_sched_tls_alloc(void)
 {
-	unsigned long *tcbptr;
 	char *tlsmem;
 
 	tlsmem = bmk_memalloc(TLSAREASIZE, 0);
 	bmk_memcpy(tlsmem, _tdata_start, TDATASIZE);
 	bmk_memset(tlsmem + TDATASIZE, 0, TBSSSIZE);
 
-	/* assumes TLS variant 2 for now */
-	tcbptr = (unsigned long *)(tlsmem + TCBOFFSET);
-	*tcbptr = (unsigned long)tcbptr;
-
-	return (void *)tcbptr;
+	return tlsmem + TCBOFFSET;
 }
 
 /*
@@ -292,6 +289,30 @@ bmk_sched_gettcb(void)
 	struct bmk_thread *thread = bmk_sched_current();
 
 	return (void *)thread->bt_tcb.btcb_tp;
+}
+
+static void
+inittcb(struct bmk_tcb *tcb, void *tlsarea, unsigned long tlssize)
+{
+
+#if 0
+	/* TCB initialization for Variant I */
+	/* TODO */
+#else
+	/* TCB initialization for Variant II */
+	*(void **)tlsarea = tlsarea;
+	tcb->btcb_tp = (unsigned long)tlsarea;
+	tcb->btcb_tpsize = tlssize;
+#endif
+}
+
+static long bmk_curoff;
+static void
+initcurrent(void *tcb, struct bmk_thread *value)
+{
+	struct bmk_thread **dst = (void *)((unsigned long)tcb + bmk_curoff);
+
+	*dst = value;
 }
 
 struct bmk_thread *
@@ -320,11 +341,10 @@ bmk_sched_create_withtls(const char *name, void *cookie, int joinable,
 	    stack_base, stack_size);
 
 	thread->bt_cookie = cookie;
-
 	thread->bt_wakeup_time = BMK_SCHED_BLOCK_INFTIME;
 
-	thread->bt_tcb.btcb_tp = (unsigned long)tlsarea;
-	thread->bt_tcb.btcb_tpsize = TCBOFFSET;
+	inittcb(&thread->bt_tcb, tlsarea, TCBOFFSET);
+	initcurrent(tlsarea, thread);
 
 	flags = bmk_platform_splhigh();
 	TAILQ_INSERT_TAIL(&threads, thread, bt_entries);
@@ -478,18 +498,53 @@ bmk_sched_wake(struct bmk_thread *thread)
 	set_runnable(thread);
 }
 
+/*
+ * Calculate offset of bmk_current early, so that we can use it
+ * in thread creation.  Attempt to not depend on allocating the
+ * TLS area so that we don't have to have malloc initialized.
+ * We will properly initialize TLS for the main thread later
+ * when we start the main thread (which is not necessarily the
+ * first thread that we create).
+ */
 void
-bmk_sched_init(void (*mainfun)(void *), void *arg)
+bmk_sched_init(void)
+{
+	unsigned long tlsinit;
+	struct bmk_tcb tcbinit;
+
+	inittcb(&tcbinit, &tlsinit, 0);
+	bmk_platform_cpu_sched_settls(&tcbinit);
+
+	/*
+	 * Not sure if this is necessary, but better to be
+	 * Marvin the Paranoid Paradroid than get eaten by 999
+	 */
+	__asm__ __volatile__("" ::: "memory");
+	bmk_curoff = (unsigned long)&bmk_current - (unsigned long)&tlsinit;
+	__asm__ __volatile__("" ::: "memory");
+
+	/*
+	 * Set TLS back to 0 so that it's easier to catch someone trying
+	 * to use it until we get TLS really initialized.
+	 */
+	tcbinit.btcb_tp = 0;
+	bmk_platform_cpu_sched_settls(&tcbinit);
+}
+
+void __attribute__((noreturn))
+bmk_sched_startmain(void (*mainfun)(void *), void *arg)
 {
 	struct bmk_thread *mainthread;
 	struct bmk_thread initthread;
 
-	mainthread = bmk_sched_create("main", NULL, 0, mainfun, arg, NULL, 0);
+	bmk_memset(&initthread, 0, sizeof(initthread));
+	bmk_strcpy(initthread.bt_name, "init");
+
+	mainthread = bmk_sched_create("main", NULL, 0,
+	    mainfun, arg, NULL, 0);
 	if (mainthread == NULL)
 		bmk_platform_halt("failed to create main thread");
 
-	bmk_memset(&initthread, 0, sizeof(initthread));
-	bmk_strcpy(initthread.bt_name, "init");
 	sched_switch(&initthread, mainthread);
 
 	bmk_platform_halt("bmk_sched_init unreachable");

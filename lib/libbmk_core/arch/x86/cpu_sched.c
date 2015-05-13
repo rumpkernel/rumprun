@@ -65,12 +65,3 @@ bmk_cpu_sched_create(struct bmk_thread *thread, struct bmk_tcb *tcb,
 	tcb->btcb_sp = (unsigned long)stack_top;
 	tcb->btcb_ip = (unsigned long)bmk_cpu_sched_bouncer;
 }
-
-struct bmk_thread *
-bmk_cpu_sched_current(void)
-{
-	struct bmk_thread **current;
-
-	current = (void *)((unsigned long)&current & ~(bmk_stacksize-1));
-	return *current;
-};
