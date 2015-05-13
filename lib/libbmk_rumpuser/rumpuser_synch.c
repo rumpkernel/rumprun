@@ -454,6 +454,7 @@ rumpuser_cv_has_waiters(struct rumpuser_cv *cv, int *rvp)
  * curlwp
  */
 
+static __thread struct lwp *current_lwp;
 void
 rumpuser_curlwpop(int enum_rumplwpop, struct lwp *l)
 {
@@ -464,12 +465,12 @@ rumpuser_curlwpop(int enum_rumplwpop, struct lwp *l)
 	case RUMPUSER_LWP_DESTROY:
 		break;
 	case RUMPUSER_LWP_SET:
-		bmk_assert(rumpuser_curlwp() == NULL);
-		bmk_sched_settls(bmk_current, 0, l);
+		bmk_assert(current_lwp == NULL);
+		current_lwp = l;
 		break;
 	case RUMPUSER_LWP_CLEAR:
-		bmk_assert(rumpuser_curlwp() == l);
-		bmk_sched_settls(bmk_current, 0, NULL);
+		bmk_assert(current_lwp == l);
+		current_lwp = NULL;
 		break;
 	}
 }
@@ -478,5 +479,5 @@ struct lwp *
 rumpuser_curlwp(void)
 {
 
-	return bmk_sched_gettls(bmk_current, 0);
+	return current_lwp;
 }

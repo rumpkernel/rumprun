@@ -570,31 +570,16 @@ bmk_sched_threadname(struct bmk_thread *thread)
 	return thread->bt_name;
 }
 
+/*
+ * XXX: this does not really belong here, but libbmk_rumpuser needs
+ * to be able to set an errno, so we can't push it into libc without
+ * violating abstraction layers.
+ */
 int *
 bmk_sched_geterrno(void)
 {
 
 	return &bmk_current->bt_errno;
-}
-
-void
-bmk_sched_settls(struct bmk_thread *thread, unsigned int which, void *value)
-{
-
-	if (which >= TLS_COUNT) {
-		bmk_platform_halt("out of bmk sched tls space");
-	}
-	thread->bt_tls[which] = value;
-}
-
-void *
-bmk_sched_gettls(struct bmk_thread *thread, unsigned int which)
-{
-
-	if (which >= TLS_COUNT) {
-		bmk_platform_halt("out of bmk sched tls space");
-	}
-	return thread->bt_tls[which];
 }
 
 void
