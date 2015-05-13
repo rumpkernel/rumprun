@@ -51,7 +51,7 @@ static const char *trydisk[] = {
 	"/dev/xenblk0",
 };
 static int logfd;
-static int logrv;
+static int logrv = 1;
 
 static void
 logexit(void)
