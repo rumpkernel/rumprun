@@ -59,7 +59,7 @@ wait(struct waithead *wh, bmk_time_t wakeup)
 	w.onlist = 1;
 	TAILQ_INSERT_TAIL(wh, &w, entries);
 
-	bmk_sched_block_timeout(w.who, wakeup);
+	bmk_sched_blockprepare_timeout(wakeup);
 	bmk_sched();
 
 	/* woken up by timeout? */

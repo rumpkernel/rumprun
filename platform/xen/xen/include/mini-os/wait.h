@@ -55,7 +55,7 @@ static inline void minios_wake_up(struct wait_queue_head *head)
     unsigned long flags;        \
     local_irq_save(flags);      \
     minios_add_wait_queue(&wq, &w);    \
-    bmk_sched_block(bmk_current);       \
+    bmk_sched_blockprepare();      \
     local_irq_restore(flags);   \
 } while (0)
 
@@ -76,7 +76,7 @@ static inline void minios_wake_up(struct wait_queue_head *head)
         /* protect the list */                                  \
         local_irq_save(flags);                                  \
         minios_add_wait_queue(&wq, &__wait);                           \
-        bmk_sched_block_timeout(bmk_current, deadline);		\
+        bmk_sched_blockprepare_timeout(deadline);		\
         local_irq_restore(flags);                               \
         if((condition) || (deadline != -1 && NOW() >= deadline))      \
             break;                                              \

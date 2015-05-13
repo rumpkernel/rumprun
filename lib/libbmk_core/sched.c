@@ -390,7 +390,7 @@ bmk_sched_exit_withtls(void)
 				break;
 			}
 		}
-		bmk_sched_block(thread);
+		bmk_sched_blockprepare();
 		bmk_sched();
 		flags = bmk_platform_splhigh();
 	}
@@ -434,7 +434,7 @@ bmk_sched_join(struct bmk_thread *joinable)
 		jw.jw_thread = thread;
 		jw.jw_wanted = joinable;
 		TAILQ_INSERT_TAIL(&joinwq, &jw, jw_entries);
-		bmk_sched_block(thread);
+		bmk_sched_blockprepare();
 		bmk_sched();
 		TAILQ_REMOVE(&joinwq, &jw, jw_entries);
 
@@ -449,19 +449,40 @@ bmk_sched_join(struct bmk_thread *joinable)
 	bmk_sched_wake(joinable);
 }
 
+/*
+ * These suspend calls are different from block calls in the that
+ * can be used to block other threads.  The only reason we need these
+ * was because someone was clever enough to invent _np interfaces for
+ * libpthread which allow randomly suspending other threads.
+ */
 void
-bmk_sched_block_timeout(struct bmk_thread *thread, bmk_time_t deadline)
+bmk_sched_suspend(struct bmk_thread *thread)
 {
+
+	bmk_platform_halt("sched_suspend unimplemented");
+}
+
+void
+bmk_sched_unsuspend(struct bmk_thread *thread)
+{
+
+	bmk_platform_halt("sched_unsuspend unimplemented");
+}
+
+void
+bmk_sched_blockprepare_timeout(bmk_time_t deadline)
+{
+	struct bmk_thread *thread = bmk_current;
 
 	thread->bt_wakeup_time = deadline;
 	clear_runnable(thread);
 }
 
 void
-bmk_sched_block(struct bmk_thread *thread)
+bmk_sched_blockprepare(void)
 {
 
-	bmk_sched_block_timeout(thread, BMK_SCHED_BLOCK_INFTIME);
+	bmk_sched_blockprepare_timeout(BMK_SCHED_BLOCK_INFTIME);
 }
 
 int

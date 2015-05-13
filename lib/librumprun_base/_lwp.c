@@ -218,7 +218,7 @@ _lwp_park(clockid_t clock_id, int flags, const struct timespec *ts,
 			rv = ETIMEDOUT;
 		}
 	} else {
-		bmk_sched_block(me->rl_thread);
+		bmk_sched_blockprepare();
 		bmk_sched();
 		rv = 0;
 	}
@@ -254,7 +254,7 @@ _lwp_continue(lwpid_t lid)
 		return ESRCH;
 	}
 
-	bmk_sched_wake(rl->rl_thread);
+	bmk_sched_unsuspend(rl->rl_thread);
 	return 0;
 }
 
@@ -267,7 +267,7 @@ _lwp_suspend(lwpid_t lid)
 		return ESRCH;
 	}
 
-	bmk_sched_block(rl->rl_thread);
+	bmk_sched_suspend(rl->rl_thread);
 	return 0;
 }
 

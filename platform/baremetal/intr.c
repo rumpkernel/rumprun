@@ -91,7 +91,7 @@ isr(void *arg)
 			}
 		} else {
 			/* no interrupts left. block until the next one. */
-			bmk_sched_block(isr_thread);
+			bmk_sched_blockprepare();
 			spl0();
 			bmk_sched();
 		}

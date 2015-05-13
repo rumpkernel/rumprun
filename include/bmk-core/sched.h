@@ -57,22 +57,24 @@ void	bmk_sched_join(struct bmk_thread *);
 void	bmk_sched_exit(void) __attribute__((__noreturn__));
 void	bmk_sched_exit_withtls(void) __attribute__((__noreturn__));
 
-void	bmk_sched_block(struct bmk_thread *);
+void	bmk_sched_blockprepare(void);
 #define BMK_SCHED_BLOCK_INFTIME -1
-void	bmk_sched_block_timeout(struct bmk_thread *, bmk_time_t);
-
-void	bmk_sched_wake(struct bmk_thread *);
+void	bmk_sched_blockprepare_timeout(bmk_time_t);
 
 int	bmk_sched_nanosleep(bmk_time_t);
 int	bmk_sched_nanosleep_abstime(bmk_time_t);
+
+void	bmk_sched_wake(struct bmk_thread *);
+
+
+void	bmk_sched_suspend(struct bmk_thread *);
+void	bmk_sched_unsuspend(struct bmk_thread *);
+
 
 void	*bmk_sched_tls_alloc(void);
 void	bmk_sched_tls_free(void *);
 
 void	*bmk_sched_gettcb(void);
-
-void	*bmk_sched_gettls(struct bmk_thread *, unsigned int);
-void	bmk_sched_settls(struct bmk_thread *, unsigned int, void *);
 
 void	bmk_cpu_sched_create(struct bmk_thread *, struct bmk_tcb *,
 			     void (*)(void *), void *,

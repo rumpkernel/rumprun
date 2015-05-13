@@ -117,7 +117,7 @@ pusher(void *arg)
 	while (!viu->viu_dying) {
 		while (viu->viu_read == viu->viu_write) {
 			viu->viu_rcvr = bmk_current;
-			bmk_sched_block(viu->viu_rcvr);
+			bmk_sched_blockprepare();
 			local_irq_restore(flags);
 			bmk_sched();
 			local_irq_save(flags);
