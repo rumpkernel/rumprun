@@ -7,6 +7,7 @@
 
 #include <err.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -105,12 +106,27 @@ jointhread(void *arg)
 	return (void *)37;
 }
 
+/* verify that a fd created in the main thread is accessible in another */
+static void *
+fdthread(void *arg)
+{
+	int fd = *(int *)arg;
+	char buf[1];
+
+	if (read(fd, buf, 1) != 0)
+		err(1, "fdthread read");
+	if (close(fd) != 0)
+		err(1, "fdthread close");
+	return (void *)0;
+}
+
 int
 rumprun_test(int argc, char *argv[])
 {
 	struct timespec ts;
 	pthread_t pt;
 	void *rv;
+	int nullfd;
 
 	pthread_key_create(&thrnumkey, NULL);
 
@@ -159,6 +175,13 @@ rumprun_test(int argc, char *argv[])
 		}
 	}
 	pthread_mutex_unlock(&mtx);
+
+	if ((nullfd = open("/dev/null", O_RDONLY)) < 0)
+		err(1, "open(/dev/null)");
+	if (pthread_create(&pt, NULL, fdthread, (void *)&nullfd) != 0)
+		errx(1, "pthread_create()");
+	if (pthread_join(pt, &rv) != 0)
+		errx(1, "pthread_join()");
 
 	printf("main thread done\n");
 
