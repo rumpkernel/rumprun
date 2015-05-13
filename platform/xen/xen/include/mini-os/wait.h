@@ -69,22 +69,19 @@ static inline void minios_wake_up(struct wait_queue_head *head)
 #define minios_wait_event_deadline(wq, condition, deadline) do {       \
     unsigned long flags;                                        \
     DEFINE_WAIT(__wait);                                        \
-    if(condition)                                               \
-        break;                                                  \
     for(;;)                                                     \
     {                                                           \
+        if(condition)                                           \
+            break;                                              \
         /* protect the list */                                  \
         local_irq_save(flags);                                  \
         minios_add_wait_queue(&wq, &__wait);                           \
-        bmk_sched_blockprepare_timeout(deadline);		\
         local_irq_restore(flags);                               \
-        if((condition) || (deadline != -1 && NOW() >= deadline))      \
-            break;                                              \
-        bmk_sched();                                             \
+        if (bmk_sched_nanosleep_abstime(deadline))		\
+	    break;						\
     }                                                           \
     local_irq_save(flags);                                      \
     /* need to wake up */                                       \
-    bmk_sched_wake(bmk_current);                                        \
     minios_remove_wait_queue(&wq, &__wait);                            \
     local_irq_restore(flags);                                   \
 } while(0) 
