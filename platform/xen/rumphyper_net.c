@@ -103,7 +103,6 @@ pusher(void *arg)
 	struct virtif_user *viu = arg;
 	struct iovec iov;
 	struct onepkt *mypkt;
-	struct bmk_thread *me;
 	int flags;
 
 	mypkt = bmk_xmalloc(sizeof(*mypkt));
