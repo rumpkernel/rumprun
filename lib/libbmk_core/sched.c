@@ -1,6 +1,5 @@
 /*-
- * Copyright (c) 2007-2015 Antti Kantee.  All Rights Reserved.
- * Copyright (c) 2014 Justin Cormack.  All Rights Reserved.
+ * Copyright (c) 2015 Antti Kantee.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,41 +23,10 @@
  * SUCH DAMAGE.
  */
 
-/* 
- ****************************************************************************
- * (C) 2005 - Grzegorz Milos - Intel Research Cambridge
- ****************************************************************************
- *
- *        File: sched.c
- *      Author: Grzegorz Milos
- *     Changes: Robert Kaiser
- *              
- *        Date: Aug 2005
- * 
- * Environment: Xen Minimal OS
- * Description: simple scheduler for Mini-Os
- *
- * The scheduler is non-preemptive (cooperative), and schedules according 
- * to Round Robin algorithm.
- *
- ****************************************************************************
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to
- * deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
- * sell copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
- * DEALINGS IN THE SOFTWARE.
+/*
+ * Historically based on the Xen Mini-OS scheduler by Grzegorz Milos,
+ * rewritten to deal with multiple infrequently running threads in the
+ * current reincarnation.
  */
 
 #include <bmk-core/core.h>
@@ -69,14 +37,27 @@
 #include <bmk-core/string.h>
 #include <bmk-core/sched.h>
 
+/*
+ * sleep for how long if there's absolutely nothing to do
+ * (default 1s)
+ */
+#define BLOCKTIME_MAX (1*1000*1000*1000)
+
 #define NAME_MAXLEN 16
 
-#define THREAD_RUNNABLE	0x01
-#define THREAD_MUSTJOIN	0x02
-#define THREAD_JOINED	0x04
-#define THREAD_EXTSTACK	0x08
-#define THREAD_TIMEDOUT	0x10
-#define THREAD_DEAD	0x20
+/* flags and their meanings + invariants */
+#define THREAD_RUNQ	0x0001		/* on runq, can be run		*/
+#define THREAD_TIMEQ	0x0002		/* on timeq, blocked w/ timeout	*/
+#define THREAD_BLOCKQ	0x0004		/* on blockq, indefinite block	*/
+#define THREAD_QMASK	0x0007
+#define THREAD_RUNNING	0x0008		/* no queue, thread == current	*/
+
+#define THREAD_TIMEDOUT	0x0010
+#define THREAD_MUSTJOIN	0x0020
+#define THREAD_JOINED	0x0040
+
+#define THREAD_EXTSTACK	0x0100
+#define THREAD_DEAD	0x0200
 
 extern const char _tdata_start[], _tdata_end[];
 extern const char _tbss_start[], _tbss_end[];
@@ -101,34 +82,152 @@ struct bmk_thread {
 	/* MD thread control block */
 	struct bmk_tcb bt_tcb;
 
-	TAILQ_ENTRY(bmk_thread) bt_entries;
+	TAILQ_ENTRY(bmk_thread) bt_schedq;
+	TAILQ_ENTRY(bmk_thread) bt_threadq;
 };
 __thread struct bmk_thread *bmk_current;
 
-static TAILQ_HEAD(, bmk_thread) zombies = TAILQ_HEAD_INITIALIZER(zombies);
-static TAILQ_HEAD(, bmk_thread) threads = TAILQ_HEAD_INITIALIZER(threads);
+TAILQ_HEAD(threadqueue, bmk_thread);
+static struct threadqueue threadq = TAILQ_HEAD_INITIALIZER(threadq);
+static struct threadqueue zombieq = TAILQ_HEAD_INITIALIZER(zombieq);
+
+/*
+ * We have 3 different queues for theoretically runnable threads:
+ * 1) runnable threads waiting to be scheduled
+ * 2) threads waiting for a timeout to expire (or to be woken up)
+ * 3) threads waiting indefinitely for a wakeup
+ *
+ * Rules: while running, threads are on no schedq.  Threads can block
+ *        only themselves (though that needs revisiting for "suspend").
+ *        when blocked, threads will move either to blockq or timeq.
+ *        When a thread is woken up (possibly by itself of a timeout
+ *        expires), the thread will move to the runnable queue.  Wakeups
+ *        while a thread is already in the runnable queue or while
+ *        running (via interrupt handler) have no effect.
+ */
+static struct threadqueue runq = TAILQ_HEAD_INITIALIZER(runq);
+static struct threadqueue blockq = TAILQ_HEAD_INITIALIZER(blockq);
+static struct threadqueue timeq = TAILQ_HEAD_INITIALIZER(timeq);
 
 static void (*scheduler_hook)(void *, void *);
 
-static int
-is_runnable(struct bmk_thread *thread)
+static void
+print_threadinfo(struct bmk_thread *thread)
 {
 
-	return thread->bt_flags & THREAD_RUNNABLE;
+	bmk_printf("thread \"%s\" at %p, flags 0x%x\n",
+	    thread->bt_name, thread, thread->bt_flags);
+}
+
+static inline void
+setflags(struct bmk_thread *thread, int add, int remove)
+{
+
+	thread->bt_flags &= ~remove;
+	thread->bt_flags |= add;
 }
 
 static void
 set_runnable(struct bmk_thread *thread)
 {
+	struct threadqueue *tq;
+	int tflags;
+	int flags;
 
-	thread->bt_flags |= THREAD_RUNNABLE;
+	tflags = thread->bt_flags;
+	/*
+	 * Already runnable?  Nothing to do, then.
+	 */
+	if ((tflags & THREAD_RUNQ) == THREAD_RUNQ)
+		return;
+
+	/* get current queue */
+	switch (tflags & THREAD_QMASK) {
+	case THREAD_TIMEQ:
+		tq = &timeq;
+		break;
+	case THREAD_BLOCKQ:
+		tq = &blockq;
+		break;
+	default:
+		/*
+		 * Are we running and not blocked?  Might be that we were
+		 * called from an interrupt handler.  Can just ignore
+		 * this whole thing.
+		 */
+		if ((tflags & (THREAD_RUNNING|THREAD_QMASK)) == THREAD_RUNNING)
+			return;
+
+		print_threadinfo(thread);
+		bmk_platform_halt("invalid thread queue");
+	}
+
+	/*
+	 * Else, target was blocked and need to make it runnable
+	 */
+	flags = bmk_platform_splhigh();
+	TAILQ_REMOVE(tq, thread, bt_schedq);
+	setflags(thread, THREAD_RUNQ, THREAD_QMASK);
+	TAILQ_INSERT_TAIL(&runq, thread, bt_schedq);
+	bmk_platform_splx(flags);
 }
 
+/*
+ * Insert thread into timeq at the correct place.
+ */
 static void
-clear_runnable(struct bmk_thread *thread)
+timeq_sorted_insert(struct bmk_thread *thread)
 {
+	struct bmk_thread *iter;
 
-	thread->bt_flags &= ~THREAD_RUNNABLE;
+	bmk_assert(thread->bt_wakeup_time != BMK_SCHED_BLOCK_INFTIME);
+
+	/* case1: no others */
+	if (TAILQ_EMPTY(&timeq)) {
+		TAILQ_INSERT_HEAD(&timeq, thread, bt_schedq);
+		return;
+	}
+
+	/* case2: not last in queue */
+	TAILQ_FOREACH(iter, &timeq, bt_schedq) {
+		if (iter->bt_wakeup_time > thread->bt_wakeup_time) {
+			TAILQ_INSERT_BEFORE(iter, thread, bt_schedq);
+			return;
+		}
+	}
+
+	/* case3: last in queue with greatest current timeout */
+	bmk_assert(TAILQ_LAST(&timeq, threadqueue)->bt_wakeup_time
+	    < thread->bt_wakeup_time);
+	TAILQ_INSERT_TAIL(&timeq, thread, bt_schedq);
+}
+
+/*
+ * Called with interrupts disabled
+ */
+static void
+clear_runnable(void)
+{
+	struct bmk_thread *thread = bmk_current;
+	int newfl;
+
+	bmk_assert(thread->bt_flags & THREAD_RUNNING);
+
+	/*
+	 * Currently we require that a thread will block only
+	 * once before calling the scheduler.
+	 */
+	bmk_assert((thread->bt_flags & THREAD_RUNQ) == 0);
+
+	newfl = thread->bt_flags;
+	if (thread->bt_wakeup_time != BMK_SCHED_BLOCK_INFTIME) {
+		newfl |= THREAD_TIMEQ;
+		timeq_sorted_insert(thread);
+	} else {
+		newfl |= THREAD_BLOCKQ;
+		TAILQ_INSERT_TAIL(&blockq, thread, bt_schedq);
+	}
+	thread->bt_flags = newfl;
 }
 
 static void
@@ -146,34 +245,41 @@ stackfree(struct bmk_thread *thread)
 	bmk_platform_freepg2(thread->bt_stackbase, bmk_stackpageorder);
 }
 
-static void
-print_threadinfo(struct bmk_thread *thread)
+void
+bmk_sched_dumpqueue(void)
 {
+	struct bmk_thread *thr;
 
-	bmk_printf("thread \"%s\" at %p, flags 0x%x\n",
-	    thread->bt_name, thread, thread->bt_flags);
+	bmk_printf("BEGIN runq dump\n");
+	TAILQ_FOREACH(thr, &runq, bt_schedq) {
+		print_threadinfo(thr);
+	}
+	bmk_printf("END runq dump\n");
+
+	bmk_printf("BEGIN timeq dump\n");
+	TAILQ_FOREACH(thr, &timeq, bt_schedq) {
+		print_threadinfo(thr);
+	}
+	bmk_printf("END timeq dump\n");
+
+	bmk_printf("BEGIN blockq dump\n");
+	TAILQ_FOREACH(thr, &blockq, bt_schedq) {
+		print_threadinfo(thr);
+	}
+	bmk_printf("END blockq dump\n");
 }
 
 static void
 sched_switch(struct bmk_thread *prev, struct bmk_thread *next)
 {
 
+	bmk_assert(next->bt_flags & THREAD_RUNNING);
+	bmk_assert((next->bt_flags & THREAD_QMASK) == 0);
+
 	if (scheduler_hook)
 		scheduler_hook(prev->bt_cookie, next->bt_cookie);
 	bmk_platform_cpu_sched_settls(&next->bt_tcb);
 	bmk_cpu_sched_switch(&prev->bt_tcb, &next->bt_tcb);
-}
-
-void
-bmk_sched_dumpqueue(void)
-{
-	struct bmk_thread *thr;
-
-	bmk_printf("BEGIN schedqueue dump\n");
-	TAILQ_FOREACH(thr, &threads, bt_entries) {
-		print_threadinfo(thr);
-	}
-	bmk_printf("END schedqueue dump\n");
 }
 
 void
@@ -183,50 +289,59 @@ bmk_sched(void)
 	unsigned long flags;
 
 	prev = bmk_current;
+
 	flags = bmk_platform_splhigh();
-
 	if (flags) {
-		bmk_platform_halt("Must not call sched() with IRQs disabled\n");
+		bmk_platform_halt("bmk_sched() called at !spl0");
 	}
-
-	/* could do time management a bit better here */
 	for (;;) {
-		bmk_time_t tm, wakeup;
+		bmk_time_t curtime, waketime;
 
-		/* block domain for max 1s */
-		tm = bmk_platform_clock_monotonic();
-		wakeup = tm + 1*1000*1000*1000ULL;
+		curtime = bmk_platform_clock_monotonic();
+		waketime = curtime + BLOCKTIME_MAX;
 
-		next = NULL;
-		TAILQ_FOREACH(thread, &threads, bt_entries) {
-			if (!is_runnable(thread)
-			    && thread->bt_wakeup_time
-			      != BMK_SCHED_BLOCK_INFTIME) {
-				if (thread->bt_wakeup_time <= tm) {
-					thread->bt_flags |= THREAD_TIMEDOUT;
-					bmk_sched_wake(thread);
-				} else if (thread->bt_wakeup_time < wakeup)
-					wakeup = thread->bt_wakeup_time;
-			}
-			if (is_runnable(thread)) {
-				next = thread;
-				/* Put this thread on the end of the list */
-				TAILQ_REMOVE(&threads, thread, bt_entries);
-				TAILQ_INSERT_TAIL(&threads, thread, bt_entries);
+		/*
+		 * Process timeout queue first by moving threads onto
+		 * the runqueue if their timeouts have expired.  Since
+		 * the timeouts are sorted, we process until we hit the
+		 * first one which will not be woked up.
+		 */
+		while ((thread = TAILQ_FIRST(&timeq)) != NULL) {
+			if (thread->bt_wakeup_time <= curtime) {
+				/*
+				 * move thread to runqueue.
+				 * threads will run in inverse order of timeout
+				 * expiry.  not sure if that matters or not.
+				 */
+				thread->bt_flags |= THREAD_TIMEDOUT;
+				bmk_sched_wake(thread);
+			} else {
+				if (thread->bt_wakeup_time < waketime)
+					waketime = thread->bt_wakeup_time;
 				break;
 			}
 		}
-		if (next)
+
+		if ((next = TAILQ_FIRST(&runq)) != NULL) {
+			bmk_assert(next->bt_flags & THREAD_RUNQ);
+			bmk_assert((next->bt_flags & THREAD_DEAD) == 0);
 			break;
+		}
 
-		/* sleep for a while */
-		bmk_platform_block(wakeup);
+		bmk_platform_block(waketime);
 	}
+	/* now we're committed to letting "next" run next */
+	setflags(prev, 0, THREAD_RUNNING);
 
+	TAILQ_REMOVE(&runq, next, bt_schedq);
+	setflags(next, THREAD_RUNNING, THREAD_RUNQ);
 	bmk_platform_splx(flags);
 
-	bmk_assert((next->bt_flags & THREAD_DEAD) == 0);
-
+	/*
+	 * No switch can happen if:
+	 *  + timeout expired while we were in here
+	 *  + interrupt handler woke us up before anything else was scheduled
+	 */
 	if (prev != next) {
 		sched_switch(prev, next);
 	}
@@ -235,8 +350,8 @@ bmk_sched(void)
 	 * Reaper.  This always runs in the context of the first "non-virgin"
 	 * thread that was scheduled after the current thread decided to exit.
 	 */
-	while ((thread = TAILQ_FIRST(&zombies)) != NULL) {
-		TAILQ_REMOVE(&zombies, thread, bt_entries);
+	while ((thread = TAILQ_FIRST(&zombieq)) != NULL) {
+		TAILQ_REMOVE(&zombieq, thread, bt_threadq);
 		if ((thread->bt_flags & THREAD_EXTSTACK) == 0)
 			stackfree(thread);
 		bmk_memfree(thread);
@@ -332,10 +447,13 @@ bmk_sched_create_withtls(const char *name, void *cookie, int joinable,
 	inittcb(&thread->bt_tcb, tlsarea, TCBOFFSET);
 	initcurrent(tlsarea, thread);
 
+	TAILQ_INSERT_TAIL(&threadq, thread, bt_threadq);
+
+	/* set runnable manually, we don't satisfy invariants yet */
 	flags = bmk_platform_splhigh();
-	TAILQ_INSERT_TAIL(&threads, thread, bt_entries);
+	TAILQ_INSERT_TAIL(&runq, thread, bt_schedq);
+	thread->bt_flags |= THREAD_RUNQ;
 	bmk_platform_splx(flags);
-	set_runnable(thread);
 
 	return thread;
 }
@@ -385,12 +503,12 @@ bmk_sched_exit_withtls(void)
 	}
 
 	/* Remove from the thread list */
-	TAILQ_REMOVE(&threads, thread, bt_entries);
-	clear_runnable(thread);
-	thread->bt_flags |= THREAD_DEAD;
+	bmk_assert((thread->bt_flags & THREAD_QMASK) == 0);
+	TAILQ_REMOVE(&threadq, thread, bt_threadq);
+	setflags(thread, THREAD_DEAD, THREAD_RUNNING);
 
 	/* Put onto exited list */
-	TAILQ_INSERT_HEAD(&zombies, thread, bt_entries);
+	TAILQ_INSERT_HEAD(&zombieq, thread, bt_threadq);
 	bmk_platform_splx(flags);
 
 	/* bye */
@@ -461,10 +579,12 @@ bmk_sched_unsuspend(struct bmk_thread *thread)
 void
 bmk_sched_blockprepare_timeout(bmk_time_t deadline)
 {
-	struct bmk_thread *thread = bmk_current;
+	int flags;
 
-	thread->bt_wakeup_time = deadline;
-	clear_runnable(thread);
+	flags = bmk_platform_splhigh();
+	bmk_current->bt_wakeup_time = deadline;
+	clear_runnable();
+	bmk_platform_splx(flags);
 }
 
 void
@@ -478,16 +598,21 @@ int
 bmk_sched_nanosleep_abstime(bmk_time_t nsec)
 {
 	struct bmk_thread *thread = bmk_current;
-	int rv;
+	int flags, tflags;
 
-	thread->bt_flags &= ~THREAD_TIMEDOUT;
+	bmk_assert((thread->bt_flags & THREAD_TIMEDOUT) == 0);
+
+	flags = bmk_platform_splhigh();
 	thread->bt_wakeup_time = nsec;
-	clear_runnable(thread);
+	clear_runnable();
+	bmk_platform_splx(flags);
+
 	bmk_sched();
 
-	rv = !!(thread->bt_flags & THREAD_TIMEDOUT);
+	tflags = thread->bt_flags;
 	thread->bt_flags &= ~THREAD_TIMEDOUT;
-	return rv;
+
+	return !!(tflags & THREAD_TIMEDOUT);
 }
 
 int
@@ -553,6 +678,12 @@ bmk_sched_startmain(void (*mainfun)(void *), void *arg)
 	if (mainthread == NULL)
 		bmk_platform_halt("failed to create main thread");
 
+	/*
+	 * Manually switch to mainthread without going through
+	 * bmk_sched (avoids confusion with bmk_current).
+	 */
+	TAILQ_REMOVE(&runq, mainthread, bt_schedq);
+	setflags(mainthread, THREAD_RUNNING, THREAD_RUNQ);
 	sched_switch(&initthread, mainthread);
 
 	bmk_platform_halt("bmk_sched_init unreachable");
@@ -595,9 +726,16 @@ bmk_sched_geterrno(void)
 void
 bmk_sched_yield(void)
 {
-	struct bmk_thread *current = bmk_current;
+	struct bmk_thread *thread = bmk_current;
+	int flags;
 
-	TAILQ_REMOVE(&threads, current, bt_entries);
-	TAILQ_INSERT_TAIL(&threads, current, bt_entries);
+	bmk_assert(thread->bt_flags & THREAD_RUNNING);
+
+	/* make schedulable and re-insert into runqueue */
+	flags = bmk_platform_splhigh();
+	setflags(thread, THREAD_RUNQ, THREAD_RUNNING);
+	TAILQ_INSERT_TAIL(&runq, thread, bt_schedq);
+	bmk_platform_splx(flags);
+
 	bmk_sched();
 }
