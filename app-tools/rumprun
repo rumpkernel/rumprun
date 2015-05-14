@@ -36,6 +36,8 @@ echo !!!
 echo
 exec 1>&3 3>&-
 
+MEM_DEFAULT=64
+
 err()
 {
 	echo rumprun: error: "$@" 1>&2
@@ -52,7 +54,7 @@ usage: rumprun PLATFORM [ -ipd ] [ -D PORT ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC
     APP is the rumprun application to start
     args will be passed to the application command line
     -N NAME sets the domain's name to NAME, default is rumprun-APP
-    -M MEM sets the domain's memory to MEM, default is 16
+    -M MEM sets the domain's memory to MEM megabytes, default is ${MEM_DEFAULT}
     -b BLKSPEC configures a block device as hostpath,mountpoint
     -n NETSPEC configures a network interface, using one of:
        inet,dhcp - IPv4 with DHCP
@@ -259,7 +261,7 @@ run_xen()
 	opt_pause=
 	opt_interactive=
 	opt_destroy='on_poweroff="preserve"'
-	opt_mem=64
+	opt_mem=${MEM_DEFAULT}
 	opt_name=
 	opt_debug=
 	opt_cansudo=false
@@ -394,6 +396,7 @@ run_qemu()
 	opt_debug=
 	opt_pause=
 	opt_netif=
+	opt_mem=${MEM_DEFAULT}
 	json_append '{'
 	while getopts "${myoptstr}" opt; do
 		case "$opt" in
@@ -405,6 +408,9 @@ run_qemu()
 			;;
 		i)
 			opt_interactive=1
+			;;
+		M)
+			opt_mem=${OPTARG}
 			;;
 		n)
 			parse_netspec "${OPTARG}" || usage
@@ -432,7 +438,7 @@ run_qemu()
 	[ -n "${opt_netif}" ] || opt_netif="-net none"
 
 	qemucmd="qemu-system-i386 ${opt_netif} -no-kvm ${opt_drivespec} \
-	    ${opt_debug} ${opt_pause} -kernel $1"
+	    ${opt_debug} ${opt_pause} -m ${opt_mem} -kernel $1"
 	if [ -n "$opt_interactive" ]; then
 		${qemucmd} -append "${json_coma}"
 	else
