@@ -118,6 +118,7 @@ rumprun_makelwp(void (*start)(void *), void *arg, void *private,
 	if (rl->rl_thread == NULL) {
 		free(rl);
 		rump_pub_lwproc_releaselwp();
+		rump_pub_lwproc_switch(curlwp);
 		return EBUSY; /* ??? */
 	}
 	rump_pub_lwproc_switch(curlwp);
