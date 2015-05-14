@@ -23,13 +23,16 @@ xen)
 	echo ">> unknown platform \"$PLATFORM\""
 	exit 1
 esac
+shift
 
 export MAKE=${APPTOOLSDIR}/rumprun-${TOOLS_PLATFORM}-make
 
 ${MAKE}
 
-cd configure
-${APPTOOLSDIR}/rumprun-${TOOLS_PLATFORM}-configure ./configure
-${MAKE}
+if [ "$1" != '-q' ]; then
+	cd configure
+	${APPTOOLSDIR}/rumprun-${TOOLS_PLATFORM}-configure ./configure
+	${MAKE}
+fi
 
 exit 0
