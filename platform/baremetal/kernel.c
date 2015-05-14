@@ -137,22 +137,32 @@ bmk_platform_memsize(void)
 void
 bmk_platform_block(bmk_time_t until)
 {
+	int s = bmk_spldepth;
 
+	/* enable interrupts around the sleep */
+	while (bmk_spldepth)
+		spl0();
 	bmk_cpu_nanohlt();
+	while (bmk_spldepth < s)
+		splhigh();
 }
 
+/*
+ * splhigh()/spl0() internally track depth
+ */
 unsigned long
 bmk_platform_splhigh(void)
 {
 
-	return 0; /* XXX */
+	splhigh();
+	return 0;
 }
 
 void
 bmk_platform_splx(unsigned long x)
 {
 
-	return; /* XXX */
+	spl0();
 }
  
 void
