@@ -99,7 +99,7 @@ isr(void *arg)
 }
 
 int
-bmk_isr_netinit(int (*func)(void *), void *arg, int intr)
+bmk_isr_init(int (*func)(void *), void *arg, int intr)
 {
 	struct intrhand *ih;
 	int error;
@@ -132,7 +132,7 @@ bmk_isr(int which)
 }
 
 int
-bmk_isr_init(void)
+bmk_intr_init(void)
 {
 	int i;
 
@@ -140,7 +140,7 @@ bmk_isr_init(void)
 		SLIST_INIT(&isr_ih[i]);
 	}
 
-	isr_thread = bmk_sched_create("netisr", NULL, 0, isr, NULL, NULL, 0);
+	isr_thread = bmk_sched_create("isrthr", NULL, 0, isr, NULL, NULL, 0);
 	if (!isr_thread)
 		return BMK_EGENERIC;
 	return 0;
