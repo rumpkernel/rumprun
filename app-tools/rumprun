@@ -47,8 +47,8 @@ myoptstr='n:b:e:pidD:N:M:S'
 usage()
 {
 	cat <<EOM
-usage: rumprun STACK [ -ipd ] [ -D PORT ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] [ -n NETSPEC ] [ -e VAR[=VALUE] ] [ -- ] APP [ args ]
-    STACK is the rumprun stack to use. Only "xen" is currently supported
+usage: rumprun PLATFORM [ -ipd ] [ -D PORT ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] [ -n NETSPEC ] [ -e VAR[=VALUE] ] [ -- ] APP [ args ]
+    PLATFORM is the rumprun runtime platform to use. currently: (xen|qemu)
     APP is the rumprun application to start
     args will be passed to the application command line
     -N NAME sets the domain's name to NAME, default is rumprun-APP
@@ -419,7 +419,7 @@ run_qemu()
 			# ignored for now
 			;;
 		*)
-			err qemu stack like zathras: not so good
+			err qemu platform like zathras: not so good
 			;;
 		esac
 	done
