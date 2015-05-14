@@ -105,17 +105,11 @@ rumprun_makelwp(void (*start)(void *), void *arg, void *private,
 	assignme(private, rl);
 
 	curlwp = rump_pub_lwproc_curlwp();
-	if (curlwp) {
-		if ((errno = rump_pub_lwproc_newlwp(getpid())) != 0) {
-			free(rl);
-			return errno;
-		}
-		newlwp = rump_pub_lwproc_curlwp();
-		rump_pub_lwproc_switch(curlwp);
+	if ((errno = rump_pub_lwproc_newlwp(getpid())) != 0) {
+		free(rl);
+		return errno;
 	}
-	else {
-		newlwp = NULL;
-	}
+	newlwp = rump_pub_lwproc_curlwp();
 	rl->rl_start = start;
 	rl->rl_arg = arg;
 	rl->rl_lwpid = ++curlwpid;
@@ -123,8 +117,10 @@ rumprun_makelwp(void (*start)(void *), void *arg, void *private,
 	    rumprun_makelwp_tramp, newlwp, stack_base, stack_size, private);
 	if (rl->rl_thread == NULL) {
 		free(rl);
+		rump_pub_lwproc_releaselwp();
 		return EBUSY; /* ??? */
 	}
+	rump_pub_lwproc_switch(curlwp);
 
 	*lid = rl->rl_lwpid;
 	TAILQ_INSERT_TAIL(&all_lwp, rl, rl_entries);
@@ -136,8 +132,7 @@ static void
 rumprun_makelwp_tramp(void *arg)
 {
 
-	if (arg != NULL)
-		rump_pub_lwproc_switch(arg);
+	rump_pub_lwproc_switch(arg);
 	(me->rl_start)(me->rl_arg);
 }
 
@@ -265,8 +260,7 @@ _lwp_exit(void)
 {
 
 	me->rl_lwpctl.lc_curcpu = LWPCTL_CPU_EXITED;
-	if (rump_pub_lwproc_curlwp())
-		rump_pub_lwproc_releaselwp();
+	rump_pub_lwproc_releaselwp();
 	TAILQ_REMOVE(&all_lwp, me, rl_entries);
 
 	/* could just assign it here, but for symmetry! */
