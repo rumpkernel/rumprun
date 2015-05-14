@@ -161,7 +161,7 @@ mainbouncer(void *arg)
 	 * rumprun_boot()
 	 */
 
-	/* exit() calls rumprun_pub_lwproc_releaselwp() (via _exit()) */
+	/* exit() calls rumprun_pub_lwproc_releaselwp() (via pthread_exit()) */
 	exit(rv);
 }
 

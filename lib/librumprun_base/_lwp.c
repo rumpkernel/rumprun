@@ -42,6 +42,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <rump/rump.h>
+
 #include <bmk-core/core.h>
 #include <bmk-core/sched.h>
 
@@ -53,6 +55,8 @@ struct rumprun_lwp {
 	struct bmk_thread *rl_thread;
 	int rl_lwpid;
 	char rl_name[MAXCOMLEN+1];
+	void (*rl_start)(void *);
+	void *rl_arg;
 
 	struct lwpctl rl_lwpctl;
 	int rl_no_parking_hare;	/* a looney tunes reference ... finally! */
@@ -68,6 +72,8 @@ static int curlwpid = FIRST_LWPID;
 static struct rumprun_lwp mainthread = {
 	.rl_lwpid = FIRST_LWPID,
 };
+
+static void rumprun_makelwp_tramp(void *);
 
 static ptrdiff_t meoff;
 static void
@@ -91,15 +97,30 @@ rumprun_makelwp(void (*start)(void *), void *arg, void *private,
 	void *stack_base, size_t stack_size, unsigned long flag, lwpid_t *lid)
 {
 	struct rumprun_lwp *rl;
+	struct lwp *curlwp, *newlwp;
 
 	rl = calloc(1, sizeof(*rl));
 	if (rl == NULL)
 		return errno;
 	assignme(private, rl);
 
+	curlwp = rump_pub_lwproc_curlwp();
+	if (curlwp) {
+		if ((errno = rump_pub_lwproc_newlwp(getpid())) != 0) {
+			free(rl);
+			return errno;
+		}
+		newlwp = rump_pub_lwproc_curlwp();
+		rump_pub_lwproc_switch(curlwp);
+	}
+	else {
+		newlwp = NULL;
+	}
+	rl->rl_start = start;
+	rl->rl_arg = arg;
 	rl->rl_lwpid = ++curlwpid;
 	rl->rl_thread = bmk_sched_create_withtls("lwp", rl, 0,
-	    start, arg, stack_base, stack_size, private);
+	    rumprun_makelwp_tramp, newlwp, stack_base, stack_size, private);
 	if (rl->rl_thread == NULL) {
 		free(rl);
 		return EBUSY; /* ??? */
@@ -109,6 +130,15 @@ rumprun_makelwp(void (*start)(void *), void *arg, void *private,
 	TAILQ_INSERT_TAIL(&all_lwp, rl, rl_entries);
 
 	return 0;
+}
+
+static void
+rumprun_makelwp_tramp(void *arg)
+{
+
+	if (arg != NULL)
+		rump_pub_lwproc_switch(arg);
+	(me->rl_start)(me->rl_arg);
 }
 
 static struct rumprun_lwp *
@@ -235,6 +265,8 @@ _lwp_exit(void)
 {
 
 	me->rl_lwpctl.lc_curcpu = LWPCTL_CPU_EXITED;
+	if (rump_pub_lwproc_curlwp())
+		rump_pub_lwproc_releaselwp();
 	TAILQ_REMOVE(&all_lwp, me, rl_entries);
 
 	/* could just assign it here, but for symmetry! */

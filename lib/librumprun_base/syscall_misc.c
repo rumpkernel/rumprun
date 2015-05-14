@@ -139,7 +139,6 @@ _exit(int eval)
 		printf("\n=== _exit(%d) called ===\n", eval);
 	}
 
-	rump_pub_lwproc_releaselwp();
 	pthread_exit((void *)(uintptr_t)eval);
 }
 
