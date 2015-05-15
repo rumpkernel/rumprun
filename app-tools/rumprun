@@ -45,7 +45,7 @@ err()
 	exit 1
 }
 
-scriptopts='hS'
+scriptopts='hDS'
 guestopts='n:b:e:pidD:N:M:'
 
 # script option default values
@@ -262,6 +262,9 @@ parse_blkspec()
 # run_xen: Generate Xen configuration and run application stack.
 run_xen()
 {
+
+	[ -n "${DUMPCMD}" ] && err -D not supported for xen
+
 	# try to find gdbsx from common locations
 	unset gdbsx
 	for x in gdbsx /usr/lib/xen-4.4/bin/gdbsx ; do
@@ -454,8 +457,9 @@ run_qemu()
 
 	[ -n "${opt_netif}" ] || opt_netif="-net none"
 
-	qemucmd="qemu-system-i386 ${opt_netif} -no-kvm ${opt_drivespec} \
-	    ${opt_debug} ${opt_pause} -m ${opt_mem} -kernel $1"
+	qemucmd="${DUMPCMD} qemu-system-i386 ${opt_netif} -no-kvm	\
+	    ${opt_drivespec} ${opt_debug} ${opt_pause} -m ${opt_mem}	\
+	    -kernel $1"
 	if [ -n "$opt_interactive" ]; then
 		${qemucmd} -append "${json_coma}"
 	else
