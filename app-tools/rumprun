@@ -28,6 +28,9 @@
 # rumprun: "driver" script for running rumprun application stacks
 #
 
+# default values
+MEM_DEFAULT=64
+
 exec 3>&1 1>&2
 echo
 echo !!!
@@ -36,37 +39,57 @@ echo !!!
 echo
 exec 1>&3 3>&-
 
-MEM_DEFAULT=64
-
 err()
 {
 	echo rumprun: error: "$@" 1>&2
 	exit 1
 }
 
-myoptstr='n:b:e:pidD:N:M:S'
+scriptopts='hS'
+guestopts='n:b:e:pidD:N:M:'
+
+# script option default values
+DUMPCMD=
+CANSUDO=false
 
 usage()
 {
+
 	cat <<EOM
-usage: rumprun PLATFORM [ -ipd ] [ -D PORT ] [ -N NAME ] [ -M MEM ] [ -b BLKSPEC ] [ -n NETSPEC ] [ -e VAR[=VALUE] ] [ -- ] APP [ args ]
-    PLATFORM is the rumprun runtime platform to use. currently: (xen|qemu)
-    APP is the rumprun application to start
-    args will be passed to the application command line
-    -N NAME sets the domain's name to NAME, default is rumprun-APP
-    -M MEM sets the domain's memory to MEM megabytes, default is ${MEM_DEFAULT}
-    -b BLKSPEC configures a block device as hostpath,mountpoint
-    -n NETSPEC configures a network interface, using one of:
-       inet,dhcp - IPv4 with DHCP
-       inet,static,ADDR/MASK[,GATEWAY] - IPv4 with static IP
-       inet6,auto - IPv6 with stateless autoconfiguration
-    -e set guest environment VAR to VALUE
-    -i attaches to domain console on startup
-    -p creates the domain but leaves it paused
-    -d destroys the domain on poweroff
-    -D PORT attaches a GDB server on PORT to the domain
-    
-    When run without -i the local domain id is printed to standard output
+usage: rumprun [script args] PLATFORM [guest args] APP [ -- ] [app args]
+
+PLATFORM is the rumprun runtime platform to use
+    xen: rumprun/xen guest using xl(1)
+    qemu: rumprun/baremetal guest using qemu -no-kvm
+
+APP is the binary to rumprun.  app args are processed by APP.
+
+script options are:
+	[-h] [-D] [-S]
+
+   -h display this message
+   -D dump backend commands instead of running them
+   -S execute sudo where potentially necessary
+
+guest options are:
+	[ -ipd ] [ -D port ] [ -N name ] [ -M mem ] [ -b blkspec ]
+	[ -n netspec ] [ -e VAR[=VALUE] ]
+
+   -N set the guest's name to name, default is rumprun-APP
+   -M set the guest's memory to mem megabytes, default is ${MEM_DEFAULT}
+   -b configures a block device.  The format of "blkspec" is:
+       hostpath[,mountpoint] where:
+	hostpath   = image that is passed to the guest as a block device
+	mountpoint = if "hostpath" is a file system image, mountpoint on guest
+   -n configures a network interface, where netspec is one of:
+	inet,dhcp - IPv4 with DHCP
+	inet,static,addr/mask[,gateway] - IPv4 with static IP
+	inet6,auto - IPv6 with stateless autoconfiguration
+   -e set environment VAR to VALUE
+   -i attaches to guest console on startup
+   -p creates the guest but leaves it paused
+   -d destroys the guest on poweroff
+   -D attaches a gdb server on port to the guest
 EOM
 	exit 1
 }
@@ -267,7 +290,7 @@ run_xen()
 	opt_cansudo=false
 	sudo=''
 
-	while getopts "${myoptstr}" opt; do
+	while getopts "${guestopts}" opt; do
 		case "$opt" in
 		# -n: NETSPEC
 		n)
@@ -318,9 +341,6 @@ run_xen()
 				err "'gdbsx' is required for -D, please install it."
 			fi
 			opt_debug=${OPTARG}
-			;;
-		S)
-			opt_cansudo=true
 			;;
 		*)
 			usage
@@ -398,7 +418,7 @@ run_qemu()
 	opt_netif=
 	opt_mem=${MEM_DEFAULT}
 	json_append '{'
-	while getopts "${myoptstr}" opt; do
+	while getopts "${guestopts}" opt; do
 		case "$opt" in
 		b)
 			parse_blkspec "${OPTARG}" || usage
@@ -420,9 +440,6 @@ run_qemu()
 			;;
 		D)
 			opt_debug="-gdb tcp::${OPTARG}"
-			;;
-		S)
-			# ignored for now
 			;;
 		*)
 			err qemu platform like zathras: not so good
@@ -452,8 +469,24 @@ if [ $# -lt 2 ]; then
 	usage
 fi
 
+while getopts "${scriptopts}" opt; do
+	case "${opt}" in
+	D)
+		DUMPCMD=echo
+		;;
+	h)
+		usage
+		;;
+	S)
+		CANSUDO=true
+		;;
+	esac
+done
+shift $((${OPTIND}-1))
+
 platform="$1"
 shift
+
 case ${platform} in
 xen)
 	run_xen "$@"
@@ -462,8 +495,9 @@ qemu)
 	run_qemu "$@"
 	;;
 *)
-	echo Invalid STACK \"${platform}\" 1>&2
+	echo Invalid platform \"${platform}\" 1>&2
 	usage
 	;;
 esac
+
 exit 0
