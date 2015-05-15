@@ -45,8 +45,8 @@ err()
 	exit 1
 }
 
-scriptopts='hDS'
-guestopts='n:b:e:pidD:N:M:'
+scriptopts='DhS'
+guestopts='b:dD:e:iM:n:N:p'
 
 # script option default values
 DUMPCMD=
@@ -59,38 +59,40 @@ usage()
 usage: rumprun [script args] PLATFORM [guest args] APP [ -- ] [app args]
 
 PLATFORM is the rumprun runtime platform to use
-    xen: rumprun/xen guest using xl(1)
-    kvm: rumprun/baremetal guest using qemu -enable-kvm
-    qemu: rumprun/baremetal guest using qemu -no-kvm
+    kvm  : baremetal guest via qemu -enable-kvm
+    qemu : baremetal guest via qemu -no-kvm
+    xen  : xen guest via xl(1)
 
 APP is the binary to rumprun.  app args are processed by APP.
 
-script options are:
-	[-h] [-D] [-S]
+script args are:
+	[-h] [-DS]
 
    -h display this message
+
    -D dump backend commands instead of running them
    -S execute sudo where potentially necessary
 
-guest options are:
-	[ -ipd ] [ -D port ] [ -N name ] [ -M mem ] [ -b blkspec ]
-	[ -n netspec ] [ -e VAR[=VALUE] ]
+guest args are:
+	[-dip] [-b blkspec] [-D port] [-e VAR[=VALUE]] [-M mem]
+	[-n netspec] [-N name]
 
-   -N set the guest's name to name, default is rumprun-APP
-   -M set the guest's memory to mem megabytes, default is ${MEM_DEFAULT}
    -b configures a block device.  The format of "blkspec" is:
        hostpath[,mountpoint] where:
 	hostpath   = image that is passed to the guest as a block device
 	mountpoint = if "hostpath" is a file system image, mountpoint on guest
+   -d destroys the guest on poweroff
+   -D attaches a gdb server on port to the guest
+   -e set environment VAR to VALUE
+   -i attaches to guest console on startup
+   -M set the guest's memory to mem megabytes, default is ${MEM_DEFAULT}
    -n configures a network interface, where netspec is one of:
 	inet,dhcp - IPv4 with DHCP
 	inet,static,addr/mask[,gateway] - IPv4 with static IP
 	inet6,auto - IPv6 with stateless autoconfiguration
-   -e set environment VAR to VALUE
-   -i attaches to guest console on startup
+   -N set the guest's name to name, default is rumprun-APP
    -p creates the guest but leaves it paused
-   -d destroys the guest on poweroff
-   -D attaches a gdb server on port to the guest
+
 EOM
 	exit 1
 }
