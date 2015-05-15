@@ -29,7 +29,7 @@
 extern int rumprun_cmdline_argc;
 extern char **rumprun_cmdline_argv;
 
-void _rumprun_config(const char *);
+void _rumprun_config(char *);
 void _rumprun_deconfig(void);
 
 #endif /* _BMKCOMMON_RUMPRUN_CONFIG_H_ */

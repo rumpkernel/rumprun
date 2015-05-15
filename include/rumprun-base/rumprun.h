@@ -29,7 +29,7 @@
 typedef int mainlike_fn(int, char *[]);
 mainlike_fn main;
 
-void	rumprun_boot(const char *);
+void	rumprun_boot(char *);
 
 void *	rumprun(mainlike_fn, int, char *[]);
 int	rumprun_wait(void *);

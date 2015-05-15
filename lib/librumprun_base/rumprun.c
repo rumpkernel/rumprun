@@ -53,7 +53,7 @@ static pthread_mutex_t w_mtx;
 static pthread_cond_t w_cv;
 
 void
-rumprun_boot(const char *cmdline)
+rumprun_boot(char *cmdline)
 {
 	struct tmpfs_args ta = {
 		.ta_version = TMPFS_ARGS_VERSION,

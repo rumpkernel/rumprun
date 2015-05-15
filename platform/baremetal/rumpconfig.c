@@ -79,6 +79,14 @@
 	}								\
   } while (/*CONSTCOND*/0)
 
+static char *
+token2cstr(jsmntok_t *t, char *data)
+{
+
+	*(T_STR(t, data) + T_SIZE(t) + 1) = '\0';
+	return T_STR(t, data);
+}
+
 int rumprun_cmdline_argc;
 char **rumprun_cmdline_argv;
 
@@ -102,47 +110,33 @@ makeargv(char *argvstr)
 }
 
 static int
-handle_cmdline(jsmntok_t *t, int left, const char *data)
+handle_cmdline(jsmntok_t *t, int left, char *data)
 {
-	char *argvstr;
-	size_t argvstrlen;
 
 	T_CHECKTYPE(t, data, JSMN_STRING, __func__);
 
-	/* allocate memory for argv element storage */
-	argvstrlen = T_SIZE(t)+1;
-	argvstr = malloc(argvstrlen);
-	if (argvstr == NULL)
-		errx(1, "could not allocate argv storage");
-
-	T_STRCPY(argvstr, argvstrlen, t, data);
-	makeargv(argvstr);
+	makeargv(token2cstr(t, data));
 
 	return 1;
 }
 
 static int
-handle_env(jsmntok_t *t, int left, const char *data)
+handle_env(jsmntok_t *t, int left, char *data)
 {
-	char *envstr;
 
 	T_CHECKTYPE(t, data, JSMN_STRING, __func__);
 
-	envstr = malloc(T_SIZE(t)+1);
-	if (envstr == NULL)
-		err(1, "allocate env string");
-	T_STRCPY(envstr, T_SIZE(t)+1, t, data);
-	if (putenv(envstr) == -1)
+	if (putenv(token2cstr(t, data)) == -1)
 		err(1, "putenv");
 
 	return 1;
 }
 
 static int
-handle_net(jsmntok_t *t, int left, const char *data)
+handle_net(jsmntok_t *t, int left, char *data)
 {
-	char ifname[32], type[32], method[32];
-	char addr[32], mask[32], gw[32];
+	char *ifname, *type, *method;
+	char *addr, *mask, *gw;
 	jsmntok_t *key, *value;
 	int rv, i, objsize;
 	static int configured;
@@ -160,10 +154,11 @@ handle_net(jsmntok_t *t, int left, const char *data)
 		errx(1, "currently only 1 \"net\" configuration is supported");
 	}
 
-	ifname[0] = type[0] = method[0] = '\0';
-	addr[0] = mask[0] = gw[0] = '\0';
+	ifname = type = method = NULL;
+	addr = mask = gw = NULL;
 
 	for (i = 0; i < objsize; i++, t+=2) {
+		char *valuestr;
 		key = t;
 		value = t+1;
 
@@ -178,26 +173,27 @@ handle_net(jsmntok_t *t, int left, const char *data)
 		 * want a richer structure, but let's be happy to not
 		 * diverge for now.
 		 */
+		valuestr = token2cstr(t, data);
 		if (T_STREQ(key, data, "if")) {
-			T_STRCPY(ifname, sizeof(ifname), value, data);
+			ifname = valuestr;
 		} else if (T_STREQ(key, data, "type")) {
-			T_STRCPY(type, sizeof(type), value, data);
+			type = valuestr;
 		} else if (T_STREQ(key, data, "method")) {
-			T_STRCPY(method, sizeof(method), value, data);
+			method = valuestr;
 		} else if (T_STREQ(key, data, "addr")) {
-			T_STRCPY(addr, sizeof(addr), value, data);
+			addr = valuestr;
 		} else if (T_STREQ(key, data, "mask")) {
 			/* XXX: we could also pass mask as a number ... */
-			T_STRCPY(mask, sizeof(mask), value, data);
+			mask = valuestr;
 		} else if (T_STREQ(key, data, "gw")) {
-			T_STRCPY(gw, sizeof(gw), value, data);
+			gw = valuestr;
 		} else {
-			errx(1, "unexpected key \"%.*s\" in \"%s\", ignoring",
+			errx(1, "unexpected key \"%.*s\" in \"%s\"",
 			    T_PRINTFSTAR(key, data), __func__);
 		}
 	}
 
-	if (!ifname[0] || !type[0] || !method[0]) {
+	if (!ifname || !type || !method) {
 		errx(1, "net cfg missing vital data, not configuring");
 	}
 
@@ -215,7 +211,7 @@ handle_net(jsmntok_t *t, int left, const char *data)
 			    "got \"%s\"", method);
 		}
 
-		if (!addr[0] || !mask[0]) {
+		if (!addr || !mask) {
 			errx(1, "static net cfg missing addr or mask");
 		}
 
@@ -224,7 +220,7 @@ handle_net(jsmntok_t *t, int left, const char *data)
 			errx(1, "ifconfig \"%s\" for \"%s/%s\" failed",
 			    ifname, addr, mask);
 		}
-		if (gw[0] && (rv = rump_pub_netconfig_ipv4_gw(gw)) != 0) {
+		if (gw && (rv = rump_pub_netconfig_ipv4_gw(gw)) != 0) {
 			errx(1, "gw \"%s\" addition failed", gw);
 		}
 	}
@@ -233,10 +229,9 @@ handle_net(jsmntok_t *t, int left, const char *data)
 }
 
 static int
-handle_blk(jsmntok_t *t, int left, const char *data)
+handle_blk(jsmntok_t *t, int left, char *data)
 {
-	char devname[64], fstype[16];
-	char *mp;
+	char *devname, *fstype, *mp;
 	jsmntok_t *key, *value;
 	int i, objsize;
 
@@ -249,10 +244,10 @@ handle_blk(jsmntok_t *t, int left, const char *data)
 	}
 	t++;
 
-	fstype[0] = devname[0] = '\0';
-	mp = NULL;
+	fstype = devname = mp = NULL;
 
 	for (i = 0; i < objsize; i++, t+=2) {
+		char *valuestr;
 		key = t;
 		value = t+1;
 
@@ -262,25 +257,20 @@ handle_blk(jsmntok_t *t, int left, const char *data)
 		T_CHECKTYPE(value, data, JSMN_STRING, __func__);
 		T_CHECKSIZE(value, data, 0, __func__);
 
+		valuestr = token2cstr(t, data);
 		if (T_STREQ(key, data, "dev")) {
-			T_STRCPY(devname, sizeof(devname), value, data);
+			devname = valuestr;
 		} else if (T_STREQ(key, data, "fstype")) {
-			T_STRCPY(fstype, sizeof(fstype), value, data);
+			fstype = valuestr;
 		} else if (T_STREQ(key, data, "mountpoint")) {
-			size_t mplen = T_SIZE(t);
-
-			mp = malloc(mplen+1);
-			if (mp == NULL)
-				errx(1, "failed to allocate mountpoint path");
-
-			T_STRCPY(mp, mplen+1, value, data);
+			mp = valuestr;
 		} else {
 			errx(1, "unexpected key \"%.*s\" in \"%s\"",
 			    T_PRINTFSTAR(key, data), __func__);
 		}
 	}
 
-	if (!devname[0] || !fstype[0]) {
+	if (devname || fstype) {
 		errx(1, "blk cfg missing vital data");
 	}
 
@@ -316,7 +306,7 @@ handle_blk(jsmntok_t *t, int left, const char *data)
 
 struct {
 	const char *name;
-	int (*handler)(jsmntok_t *, int, const char *);
+	int (*handler)(jsmntok_t *, int, char *);
 } parsers[] = {
 	{ "cmdline", handle_cmdline },
 	{ "env", handle_env },
@@ -325,7 +315,7 @@ struct {
 };
 
 void
-_rumprun_config(const char *cmdline)
+_rumprun_config(char *cmdline)
 {
 	jsmn_parser p;
 	jsmntok_t *tokens = NULL;
