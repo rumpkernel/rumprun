@@ -328,6 +328,7 @@ bmk_sched(void)
 			break;
 		}
 
+		/* nothing to run.  enable interrupts and sleep. */
 		bmk_platform_block(waketime);
 	}
 	/* now we're committed to letting "next" run next */
