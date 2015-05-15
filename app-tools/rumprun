@@ -60,6 +60,7 @@ usage: rumprun [script args] PLATFORM [guest args] APP [ -- ] [app args]
 
 PLATFORM is the rumprun runtime platform to use
     xen: rumprun/xen guest using xl(1)
+    kvm: rumprun/baremetal guest using qemu -enable-kvm
     qemu: rumprun/baremetal guest using qemu -no-kvm
 
 APP is the binary to rumprun.  app args are processed by APP.
@@ -420,6 +421,9 @@ run_qemu()
 	opt_netif=
 	opt_mem=${MEM_DEFAULT}
 	json_append '{'
+
+	variant=$1
+	shift
 	while getopts "${guestopts}" opt; do
 		case "$opt" in
 		b)
@@ -450,13 +454,19 @@ run_qemu()
 	done
 	shift $((${OPTIND}-1))
 
+	if [ "${variant}" = "kvm" ]; then
+		opt_kvm=-enable-kvm
+	else
+		opt_kvm=-no-kvm
+	fi
+
 	json_append "\"cmdline\": \""$@"\""
 	json_append '}'
 	json_coma="$(echo ${json} | sed 's/,/,,/g')"
 
 	[ -n "${opt_netif}" ] || opt_netif="-net none"
 
-	qemucmd="${DUMPCMD} qemu-system-i386 ${opt_netif} -no-kvm	\
+	qemucmd="${DUMPCMD} qemu-system-i386 ${opt_netif} ${opt_kvm}	\
 	    ${opt_drivespec} ${opt_debug} ${opt_pause} -m ${opt_mem}	\
 	    -kernel $1"
 	if [ -n "$opt_interactive" ]; then
@@ -494,8 +504,11 @@ case ${platform} in
 xen)
 	run_xen "$@"
 	;;
+kvm)
+	run_qemu kvm "$@"
+	;;
 qemu)
-	run_qemu "$@"
+	run_qemu qemu "$@"
 	;;
 *)
 	echo Invalid platform \"${platform}\" 1>&2
