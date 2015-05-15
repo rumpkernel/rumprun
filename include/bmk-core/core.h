@@ -32,7 +32,7 @@ int bmk_core_init(unsigned long, unsigned long);
 
 #define bmk_assert(x)							\
   do {									\
-	if (!(x)) {							\
+	if (__builtin_expect(!(x), 0)) {				\
 		bmk_platform_halt("assert \"" #x "\" FAILED\n");	\
 	}								\
   } while (0)
