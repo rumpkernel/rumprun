@@ -38,6 +38,7 @@ $(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-${1}: \
 		-e 's#!APPTOOLS_PLATFORM!#$(APP_TOOLS_PLATFORM)#g;' \
 		-e 's#!CPPFLAGS!#$(BUILDRUMP_TOOL_CPPFLAGS)#g;' \
 		-e 's#!CFLAGS!#$(BUILDRUMP_TOOL_CFLAGS)#g;' \
+		-e 's#!CXXFLAGS!#$(BUILDRUMP_TOOL_CXXFLAGS)#g;' \
 		-e 's#!OBJS!#$(APP_TOOLS_OBJS)#g;' \
 		-e 's#!LDLIBS!#$(APP_TOOLS_LDLIBS)#g;' \
 		-e 's#!LDFLAGS!#$(APP_TOOLS_LDFLAGS)#g;' \
