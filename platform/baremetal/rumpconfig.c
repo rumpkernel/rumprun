@@ -83,7 +83,7 @@ static char *
 token2cstr(jsmntok_t *t, char *data)
 {
 
-	*(T_STR(t, data) + T_SIZE(t) + 1) = '\0';
+	*(T_STR(t, data) + T_SIZE(t)) = '\0';
 	return T_STR(t, data);
 }
 
@@ -219,7 +219,7 @@ handle_net(jsmntok_t *t, int left, char *data)
 		 * want a richer structure, but let's be happy to not
 		 * diverge for now.
 		 */
-		valuestr = token2cstr(t, data);
+		valuestr = token2cstr(value, data);
 		if (T_STREQ(key, data, "if")) {
 			ifname = valuestr;
 		} else if (T_STREQ(key, data, "type")) {
@@ -283,7 +283,7 @@ handle_blk(jsmntok_t *t, int left, char *data)
 		T_CHECKTYPE(value, data, JSMN_STRING, __func__);
 		T_CHECKSIZE(value, data, 0, __func__);
 
-		valuestr = token2cstr(t, data);
+		valuestr = token2cstr(value, data);
 		if (T_STREQ(key, data, "dev")) {
 			devname = valuestr;
 		} else if (T_STREQ(key, data, "fstype")) {
