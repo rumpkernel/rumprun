@@ -323,8 +323,6 @@ handle_blk(jsmntok_t *t, int left, char *data)
 		} else {
 			errx(1, "unknown fstype \"%s\"", fstype);
 		}
-
-		free(mp);
 	}
 
 	return 2*objsize + 1;
