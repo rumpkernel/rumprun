@@ -132,13 +132,59 @@ handle_env(jsmntok_t *t, int left, char *data)
 	return 1;
 }
 
+static void
+config_ipv4(const char *ifname, const char *method,
+	const char *addr, const char *mask, const char *gw)
+{
+	int rv;
+
+	if (strcmp(method, "dhcp") == 0) {
+		if ((rv = rump_pub_netconfig_dhcp_ipv4_oneshot(ifname)) != 0)
+			errx(1, "configuring dhcp for %s failed: %d",
+			    ifname, rv);
+	} else {
+		if (strcmp(method, "static") != 0) {
+			errx(1, "method \"static\" or \"dhcp\" expected, "
+			    "got \"%s\"", method);
+		}
+
+		if (!addr || !mask) {
+			errx(1, "static net cfg missing addr or mask");
+		}
+
+		if ((rv = rump_pub_netconfig_ipv4_ifaddr_cidr(ifname,
+		    addr, atoi(mask))) != 0) {
+			errx(1, "ifconfig \"%s\" for \"%s/%s\" failed",
+			    ifname, addr, mask);
+		}
+		if (gw && (rv = rump_pub_netconfig_ipv4_gw(gw)) != 0) {
+			errx(1, "gw \"%s\" addition failed", gw);
+		}
+	}
+}
+
+static void
+config_ipv6(const char *ifname, const char *method,
+	const char *addr, const char *mask, const char *gw)
+{
+	int rv;
+
+	if (strcmp(method, "auto") == 0) {
+		if ((rv = rump_pub_netconfig_auto_ipv6(ifname)) != 0) {
+			errx(1, "ipv6 autoconfig failed");
+		}
+	} else {
+		errx(1, "unsupported ipv6 config method \"%s\"", method);
+	}
+}
+
 static int
 handle_net(jsmntok_t *t, int left, char *data)
 {
 	char *ifname, *type, *method;
 	char *addr, *mask, *gw;
 	jsmntok_t *key, *value;
-	int rv, i, objsize;
+	int i, objsize;
 	static int configured;
 
 	T_CHECKTYPE(t, data, JSMN_OBJECT, __func__);
@@ -197,32 +243,12 @@ handle_net(jsmntok_t *t, int left, char *data)
 		errx(1, "net cfg missing vital data, not configuring");
 	}
 
-	if (strcmp(type, "inet") != 0) {
-		errx(1, "only ipv4 is supported currently, got: \"%s\"", type);
-	}
-
-	if (strcmp(method, "dhcp") == 0) {
-		if ((rv = rump_pub_netconfig_dhcp_ipv4_oneshot(ifname)) != 0)
-			errx(1, "configuring dhcp for %s failed: %d",
-			    ifname, rv);
+	if (strcmp(type, "inet") == 0) {
+		config_ipv4(ifname, method, addr, mask, gw);
+	} else if (strcmp(type, "inet6") == 0) {
+		config_ipv6(ifname, method, addr, mask, gw);
 	} else {
-		if (strcmp(method, "static") != 0) {
-			errx(1, "method \"static\" or \"dhcp\" expected, "
-			    "got \"%s\"", method);
-		}
-
-		if (!addr || !mask) {
-			errx(1, "static net cfg missing addr or mask");
-		}
-
-		if ((rv = rump_pub_netconfig_ipv4_ifaddr_cidr(ifname,
-		    addr, atoi(mask))) != 0) {
-			errx(1, "ifconfig \"%s\" for \"%s/%s\" failed",
-			    ifname, addr, mask);
-		}
-		if (gw && (rv = rump_pub_netconfig_ipv4_gw(gw)) != 0) {
-			errx(1, "gw \"%s\" addition failed", gw);
-		}
+		errx(1, "network type \"%s\" not supported", type);
 	}
 
 	return 2*objsize + 1;
