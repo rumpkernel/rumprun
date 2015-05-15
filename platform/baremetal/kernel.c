@@ -140,11 +140,15 @@ bmk_platform_block(bmk_time_t until)
 	int s = bmk_spldepth;
 
 	/* enable interrupts around the sleep */
-	while (bmk_spldepth)
+	if (bmk_spldepth) {
+		bmk_spldepth = 1;
 		spl0();
+	}
 	bmk_cpu_nanohlt();
-	while (bmk_spldepth < s)
+	if (s) {
 		splhigh();
+		bmk_spldepth = s;
+	}
 }
 
 /*
