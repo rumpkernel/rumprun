@@ -431,6 +431,12 @@ run_qemu()
 		b)
 			parse_blkspec "${OPTARG}" || usage
 			;;
+		d)
+			err -d not supported on qemu/kvm
+			;;
+		D)
+			opt_debug="-gdb tcp::${OPTARG}"
+			;;
 		e)
 			json_append "\"env\": \"${OPTARG}\","
 			;;
@@ -443,14 +449,15 @@ run_qemu()
 		n)
 			parse_netspec "${OPTARG}" || usage
 			;;
+		N)
+			# ignored
+			opt_name=${OPTARG}
+			;;
 		p)
 			opt_pause="-S"
 			;;
-		D)
-			opt_debug="-gdb tcp::${OPTARG}"
-			;;
 		*)
-			err qemu platform like zathras: not so good
+			usage
 			;;
 		esac
 	done
@@ -498,6 +505,7 @@ while getopts "${scriptopts}" opt; do
 	esac
 done
 shift $((${OPTIND}-1))
+OPTIND=1
 
 platform="$1"
 shift
