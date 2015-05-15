@@ -53,7 +53,8 @@ parsemem(uint32_t addr, uint32_t len)
 			break;
 		}
 	}
-	bmk_assert(off < len);
+	if (!(off < len))
+		bmk_platform_halt("multiboot memory chunk not found");
 
 	memsize = mbm->len;
 	osbegin = (unsigned long)_begin;
