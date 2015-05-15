@@ -290,7 +290,6 @@ run_xen()
 	opt_mem=${MEM_DEFAULT}
 	opt_name=
 	opt_debug=
-	opt_cansudo=false
 	sudo=''
 
 	while getopts "${guestopts}" opt; do
@@ -374,7 +373,7 @@ extra="$@"
 ${conf_vif}
 ${conf_disk}
 EOM
-	if ${opt_cansudo} && [ $(id -u) -ne 0 ]; then
+	if ${CANSUDO} && [ $(id -u) -ne 0 ]; then
 		sudo='sudo'
 	fi
 
