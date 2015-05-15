@@ -1,6 +1,7 @@
 #!/bin/sh
 #
 # Copyright (c) 2014 Martin Lucina.  All Rights Reserved.
+# Copyright (c) 2015 Antti Kantee.  All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -46,7 +47,7 @@ err()
 }
 
 scriptopts='DhS'
-guestopts='b:dD:e:iM:n:N:p'
+guestopts='b:dD:e:iI:M:n:N:pW:'
 
 # script option default values
 DUMPCMD=
@@ -74,7 +75,7 @@ script args are:
    -S execute sudo where potentially necessary
 
 guest args are:
-	[-dip] [-b blkspec] [-D port] [-e VAR[=VALUE]] [-M mem]
+	[-dip] [-b blkspec] [-D port] [-e VAR[=VALUE]] [-I ifopts] [-M mem]
 	[-n netspec] [-N name]
 
    -b configures a block device.  The format of "blkspec" is:
@@ -85,6 +86,11 @@ guest args are:
    -D attaches a gdb server on port to the guest
    -e set environment VAR to VALUE
    -i attaches to guest console on startup
+   -I create guest network interface and attach the user-specified
+      iftag to it.  the format is:
+	iftag[,backendopts]
+	e.g. -I 'qnet0,-net tap=/dev/tap0'
+	(NOTE: currently available only for kvm/qemu)
    -M set the guest's memory to mem megabytes, default is ${MEM_DEFAULT}
    -n configures a network interface, where netspec is one of:
 	inet,dhcp - IPv4 with DHCP
@@ -92,6 +98,10 @@ guest args are:
 	inet6,auto - IPv6 with stateless autoconfiguration
    -N set the guest's name to name, default is rumprun-APP
    -p creates the guest but leaves it paused
+   -W configure network interface new style
+	iftag,type,method[,params]
+	e.g. -W qnet0,inet,static,1.2.3.4/24
+	(NOTE: currently available only for kvm/qemu)
 
 EOM
 	exit 1
@@ -100,6 +110,19 @@ EOM
 store_netspec=usage
 nindex=0
 bindex=0
+
+createif_qemu ()
+{
+	local iftag
+	local qemuargs
+
+	iftag="${1%%,*}"
+	qemuargs="${1#*,}"
+
+	opt_netif="${opt_netif} -net nic,model=virtio ${qemuargs}"
+	eval ${iftag}2ifname=vioif${nindex}
+	nindex=$(expr $nindex + 1)
+}
 
 json_append()
 {
@@ -155,12 +178,8 @@ json_store_netspec()
 
 	json_append '"net" : {'
 
-	# XXX: should not generate the interface here
-	opt_netif="${opt_netif} -net nic,model=virtio -net user"
-
 	# XXX: should not assume vioif or -net user
-	json_append	'"if":		"'vioif${nindex}'",'
-
+	json_append	'"if":		"'$(eval echo \${${iftag}2ifname})'",'
 	json_append	'"type":	"'${iftype}'",'
 	json_append	'"method":	"'${ifmethod}'",'
 
@@ -178,6 +197,8 @@ json_store_netspec()
 
 parse_netspec()
 {
+	iftag=$1
+	shift
 
 	IFS=,
 	set -- $1
@@ -206,9 +227,15 @@ parse_netspec()
 	esac
 
 	${store_netspec}
-	nindex=$(expr $nindex + 1)
 
 	return 0
+}
+
+parse_newnetspec ()
+{
+
+	iftag=${1%%,*}
+	parse_netspec ${iftag} "${1#*,}"
 }
 
 xen_store_blkspec()
@@ -299,7 +326,8 @@ run_xen()
 		case "$opt" in
 		# -n: NETSPEC
 		n)
-			parse_netspec "${OPTARG}" || usage
+			parse_netspec net${nindex} "${OPTARG}" || usage
+			nindex=$(expr $nindex + 1)
 			;;
 		# -b: BLKSPEC: hostpath,mountpoint
 		b)
@@ -443,11 +471,17 @@ run_qemu()
 		i)
 			opt_interactive=1
 			;;
+		I)
+			createif_qemu "${OPTARG}" || usage
+			nindex=$(expr $nindex + 1)
+			;;
 		M)
 			opt_mem=${OPTARG}
 			;;
 		n)
-			parse_netspec "${OPTARG}" || usage
+			netname=_net${nindex}
+			createif_qemu "${netname},-net user"
+			parse_netspec ${netname} "${OPTARG}" || usage
 			;;
 		N)
 			# ignored
@@ -455,6 +489,9 @@ run_qemu()
 			;;
 		p)
 			opt_pause="-S"
+			;;
+		W)
+			parse_newnetspec "${OPTARG}" || usage
 			;;
 		*)
 			usage
