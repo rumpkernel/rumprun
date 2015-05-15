@@ -181,8 +181,8 @@ config_ipv6(const char *ifname, const char *method,
 static int
 handle_net(jsmntok_t *t, int left, char *data)
 {
-	char *ifname, *type, *method;
-	char *addr, *mask, *gw;
+	const char *ifname, *type, *method;
+	const char *addr, *mask, *gw;
 	jsmntok_t *key, *value;
 	int i, objsize;
 	static int configured;
@@ -204,7 +204,7 @@ handle_net(jsmntok_t *t, int left, char *data)
 	addr = mask = gw = NULL;
 
 	for (i = 0; i < objsize; i++, t+=2) {
-		char *valuestr;
+		const char *valuestr;
 		key = t;
 		value = t+1;
 
@@ -257,7 +257,7 @@ handle_net(jsmntok_t *t, int left, char *data)
 static int
 handle_blk(jsmntok_t *t, int left, char *data)
 {
-	char *devname, *fstype, *mp;
+	const char *devname, *fstype, *mp;
 	jsmntok_t *key, *value;
 	int i, objsize;
 
@@ -273,7 +273,7 @@ handle_blk(jsmntok_t *t, int left, char *data)
 	fstype = devname = mp = NULL;
 
 	for (i = 0; i < objsize; i++, t+=2) {
-		char *valuestr;
+		const char *valuestr;
 		key = t;
 		value = t+1;
 
@@ -307,7 +307,8 @@ handle_blk(jsmntok_t *t, int left, char *data)
 			errx(1, "creating mountpoint \"%s\" failed", mp);
 
 		if (strcmp(fstype, "ffs") == 0) {
-			struct ufs_args mntargs = { .fspec = devname };
+			struct ufs_args mntargs =
+			    { .fspec = __UNCONST(devname) };
 
 			if (mount(MOUNT_FFS, mp, 0,
 			    &mntargs, sizeof(mntargs)) == -1) {
