@@ -76,27 +76,27 @@ script args are:
 
 guest args are:
 	[-dip] [-b blkspec] [-D port] [-e VAR[=VALUE]] [-I ifopts] [-M mem]
-	[-n netspec] [-N name]
+	[-N name] [-n netspec]
 
    -b configures a block device.  The format of "blkspec" is:
        hostpath[,mountpoint] where:
 	hostpath   = image that is passed to the guest as a block device
 	mountpoint = if "hostpath" is a file system image, mountpoint on guest
-   -d destroys the guest on poweroff
    -D attaches a gdb server on port to the guest
+   -d destroys the guest on poweroff
    -e set environment VAR to VALUE
-   -i attaches to guest console on startup
    -I create guest network interface and attach the user-specified
       iftag to it.  the format is:
 	iftag[,backendopts]
 	e.g. -I 'qnet0,-net tap=/dev/tap0'
 	(NOTE: currently available only for kvm/qemu)
+   -i attaches to guest console on startup
    -M set the guest's memory to mem megabytes, default is ${MEM_DEFAULT}
+   -N set the guest's name to name, default is rumprun-APP
    -n configures a network interface, where netspec is one of:
 	inet,dhcp - IPv4 with DHCP
 	inet,static,addr/mask[,gateway] - IPv4 with static IP
 	inet6,auto - IPv6 with stateless autoconfiguration
-   -N set the guest's name to name, default is rumprun-APP
    -p creates the guest but leaves it paused
    -W configure network interface new style
 	iftag,type,method[,params]
