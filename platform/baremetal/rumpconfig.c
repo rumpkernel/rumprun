@@ -296,7 +296,7 @@ handle_blk(jsmntok_t *t, int left, char *data)
 		}
 	}
 
-	if (devname || fstype) {
+	if (!devname || !fstype) {
 		errx(1, "blk cfg missing vital data");
 	}
 
