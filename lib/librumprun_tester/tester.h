@@ -26,6 +26,10 @@
 #ifndef _BMK_BASE_RUMPRUN_TEST_H_
 #define _BMK_BASE_RUMPRUN_TEST_H_
 
+#include <sys/cdefs.h>
+
+__BEGIN_DECLS
 int rumprun_test(int, char **);
+__END_DECLS
 
 #endif /* _BMK_BASE_RUMPRUN_TEST_H_ */
