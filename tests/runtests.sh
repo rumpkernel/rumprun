@@ -29,6 +29,9 @@ cd $(dirname $0) || die 'could not enter test dir'
 RUMPRUN=$(pwd)/../app-tools/rumprun
 RUMPSTOP=$(pwd)/../app-tools/rumpstop
 
+# we know, we knooooooow
+export RUMPRUN_WARNING_STFU=please
+
 # TODO: use a more scalable way of specifying tests
 TESTS='hello/hello basic/ctor_test basic/pthread_test basic/tls_test
 	crypto/md5'
