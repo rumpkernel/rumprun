@@ -1,7 +1,9 @@
 #include <iostream>
 
+#include <rumprun/tester.h>
+
 int
-main()
+rumprun_test(int argc, char *argv[])
 {
 
 	std::cout << "hello, c++" << std::endl;
