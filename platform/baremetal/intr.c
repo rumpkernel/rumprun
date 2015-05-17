@@ -73,16 +73,17 @@ isr(void *arg)
 			rv = 0;
 			for (i = 0; i < sizeof(isr_todo)*8; i++) {
 				struct intrhand *ih;
+				int nlocks = 1;
 
 				if ((isrcopy & (1<<i)) == 0)
 					continue;
 
-				rumpuser__hyp.hyp_schedule();
+				rumpkern_sched(nlocks, NULL);
 				SLIST_FOREACH(ih, &isr_ih[i], ih_entries) {
 					if ((rv = ih->ih_fun(ih->ih_arg)) != 0)
 						break;
 				}
-				rumpuser__hyp.hyp_unschedule();
+				rumpkern_unsched(&nlocks, NULL);
 			}
 
 			bmk_cpu_intr_ack();
