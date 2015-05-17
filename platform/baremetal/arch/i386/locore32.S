@@ -144,3 +144,5 @@ END(bmk_cpu_isr_##intnum)
 
 INTRSTUB(10)
 INTRSTUB(11)
+INTRSTUB(14)
+INTRSTUB(15)

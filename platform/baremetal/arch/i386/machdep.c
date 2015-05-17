@@ -61,6 +61,8 @@ void bmk_cpu_insr(void);
 void bmk_cpu_isr_clock(void);
 void bmk_cpu_isr_10(void);
 void bmk_cpu_isr_11(void);
+void bmk_cpu_isr_14(void);
+void bmk_cpu_isr_15(void);
 
 static void
 fillgate(struct gate_descriptor *gd, void *fun)
@@ -231,6 +233,12 @@ bmk_cpu_intr_init(int intr)
 		break;
 	case 11:
 		fillgate(&idt[32+11], bmk_cpu_isr_11);
+		break;
+	case 14:
+		fillgate(&idt[32+14], bmk_cpu_isr_14);
+		break;
+	case 15:
+		fillgate(&idt[32+15], bmk_cpu_isr_15);
 		break;
 	default:
 		return BMK_EGENERIC;
