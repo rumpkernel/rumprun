@@ -156,23 +156,23 @@ createif_qemu ()
 }
 
 json_depth=0
-json_append ()
+json_append_ln ()
 {
 
-	json="${json} $*"
+	json="${json} $*, "
 }
 
 json_open_block ()
 {
 
-	json_append ${1:+\"$1\" : } '{'
+	json="${json} ${1:+\"$1\" : } {"
 	json_depth=$((${json_depth}+1))
 }
 
 json_finalize_block ()
 {
 
-	json_append '},'
+	json_append_ln }
 	json_depth=$((${json_depth}-1))
 }
 
@@ -219,18 +219,18 @@ json_store_netspec ()
 	json_open_block net
 
 	# XXX: should not assume vioif or -net user
-	json_append	'"if":		"'$(eval echo \${${iftag}2ifname})'",'
-	json_append	'"type":	"'${iftype}'",'
-	json_append	'"method":	"'${ifmethod}'",'
+	json_append_ln	'"if":		"'$(eval echo \${${iftag}2ifname})'"'
+	json_append_ln	'"type":	"'${iftype}'"'
+	json_append_ln	'"method":	"'${ifmethod}'"'
 
 	[ -n "${ifaddr}" ] || { json_finalize_block ; return ; }
 
-	json_append	'"addr":	"'${ifaddr}'",'
-	json_append	'"mask":	"'${ifmask}'",'
+	json_append_ln	'"addr":	"'${ifaddr}'"'
+	json_append_ln	'"mask":	"'${ifmask}'"'
 
 	[ -n "${ifgw}" ] || { json_finalize_block ; return ; }
 
-	json_append	'"gw":		"'${ifgw}'",'
+	json_append_ln	'"gw":		"'${ifgw}'"'
 
 	json_finalize_block
 }
@@ -303,10 +303,10 @@ json_store_qemu_blkspec ()
 	json_open_block blk
 
 	# XXX: should not assume ld (virtio)
-	json_append	'"source":	"'dev'",'
-	json_append	'"path":	"'/dev/ld${bindex}a'",'
-	json_append	'"fstype":	"'${fstype}'",'
-	json_append	'"mountpoint":	"'${mountpoint}'",'
+	json_append_ln	'"source":	"'dev'"'
+	json_append_ln	'"path":	"'/dev/ld${bindex}a'"'
+	json_append_ln	'"fstype":	"'${fstype}'"'
+	json_append_ln	'"mountpoint":	"'${mountpoint}'"'
 
 	json_finalize_block
 }
@@ -509,7 +509,7 @@ run_qemu ()
 			opt_debug="-gdb tcp::${OPTARG}"
 			;;
 		e)
-			json_append "\"env\": \"${OPTARG}\","
+			json_append_ln "\"env\": \"${OPTARG}\""
 			;;
 		i)
 			opt_interactive=1
@@ -549,7 +549,7 @@ run_qemu ()
 		opt_kvm=-no-kvm
 	fi
 
-	json_append "\"cmdline\": \""$@"\""
+	json_append_ln "\"cmdline\": \""$@"\""
 	json_finalize_block
 
 	# internal check
