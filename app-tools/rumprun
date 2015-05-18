@@ -48,12 +48,13 @@ err()
 	exit 1
 }
 
-scriptopts='DhS'
+scriptopts='DhSt:T:'
 guestopts='b:dD:e:iI:M:n:N:pW:'
 
 # script option default values
 DUMPCMD=
 CANSUDO=false
+PRESERVETMPDIR=false
 
 usage()
 {
@@ -69,12 +70,14 @@ PLATFORM is the rumprun runtime platform to use
 APP is the binary to rumprun.  app args are processed by APP.
 
 script args are:
-	[-h] [-DS]
+	[-h] [-DS] [-t tmpdir] [-T tmpdir]
 
    -h display this message
 
    -D dump backend commands instead of running them
    -S execute sudo where potentially necessary
+   -t use tmpdir as dir for temp files (default: /tmp/rumprun.XXXXXXXX)
+   -T same as -t, except do not remove temporary directory
 
 guest args are:
 	[-dip] [-b blkspec] [-D port] [-e VAR[=VALUE]] [-I ifopts] [-M mem]
@@ -107,6 +110,32 @@ guest args are:
 
 EOM
 	exit 1
+}
+
+nuketmpdir ()
+{
+
+	[ -z "${TMPDIR}" ] && return
+	${PRESERVETMPDIR} && return
+
+	realtmpdir="${TMPDIR}"
+	TMPDIR=''
+	rm -rf "${realtmpdir}"
+}
+
+setuptmpdir ()
+{
+
+	if [ -z "${TMPDIR}" ]; then
+		TMPDIR=$(mktemp -d /tmp/rumprun.XXXXXXXX)
+	else
+		[ ! -d "${TMPDIR}" ] || err ${TMPDIR} already exists
+		mkdir -p "${TMPDIR}" || err could not create ${TMPDIR}
+		chmod 700 "${TMPDIR}" \
+		    || { rm -rf "${TMPDIR}" ; err could not chmod ${TMPDIR}; }
+	fi
+	trap nuketmpdir 0 INT TERM
+	sleep 3
 }
 
 store_netspec=usage
@@ -309,8 +338,8 @@ run_xen()
 	store_blkspec=xen_store_blkspec
 	store_netspec=xen_store_netspec
 
-	conf=/tmp/xr.conf.$$
-	xenstore=/tmp/xr.store.$$
+	conf="${TMPDIR}/xr.conf"
+	xenstore="${TMPDIR}/xr.store"
 	>${conf}
 	>${xenstore}
 	OPTIND=1
@@ -395,7 +424,7 @@ run_xen()
 	app=$(readlink -f $1)
 	shift
 	# Generate xl configuration file.
-	cat <<EOM >/tmp/xr.conf.$$
+	cat <<EOM >"${TMPDIR}/xr.conf"
 kernel="${app}"
 name="${name}"
 vcpus=1
@@ -414,14 +443,15 @@ EOM
 	if ! ${sudo} xl create -p ${conf} >/dev/null; then
 		err xl create failed
 	fi
-	rm ${conf}
 	domid=$(${sudo} xl domid ${name})
 	# Write provisioning information for domain to xenstore.
 	prefix=/local/domain/${domid}/rumprun
 	cat ${xenstore} | while read key value; do
 		${sudo} xenstore-write "${prefix}/${key}" "${value}"
 	done
-	rm ${xenstore}
+
+	nuketmpdir
+
 	# Attach debugger if requested.
 	if [ -n "$opt_debug" ]; then
 		if objdump -f ${app} | grep -q elf64; then
@@ -541,6 +571,13 @@ while getopts "${scriptopts}" opt; do
 	S)
 		CANSUDO=true
 		;;
+	t)
+		TMPDIR="${OPTARG}"
+		;;
+	T)
+		PRESERVETMPDIR=true
+		TMPDIR="${OPTARG}"
+		;;
 	esac
 done
 shift $((${OPTIND}-1))
@@ -548,6 +585,8 @@ OPTIND=1
 
 platform="$1"
 shift
+
+setuptmpdir
 
 case ${platform} in
 xen)
