@@ -281,7 +281,7 @@ xen_store_blkspec()
 	fi
 }
 
-json_store_blkspec()
+json_store_qemu_blkspec()
 {
 
 	# XXX: should not generate the interface here
@@ -293,7 +293,8 @@ json_store_blkspec()
 	json_append '"blk" : {'
 
 	# XXX: should not assume ld (virtio)
-	json_append	'"dev":		"'/dev/ld${bindex}a'",'
+	json_append	'"source":	"'dev'",'
+	json_append	'"path":	"'/dev/ld${bindex}a'",'
 	json_append	'"fstype":	"'${fstype}'",'
 	json_append	'"mountpoint":	"'${mountpoint}'",'
 
@@ -472,7 +473,7 @@ EOM
 run_qemu()
 {
 
-	store_blkspec=json_store_blkspec
+	store_blkspec=json_store_qemu_blkspec
 	store_netspec=json_store_netspec
 
 	opt_interactive=

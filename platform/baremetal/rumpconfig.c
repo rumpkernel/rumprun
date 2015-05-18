@@ -257,7 +257,7 @@ handle_net(jsmntok_t *t, int left, char *data)
 static int
 handle_blk(jsmntok_t *t, int left, char *data)
 {
-	const char *devname, *fstype, *mp;
+	const char *source, *path, *fstype, *mp;
 	jsmntok_t *key, *value;
 	int i, objsize;
 
@@ -270,7 +270,7 @@ handle_blk(jsmntok_t *t, int left, char *data)
 	}
 	t++;
 
-	fstype = devname = mp = NULL;
+	fstype = source = path = mp = NULL;
 
 	for (i = 0; i < objsize; i++, t+=2) {
 		const char *valuestr;
@@ -284,8 +284,10 @@ handle_blk(jsmntok_t *t, int left, char *data)
 		T_CHECKSIZE(value, data, 0, __func__);
 
 		valuestr = token2cstr(value, data);
-		if (T_STREQ(key, data, "dev")) {
-			devname = valuestr;
+		if (T_STREQ(key, data, "source")) {
+			source = valuestr;
+		} else if (T_STREQ(key, data, "path")) {
+			path = valuestr;
 		} else if (T_STREQ(key, data, "fstype")) {
 			fstype = valuestr;
 		} else if (T_STREQ(key, data, "mountpoint")) {
@@ -296,8 +298,12 @@ handle_blk(jsmntok_t *t, int left, char *data)
 		}
 	}
 
-	if (!devname || !fstype) {
+	if (!source || !path || !fstype) {
 		errx(1, "blk cfg missing vital data");
+	}
+
+	if (strcmp(source, "dev") != 0) {
+		errx(1, "unsupported blk source \"%s\"", source);
 	}
 
 	/* we only need to do something only if a mountpoint is specified */
@@ -308,14 +314,14 @@ handle_blk(jsmntok_t *t, int left, char *data)
 
 		if (strcmp(fstype, "ffs") == 0) {
 			struct ufs_args mntargs =
-			    { .fspec = __UNCONST(devname) };
+			    { .fspec = __UNCONST(path) };
 
 			if (mount(MOUNT_FFS, mp, 0,
 			    &mntargs, sizeof(mntargs)) == -1) {
 				errx(1, "rumprun_config: mount_ffs failed");
 			}
 		} else if(strcmp(fstype, "cd9660") == 0) {
-			struct iso_args mntargs = { .fspec = devname };
+			struct iso_args mntargs = { .fspec = path };
 
 			if (mount(MOUNT_CD9660, mp, MNT_RDONLY,
 			    &mntargs, sizeof(mntargs)) == -1) {
