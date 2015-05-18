@@ -135,7 +135,6 @@ setuptmpdir ()
 		    || { rm -rf "${TMPDIR}" ; err could not chmod ${TMPDIR}; }
 	fi
 	trap nuketmpdir 0 INT TERM
-	sleep 3
 }
 
 store_netspec=usage
