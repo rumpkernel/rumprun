@@ -42,8 +42,9 @@ if [ "${RUMPRUN_WARNING_STFU}" != 'please' ]; then
 	exec 1>&3 3>&-
 fi
 
-err()
+die ()
 {
+
 	echo rumprun: error: "$@" 1>&2
 	exit 1
 }
@@ -56,7 +57,7 @@ DUMPCMD=
 CANSUDO=false
 PRESERVETMPDIR=false
 
-usage()
+usage ()
 {
 
 	cat <<EOM
@@ -129,10 +130,10 @@ setuptmpdir ()
 	if [ -z "${TMPDIR}" ]; then
 		TMPDIR=$(mktemp -d /tmp/rumprun.XXXXXXXX)
 	else
-		[ ! -d "${TMPDIR}" ] || err ${TMPDIR} already exists
-		mkdir -p "${TMPDIR}" || err could not create ${TMPDIR}
+		[ ! -d "${TMPDIR}" ] || die ${TMPDIR} already exists
+		mkdir -p "${TMPDIR}" || die could not create ${TMPDIR}
 		chmod 700 "${TMPDIR}" \
-		    || { rm -rf "${TMPDIR}" ; err could not chmod ${TMPDIR}; }
+		    || { rm -rf "${TMPDIR}" ; die could not chmod ${TMPDIR}; }
 	fi
 	trap nuketmpdir 0 INT TERM
 }
@@ -154,20 +155,20 @@ createif_qemu ()
 	nindex=$(expr $nindex + 1)
 }
 
-json_append()
+json_append ()
 {
 
 	json="${json} $*"
 }
 
-json_finalize_block()
+json_finalize_block ()
 {
 
 	json_append '},'
 }
 
 # Detect the filesystem type of the image at $1.
-detect_fstype()
+detect_fstype ()
 {
 	eval $(blkid -o export $1)
 	if [ $? -ne 0 ]; then
@@ -189,7 +190,7 @@ detect_fstype()
 	esac
 }
 
-xen_store_netspec()
+xen_store_netspec ()
 {
 
 	echo net/${nindex}/type ${iftype} >>${xenstore}
@@ -203,7 +204,7 @@ xen_store_netspec()
 	fi
 }
 
-json_store_netspec()
+json_store_netspec ()
 {
 
 	json_append '"net" : {'
@@ -225,7 +226,7 @@ json_store_netspec()
 	json_finalize_block
 }
 
-parse_netspec()
+parse_netspec ()
 {
 	iftag=$1
 	shift
@@ -268,7 +269,7 @@ parse_newnetspec ()
 	parse_netspec ${iftag} "${1#*,}"
 }
 
-xen_store_blkspec()
+xen_store_blkspec ()
 {
 
 	vdev=hd$(echo ${bindex} | tr '[0-9]' '[a-j]')
@@ -281,7 +282,7 @@ xen_store_blkspec()
 	fi
 }
 
-json_store_qemu_blkspec()
+json_store_qemu_blkspec ()
 {
 
 	# XXX: should not generate the interface here
@@ -301,7 +302,7 @@ json_store_qemu_blkspec()
 	json_finalize_block
 }
 
-parse_blkspec()
+parse_blkspec ()
 {
 	spec=$1
 
@@ -309,11 +310,11 @@ parse_blkspec()
 	image=$(readlink -f ${image})
 	mountpoint=$(echo ${spec} | sed -n 's/.*,\(.*\)/\1/p')
 	[ -n "$image" ] || usage
-	[ -f "$image" ] || err File $image does not exist
+	[ -f "$image" ] || die File $image does not exist
 
 	if [ -n "$mountpoint" ]; then
 		fstype=$(detect_fstype $image)
-		[ $? -ne 0 ] && err File $image: unknown fstype
+		[ $? -ne 0 ] && die File $image: unknown fstype
 	fi
 
 	${store_blkspec}
@@ -321,10 +322,10 @@ parse_blkspec()
 }
 
 # run_xen: Generate Xen configuration and run application stack.
-run_xen()
+run_xen ()
 {
 
-	[ -n "${DUMPCMD}" ] && err -D not supported for xen
+	[ -n "${DUMPCMD}" ] && die -D not supported for xen
 
 	# try to find gdbsx from common locations
 	unset gdbsx
@@ -402,7 +403,7 @@ run_xen()
 		# -D PORT: attach gdbsx to domain.
 		D)
 			if [ -z "${gdbsx}" ]; then
-				err "'gdbsx' is required for -D, please install it."
+				die "'gdbsx' is required for -D, please install it."
 			fi
 			opt_debug=${OPTARG}
 			;;
@@ -441,7 +442,7 @@ EOM
 
 	# Create the domain and leave it paused so that we can get its domid.
 	if ! ${sudo} xl create -p ${conf} >/dev/null; then
-		err xl create failed
+		die xl create failed
 	fi
 	domid=$(${sudo} xl domid ${name})
 	# Write provisioning information for domain to xenstore.
@@ -470,7 +471,7 @@ EOM
 	fi
 }
 
-run_qemu()
+run_qemu ()
 {
 
 	store_blkspec=json_store_qemu_blkspec
@@ -492,7 +493,7 @@ run_qemu()
 			parse_blkspec "${OPTARG}" || usage
 			;;
 		d)
-			err -d not supported on qemu/kvm
+			die -d not supported on qemu/kvm
 			;;
 		D)
 			opt_debug="-gdb tcp::${OPTARG}"
