@@ -64,6 +64,7 @@ usage ()
 usage: rumprun [script args] PLATFORM [guest args] APP [ -- ] [app args]
 
 PLATFORM is the rumprun runtime platform to use
+    iso  : bake app and config into a bootable iso image
     kvm  : baremetal guest via qemu -enable-kvm
     qemu : baremetal guest via qemu -no-kvm
     xen  : xen guest via xl(1)
@@ -139,6 +140,8 @@ setuptmpdir ()
 }
 
 store_netspec=usage
+store_blkspec=usage
+
 nindex=0
 bindex=0
 
@@ -581,6 +584,84 @@ run_qemu ()
 	fi
 }
 
+bake_iso ()
+{
+
+	type xorriso >/dev/null || die bake_iso needs xorriso
+	type grub-mkrescue >/dev/null || die bake_iso needs grub-mkrescue
+
+	# store_blkspec=json_store_iso_blkspec
+	# store_netspec=json_store_netspec
+
+	opt_interactive=
+	opt_drivespec=
+	opt_debug=
+	opt_pause=
+	opt_netif=
+	opt_mem=${MEM_DEFAULT}
+
+	json_open_block
+
+	while getopts "${guestopts}" opt; do
+		case "$opt" in
+		b)
+			die -b not YET supported on iso
+			parse_blkspec "${OPTARG}" || usage
+			;;
+		d)
+			die -d not supported on iso
+			;;
+		D)
+			die -D not supported on iso
+			;;
+		e)
+			json_append_ln "\"env\": \"${OPTARG}\""
+			;;
+		i)
+			die -i not supported on iso
+			;;
+		I)
+			: createif_iso "${OPTARG}" || usage
+			nindex=$(expr $nindex + 1)
+			;;
+		M)
+			die -M not supported on iso
+			;;
+		N)
+			opt_name=${OPTARG}
+			;;
+		p)
+			die -p not supported on iso
+			;;
+		W)
+			die -W not YET supported on iso
+			parse_newnetspec "${OPTARG}" || usage
+			;;
+		*)
+			usage
+			;;
+		esac
+	done
+	shift $((${OPTIND}-1))
+	bootimage=$1
+	: ${opt_name:=rumprun-$(echo ${bootimage} | tr / _).iso}
+
+	[ ! -f ${opt_name} ] || die target ${opt_name} already exists
+
+	json_append_ln "\"cmdline\": \""$@"\""
+	json_finalize_block
+	[ ${json_depth} -eq 0 ] || die internal error, final depth ${json_depth}
+
+	# create the iso directory structure
+	isodir="${TMPDIR}/iso"
+	mkdir -p "${isodir}/boot/grub"
+	printf 'set timeout=0\n' > "${isodir}/boot/grub/grub.cfg"
+	printf 'menuentry "rumpkernel" {\n\tmultiboot /boot/%s\n}\n' $1 \
+	    >> "${isodir}/boot/grub/grub.cfg"
+	cp ${bootimage} "${isodir}/boot"
+	grub-mkrescue "${isodir}" -o ${opt_name}
+}
+
 if [ $# -lt 2 ]; then
 	usage
 fi
@@ -616,6 +697,9 @@ setuptmpdir
 case ${platform} in
 xen)
 	run_xen "$@"
+	;;
+iso)
+	bake_iso "$@"
 	;;
 kvm)
 	run_qemu kvm "$@"
