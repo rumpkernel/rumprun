@@ -74,3 +74,16 @@ _sys___sigprocmask14(int how, const sigset_t *set, sigset_t *oset)
 }
 __strong_alias(sigprocmask,__sigprocmask14);
 __weak_alias(__sigprocmask14,_sys___sigprocmask14);
+
+int
+sigpending(sigset_t *set)
+{
+	static int warned = 0;
+
+	STUBWARN();
+
+	if (set)
+		memset(set, 0, sizeof(*set));
+	return 0;
+}
+__strong_alias(sigpending,__sigpending14);
