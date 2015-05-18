@@ -155,16 +155,25 @@ createif_qemu ()
 	nindex=$(expr $nindex + 1)
 }
 
+json_depth=0
 json_append ()
 {
 
 	json="${json} $*"
 }
 
+json_open_block ()
+{
+
+	json_append ${1:+\"$1\" : } '{'
+	json_depth=$((${json_depth}+1))
+}
+
 json_finalize_block ()
 {
 
 	json_append '},'
+	json_depth=$((${json_depth}-1))
 }
 
 # Detect the filesystem type of the image at $1.
@@ -207,7 +216,7 @@ xen_store_netspec ()
 json_store_netspec ()
 {
 
-	json_append '"net" : {'
+	json_open_block net
 
 	# XXX: should not assume vioif or -net user
 	json_append	'"if":		"'$(eval echo \${${iftag}2ifname})'",'
@@ -291,7 +300,7 @@ json_store_qemu_blkspec ()
 	# if the image does not need to be mounted, we're done
 	[ -n "${mountpoint}" ] || return
 
-	json_append '"blk" : {'
+	json_open_block blk
 
 	# XXX: should not assume ld (virtio)
 	json_append	'"source":	"'dev'",'
@@ -483,7 +492,8 @@ run_qemu ()
 	opt_pause=
 	opt_netif=
 	opt_mem=${MEM_DEFAULT}
-	json_append '{'
+
+	json_open_block
 
 	variant=$1
 	shift
@@ -540,7 +550,11 @@ run_qemu ()
 	fi
 
 	json_append "\"cmdline\": \""$@"\""
-	json_append '}'
+	json_finalize_block
+
+	# internal check
+	[ ${json_depth} -eq 0 ] || die internal error, final depth ${json_depth}
+
 	json_coma="$(echo ${json} | sed 's/,/,,/g')"
 
 	[ -n "${opt_netif}" ] || opt_netif="-net none"
