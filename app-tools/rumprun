@@ -156,24 +156,34 @@ createif_qemu ()
 }
 
 json_depth=0
+json_indent ()
+{
+
+	for x in $(seq ${json_depth}); do
+		printf '\t' >> ${TMPDIR}/json.cfg
+	done
+}
+
 json_append_ln ()
 {
 
-	json="${json} $*, "
+	json_indent
+	echo "$*, " >> ${TMPDIR}/json.cfg
 }
 
 json_open_block ()
 {
 
-	json="${json} ${1:+\"$1\" : } {"
+	json_append_ln "${1:+\"$1\" : }" {
 	json_depth=$((${json_depth}+1))
 }
 
 json_finalize_block ()
 {
 
-	json_append_ln }
+	[ ${json_depth} -ne 0 ] || die internal json error
 	json_depth=$((${json_depth}-1))
+	json_append_ln }
 }
 
 # Detect the filesystem type of the image at $1.
@@ -555,7 +565,7 @@ run_qemu ()
 	# internal check
 	[ ${json_depth} -eq 0 ] || die internal error, final depth ${json_depth}
 
-	json_coma="$(echo ${json} | sed 's/,/,,/g')"
+	json_coma="$(sed 's/,/,,/g' < "${TMPDIR}/json.cfg")"
 
 	[ -n "${opt_netif}" ] || opt_netif="-net none"
 
