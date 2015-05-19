@@ -158,6 +158,16 @@ createif_qemu ()
 	nindex=$(expr $nindex + 1)
 }
 
+createif_iso ()
+{
+	local iftag
+
+	iftag="${1%%,*}"
+
+	eval ${iftag}2ifname=vioif${nindex}
+	nindex=$(expr $nindex + 1)
+}
+
 json_depth=0
 json_indent ()
 {
@@ -615,7 +625,7 @@ bake_iso ()
 	type grub-mkrescue >/dev/null || die bake_iso needs grub-mkrescue
 
 	store_blkspec=json_store_iso_blkspec
-	# store_netspec=json_store_netspec
+	store_netspec=json_store_netspec
 
 	opt_interactive=
 	opt_drivespec=
@@ -652,7 +662,7 @@ bake_iso ()
 			die -i not supported on iso
 			;;
 		I)
-			: createif_iso "${OPTARG}" || usage
+			createif_iso "${OPTARG}" || usage
 			nindex=$(expr $nindex + 1)
 			;;
 		M)
@@ -665,7 +675,6 @@ bake_iso ()
 			die -p not supported on iso
 			;;
 		W)
-			die -W not YET supported on iso
 			parse_newnetspec "${OPTARG}" || usage
 			;;
 		*)
