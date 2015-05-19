@@ -30,10 +30,13 @@
  */
 
 #include <sys/param.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 
 #include <ufs/ufs/ufsmount.h>
 #include <isofs/cd9660/cd9660_mount.h>
+
+#include <dev/vndvar.h>
 
 #include <assert.h>
 #include <err.h>
@@ -255,6 +258,24 @@ handle_net(jsmntok_t *t, int left, char *data)
 	return 2*objsize + 1;
 }
 
+static void
+configvnd(const char *path)
+{
+	struct vnd_ioctl vndio;
+	int fd;
+
+	memset(&vndio, 0, sizeof(vndio));
+	vndio.vnd_file = __UNCONST(path);
+	vndio.vnd_flags = VNDIOF_READONLY;
+
+	fd = open("/dev/rvnd0d", O_RDWR);
+	if (fd == -1)
+		err(1, "cannot open /dev/vnd");
+
+	if (ioctl(fd, VNDIOCSET, &vndio) == -1)
+		err(1, "vndset failed");
+}
+
 static int
 handle_blk(jsmntok_t *t, int left, char *data)
 {
@@ -303,7 +324,12 @@ handle_blk(jsmntok_t *t, int left, char *data)
 		errx(1, "blk cfg missing vital data");
 	}
 
-	if (strcmp(source, "dev") != 0) {
+	if (strcmp(source, "dev") == 0) {
+		/* nothing to do here */
+	} else if (strcmp(source, "vnd") == 0) {
+		configvnd(path);
+		path = "/dev/vnd0d"; /* XXX */
+	} else {
 		errx(1, "unsupported blk source \"%s\"", source);
 	}
 
