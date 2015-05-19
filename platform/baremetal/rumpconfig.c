@@ -377,7 +377,7 @@ struct {
 static char *
 getcmdlinefromroot(const char *cfgname)
 {
-	struct iso_args mntargs = { .fspec = "/dev/cd0a" }; /* XXX hardcode */
+	struct iso_args mntargs = { .fspec = "/dev/ld0d" }; /* XXX hardcode */
 	struct stat sb;
 	int fd;
 	char *p;
