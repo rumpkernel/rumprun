@@ -41,6 +41,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <rump/rump.h>
 #include <rump/netconfig.h>
@@ -345,14 +346,65 @@ struct {
 	{ "net", handle_net },
 };
 
+/* don't believe we can have a >64k config */
+#define CFGMAXSIZE (64*1024)
+static char *
+getcmdlinefromroot(const char *cfgname)
+{
+	struct iso_args mntargs = { .fspec = "/dev/cd0a" }; /* XXX hardcode */
+	struct stat sb;
+	int fd;
+	char *p;
+
+	if (mkdir("/rootfs", 0777) == -1)
+		err(1, "mkdir /rootfs failed");
+
+	/* XXX: should not be hardcoded to cd9660.  but it is for now. */
+	if (mount(MOUNT_CD9660, "/rootfs", MNT_RDONLY,
+	    &mntargs, sizeof(mntargs)) == -1) {
+		err(1, "rumprun_config: mount_cd9660 failed");
+	}
+
+	while (*cfgname == '/')
+		cfgname++;
+	if (chdir("/rootfs") == -1)
+		err(1, "chdir rootfs");
+
+	if ((fd = open(cfgname, O_RDONLY)) == -1)
+		err(1, "open %s", cfgname);
+	if (stat(cfgname, &sb) == -1)
+		err(1, "stat %s", cfgname);
+
+	if (sb.st_size > CFGMAXSIZE)
+		errx(1, "unbelievable cfg file size, increase CFGMAXSIZE");
+	if ((p = malloc(sb.st_size+1)) == NULL)
+		err(1, "cfgname storage");
+
+	if (read(fd, p, sb.st_size) != sb.st_size)
+		err(1, "read cfgfile");
+	close(fd);
+
+	p[sb.st_size] = '\0';
+	return p;
+}
+
+#define ROOTCFG "ROOTFSCFG="
 void
 _rumprun_config(char *cmdline)
 {
 	jsmn_parser p;
 	jsmntok_t *tokens = NULL;
 	jsmntok_t *t;
-	size_t cmdline_len = strlen(cmdline);
+	size_t cmdline_len;
+	const size_t rootcfglen = sizeof(ROOTCFG)-1;
 	int i, ntok;
+
+	/* is the config file on rootfs?  if so, mount & dig it out */
+	if (strncmp(cmdline, ROOTCFG, rootcfglen) == 0) {
+		cmdline = getcmdlinefromroot(cmdline + rootcfglen);
+		if (cmdline == NULL)
+			errx(1, "could not get cfg from rootfs");
+	}
 
 	while (*cmdline != '{') {
 		if (*cmdline == '\0') {
@@ -363,11 +415,12 @@ _rumprun_config(char *cmdline)
 		cmdline++;
 	}
 
+	cmdline_len = strlen(cmdline);
 	jsmn_init(&p);
 	ntok = jsmn_parse(&p, cmdline, cmdline_len, NULL, 0);
 
 	if (ntok <= 0) {
-		errx(1, "command line json parse failed");
+		errx(1, "json parse failed 1");
 	}
 
 	tokens = malloc(ntok * sizeof(*t));
@@ -377,7 +430,7 @@ _rumprun_config(char *cmdline)
 
 	jsmn_init(&p);
 	if ((ntok = jsmn_parse(&p, cmdline, cmdline_len, tokens, ntok)) < 1) {
-		errx(1, "command line json parse failed");
+		errx(1, "json parse failed 2");
 	}
 
 	T_CHECKTYPE(tokens, cmdline, JSMN_OBJECT, __func__);
