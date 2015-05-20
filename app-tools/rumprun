@@ -386,7 +386,7 @@ parse_blkspec ()
 run_xen ()
 {
 
-	[ -n "${DUMPCMD}" ] && die -D not supported for xen
+	[ -z "${DUMPCMD}" ] || echo WARNING: -D not perfectly supported by Xen
 
 	# try to find gdbsx from common locations
 	unset gdbsx
@@ -502,14 +502,14 @@ EOM
 	fi
 
 	# Create the domain and leave it paused so that we can get its domid.
-	if ! ${sudo} xl create -p ${conf} >/dev/null; then
+	if ! ${DUMPCMD} ${sudo} xl create -p ${conf} >/dev/null; then
 		die xl create failed
 	fi
-	domid=$(${sudo} xl domid ${name})
+	domid=$(${DUMPCMD} ${sudo} xl domid ${name})
 	# Write provisioning information for domain to xenstore.
 	prefix=/local/domain/${domid}/rumprun
 	cat ${xenstore} | while read key value; do
-		${sudo} xenstore-write "${prefix}/${key}" "${value}"
+		${DUMPCMD} ${sudo} xenstore-write "${prefix}/${key}" "${value}"
 	done
 
 	nuketmpdir
@@ -521,12 +521,12 @@ EOM
 		else
 			bits=32
 		fi
-		${gdbsx} -a ${domid} ${bits} ${opt_debug} &
+		${DUMPCMD} ${gdbsx} -a ${domid} ${bits} ${opt_debug} &
 	fi
 	# Go go go!
-	[ -z "$opt_pause" ] && ${sudo} xl unpause ${domid}
+	[ -z "$opt_pause" ] && ${DUMPCMD} ${sudo} xl unpause ${domid}
 	if [ -n "$opt_interactive" ]; then
-		exec ${sudo} xl console $domid
+		${DUMPCMD} exec ${sudo} xl console $domid
 	else
 		echo xen:${domid}
 	fi
