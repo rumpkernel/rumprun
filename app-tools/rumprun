@@ -161,10 +161,14 @@ createif_qemu ()
 createif_iso ()
 {
 	local iftag
+	local ifbasename
 
 	iftag="${1%%,*}"
+	ifbasename="${1#*,}"
 
-	eval ${iftag}2ifname=vioif${nindex}
+	[ "${iftag}" != "${ifbasename}" ] || usage
+
+	eval ${iftag}2ifname=${ifbasename}${nindex}
 	nindex=$(expr $nindex + 1)
 }
 
