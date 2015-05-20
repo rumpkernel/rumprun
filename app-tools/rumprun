@@ -94,8 +94,8 @@ guest args are:
    -e set environment VAR to VALUE
    -I create guest network interface and attach the user-specified
       iftag to it.  the format is:
-	iftag[,backendopts]
-	e.g. -I 'qnet0,-net tap=/dev/tap0'
+	iftag,ifbasename,[,backendopts]
+	e.g. -I 'qnet0,vioif,-net tap=/dev/tap0'
 	(NOTE: currently available only for kvm/qemu)
    -i attaches to guest console on startup
    -M set the guest's memory to mem megabytes, default is ${MEM_DEFAULT}
@@ -147,14 +147,15 @@ bindex=0
 
 createif_qemu ()
 {
-	local iftag
-	local qemuargs
+	local iftag ifbasename scratch qemuargs
 
 	iftag="${1%%,*}"
-	qemuargs="${1#*,}"
+	scratch="${1#*,}"
+	ifbasename="${scratch%%,*}"
+	qemuargs="${scratch#*,}"
 
 	opt_netif="${opt_netif} -net nic,model=virtio ${qemuargs}"
-	eval ${iftag}2ifname=vioif${nindex}
+	eval ${iftag}2ifname=${ifbasename}${nindex}
 	nindex=$(expr $nindex + 1)
 }
 
