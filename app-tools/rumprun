@@ -170,7 +170,27 @@ createif_iso ()
 	[ "${iftag}" != "${ifbasename}" ] || usage
 
 	eval ${iftag}2ifname=${ifbasename}${nindex}
+
 	nindex=$(expr $nindex + 1)
+}
+
+createif_xen ()
+{
+	local iftag
+	local ifbasename
+
+	iftag="${1%%,*}"
+	ifbasename="${1#*,}"
+
+	[ "${iftag}" != "${ifbasename}" ] || usage
+
+	eval ${iftag}2ifname=${ifbasename}${nindex}
+	eval ${iftag}2index=${nindex}
+
+	nindex=$(expr $nindex + 1)
+
+	# it's magic ;)
+	conf_vif="${conf_vif}'',"
 }
 
 json_depth=0
@@ -229,15 +249,18 @@ detect_fstype ()
 
 xen_store_netspec ()
 {
+	local index
 
-	echo net/${nindex}/type ${iftype} >>${xenstore}
-	echo net/${nindex}/method ${ifmethod} >>${xenstore}
+	index=$(eval echo \${${iftag}2index})
+
+	echo net/${index}/type ${iftype} >>${xenstore}
+	echo net/${index}/method ${ifmethod} >>${xenstore}
 	if [ -n "${ifaddr}" ]; then
-		echo net/${nindex}/addr ${ifaddr} >>${xenstore}
-		echo net/${nindex}/netmask ${ifmask} >>${xenstore}
+		echo net/${index}/addr ${ifaddr} >>${xenstore}
+		echo net/${index}/netmask ${ifmask} >>${xenstore}
 	fi
 	if [ -n "${ifgw}" ]; then
-		echo net/${nindex}/gw ${ifgw} >>${xenstore}
+		echo net/${index}/gw ${ifgw} >>${xenstore}
 	fi
 }
 
@@ -276,7 +299,6 @@ parse_netspec ()
 	iftype=$1
 	ifmethod=$2
 	[ "${iftype}" != "inet" -a "${iftype}" != "inet6" ] && return 1
-	conf_vif="${conf_vif}'',"
 	case ${ifmethod} in
 		auto)
 			;;
@@ -419,8 +441,9 @@ run_xen ()
 		case "$opt" in
 		# -n: NETSPEC
 		n)
-			parse_netspec net${nindex} "${OPTARG}" || usage
-			nindex=$(expr $nindex + 1)
+			netname=_net${nindex}
+			createif_xen ${netname},xenif || usage
+			parse_newnetspec "${netname},${OPTARG}" || usage
 			;;
 		# -b: BLKSPEC: hostpath,mountpoint
 		b)
@@ -449,6 +472,10 @@ run_xen ()
 		i)
 			opt_interactive=1
 			;;
+		# -I: create interface
+		I)
+			createif_xen "${OPTARG}" || usage
+			;;
 		# -d: Destroy domain on poweroff instead of preserving it.
 		d)
 			opt_destroy='on_poweroff="destroy"'
@@ -467,6 +494,9 @@ run_xen ()
 				die "'gdbsx' is required for -D, please install it."
 			fi
 			opt_debug=${OPTARG}
+			;;
+		W)
+			parse_newnetspec "${OPTARG}" || usage
 			;;
 		*)
 			usage
