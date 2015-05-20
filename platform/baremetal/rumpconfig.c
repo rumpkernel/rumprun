@@ -377,19 +377,32 @@ struct {
 static char *
 getcmdlinefromroot(const char *cfgname)
 {
-	struct iso_args mntargs = { .fspec = "/dev/ld0d" }; /* XXX hardcode */
+	const char *tryroot[] = {
+		"/dev/ld0a",
+		"/dev/sd0a",
+	};
+	struct iso_args mntargs;
 	struct stat sb;
-	int fd;
+	int fd, i;
 	char *p;
 
 	if (mkdir("/rootfs", 0777) == -1)
 		err(1, "mkdir /rootfs failed");
 
-	/* XXX: should not be hardcoded to cd9660.  but it is for now. */
-	if (mount(MOUNT_CD9660, "/rootfs", MNT_RDONLY,
-	    &mntargs, sizeof(mntargs)) == -1) {
-		err(1, "rumprun_config: mount_cd9660 failed");
+	/*
+	 * XXX: should not be hardcoded to cd9660.  but it is for now.
+	 * Maybe use mountroot() here somehow?
+	 */
+	for (i = 0; i < __arraycount(tryroot); i++) {
+		memset(&mntargs, 0, sizeof(mntargs));
+		mntargs.fspec = tryroot[i];
+		if (mount(MOUNT_CD9660, "/rootfs", MNT_RDONLY,
+		    &mntargs, sizeof(mntargs)) == 0) {
+			break;
+		}
 	}
+	if (i == __arraycount(tryroot))
+		errx(1, "failed to mount rootfs from image");
 
 	while (*cfgname == '/')
 		cfgname++;
