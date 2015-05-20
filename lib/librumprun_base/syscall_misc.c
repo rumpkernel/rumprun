@@ -188,3 +188,12 @@ __getrusage50(int who, struct rusage *usage)
 	/* XXX: wrong in many ways */
 	return ENOTSUP;
 }
+
+/* there is no virtual memory, tada */
+int
+mincore(void *addr, size_t length, char *vec)
+{
+
+	memset(vec, 0x01, length);
+	return 0;
+}
