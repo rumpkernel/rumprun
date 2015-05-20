@@ -193,7 +193,8 @@ __getrusage50(int who, struct rusage *usage)
 int
 mincore(void *addr, size_t length, char *vec)
 {
+	long page_size = sysconf(_SC_PAGESIZE);
 
-	memset(vec, 0x01, length);
+	memset(vec, 0x01, (length + page_size - 1) / page_size);
 	return 0;
 }
