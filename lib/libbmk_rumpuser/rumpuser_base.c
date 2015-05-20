@@ -57,7 +57,9 @@ rumpuser_init(int version, const struct rumpuser_hyperup *hyp)
 /* attempt to give at least this much to the rump kernel */
 #define MEMSIZE_WARNLIMIT (8*1024*1024)
 /* give at most this much */
-#define MEMSIZE_HILIMIT (64*1024*1024)
+#ifndef MEMSIZE_HIMLIT
+#define MEMSIZE_HILIMIT ~0UL
+#endif
 
 int
 rumpuser_getparam(const char *name, void *buf, size_t buflen)
