@@ -54,6 +54,8 @@ LIBS_PCI_NET=	-lrumpdev_pci_if_wm -lrumpdev_miiphy
 #LIBS_AUDIO_EAP=-lrumpdev_pci_eap
 #LIBS_AUDIO_HDA=-lrumpdev_pci_hdaudio -lrumpdev_hdaudio_hdafg
 LIBS_PCI=	-lrumpdev_pci
+#LIBS_USB=	-lrumpdev_pci_usbhc -lrumpdev_usb -lrumpdev_umass
+#LIBS_SCSI=	-lrumpdev_scsipi
 LIBS_VND=	-lrumpdev_vnd
 endif
 LIBS_NETINET=	-lrumpnet_netinet6 -lrumpnet_netinet -lrumpnet_net -lrumpnet
@@ -70,6 +72,8 @@ RUMPKERN_LIB=	${LIBS_VIO_NET}					\
 		${LIBS_AUDIO_EAP}				\
 		${LIBS_AUDIO_HDA}				\
 		${LIBS_PCI_NET}					\
+		${LIBS_USB}					\
+		${LIBS_SCSI}					\
 		${LIBS_PCI}					\
 		${LIBS_NETINET}					\
 		${LIBS_NETCONFIG}				\
