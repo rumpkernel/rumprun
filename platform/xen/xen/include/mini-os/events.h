@@ -45,4 +45,8 @@ int minios_event_channel_op(int cmd, void *op);
 
 void fini_events(void);
 
+extern struct wait_queue_head minios_events_waitq;
+void minios_evtdev_handler(evtchn_port_t port, struct pt_regs * regs,
+						   void *data);
+void minios_events_register_rump_callback(void (*cb)(u_int));
 #endif /* _MINIOS_EVENTS_H_ */

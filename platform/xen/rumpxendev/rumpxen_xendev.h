@@ -57,7 +57,9 @@
 
 extern int xenbus_dev_open(struct file *fp, void **fdata);
 extern const struct fileops xenbus_dev_fileops;
-
+extern void xenevt_dev_init(void);
+extern int xenevt_dev_open(struct file *fp, void **fdata);
+extern const struct fileops xenevt_dev_fileops;
 
 static inline void*
 xbd_malloc(size_t sz)

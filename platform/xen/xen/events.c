@@ -21,6 +21,7 @@
 #include <mini-os/hypervisor.h>
 #include <mini-os/events.h>
 #include <mini-os/lib.h>
+#include <mini-os/wait.h>
 
 #define NR_EVS 1024
 
@@ -36,6 +37,33 @@ static ev_action_t ev_actions[NR_EVS];
 void default_handler(evtchn_port_t port, struct pt_regs *regs, void *data);
 
 static unsigned long bound_ports[NR_EVS/(8*sizeof(unsigned long))];
+
+static void (*rump_evtdev_callback)(u_int port);
+
+void minios_events_register_rump_callback(void (*cb)(u_int))
+{
+    BUG_ON(rump_evtdev_callback != NULL);
+    rump_evtdev_callback = cb;
+}
+
+/* interrupt handler queues events here */
+DECLARE_WAIT_QUEUE_HEAD(minios_events_waitq);
+static DEFINE_SPINLOCK(evt_handler_lock);
+void minios_evtdev_handler(evtchn_port_t port, struct pt_regs * regs,
+                           void *data)
+{
+    unsigned long flags;
+
+    minios_mask_evtchn(port);
+
+    local_irq_save(flags);
+    spin_lock(&evt_handler_lock);
+
+    rump_evtdev_callback(port);
+
+    spin_unlock(&evt_handler_lock);
+    local_irq_restore(flags);
+}
 
 void unbind_all_ports(void)
 {
