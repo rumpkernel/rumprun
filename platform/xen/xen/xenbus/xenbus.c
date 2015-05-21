@@ -511,7 +511,7 @@ void xenbus_xb_write(int type, int req_id, xenbus_transaction_t trans_id,
     spin_unlock(&xb_lock);
 
     /* Send evtchn to notify remote */
-    notify_remote_via_evtchn(start_info.store_evtchn);
+    minios_notify_remote_via_evtchn(start_info.store_evtchn);
 }
 
 /* Send a mesasge to xenbus, in the same fashion as xb_write, and

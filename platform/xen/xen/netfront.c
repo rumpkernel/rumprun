@@ -136,7 +136,7 @@ moretodo:
     
     RING_PUSH_REQUESTS_AND_CHECK_NOTIFY(&dev->rx, notify);
     if (notify)
-        notify_remote_via_evtchn(dev->evtchn);
+        minios_notify_remote_via_evtchn(dev->evtchn);
 
 }
 
@@ -515,7 +515,7 @@ void init_rx_buffers(struct netfront_dev *dev)
     RING_PUSH_REQUESTS_AND_CHECK_NOTIFY(&dev->rx, notify);
 
     if (notify) 
-        notify_remote_via_evtchn(dev->evtchn);
+        minios_notify_remote_via_evtchn(dev->evtchn);
 
     dev->rx.sring->rsp_event = dev->rx.rsp_cons + 1;
 }
@@ -562,7 +562,7 @@ void netfront_xmit(struct netfront_dev *dev, unsigned char* data,int len)
 
     RING_PUSH_REQUESTS_AND_CHECK_NOTIFY(&dev->tx, notify);
 
-    if(notify) notify_remote_via_evtchn(dev->evtchn);
+    if(notify) minios_notify_remote_via_evtchn(dev->evtchn);
 
     local_irq_save(flags);
     network_tx_buf_gc(dev);

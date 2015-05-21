@@ -49,12 +49,14 @@ char *xbd_strdup(const char *s)
 
 static const struct xen_dev_info {
 	const char *path;
+	void (*xd_init)(void);
 	int (*xd_open)(struct file *fp, void **fdata_r);
 	const struct fileops *fo;
 } devs[] = {
-#define XDEV(cmin, leaf)						\
-	[cmin] = { DEV_XEN "/" #leaf, leaf##_dev_open, &leaf##_dev_fileops }
-	XDEV(0, xenbus),
+#define XDEV(cmin, path, init_fn, component)					\
+	[cmin] = { path, init_fn, component##_dev_open,	\
+		   &component##_dev_fileops }
+	XDEV(0, DEV_XEN "/xenbus", NULL, xenbus),
 #undef XDEV
 };
 
@@ -133,6 +135,8 @@ RUMP_COMPONENT(RUMP_COMPONENT_DEV)
 	     if (err)
 		     panic("%s: cannot create device node: %d",
 			   xdinfo->path, err);
+	     if (xdinfo->xd_init)
+		     xdinfo->xd_init();
 	     DPRINTF(("%s: created, %lu.%lu\n",
 		      xdinfo->path, (unsigned long)cmaj, (unsigned long)cmin));
 	}
