@@ -128,7 +128,7 @@ runtest ()
 	runtest tester disk.img
 }
 
-[ $# -ge 1 ] || die "usage: runtests.sh [-S] qemu|xen"
+[ $# -ge 1 ] || die "usage: runtests.sh [-S] kvm|qemu|xen"
 
 if [ "$1" = '-S' ]; then
 	shift
