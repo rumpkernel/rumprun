@@ -650,7 +650,7 @@ bmk_sched_init(void)
 	bmk_platform_cpu_sched_settls(&tcbinit);
 
 	/*
-	 * Not sure if this is necessary, but better to be
+	 * Not sure if the membars are necessary, but better to be
 	 * Marvin the Paranoid Paradroid than get eaten by 999
 	 */
 	__asm__ __volatile__("" ::: "memory");
