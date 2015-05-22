@@ -42,6 +42,7 @@ struct intrhand {
 SLIST_HEAD(isr_ihead, intrhand);
 static struct isr_ihead isr_ih[BMK_MAXINTR];
 static unsigned int isr_todo;
+static unsigned int isr_lowest = sizeof(isr_todo)*8;
 
 static struct bmk_thread *isr_thread;
 
@@ -65,26 +66,29 @@ isr(void *arg)
 		splhigh();
 		if (isr_todo) {
 			unsigned int isrcopy;
+			int nlocks = 1;
 
 			isrcopy = isr_todo;
 			isr_todo = 0;
 			spl0();
 
-			rv = 0;
-			for (i = 0; i < sizeof(isr_todo)*8; i++) {
+			rumpkern_sched(nlocks, NULL);
+			for (rv = 0, i = isr_lowest;
+			    isrcopy && i < sizeof(isrcopy)*8;
+			    i++) {
 				struct intrhand *ih;
-				int nlocks = 1;
 
 				if ((isrcopy & (1<<i)) == 0)
 					continue;
+				isrcopy &= ~(1<<i);
 
-				rumpkern_sched(nlocks, NULL);
 				SLIST_FOREACH(ih, &isr_ih[i], ih_entries) {
-					if ((rv = ih->ih_fun(ih->ih_arg)) != 0)
-						break;
+					if (ih->ih_fun(ih->ih_arg) != 0) {
+						rv = 1;
+					}
 				}
-				rumpkern_unsched(&nlocks, NULL);
 			}
+			rumpkern_unsched(&nlocks, NULL);
 
 			bmk_cpu_intr_ack();
 			if (!rv) {
@@ -119,6 +123,8 @@ bmk_isr_init(int (*func)(void *), void *arg, int intr)
 	ih->ih_fun = func;
 	ih->ih_arg = arg;
 	SLIST_INSERT_HEAD(&isr_ih[intr], ih, ih_entries);
+	if ((unsigned)intr < isr_lowest)
+		isr_lowest = intr;
 
 	return 0;
 }
