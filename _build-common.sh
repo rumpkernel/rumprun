@@ -27,7 +27,16 @@ set -e
 (
 	cd $(git rev-parse --show-cdup)
 	if git submodule status ${RUMPSRC} | grep -q '^-' ; then
-		git submodule update --init --recursive ${RUMPSRC}
+		echo '>> submodules missing.  run "git submodule update --init"'
+		exit 1
+	fi
+	if git submodule status ${RUMPSRC} | grep -q '^+' ; then
+		echo '>>'
+		echo '>> Your git submodules are out-of-date'
+		echo '>> Did you forget to run "git submodule update"?'
+		echo '>> (sleeping for 5s)'
+		echo '>>'
+		sleep 5
 	fi
 )
 [ "$1" = "justcheckout" ] && { echo ">> $0 done" ; exit 0; }
