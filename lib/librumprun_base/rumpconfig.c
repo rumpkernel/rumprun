@@ -347,7 +347,7 @@ handle_blk(jsmntok_t *t, int left, char *data)
 		}
 	}
 
-	if (!source || !path || !fstype) {
+	if (!source || !path) {
 		errx(1, "blk cfg missing vital data");
 	}
 
@@ -364,6 +364,10 @@ handle_blk(jsmntok_t *t, int left, char *data)
 
 	/* we only need to do something only if a mountpoint is specified */
 	if (mp) {
+		if (!fstype) {
+			err(1, "no fstype for mountpoint \"%s\"\n", mp);
+		}
+
 		/* XXX: handles only one component */
 		if (mkdir(mp, 0777) == -1)
 			errx(1, "creating mountpoint \"%s\" failed", mp);
