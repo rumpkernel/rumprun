@@ -618,35 +618,6 @@ bmk_sched_block(void)
 	return tflags & THR_TIMEDOUT ? BMK_ETIMEDOUT : 0;
 }
 
-int
-bmk_sched_nanosleep_abstime(bmk_time_t nsec)
-{
-	struct bmk_thread *thread = bmk_current;
-	int flags, tflags;
-
-	bmk_assert((thread->bt_flags & THR_TIMEDOUT) == 0);
-
-	flags = bmk_platform_splhigh();
-	thread->bt_wakeup_time = nsec;
-	clear_runnable();
-	bmk_platform_splx(flags);
-
-	schedule();
-
-	tflags = thread->bt_flags;
-	thread->bt_flags &= ~THR_TIMEDOUT;
-
-	return !!(tflags & THR_TIMEDOUT);
-}
-
-int
-bmk_sched_nanosleep(bmk_time_t nsec)
-{
-
-	return bmk_sched_nanosleep_abstime(nsec
-	    + bmk_platform_clock_monotonic());
-}
-
 void
 bmk_sched_wake(struct bmk_thread *thread)
 {

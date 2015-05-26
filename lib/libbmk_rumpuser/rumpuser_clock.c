@@ -57,19 +57,20 @@ int
 rumpuser_clock_sleep(int enum_rumpclock, int64_t sec, long nsec)
 {
 	enum rumpclock rclk = enum_rumpclock;
-	bmk_time_t totnsec;
+	bmk_time_t deadline = 0;
 	int nlocks;
 
 	rumpkern_unsched(&nlocks, NULL);
-	totnsec = sec * 1000*1000*1000 + nsec;
 	switch (rclk) {
 	case RUMPUSER_CLOCK_RELWALL:
-		bmk_sched_nanosleep(totnsec);
+		deadline = bmk_platform_clock_monotonic();
 		break;
 	case RUMPUSER_CLOCK_ABSMONO:
-		bmk_sched_nanosleep_abstime(totnsec);
 		break;
 	}
+	deadline += sec * 1000*1000*1000 + nsec;
+	bmk_sched_blockprepare_timeout(deadline);
+	bmk_sched_block();
 	rumpkern_sched(nlocks, NULL);
 
 	return 0;

@@ -236,18 +236,15 @@ _lwp_park(clockid_t clock_id, int flags, const struct timespec *ts,
 
 		if (flags & TIMER_ABSTIME) {
 			nsecs -= bmk_platform_clock_epochoffset();
-			rv = bmk_sched_nanosleep_abstime(nsecs);
 		} else {
-			rv = bmk_sched_nanosleep(nsecs);
+			nsecs += bmk_platform_clock_monotonic();
 		}
-		if (rv) {
-			rv = ETIMEDOUT;
-		}
+		bmk_sched_blockprepare_timeout(nsecs);
 	} else {
 		bmk_sched_blockprepare();
-		bmk_sched_block();
-		rv = 0;
 	}
+	rv = bmk_sched_block();
+	bmk_assert(rv == 0 || rv == ETIMEDOUT);
 
 	if (rv) {
 		errno = rv;

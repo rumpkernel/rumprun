@@ -84,8 +84,9 @@ static inline void minios_wake_up(struct wait_queue_head *head)
         /* protect the list */                                  \
         local_irq_save(flags);                                  \
         minios_add_wait_queue(&wq, &__wait);                           \
+        bmk_sched_blockprepare_timeout(deadline);		\
         local_irq_restore(flags);                               \
-        if (bmk_sched_nanosleep_abstime(deadline))		\
+        if (bmk_sched_block() != 0)				\
 	    break;						\
     }                                                           \
     local_irq_save(flags);                                      \
