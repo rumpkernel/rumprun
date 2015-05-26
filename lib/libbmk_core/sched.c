@@ -59,6 +59,7 @@
 
 #define THR_EXTSTACK	0x0100
 #define THR_DEAD	0x0200
+#define THR_BLOCKPREP	0x0400
 
 extern const char _tdata_start[], _tdata_end[];
 extern const char _tbss_start[], _tbss_end[];
@@ -581,10 +582,14 @@ bmk_sched_unsuspend(struct bmk_thread *thread)
 void
 bmk_sched_blockprepare_timeout(bmk_time_t deadline)
 {
+	struct bmk_thread *thread = bmk_current;
 	int flags;
 
+	bmk_assert((thread->bt_flags & THR_BLOCKPREP) == 0);
+
 	flags = bmk_platform_splhigh();
-	bmk_current->bt_wakeup_time = deadline;
+	thread->bt_wakeup_time = deadline;
+	thread->bt_flags |= THR_BLOCKPREP;
 	clear_runnable();
 	bmk_platform_splx(flags);
 }
@@ -603,11 +608,12 @@ bmk_sched_block(void)
 	int tflags;
 
 	bmk_assert((thread->bt_flags & THR_TIMEDOUT) == 0);
+	bmk_assert(thread->bt_flags & THR_BLOCKPREP);
 
 	schedule();
 
 	tflags = thread->bt_flags;
-	thread->bt_flags &= ~THR_TIMEDOUT;
+	thread->bt_flags &= ~(THR_TIMEDOUT | THR_BLOCKPREP);
 
 	return tflags & THR_TIMEDOUT ? BMK_ETIMEDOUT : 0;
 }
