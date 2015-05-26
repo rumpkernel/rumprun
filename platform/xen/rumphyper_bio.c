@@ -224,7 +224,7 @@ biothread(void *arg)
 				break;
 			minios_add_waiter(w, blkfront_queue);
 			local_irq_restore(flags);
-			bmk_sched();
+			minios_wait(w);
 			local_irq_save(flags);
 		}
 		local_irq_restore(flags);

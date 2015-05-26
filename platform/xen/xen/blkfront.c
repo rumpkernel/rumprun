@@ -299,7 +299,7 @@ static void blkfront_wait_slot(struct blkfront_dev *dev)
 	    /* Really no slot, go to sleep. */
 	    minios_add_waiter(w, blkfront_queue);
 	    local_irq_restore(flags);
-	    bmk_sched();
+	    minios_wait(w);
 	    local_irq_save(flags);
 	}
 	minios_remove_waiter(w, blkfront_queue);
@@ -390,7 +390,7 @@ void blkfront_io(struct blkfront_aiocb *aiocbp, int write)
 
 	minios_add_waiter(w, blkfront_queue);
 	local_irq_restore(flags);
-	bmk_sched();
+	minios_wait(w);
 	local_irq_save(flags);
     }
     minios_remove_waiter(w, blkfront_queue);
@@ -446,7 +446,7 @@ void blkfront_sync(struct blkfront_dev *dev)
 
 	minios_add_waiter(w, blkfront_queue);
 	local_irq_restore(flags);
-	bmk_sched();
+	minios_wait(w);
 	local_irq_save(flags);
     }
     minios_remove_waiter(w, blkfront_queue);

@@ -5,6 +5,8 @@
 #include <mini-os/waittypes.h>
 #include <mini-os/time.h>
 
+#include <bmk-core/core.h>
+
 #include <sys/queue.h>
 
 #define DEFINE_WAIT(name)                          \
@@ -65,6 +67,12 @@ static inline void minios_wake_up(struct wait_queue_head *head)
     minios_remove_wait_queue(&wq, &w);    \
     local_irq_restore(flags);      \
 } while (0)
+
+#define minios_wait(w) \
+  do { \
+    bmk_assert(w.waiting); \
+    bmk_sched(); \
+  } while (/*CONSTCOND*/0)
 
 #define minios_wait_event_deadline(wq, condition, deadline) do {       \
     unsigned long flags;                                        \

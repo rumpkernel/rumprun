@@ -111,7 +111,7 @@ static struct xenbus_event *await_event(struct xenbus_event_queue *queue)
     while (!(event = remove_event(queue))) {
         minios_add_waiter(w, queue->waitq);
         spin_unlock(&xenbus_req_lock);
-        bmk_sched();
+        minios_wait(w);
         spin_lock(&xenbus_req_lock);
     }
     minios_remove_waiter(w, queue->waitq);
