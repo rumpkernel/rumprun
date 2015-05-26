@@ -47,18 +47,18 @@
 #define NAME_MAXLEN 16
 
 /* flags and their meanings + invariants */
-#define THREAD_RUNQ	0x0001		/* on runq, can be run		*/
-#define THREAD_TIMEQ	0x0002		/* on timeq, blocked w/ timeout	*/
-#define THREAD_BLOCKQ	0x0004		/* on blockq, indefinite block	*/
-#define THREAD_QMASK	0x0007
-#define THREAD_RUNNING	0x0008		/* no queue, thread == current	*/
+#define THR_RUNQ	0x0001		/* on runq, can be run		*/
+#define THR_TIMEQ	0x0002		/* on timeq, blocked w/ timeout	*/
+#define THR_BLOCKQ	0x0004		/* on blockq, indefinite block	*/
+#define THR_QMASK	0x0007
+#define THR_RUNNING	0x0008		/* no queue, thread == current	*/
 
-#define THREAD_TIMEDOUT	0x0010
-#define THREAD_MUSTJOIN	0x0020
-#define THREAD_JOINED	0x0040
+#define THR_TIMEDOUT	0x0010
+#define THR_MUSTJOIN	0x0020
+#define THR_JOINED	0x0040
 
-#define THREAD_EXTSTACK	0x0100
-#define THREAD_DEAD	0x0200
+#define THR_EXTSTACK	0x0100
+#define THR_DEAD	0x0200
 
 extern const char _tdata_start[], _tdata_end[];
 extern const char _tbss_start[], _tbss_end[];
@@ -139,15 +139,15 @@ set_runnable(struct bmk_thread *thread)
 	/*
 	 * Already runnable?  Nothing to do, then.
 	 */
-	if ((tflags & THREAD_RUNQ) == THREAD_RUNQ)
+	if ((tflags & THR_RUNQ) == THR_RUNQ)
 		return;
 
 	/* get current queue */
-	switch (tflags & THREAD_QMASK) {
-	case THREAD_TIMEQ:
+	switch (tflags & THR_QMASK) {
+	case THR_TIMEQ:
 		tq = &timeq;
 		break;
-	case THREAD_BLOCKQ:
+	case THR_BLOCKQ:
 		tq = &blockq;
 		break;
 	default:
@@ -156,7 +156,7 @@ set_runnable(struct bmk_thread *thread)
 		 * called from an interrupt handler.  Can just ignore
 		 * this whole thing.
 		 */
-		if ((tflags & (THREAD_RUNNING|THREAD_QMASK)) == THREAD_RUNNING)
+		if ((tflags & (THR_RUNNING|THR_QMASK)) == THR_RUNNING)
 			return;
 
 		print_threadinfo(thread);
@@ -168,7 +168,7 @@ set_runnable(struct bmk_thread *thread)
 	 */
 	flags = bmk_platform_splhigh();
 	TAILQ_REMOVE(tq, thread, bt_schedq);
-	setflags(thread, THREAD_RUNQ, THREAD_QMASK);
+	setflags(thread, THR_RUNQ, THR_QMASK);
 	TAILQ_INSERT_TAIL(&runq, thread, bt_schedq);
 	bmk_platform_splx(flags);
 }
@@ -212,20 +212,20 @@ clear_runnable(void)
 	struct bmk_thread *thread = bmk_current;
 	int newfl;
 
-	bmk_assert(thread->bt_flags & THREAD_RUNNING);
+	bmk_assert(thread->bt_flags & THR_RUNNING);
 
 	/*
 	 * Currently we require that a thread will block only
 	 * once before calling the scheduler.
 	 */
-	bmk_assert((thread->bt_flags & THREAD_RUNQ) == 0);
+	bmk_assert((thread->bt_flags & THR_RUNQ) == 0);
 
 	newfl = thread->bt_flags;
 	if (thread->bt_wakeup_time != BMK_SCHED_BLOCK_INFTIME) {
-		newfl |= THREAD_TIMEQ;
+		newfl |= THR_TIMEQ;
 		timeq_sorted_insert(thread);
 	} else {
-		newfl |= THREAD_BLOCKQ;
+		newfl |= THR_BLOCKQ;
 		TAILQ_INSERT_TAIL(&blockq, thread, bt_schedq);
 	}
 	thread->bt_flags = newfl;
@@ -274,8 +274,8 @@ static void
 sched_switch(struct bmk_thread *prev, struct bmk_thread *next)
 {
 
-	bmk_assert(next->bt_flags & THREAD_RUNNING);
-	bmk_assert((next->bt_flags & THREAD_QMASK) == 0);
+	bmk_assert(next->bt_flags & THR_RUNNING);
+	bmk_assert((next->bt_flags & THR_QMASK) == 0);
 
 	if (scheduler_hook)
 		scheduler_hook(prev->bt_cookie, next->bt_cookie);
@@ -314,7 +314,7 @@ schedule(void)
 				 * threads will run in inverse order of timeout
 				 * expiry.  not sure if that matters or not.
 				 */
-				thread->bt_flags |= THREAD_TIMEDOUT;
+				thread->bt_flags |= THR_TIMEDOUT;
 				bmk_sched_wake(thread);
 			} else {
 				if (thread->bt_wakeup_time < waketime)
@@ -324,8 +324,8 @@ schedule(void)
 		}
 
 		if ((next = TAILQ_FIRST(&runq)) != NULL) {
-			bmk_assert(next->bt_flags & THREAD_RUNQ);
-			bmk_assert((next->bt_flags & THREAD_DEAD) == 0);
+			bmk_assert(next->bt_flags & THR_RUNQ);
+			bmk_assert((next->bt_flags & THR_DEAD) == 0);
 			break;
 		}
 
@@ -333,10 +333,10 @@ schedule(void)
 		bmk_platform_block(waketime);
 	}
 	/* now we're committed to letting "next" run next */
-	setflags(prev, 0, THREAD_RUNNING);
+	setflags(prev, 0, THR_RUNNING);
 
 	TAILQ_REMOVE(&runq, next, bt_schedq);
-	setflags(next, THREAD_RUNNING, THREAD_RUNQ);
+	setflags(next, THR_RUNNING, THR_RUNQ);
 	bmk_platform_splx(flags);
 
 	/*
@@ -354,7 +354,7 @@ schedule(void)
 	 */
 	while ((thread = TAILQ_FIRST(&zombieq)) != NULL) {
 		TAILQ_REMOVE(&zombieq, thread, bt_threadq);
-		if ((thread->bt_flags & THREAD_EXTSTACK) == 0)
+		if ((thread->bt_flags & THR_EXTSTACK) == 0)
 			stackfree(thread);
 		bmk_memfree(thread);
 	}
@@ -434,11 +434,11 @@ bmk_sched_create_withtls(const char *name, void *cookie, int joinable,
 		bmk_assert(stack_size == 0);
 		stackalloc(&stack_base, &stack_size);
 	} else {
-		thread->bt_flags = THREAD_EXTSTACK;
+		thread->bt_flags = THR_EXTSTACK;
 	}
 	thread->bt_stackbase = stack_base;
 	if (joinable)
-		thread->bt_flags |= THREAD_MUSTJOIN;
+		thread->bt_flags |= THR_MUSTJOIN;
 
 	bmk_cpu_sched_create(thread, &thread->bt_tcb, f, data,
 	    stack_base, stack_size);
@@ -454,7 +454,7 @@ bmk_sched_create_withtls(const char *name, void *cookie, int joinable,
 	/* set runnable manually, we don't satisfy invariants yet */
 	flags = bmk_platform_splhigh();
 	TAILQ_INSERT_TAIL(&runq, thread, bt_schedq);
-	thread->bt_flags |= THREAD_RUNQ;
+	thread->bt_flags |= THR_RUNQ;
 	bmk_platform_splx(flags);
 
 	return thread;
@@ -488,8 +488,8 @@ bmk_sched_exit_withtls(void)
 
 	/* if joinable, gate until we are allowed to exit */
 	flags = bmk_platform_splhigh();
-	while (thread->bt_flags & THREAD_MUSTJOIN) {
-		thread->bt_flags |= THREAD_JOINED;
+	while (thread->bt_flags & THR_MUSTJOIN) {
+		thread->bt_flags |= THR_JOINED;
 		bmk_platform_splx(flags);
 
 		/* see if the joiner is already there */
@@ -505,9 +505,9 @@ bmk_sched_exit_withtls(void)
 	}
 
 	/* Remove from the thread list */
-	bmk_assert((thread->bt_flags & THREAD_QMASK) == 0);
+	bmk_assert((thread->bt_flags & THR_QMASK) == 0);
 	TAILQ_REMOVE(&threadq, thread, bt_threadq);
-	setflags(thread, THREAD_DEAD, THREAD_RUNNING);
+	setflags(thread, THR_DEAD, THR_RUNNING);
 
 	/* Put onto exited list */
 	TAILQ_INSERT_HEAD(&zombieq, thread, bt_threadq);
@@ -533,11 +533,11 @@ bmk_sched_join(struct bmk_thread *joinable)
 	struct bmk_thread *thread = bmk_current;
 	unsigned long flags;
 
-	bmk_assert(joinable->bt_flags & THREAD_MUSTJOIN);
+	bmk_assert(joinable->bt_flags & THR_MUSTJOIN);
 
 	flags = bmk_platform_splhigh();
 	/* wait for exiting thread to hit thread_exit() */
-	while ((joinable->bt_flags & THREAD_JOINED) == 0) {
+	while ((joinable->bt_flags & THR_JOINED) == 0) {
 		bmk_platform_splx(flags);
 
 		jw.jw_thread = thread;
@@ -551,8 +551,8 @@ bmk_sched_join(struct bmk_thread *joinable)
 	}
 
 	/* signal exiting thread that we have seen it and it may now exit */
-	bmk_assert(joinable->bt_flags & THREAD_JOINED);
-	joinable->bt_flags &= ~THREAD_MUSTJOIN;
+	bmk_assert(joinable->bt_flags & THR_JOINED);
+	joinable->bt_flags &= ~THR_MUSTJOIN;
 	bmk_platform_splx(flags);
 
 	bmk_sched_wake(joinable);
@@ -602,14 +602,14 @@ bmk_sched_block(void)
 	struct bmk_thread *thread = bmk_current;
 	int tflags;
 
-	bmk_assert((thread->bt_flags & THREAD_TIMEDOUT) == 0);
+	bmk_assert((thread->bt_flags & THR_TIMEDOUT) == 0);
 
 	schedule();
 
 	tflags = thread->bt_flags;
-	thread->bt_flags &= ~THREAD_TIMEDOUT;
+	thread->bt_flags &= ~THR_TIMEDOUT;
 
-	return tflags & THREAD_TIMEDOUT ? BMK_ETIMEDOUT : 0;
+	return tflags & THR_TIMEDOUT ? BMK_ETIMEDOUT : 0;
 }
 
 int
@@ -618,7 +618,7 @@ bmk_sched_nanosleep_abstime(bmk_time_t nsec)
 	struct bmk_thread *thread = bmk_current;
 	int flags, tflags;
 
-	bmk_assert((thread->bt_flags & THREAD_TIMEDOUT) == 0);
+	bmk_assert((thread->bt_flags & THR_TIMEDOUT) == 0);
 
 	flags = bmk_platform_splhigh();
 	thread->bt_wakeup_time = nsec;
@@ -628,9 +628,9 @@ bmk_sched_nanosleep_abstime(bmk_time_t nsec)
 	schedule();
 
 	tflags = thread->bt_flags;
-	thread->bt_flags &= ~THREAD_TIMEDOUT;
+	thread->bt_flags &= ~THR_TIMEDOUT;
 
-	return !!(tflags & THREAD_TIMEDOUT);
+	return !!(tflags & THR_TIMEDOUT);
 }
 
 int
@@ -701,7 +701,7 @@ bmk_sched_startmain(void (*mainfun)(void *), void *arg)
 	 * bmk_sched (avoids confusion with bmk_current).
 	 */
 	TAILQ_REMOVE(&runq, mainthread, bt_schedq);
-	setflags(mainthread, THREAD_RUNNING, THREAD_RUNQ);
+	setflags(mainthread, THR_RUNNING, THR_RUNQ);
 	sched_switch(&initthread, mainthread);
 
 	bmk_platform_halt("bmk_sched_init unreachable");
@@ -747,11 +747,11 @@ bmk_sched_yield(void)
 	struct bmk_thread *thread = bmk_current;
 	int flags;
 
-	bmk_assert(thread->bt_flags & THREAD_RUNNING);
+	bmk_assert(thread->bt_flags & THR_RUNNING);
 
 	/* make schedulable and re-insert into runqueue */
 	flags = bmk_platform_splhigh();
-	setflags(thread, THREAD_RUNQ, THREAD_RUNNING);
+	setflags(thread, THR_RUNQ, THR_RUNNING);
 	TAILQ_INSERT_TAIL(&runq, thread, bt_schedq);
 	bmk_platform_splx(flags);
 
