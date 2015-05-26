@@ -185,7 +185,7 @@ config_ipv6(const char *ifname, const char *method,
 static int
 handle_net(jsmntok_t *t, int left, char *data)
 {
-	const char *ifname, *type, *method;
+	const char *ifname, *cloner, *type, *method;
 	const char *addr, *mask, *gw;
 	jsmntok_t *key, *value;
 	int i, objsize;
@@ -205,7 +205,7 @@ handle_net(jsmntok_t *t, int left, char *data)
 		errx(1, "currently only 1 \"net\" configuration is supported");
 	}
 
-	ifname = type = method = NULL;
+	ifname = cloner = type = method = NULL;
 	addr = mask = gw = NULL;
 
 	for (i = 0; i < objsize; i++, t+=2) {
@@ -227,6 +227,8 @@ handle_net(jsmntok_t *t, int left, char *data)
 		valuestr = token2cstr(value, data);
 		if (T_STREQ(key, data, "if")) {
 			ifname = valuestr;
+		} else if (T_STREQ(key, data, "cloner")) {
+			cloner = valuestr;
 		} else if (T_STREQ(key, data, "type")) {
 			type = valuestr;
 		} else if (T_STREQ(key, data, "method")) {
@@ -248,9 +250,11 @@ handle_net(jsmntok_t *t, int left, char *data)
 		errx(1, "net cfg missing vital data, not configuring");
 	}
 
-	if ((rv = rump_pub_netconfig_ifcreate(ifname)) != 0) {
-		errx(1, "rumprun_config: ifcreate %s failed: %d",
-		    ifname, rv);
+	if (cloner) {
+		if ((rv = rump_pub_netconfig_ifcreate(ifname)) != 0) {
+			errx(1, "rumprun_config: ifcreate %s failed: %d",
+			    ifname, rv);
+		}
 	}
 
 	if (strcmp(type, "inet") == 0) {

@@ -185,10 +185,11 @@ config_ipv6(const char *ifname, const char *method,
 static int
 handle_net(jsmntok_t *t, int left, char *data)
 {
-	const char *ifname, *type, *method;
+	const char *ifname, *cloner, *type, *method;
 	const char *addr, *mask, *gw;
 	jsmntok_t *key, *value;
 	int i, objsize;
+	int rv;
 	static int configured;
 
 	T_CHECKTYPE(t, data, JSMN_OBJECT, __func__);
@@ -204,7 +205,7 @@ handle_net(jsmntok_t *t, int left, char *data)
 		errx(1, "currently only 1 \"net\" configuration is supported");
 	}
 
-	ifname = type = method = NULL;
+	ifname = cloner = type = method = NULL;
 	addr = mask = gw = NULL;
 
 	for (i = 0; i < objsize; i++, t+=2) {
@@ -226,6 +227,8 @@ handle_net(jsmntok_t *t, int left, char *data)
 		valuestr = token2cstr(value, data);
 		if (T_STREQ(key, data, "if")) {
 			ifname = valuestr;
+		} else if (T_STREQ(key, data, "cloner")) {
+			cloner = valuestr;
 		} else if (T_STREQ(key, data, "type")) {
 			type = valuestr;
 		} else if (T_STREQ(key, data, "method")) {
@@ -245,6 +248,13 @@ handle_net(jsmntok_t *t, int left, char *data)
 
 	if (!ifname || !type || !method) {
 		errx(1, "net cfg missing vital data, not configuring");
+	}
+
+	if (cloner) {
+		if ((rv = rump_pub_netconfig_ifcreate(ifname)) != 0) {
+			errx(1, "rumprun_config: ifcreate %s failed: %d",
+			    ifname, rv);
+		}
 	}
 
 	if (strcmp(type, "inet") == 0) {
@@ -274,6 +284,23 @@ configvnd(const char *path)
 
 	if (ioctl(fd, VNDIOCSET, &vndio) == -1)
 		err(1, "vndset failed");
+}
+
+static char *
+configetfs(const char *path)
+{
+	char buf[32];
+	char *p;
+	int rv;
+
+	snprintf(buf, sizeof(buf), "/dev/%s", path);
+	rv = rump_pub_etfs_register(buf, path, RUMP_ETFS_BLK);
+	if (rv != 0)
+		errx(1, "etfs register for \"%s\" failed: %d", path, rv);
+
+	if ((p = strdup(buf)) == NULL)
+		err(1, "failed to allocate pathbuf");
+	return p;
 }
 
 static int
@@ -329,6 +356,8 @@ handle_blk(jsmntok_t *t, int left, char *data)
 	} else if (strcmp(source, "vnd") == 0) {
 		configvnd(path);
 		path = "/dev/vnd0d"; /* XXX */
+	} else if (strcmp(source, "etfs") == 0) {
+		path = configetfs(path);
 	} else {
 		errx(1, "unsupported blk source \"%s\"", source);
 	}

@@ -156,6 +156,7 @@ createif_qemu ()
 
 	opt_netif="${opt_netif} -net nic,model=virtio ${qemuargs}"
 	eval ${iftag}2ifname=${ifbasename}${nindex}
+	eval ${iftag}2cloner=false
 	nindex=$(expr $nindex + 1)
 }
 
@@ -170,6 +171,7 @@ createif_iso ()
 	[ "${iftag}" != "${ifbasename}" ] || usage
 
 	eval ${iftag}2ifname=${ifbasename}${nindex}
+	eval ${iftag}2cloner=false
 
 	nindex=$(expr $nindex + 1)
 }
@@ -186,6 +188,7 @@ createif_xen ()
 
 	eval ${iftag}2ifname=${ifbasename}${nindex}
 	eval ${iftag}2index=${nindex}
+	eval ${iftag}2cloner=true
 
 	nindex=$(expr $nindex + 1)
 
@@ -254,6 +257,11 @@ json_store_netspec ()
 
 	# XXX: should not assume vioif or -net user
 	json_append_ln	'"if":		"'$(eval echo \${${iftag}2ifname})'"'
+
+	if $(eval \${${iftag}2cloner}); then
+		json_append_ln	'"cloner":	"'true'"'
+	fi
+
 	json_append_ln	'"type":	"'${iftype}'"'
 	json_append_ln	'"method":	"'${ifmethod}'"'
 
