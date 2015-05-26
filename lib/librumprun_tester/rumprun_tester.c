@@ -48,7 +48,7 @@
 
 static const char *trydisk[] = {
 	"/dev/ld0d",
-	"/dev/xenblk0",
+	"/dev/blk0",
 };
 static int logfd;
 static int logrv = 1;
