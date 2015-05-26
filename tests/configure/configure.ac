@@ -1,5 +1,5 @@
 AC_PREREQ([2.66])
-AC_INIT([apptools-test], [11], [rumpkernel-users@lists.sourceforge.net])
+AC_INIT([apptools-test], [11], [rumpkernel-users@freelists.org])
 
 AC_CONFIG_SRCDIR([test.c])
 AC_CONFIG_HEADERS([config.h])
