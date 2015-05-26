@@ -325,14 +325,15 @@ json_store_xen_blkspec ()
 	vdev=hd$(echo ${bindex} | tr '[0-9]' '[a-j]')
 	conf_disk="${conf_disk}'file:$image,$vdev,w',"
 
-	# if the image does not need to be mounted, we're done
-	[ -n "${mountpoint}" ] || return
-
 	json_open_block blk
 
 	# XXX: should not assume ld (virtio)
 	json_append_ln	'"source":	"'etfs'"'
 	json_append_ln	'"path":	"'blk${bindex}'"'
+
+	# if the image does not need to be mounted, we're done
+	[ -n "${mountpoint}" ] || { json_finalize_block ; return ; }
+
 	json_append_ln	'"fstype":	"'${fstype}'"'
 	json_append_ln	'"mountpoint":	"'${mountpoint}'"'
 
