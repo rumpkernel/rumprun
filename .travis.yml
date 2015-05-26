@@ -18,6 +18,7 @@ env:
 script:
   - export CC=gcc-4.8
   - export CXX=g++-4.8
+  - git submodule update --init
   - ./build-rr.sh -qq ${PLATFORM} ${EXTRAFLAGS}
   - ./tests/buildtests.sh ${PLATFORM}
   - ./tests/runtests.sh ${TESTS}
