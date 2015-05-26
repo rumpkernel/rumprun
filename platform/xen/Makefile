@@ -58,7 +58,6 @@ rump-src-y += rumphyper_net.c
 rump-src-y += rumphyper_pci.c
 
 rump-src-y += callmain.c
-rump-src-y += rumpconfig.c
 
 # Rump kernel middleware objects to build.
 RUMP_OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(rump-src-y))

@@ -37,7 +37,6 @@ endif
 all: app-tools include/bmk/machine rumprun.o commonlibs buildtest
 
 OBJS_BMK-y+=		intr.o clock.o kernel.o multiboot.o undefs.o
-OBJS_BMK-y+=		rumpconfig.o
 OBJS_BMK-${HASPCI}+=	rumppci.o
 
 OBJS_BMK+= ${OBJS_BMK-y}

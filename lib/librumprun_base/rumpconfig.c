@@ -412,7 +412,8 @@ getcmdlinefromroot(const char *cfgname)
 	};
 	struct iso_args mntargs;
 	struct stat sb;
-	int fd, i;
+	unsigned int i;
+	int fd;
 	char *p;
 
 	if (mkdir("/rootfs", 0777) == -1)
@@ -465,7 +466,8 @@ _rumprun_config(char *cmdline)
 	jsmntok_t *t;
 	size_t cmdline_len;
 	const size_t rootcfglen = sizeof(ROOTCFG)-1;
-	int i, ntok;
+	unsigned int i;
+	int ntok;
 
 	/* is the config file on rootfs?  if so, mount & dig it out */
 	if (strncmp(cmdline, ROOTCFG, rootcfglen) == 0) {
