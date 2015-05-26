@@ -71,7 +71,7 @@ static inline void minios_wake_up(struct wait_queue_head *head)
 #define minios_wait(w) \
   do { \
     bmk_assert(w.waiting); \
-    bmk_sched(); \
+    bmk_sched_block(); \
   } while (/*CONSTCOND*/0)
 
 #define minios_wait_event_deadline(wq, condition, deadline) do {       \

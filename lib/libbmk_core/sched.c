@@ -30,6 +30,7 @@
  */
 
 #include <bmk-core/core.h>
+#include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
 #include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
@@ -282,8 +283,8 @@ sched_switch(struct bmk_thread *prev, struct bmk_thread *next)
 	bmk_cpu_sched_switch(&prev->bt_tcb, &next->bt_tcb);
 }
 
-void
-bmk_sched(void)
+static void
+schedule(void)
 {
 	struct bmk_thread *prev, *next, *thread;
 	unsigned long flags;
@@ -292,7 +293,7 @@ bmk_sched(void)
 
 	flags = bmk_platform_splhigh();
 	if (flags) {
-		bmk_platform_halt("bmk_sched() called at !spl0");
+		bmk_platform_halt("schedule() called at !spl0");
 	}
 	for (;;) {
 		bmk_time_t curtime, waketime;
@@ -499,7 +500,7 @@ bmk_sched_exit_withtls(void)
 			}
 		}
 		bmk_sched_blockprepare();
-		bmk_sched();
+		bmk_sched_block();
 		flags = bmk_platform_splhigh();
 	}
 
@@ -513,7 +514,7 @@ bmk_sched_exit_withtls(void)
 	bmk_platform_splx(flags);
 
 	/* bye */
-	bmk_sched();
+	schedule();
 	bmk_platform_halt("schedule() returned for a dead thread!\n");
 }
 
@@ -543,7 +544,7 @@ bmk_sched_join(struct bmk_thread *joinable)
 		jw.jw_wanted = joinable;
 		TAILQ_INSERT_TAIL(&joinwq, &jw, jw_entries);
 		bmk_sched_blockprepare();
-		bmk_sched();
+		bmk_sched_block();
 		TAILQ_REMOVE(&joinwq, &jw, jw_entries);
 
 		flags = bmk_platform_splhigh();
@@ -596,6 +597,22 @@ bmk_sched_blockprepare(void)
 }
 
 int
+bmk_sched_block(void)
+{
+	struct bmk_thread *thread = bmk_current;
+	int tflags;
+
+	bmk_assert((thread->bt_flags & THREAD_TIMEDOUT) == 0);
+
+	schedule();
+
+	tflags = thread->bt_flags;
+	thread->bt_flags &= ~THREAD_TIMEDOUT;
+
+	return tflags & THREAD_TIMEDOUT ? BMK_ETIMEDOUT : 0;
+}
+
+int
 bmk_sched_nanosleep_abstime(bmk_time_t nsec)
 {
 	struct bmk_thread *thread = bmk_current;
@@ -608,7 +625,7 @@ bmk_sched_nanosleep_abstime(bmk_time_t nsec)
 	clear_runnable();
 	bmk_platform_splx(flags);
 
-	bmk_sched();
+	schedule();
 
 	tflags = thread->bt_flags;
 	thread->bt_flags &= ~THREAD_TIMEDOUT;
@@ -738,5 +755,5 @@ bmk_sched_yield(void)
 	TAILQ_INSERT_TAIL(&runq, thread, bt_schedq);
 	bmk_platform_splx(flags);
 
-	bmk_sched();
+	schedule();
 }

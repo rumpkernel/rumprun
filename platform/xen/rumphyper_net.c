@@ -119,7 +119,7 @@ pusher(void *arg)
 			viu->viu_rcvr = bmk_current;
 			bmk_sched_blockprepare();
 			local_irq_restore(flags);
-			bmk_sched();
+			bmk_sched_block();
 			local_irq_save(flags);
 			viu->viu_rcvr = NULL;
 			goto again;

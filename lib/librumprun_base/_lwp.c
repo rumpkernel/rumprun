@@ -245,7 +245,7 @@ _lwp_park(clockid_t clock_id, int flags, const struct timespec *ts,
 		}
 	} else {
 		bmk_sched_blockprepare();
-		bmk_sched();
+		bmk_sched_block();
 		rv = 0;
 	}
 

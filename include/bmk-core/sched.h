@@ -42,7 +42,6 @@ struct bmk_thread;
 void	bmk_sched_init(void);
 void	bmk_sched_startmain(void (*)(void *), void *) __attribute__((noreturn));
 
-void	bmk_sched(void);
 void	bmk_sched_yield(void);
 
 void	bmk_sched_dumpqueue(void);
@@ -60,6 +59,7 @@ void	bmk_sched_exit_withtls(void) __attribute__((__noreturn__));
 void	bmk_sched_blockprepare(void);
 #define BMK_SCHED_BLOCK_INFTIME -1
 void	bmk_sched_blockprepare_timeout(bmk_time_t);
+int	bmk_sched_block(void);
 
 int	bmk_sched_nanosleep(bmk_time_t);
 int	bmk_sched_nanosleep_abstime(bmk_time_t);
