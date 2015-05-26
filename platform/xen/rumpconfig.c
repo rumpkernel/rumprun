@@ -1,4 +1,5 @@
-/*
+/*-
+ * Copyright (c) 2015 Antti Kantee.  All Rights Reserved.
  * Copyright (c) 2014 Martin Lucina.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -23,621 +24,503 @@
  * SUCH DAMAGE.
  */
 
-#include <assert.h>
-#include <err.h>
-#include <errno.h>
-#include <sys/types.h>
+/*
+ * NOTE: this implementation is currently a sketch of what things
+ * should looks like.
+ */
+
 #include <sys/param.h>
-#include <sys/mount.h>
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-#include <rump/rump.h>
-#include <rump/rump_syscalls.h>
-#include <rump/netconfig.h>
-
-#include <mini-os/os.h>
-#include <mini-os/mm.h>
-#include <mini-os/xenbus.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
 
 #include <ufs/ufs/ufsmount.h>
 #include <isofs/cd9660/cd9660_mount.h>
 
+#include <dev/vndvar.h>
+
+#include <assert.h>
+#include <err.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <rump/rump.h>
+#include <rump/netconfig.h>
+
 #include <rumprun-base/config.h>
+#include <rumprun-base/parseargs.h>
 
-static int
-xs_read_netconfig(const char *if_index, char **type, char **method, char **addr,
-		char **mask, char **gw)
+#include <bmk-core/jsmn.h>
+
+/* helper macros */
+#define T_SIZE(t) ((t)->end - (t)->start)
+#define T_STR(t,d) ((t)->start + d)
+#define T_PRINTFSTAR(t,d) T_SIZE(t), T_STR(t,d)
+#define T_STREQ(t, d, str) (strncmp(T_STR(t,d), str, T_SIZE(t)) == 0)
+
+#define T_STRCPY(dest, destsize, t, d)					\
+  do {									\
+	unsigned long strsize = MIN(destsize-1,T_SIZE(t));		\
+	strncpy(dest, T_STR(t, d), strsize);				\
+	dest[strsize] = '\0';						\
+  } while (/*CONSTCOND*/0)
+
+#define T_CHECKTYPE(t, data, exp, fun)					\
+  do {									\
+	if (t->type != exp) {						\
+		errx(1, "unexpected type for token \"%.*s\" "		\
+		    "in \"%s\"", T_PRINTFSTAR(t,data), fun);		\
+	}								\
+  } while (/*CONSTCOND*/0)
+
+#define T_CHECKSIZE(t, data, exp, fun)					\
+  do {									\
+	if (t->size != exp) {						\
+		errx(1, "unexpected size for token \"%.*s\" "		\
+		    "in \"%s\"", T_PRINTFSTAR(t,data), fun);		\
+	}								\
+  } while (/*CONSTCOND*/0)
+
+static char *
+token2cstr(jsmntok_t *t, char *data)
 {
-	char *if_type = NULL;
-	char *if_method = NULL;
-	char *if_addr = NULL;
-	char *if_mask = NULL;
-	char *if_gw = NULL;
-	char buf[128];
-	char *xberr = NULL;
-	xenbus_transaction_t txn;
-	int xbretry = 0;
 
-	xberr = xenbus_transaction_start(&txn);
-	if (xberr) {
-		warnx("rumprun_config: xenbus_transaction_start() failed: %s",
-			xberr);
-		return 1;
-	}
-	snprintf(buf, sizeof buf, "rumprun/net/%s/type", if_index);
-	xberr = xenbus_read(txn, buf, &if_type);
-	if (xberr) {
-		warnx("rumprun_config: xenif%s: read %s failed: %s",
-			if_index, buf, xberr);
-		xenbus_transaction_end(txn, 0, &xbretry);
-		return 1;
-	}
-	snprintf(buf, sizeof buf, "rumprun/net/%s/method", if_index);
-	xberr = xenbus_read(txn, buf, &if_method);
-	if (xberr) {
-		warnx("rumprun_config: xenif%s: read %s failed: %s",
-			if_index, buf, xberr);
-		xenbus_transaction_end(txn, 0, &xbretry);
-		free(if_type);
-		return 1;
-	}
-	/* The following parameters are dependent on the type/method. */
-	snprintf(buf, sizeof buf, "rumprun/net/%s/addr", if_index);
-	xberr = xenbus_read(txn, buf, &if_addr);
-	if (xberr && strcmp(xberr, "ENOENT") != 0) {
-		warnx("rumprun_config: xenif%s: read %s failed: %s",
-			if_index, buf, xberr);
-		xenbus_transaction_end(txn, 0, &xbretry);
-		free(if_type);
-		return 1;
-	}
-	snprintf(buf, sizeof buf, "rumprun/net/%s/netmask", if_index);
-	xberr = xenbus_read(txn, buf, &if_mask);
-	if (xberr && strcmp(xberr, "ENOENT") != 0) {
-		warnx("rumprun_config: xenif%s: read %s failed: %s",
-			if_index, buf, xberr);
-		xenbus_transaction_end(txn, 0, &xbretry);
-		free(if_type);
-		return 1;
-	}
-	snprintf(buf, sizeof buf, "rumprun/net/%s/gw", if_index);
-	xberr = xenbus_read(txn, buf, &if_gw);
-	if (xberr && strcmp(xberr, "ENOENT") != 0) {
-		warnx("rumprun_config: xenif%s: read %s failed: %s",
-			if_index, buf, xberr);
-		xenbus_transaction_end(txn, 0, &xbretry);
-		free(if_type);
-		return 1;
-	}
-	xberr = xenbus_transaction_end(txn, 0, &xbretry);
-	if (xberr) {
-		warnx("rumprun_config: xenbus_transaction_end() failed: %s",
-			xberr);
-		free(if_type);
-		free(if_method);
-		return 1;
-	}
-	*type = if_type;
-	*method = if_method;
-	*addr = if_addr;
-	*mask = if_mask;
-	*gw = if_gw;
-	return 0;
+	*(T_STR(t, data) + T_SIZE(t)) = '\0';
+	return T_STR(t, data);
 }
 
-static void
-rumprun_config_net(const char *if_index)
-{
-	char *if_type = NULL;
-	char *if_method = NULL;
-	char *if_addr = NULL;
-	char *if_mask = NULL;
-	char *if_gw = NULL;
-	char buf[128];
-	int rv;
-	
-	rv = xs_read_netconfig(if_index, &if_type, &if_method, &if_addr,
-		&if_mask, &if_gw);
-	if (rv != 0)
-		return;
-	
-	printf("rumprun_config: configuring xenif%s as %s with %s %s\n",
-		if_index, if_type, if_method, if_addr ? if_addr : "");
-	snprintf(buf, sizeof buf, "xenif%s", if_index);
-	if ((rv = rump_pub_netconfig_ifcreate(buf)) != 0) {
-		warnx("rumprun_config: %s: ifcreate failed: %s", buf,
-			strerror(rv));
-		goto out;
-	}
-	if (strcmp(if_type, "inet") == 0 &&
-	    strcmp(if_method, "dhcp") == 0) {
-		if ((rv = rump_pub_netconfig_dhcp_ipv4_oneshot(buf)) != 0) {
-			warnx("rumprun_config: %s: dhcp_ipv4 failed: %s", buf,
-				strerror(rv));
-			goto out;
-		}
-	}
-	else if (strcmp(if_type, "inet") == 0 &&
-		 strcmp(if_method, "static") == 0) {
-		if (if_addr == NULL || if_mask == NULL) {
-			warnx("rumprun_config: %s: missing if_addr/mask",
-			    buf);
-			goto out;
-		}
-		if ((rv = rump_pub_netconfig_ipv4_ifaddr_cidr(buf, if_addr,
-			atoi(if_mask))) != 0) {
-			warnx("rumprun_config: %s: ipv4_ifaddr failed: %s",
-				buf, strerror(rv));
-			goto out;
-		}
-		if (if_gw &&
-			(rv = rump_pub_netconfig_ipv4_gw(if_gw)) != 0) {
-			warnx("rumprun_config: %s: ipv4_gw failed: %s",
-				buf, strerror(rv));
-			goto out;
-		}
-	}
-	else if (strcmp(if_type, "inet6") == 0 &&
-	    strcmp(if_method, "auto") == 0) {
-		if ((rv = rump_pub_netconfig_auto_ipv6(buf)) != 0) {
-			warnx("rumprun_config: %s: auto_ipv6 failed: %s", buf,
-				strerror(rv));
-			goto out;
-		}
-	}
-	else {
-		warnx("rumprun_config: %s: unknown type/method %s/%s",
-			buf, if_type, if_method);
-	}
-
-out:
-	free(if_type);
-	free(if_method);
-	if (if_addr)
-		free(if_addr);
-	if (if_mask)
-		free(if_mask);
-	if (if_gw)
-		free(if_gw);
-}
+int rumprun_cmdline_argc;
+char **rumprun_cmdline_argv;
 
 static void
-rumprun_deconfig_net(const char *if_index)
+makeargv(char *argvstr)
 {
-	char *if_type = NULL;
-	char *if_method = NULL;
-	char *if_addr = NULL;
-	char *if_mask = NULL;
-	char *if_gw = NULL;
-	char buf[128];
-	int rv;
+	char **argv;
+	int nargs;
 
-	rv = xs_read_netconfig(if_index, &if_type, &if_method, &if_addr,
-		&if_mask, &if_gw);
-	if (rv != 0)
-		return;
+	assert(rumprun_cmdline_argc == 0 && rumprun_cmdline_argv == NULL);
 
-	if (strcmp(if_type, "inet") == 0 &&
-	    strcmp(if_method, "dhcp") == 0) {
-		/* TODO: need an interface to send DHCPRELEASE here */
-		snprintf(buf, sizeof buf, "xenif%s", if_index);
-		if ((rv = rump_pub_netconfig_ifdown(buf)) != 0) {
-			warnx("rumprun_deconfig: %s: ifdown failed: %s", buf,
-				strerror(rv));
-			goto out;
-		}
-		if ((rv = rump_pub_netconfig_ifdestroy(buf)) != 0) {
-			printf("rumprun_deconfig: %s: ifdestroy failed: %s",
-				buf, strerror(rv));
-			goto out;
-		}
+	rumprun_parseargs(argvstr, &nargs, 0);
+	argv = malloc(sizeof(*argv) * (nargs+2));
+	if (argv == NULL)
+		errx(1, "could not allocate argv");
 
-	}
-	else if (strcmp(if_type, "inet") == 0 &&
-		 strcmp(if_method, "static") == 0) {
-		snprintf(buf, sizeof buf, "xenif%s", if_index);
-		if ((rv = rump_pub_netconfig_ifdown(buf)) != 0) {
-			warnx("rumprun_deconfig: %s: ifdown failed: %s", buf,
-				strerror(rv));
-			goto out;
-		}
-		if ((rv = rump_pub_netconfig_ifdestroy(buf)) != 0) {
-			printf("rumprun_deconfig: %s: ifdestroy failed: %s",
-				buf, strerror(rv));
-			goto out;
-		}
-	}
-	else if (strcmp(if_type, "inet6") == 0 &&
-		 strcmp(if_method, "auto") == 0) {
-		snprintf(buf, sizeof buf, "xenif%s", if_index);
-		if ((rv = rump_pub_netconfig_ifdown(buf)) != 0) {
-			warnx("rumprun_deconfig: %s: ifdown failed: %s", buf,
-				strerror(rv));
-			goto out;
-		}
-		if ((rv = rump_pub_netconfig_ifdestroy(buf)) != 0) {
-			printf("rumprun_deconfig: %s: ifdestroy failed: %s",
-				buf, strerror(rv));
-			goto out;
-		}
-	}
-	else {
-		warnx("rumprun_config: %s: unknown type/method %s/%s",
-			buf, if_type, if_method);
-	}
-
-out:
-	free(if_type);
-	free(if_method);
-	if (if_addr)
-		free(if_addr);
-	if (if_mask)
-		free(if_mask);
-	if (if_gw)
-		free(if_gw);
+	rumprun_parseargs(argvstr, &nargs, argv);
+	argv[nargs] = argv[nargs+1] = '\0';
+	rumprun_cmdline_argv = argv;
+	rumprun_cmdline_argc = nargs;
 }
 
 static int
-xs_read_blkconfig(const char *blk_index, char **type, char **mountpoint,
-	char **fstype)
+handle_cmdline(jsmntok_t *t, int left, char *data)
 {
-	char *blk_type = NULL;
-	char *blk_mountpoint = NULL;
-	char *blk_fstype = NULL;
-	char buf[128];
-	char *xberr = NULL;
-	xenbus_transaction_t txn;
-	int xbretry = 0;
-	
-	xberr = xenbus_transaction_start(&txn);
-	if (xberr) {
-		warnx("rumprun_config: xenbus_transaction_start() failed: %s",
-			xberr);
-		return 1;
-	}
-	snprintf(buf, sizeof buf, "rumprun/blk/%s/type", blk_index);
-	xberr = xenbus_read(txn, buf, &blk_type);
-	if (xberr) {
-		warnx("rumprun_config: xenblk%s: read %s failed: %s",
-			blk_index, buf, xberr);
-		xenbus_transaction_end(txn, 0, &xbretry);
-		return 1;
-	}
-	if (strcmp(blk_type, "etfs") != 0) {
-		warnx("rumprun_config: xenblk%s: unknown type '%s'",
-			blk_index, blk_type);
-		xenbus_transaction_end(txn, 0, &xbretry);
-		free(blk_type);
-		return 1;
-	}
 
-	snprintf(buf, sizeof buf, "rumprun/blk/%s/mountpoint", blk_index);
-	xberr = xenbus_read(txn, buf, &blk_mountpoint);
-	if (xberr) {
-		/* no mountpoint, hence we don't need fstype either */
-		assert(blk_mountpoint == NULL);
-		goto out;
-	}
+	T_CHECKTYPE(t, data, JSMN_STRING, __func__);
 
-	snprintf(buf, sizeof buf, "rumprun/blk/%s/fstype", blk_index);
-	xberr = xenbus_read(txn, buf, &blk_fstype);
-	if (xberr) {
-		warnx("rumprun_config: xenblk%s: read %s failed: %s",
-			blk_index, buf, xberr);
-		xenbus_transaction_end(txn, 0, &xbretry);
-		free(blk_type);
-		free(blk_mountpoint);
-		return 1;
-	}
+	makeargv(token2cstr(t, data));
 
- out:
-	xberr = xenbus_transaction_end(txn, 0, &xbretry);
-	if (xberr) {
-		warnx("rumprun_config: xenbus_transaction_end() failed: %s",
-			xberr);
-		free(blk_type);
-		free(blk_mountpoint);
-		free(blk_fstype);
-		return 1;
-	}
-	*type = blk_type;
-	*mountpoint = blk_mountpoint;
-	*fstype = blk_fstype;
-	return 0;
-}
-
-static void
-rumprun_config_blk(const char *blk_index)
-{
-	char *blk_type = NULL;
-	char *blk_mountpoint = NULL;
-	char *blk_fstype = NULL;
-	int rv;
-	char key[32],
-	     hostpath[32];
-
-	rv = xs_read_blkconfig(blk_index, &blk_type, &blk_mountpoint,
-		&blk_fstype);
-	if (rv != 0)
-		return;
-
-	snprintf(key, sizeof key, "/dev/xenblk%s", blk_index);
-	snprintf(hostpath, sizeof hostpath, "blk%s", blk_index);
-	/* XXX: will "leak" etfs registration if later step fails */
-	if ((rv = rump_pub_etfs_register(key, hostpath, RUMP_ETFS_BLK)) != 0) {
-		warnx("rumprun_config: etfs_register failed: %d", rv);
-		goto out;
-	}
-
-	if (blk_mountpoint == NULL)
-		goto out;
-
-	if ((strcmp(blk_fstype, "ffs") != 0) &&
-		(strcmp(blk_fstype, "cd9660") != 0)) {
-		warnx("rumprun_config: xenblk%s: unsupported fstype %s",
-			blk_index, blk_fstype);
-		goto out;
-	}
-
-	printf("rumprun_config: mounting xenblk%s on %s as %s\n",
-		blk_index, blk_mountpoint, blk_fstype);
-	if ((rv = mkdir(blk_mountpoint, 0777)) != 0) {
-		warn("rumprun_config: mkdir failed");
-		goto out;
-	}
-
-	if (strcmp(blk_fstype, "ffs") == 0) {
-		struct ufs_args mntargs = { .fspec = key };
-		if (mount(MOUNT_FFS, blk_mountpoint, 0, &mntargs, sizeof(mntargs)) != 0) {
-			warn("rumprun_config: mount_ffs failed");
-			goto out;
-		}
-	}
-	else if(strcmp(blk_fstype, "cd9660") == 0) {
-		struct iso_args mntargs = { .fspec = key };
-		if (mount(MOUNT_CD9660, blk_mountpoint, MNT_RDONLY, &mntargs, sizeof(mntargs)) != 0) {
-			warn("rumprun_config: mount_cd9660 failed");
-			goto out;
-		}
-	}
-
-out:
-	free(blk_type);
-	free(blk_mountpoint);
-	free(blk_fstype);
-}
-
-static void
-rumprun_deconfig_blk(const char *blk_index)
-{
-	char *blk_type = NULL;
-	char *blk_mountpoint = NULL;
-	char *blk_fstype = NULL;
-	char key[32];
-	int rv;
-	
-	rv = xs_read_blkconfig(blk_index, &blk_type, &blk_mountpoint,
-		&blk_fstype);
-	if (rv != 0)
-		return;
-	
-	if (blk_mountpoint) {
-		printf("rumprun_config: unmounting xenblk%s from %s\n",
-			blk_index, blk_mountpoint);
-		if (unmount(blk_mountpoint, 0) != 0) {
-			warn("rumprun_config: unmount failed");
-			goto out;
-		}
-	}
-	snprintf(key, sizeof key, "/dev/xenblk%s", blk_index);
-	if ((rv = rump_pub_etfs_remove(key)) != 0) {
-		warnx("rumprun_config: etfs_remove failed: %d", rv);
-		goto out;
-	}
-
-out:
-	free(blk_type);
-	free(blk_mountpoint);
-	free(blk_fstype);
+	return 1;
 }
 
 static int
-xs_read_environ(const char *name, char **value_out)
+handle_env(jsmntok_t *t, int left, char *data)
 {
-	char *value = NULL;
-	char buf[128];
-	char *xberr = NULL;
-	xenbus_transaction_t txn;
-	int xbretry = 0;
 
-	xberr = xenbus_transaction_start(&txn);
-	if (xberr) {
-		warnx("rumprun_config: xenbus_transaction_start() failed: %s",
-			xberr);
-		return 1;
-	}
-	snprintf(buf, sizeof buf, "rumprun/environ/%s", name);
-	xberr = xenbus_read(txn, buf, &value);
-	if (xberr) {
-		warnx("rumprun_config: environ: read %s failed: %s",
-			buf, xberr);
-		xenbus_transaction_end(txn, 0, &xbretry);
-		return 1;
-	}
-	xberr = xenbus_transaction_end(txn, 0, &xbretry);
-	if (xberr) {
-		warnx("rumprun_config: xenbus_transaction_end() failed: %s",
-			xberr);
-		free(value);
-		return 1;
-	}
-	*value_out = value;
-	return 0;
+	T_CHECKTYPE(t, data, JSMN_STRING, __func__);
+
+	if (putenv(token2cstr(t, data)) == -1)
+		err(1, "putenv");
+
+	return 1;
 }
 
 static void
-rumprun_config_environ(const char *name)
+config_ipv4(const char *ifname, const char *method,
+	const char *addr, const char *mask, const char *gw)
 {
-	char *value = NULL;
 	int rv;
 
-	rv = xs_read_environ(name, &value);
-	if (rv != 0)
-		return;
-	if (setenv(name, value, 1) != 0) {
-		warn("rumprun_config: setenv(%s) failed", name);
-		goto out;
-	}
+	if (strcmp(method, "dhcp") == 0) {
+		if ((rv = rump_pub_netconfig_dhcp_ipv4_oneshot(ifname)) != 0)
+			errx(1, "configuring dhcp for %s failed: %d",
+			    ifname, rv);
+	} else {
+		if (strcmp(method, "static") != 0) {
+			errx(1, "method \"static\" or \"dhcp\" expected, "
+			    "got \"%s\"", method);
+		}
 
-out:
-	free(value);
+		if (!addr || !mask) {
+			errx(1, "static net cfg missing addr or mask");
+		}
+
+		if ((rv = rump_pub_netconfig_ipv4_ifaddr_cidr(ifname,
+		    addr, atoi(mask))) != 0) {
+			errx(1, "ifconfig \"%s\" for \"%s/%s\" failed",
+			    ifname, addr, mask);
+		}
+		if (gw && (rv = rump_pub_netconfig_ipv4_gw(gw)) != 0) {
+			errx(1, "gw \"%s\" addition failed", gw);
+		}
+	}
 }
 
+static void
+config_ipv6(const char *ifname, const char *method,
+	const char *addr, const char *mask, const char *gw)
+{
+	int rv;
+
+	if (strcmp(method, "auto") == 0) {
+		if ((rv = rump_pub_netconfig_auto_ipv6(ifname)) != 0) {
+			errx(1, "ipv6 autoconfig failed");
+		}
+	} else {
+		errx(1, "unsupported ipv6 config method \"%s\"", method);
+	}
+}
+
+static int
+handle_net(jsmntok_t *t, int left, char *data)
+{
+	const char *ifname, *type, *method;
+	const char *addr, *mask, *gw;
+	jsmntok_t *key, *value;
+	int i, objsize;
+	int rv;
+	static int configured;
+
+	T_CHECKTYPE(t, data, JSMN_OBJECT, __func__);
+
+	/* we expect straight key-value pairs (at least for now) */
+	objsize = t->size;
+	if (left < 2*objsize + 1) {
+		return -1;
+	}
+	t++;
+
+	if (configured) {
+		errx(1, "currently only 1 \"net\" configuration is supported");
+	}
+
+	ifname = type = method = NULL;
+	addr = mask = gw = NULL;
+
+	for (i = 0; i < objsize; i++, t+=2) {
+		const char *valuestr;
+		key = t;
+		value = t+1;
+
+		T_CHECKTYPE(key, data, JSMN_STRING, __func__);
+		T_CHECKSIZE(key, data, 1, __func__);
+
+		T_CHECKTYPE(value, data, JSMN_STRING, __func__);
+		T_CHECKSIZE(value, data, 0, __func__);
+
+		/*
+		 * XXX: this mimics the structure from Xen.  We probably
+		 * want a richer structure, but let's be happy to not
+		 * diverge for now.
+		 */
+		valuestr = token2cstr(value, data);
+		if (T_STREQ(key, data, "if")) {
+			ifname = valuestr;
+		} else if (T_STREQ(key, data, "type")) {
+			type = valuestr;
+		} else if (T_STREQ(key, data, "method")) {
+			method = valuestr;
+		} else if (T_STREQ(key, data, "addr")) {
+			addr = valuestr;
+		} else if (T_STREQ(key, data, "mask")) {
+			/* XXX: we could also pass mask as a number ... */
+			mask = valuestr;
+		} else if (T_STREQ(key, data, "gw")) {
+			gw = valuestr;
+		} else {
+			errx(1, "unexpected key \"%.*s\" in \"%s\"",
+			    T_PRINTFSTAR(key, data), __func__);
+		}
+	}
+
+	if (!ifname || !type || !method) {
+		errx(1, "net cfg missing vital data, not configuring");
+	}
+
+	if ((rv = rump_pub_netconfig_ifcreate(ifname)) != 0) {
+		errx(1, "rumprun_config: ifcreate %s failed: %d",
+		    ifname, rv);
+	}
+
+	if (strcmp(type, "inet") == 0) {
+		config_ipv4(ifname, method, addr, mask, gw);
+	} else if (strcmp(type, "inet6") == 0) {
+		config_ipv6(ifname, method, addr, mask, gw);
+	} else {
+		errx(1, "network type \"%s\" not supported", type);
+	}
+
+	return 2*objsize + 1;
+}
+
+static void
+configvnd(const char *path)
+{
+	struct vnd_ioctl vndio;
+	int fd;
+
+	memset(&vndio, 0, sizeof(vndio));
+	vndio.vnd_file = __UNCONST(path);
+	vndio.vnd_flags = VNDIOF_READONLY;
+
+	fd = open("/dev/rvnd0d", O_RDWR);
+	if (fd == -1)
+		err(1, "cannot open /dev/vnd");
+
+	if (ioctl(fd, VNDIOCSET, &vndio) == -1)
+		err(1, "vndset failed");
+}
+
+static char *
+configetfs(const char *path)
+{
+	char buf[32];
+	char *p;
+	int rv;
+
+	snprintf(buf, sizeof(buf), "/dev/%s", path);
+	rv = rump_pub_etfs_register(buf, path, RUMP_ETFS_BLK);
+	if (rv != 0)
+		errx(1, "etfs register for \"%s\" failed: %d", path, rv);
+
+	if ((p = strdup(buf)) == NULL)
+		err(1, "failed to allocate pathbuf");
+	return p;
+}
+
+static int
+handle_blk(jsmntok_t *t, int left, char *data)
+{
+	const char *source, *path, *fstype, *mp;
+	jsmntok_t *key, *value;
+	int i, objsize;
+
+	T_CHECKTYPE(t, data, JSMN_OBJECT, __func__);
+
+	/* we expect straight key-value pairs */
+	objsize = t->size;
+	if (left < 2*objsize + 1) {
+		return -1;
+	}
+	t++;
+
+	fstype = source = path = mp = NULL;
+
+	for (i = 0; i < objsize; i++, t+=2) {
+		const char *valuestr;
+		key = t;
+		value = t+1;
+
+		T_CHECKTYPE(key, data, JSMN_STRING, __func__);
+		T_CHECKSIZE(key, data, 1, __func__);
+
+		T_CHECKTYPE(value, data, JSMN_STRING, __func__);
+		T_CHECKSIZE(value, data, 0, __func__);
+
+		valuestr = token2cstr(value, data);
+		if (T_STREQ(key, data, "source")) {
+			source = valuestr;
+		} else if (T_STREQ(key, data, "path")) {
+			path = valuestr;
+		} else if (T_STREQ(key, data, "fstype")) {
+			fstype = valuestr;
+		} else if (T_STREQ(key, data, "mountpoint")) {
+			mp = valuestr;
+		} else {
+			errx(1, "unexpected key \"%.*s\" in \"%s\"",
+			    T_PRINTFSTAR(key, data), __func__);
+		}
+	}
+
+	if (!source || !path || !fstype) {
+		errx(1, "blk cfg missing vital data");
+	}
+
+	if (strcmp(source, "dev") == 0) {
+		/* nothing to do here */
+	} else if (strcmp(source, "vnd") == 0) {
+		configvnd(path);
+		path = "/dev/vnd0d"; /* XXX */
+	} else if (strcmp(source, "etfs") == 0) {
+		path = configetfs(path);
+	} else {
+		errx(1, "unsupported blk source \"%s\"", source);
+	}
+
+	/* we only need to do something only if a mountpoint is specified */
+	if (mp) {
+		/* XXX: handles only one component */
+		if (mkdir(mp, 0777) == -1)
+			errx(1, "creating mountpoint \"%s\" failed", mp);
+
+		if (strcmp(fstype, "ffs") == 0) {
+			struct ufs_args mntargs =
+			    { .fspec = __UNCONST(path) };
+
+			if (mount(MOUNT_FFS, mp, 0,
+			    &mntargs, sizeof(mntargs)) == -1) {
+				errx(1, "rumprun_config: mount_ffs failed");
+			}
+		} else if(strcmp(fstype, "cd9660") == 0) {
+			struct iso_args mntargs = { .fspec = path };
+
+			if (mount(MOUNT_CD9660, mp, MNT_RDONLY,
+			    &mntargs, sizeof(mntargs)) == -1) {
+				errx(1, "rumprun_config: mount_cd9660 failed");
+			}
+		} else {
+			errx(1, "unknown fstype \"%s\"", fstype);
+		}
+	}
+
+	return 2*objsize + 1;
+}
+
+struct {
+	const char *name;
+	int (*handler)(jsmntok_t *, int, char *);
+} parsers[] = {
+	{ "cmdline", handle_cmdline },
+	{ "env", handle_env },
+	{ "blk", handle_blk },
+	{ "net", handle_net },
+};
+
+/* don't believe we can have a >64k config */
+#define CFGMAXSIZE (64*1024)
+static char *
+getcmdlinefromroot(const char *cfgname)
+{
+	const char *tryroot[] = {
+		"/dev/ld0a",
+		"/dev/sd0a",
+	};
+	struct iso_args mntargs;
+	struct stat sb;
+	int fd, i;
+	char *p;
+
+	if (mkdir("/rootfs", 0777) == -1)
+		err(1, "mkdir /rootfs failed");
+
+	/*
+	 * XXX: should not be hardcoded to cd9660.  but it is for now.
+	 * Maybe use mountroot() here somehow?
+	 */
+	for (i = 0; i < __arraycount(tryroot); i++) {
+		memset(&mntargs, 0, sizeof(mntargs));
+		mntargs.fspec = tryroot[i];
+		if (mount(MOUNT_CD9660, "/rootfs", MNT_RDONLY,
+		    &mntargs, sizeof(mntargs)) == 0) {
+			break;
+		}
+	}
+	if (i == __arraycount(tryroot))
+		errx(1, "failed to mount rootfs from image");
+
+	while (*cfgname == '/')
+		cfgname++;
+	if (chdir("/rootfs") == -1)
+		err(1, "chdir rootfs");
+
+	if ((fd = open(cfgname, O_RDONLY)) == -1)
+		err(1, "open %s", cfgname);
+	if (stat(cfgname, &sb) == -1)
+		err(1, "stat %s", cfgname);
+
+	if (sb.st_size > CFGMAXSIZE)
+		errx(1, "unbelievable cfg file size, increase CFGMAXSIZE");
+	if ((p = malloc(sb.st_size+1)) == NULL)
+		err(1, "cfgname storage");
+
+	if (read(fd, p, sb.st_size) != sb.st_size)
+		err(1, "read cfgfile");
+	close(fd);
+
+	p[sb.st_size] = '\0';
+	return p;
+}
+
+#define ROOTCFG "ROOTFSCFG="
 void
-_rumprun_config(char *cmdline_unused)
+_rumprun_config(char *cmdline)
 {
-	char *err = NULL;
-	xenbus_transaction_t txn;
-	char **netdevices = NULL,
-	     **blkdevices = NULL,
-	     **environ = NULL;
-	int retry = 0,
-	    i;
+	jsmn_parser p;
+	jsmntok_t *tokens = NULL;
+	jsmntok_t *t;
+	size_t cmdline_len;
+	const size_t rootcfglen = sizeof(ROOTCFG)-1;
+	int i, ntok;
 
-	err = xenbus_transaction_start(&txn);
-	if (err) {
-		warnx("rumprun_config: xenbus_transaction_start() failed: %s",
-			err);
-		goto out_err;
+	/* is the config file on rootfs?  if so, mount & dig it out */
+	if (strncmp(cmdline, ROOTCFG, rootcfglen) == 0) {
+		cmdline = getcmdlinefromroot(cmdline + rootcfglen);
+		if (cmdline == NULL)
+			errx(1, "could not get cfg from rootfs");
 	}
-	err = xenbus_ls(txn, "rumprun/net", &netdevices);
-	if (err && strcmp(err, "ENOENT") != 0) {
-		warnx("rumprun_config: xenbus_ls(rumprun/net) failed: %s", err);
-		xenbus_transaction_end(txn, 0, &retry);
-		goto out_err;
-	}
-	err = xenbus_ls(txn, "rumprun/blk", &blkdevices);
-	if (err && strcmp(err, "ENOENT") != 0) {
-		warnx("rumprun_config: xenbus_ls(rumprun/blk) failed: %s", err);
-		xenbus_transaction_end(txn, 0, &retry);
-		goto out_err;
-	}
-	err = xenbus_ls(txn, "rumprun/environ", &environ);
-	if (err && strcmp(err, "ENOENT") != 0) {
-		warnx("rumprun_config: xenbus_ls(rumprun/environ) failed: %s",
-				err);
-		xenbus_transaction_end(txn, 0, &retry);
-		goto out_err;
-	}
-	err = xenbus_transaction_end(txn, 0, &retry);
-	if (err) {
-		warnx("rumprun_config: xenbus_transaction_end() failed: %s",
-			err);
-		goto out_err;
-	}
-	if (netdevices) {
-		for(i = 0; netdevices[i]; i++) {
-			rumprun_config_net(netdevices[i]);
-			free(netdevices[i]);
-		}
-		free(netdevices);
-	}
-	if (blkdevices) {
-		for(i = 0; blkdevices[i]; i++) {
-			rumprun_config_blk(blkdevices[i]);
-			free(blkdevices[i]);
-		}
-		free(blkdevices);
-	}
-	if (environ) {
-		for(i = 0; environ[i]; i++) {
-			rumprun_config_environ(environ[i]);
-			free(environ[i]);
-		}
-		free(environ);
-	}
-	return;
 
-out_err:
-	if (netdevices) {
-		for(i = 0; netdevices[i]; i++)
-			free(netdevices[i]);
-		free(netdevices);
+	while (*cmdline != '{') {
+		if (*cmdline == '\0') {
+			warnx("could not find start of json.  no config?");
+			makeargv("rumprun");
+			return;
+		}
+		cmdline++;
 	}
-	if (blkdevices) {
-		for(i = 0; blkdevices[i]; i++)
-			free(blkdevices[i]);
-		free(blkdevices);
+
+	cmdline_len = strlen(cmdline);
+	jsmn_init(&p);
+	ntok = jsmn_parse(&p, cmdline, cmdline_len, NULL, 0);
+
+	if (ntok <= 0) {
+		errx(1, "json parse failed 1");
 	}
-	if (environ) {
-		for(i = 0; environ[i]; i++)
-			free(environ[i]);
-		free(environ);
+
+	tokens = malloc(ntok * sizeof(*t));
+	if (!tokens) {
+		errx(1, "failed to allocate jsmn tokens");
 	}
+
+	jsmn_init(&p);
+	if ((ntok = jsmn_parse(&p, cmdline, cmdline_len, tokens, ntok)) < 1) {
+		errx(1, "json parse failed 2");
+	}
+
+	T_CHECKTYPE(tokens, cmdline, JSMN_OBJECT, __func__);
+
+	for (t = &tokens[1]; t < &tokens[ntok]; ) {
+		for (i = 0; i < __arraycount(parsers); i++) {
+			if (T_STREQ(t, cmdline, parsers[i].name)) {
+				int left;
+
+				t++;
+				left = &tokens[ntok] - t;
+				t += parsers[i].handler(t, left, cmdline);
+				break;
+			}
+		}
+		if (i == __arraycount(parsers))
+			errx(1, "no match for key \"%.*s\"",
+			    T_PRINTFSTAR(t, cmdline));
+	}
+
+	free(tokens);
 }
 
 void
 _rumprun_deconfig(void)
 {
-	char *err = NULL;
-	xenbus_transaction_t txn;
-	char **netdevices = NULL,
-	     **blkdevices = NULL;
-	int retry = 0,
-	    i;
 
-	err = xenbus_transaction_start(&txn);
-	if (err) {
-		warnx("rumprun_config: xenbus_transaction_start() failed: %s",
-			err);
-		goto out_err;
-	}
-	err = xenbus_ls(txn, "rumprun/net", &netdevices);
-	if (err && strcmp(err, "ENOENT") != 0) {
-		warnx("rumprun_config: xenbus_ls(rumprun/net) failed: %s", err);
-		xenbus_transaction_end(txn, 0, &retry);
-		goto out_err;
-	}
-	err = xenbus_ls(txn, "rumprun/blk", &blkdevices);
-	if (err && strcmp(err, "ENOENT") != 0) {
-		warnx("rumprun_config: xenbus_ls(rumprun/blk) failed: %s", err);
-		xenbus_transaction_end(txn, 0, &retry);
-		goto out_err;
-	}
-	err = xenbus_transaction_end(txn, 0, &retry);
-	if (err) {
-		warnx("rumprun_config: xenbus_transaction_end() failed: %s",
-			err);
-		goto out_err;
-	}
-	if (netdevices) {
-		for(i = 0; netdevices[i]; i++) {
-			rumprun_deconfig_net(netdevices[i]);
-			free(netdevices[i]);
-		}
-		free(netdevices);
-	}
-	if (blkdevices) {
-		for(i = 0; blkdevices[i]; i++) {
-			rumprun_deconfig_blk(blkdevices[i]);
-			free(blkdevices[i]);
-		}
-		free(blkdevices);
-	}
-	return;
-
-out_err:
-	if (netdevices) {
-		for(i = 0; netdevices[i]; i++)
-			free(netdevices[i]);
-		free(netdevices);
-	}
-	if (blkdevices) {
-		for(i = 0; blkdevices[i]; i++)
-			free(blkdevices[i]);
-		free(blkdevices);
-	}
+	return; /* TODO */
 }

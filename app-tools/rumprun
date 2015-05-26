@@ -247,23 +247,6 @@ detect_fstype ()
 	esac
 }
 
-xen_store_netspec ()
-{
-	local index
-
-	index=$(eval echo \${${iftag}2index})
-
-	echo net/${index}/type ${iftype} >>${xenstore}
-	echo net/${index}/method ${ifmethod} >>${xenstore}
-	if [ -n "${ifaddr}" ]; then
-		echo net/${index}/addr ${ifaddr} >>${xenstore}
-		echo net/${index}/netmask ${ifmask} >>${xenstore}
-	fi
-	if [ -n "${ifgw}" ]; then
-		echo net/${index}/gw ${ifgw} >>${xenstore}
-	fi
-}
-
 json_store_netspec ()
 {
 
@@ -328,17 +311,24 @@ parse_newnetspec ()
 	parse_netspec ${iftag} "${1#*,}"
 }
 
-xen_store_blkspec ()
+json_store_xen_blkspec ()
 {
 
 	vdev=hd$(echo ${bindex} | tr '[0-9]' '[a-j]')
 	conf_disk="${conf_disk}'file:$image,$vdev,w',"
-	echo blk/${bindex}/type etfs >>${xenstore}
-	echo blk/${bindex}/fstype $fstype >>${xenstore}
-	if [ -n "$mountpoint" ]; then
-		echo blk/${bindex}/mountpoint $mountpoint\
-		>>${xenstore}
-	fi
+
+	# if the image does not need to be mounted, we're done
+	[ -n "${mountpoint}" ] || return
+
+	json_open_block blk
+
+	# XXX: should not assume ld (virtio)
+	json_append_ln	'"source":	"'etfs'"'
+	json_append_ln	'"path":	"'blk${bindex}'"'
+	json_append_ln	'"fstype":	"'${fstype}'"'
+	json_append_ln	'"mountpoint":	"'${mountpoint}'"'
+
+	json_finalize_block
 }
 
 json_store_qemu_blkspec ()
@@ -419,13 +409,11 @@ run_xen ()
 		fi
 	done
 
-	store_blkspec=xen_store_blkspec
-	store_netspec=xen_store_netspec
+	store_blkspec=json_store_xen_blkspec
+	store_netspec=json_store_netspec
 
 	conf="${TMPDIR}/xr.conf"
-	xenstore="${TMPDIR}/xr.store"
 	>${conf}
-	>${xenstore}
 	OPTIND=1
 	conf_disk=
 	conf_vif=
@@ -436,6 +424,8 @@ run_xen ()
 	opt_name=
 	opt_debug=
 	sudo=''
+
+	json_open_block
 
 	while getopts "${guestopts}" opt; do
 		case "$opt" in
@@ -451,18 +441,7 @@ run_xen ()
 			;;
 		# -e: Set guest environment variable.
 		e)
-			case "${OPTARG}" in
-			*=*)
-				key=${OPTARG%%=*}
-				value=${OPTARG#*=}
-				;;
-			*)
-				key=${OPTARG}
-				value=
-				;;
-			esac
-			[ -n "$key" ] || usage
-			echo environ/${key} "${value}" >>${xenstore}
+			json_append_ln "\"env\": \"${OPTARG}\""
 			;;
 		# -p: Leave the domain paused after creation.
 		p)
@@ -503,15 +482,21 @@ run_xen ()
 			;;
 		esac
 	done
+
+	# Remaining arguments belong to the application.
+	shift $((OPTIND-1))
+	[ "$1" = "--" ] && shift
+	[ $# -lt 1 ] && usage
+
+	json_append_ln "\"cmdline\": \""$@"\""
+	json_finalize_block
+
 	# Clean up vif and disk, xl does not like trailing commas.
 	conf_vif=$(echo ${conf_vif} | sed -e s/,\$//)
 	[ -n ${conf_vif} ] && conf_vif="vif=[${conf_vif}]"
 	conf_disk=$(echo ${conf_disk} | sed -e s/,\$//)
 	[ -n ${conf_disk} ] && conf_disk="disk=[${conf_disk}]"
-	# Remaining arguments belong to the application.
-	shift $((OPTIND-1))
-	[ "$1" = "--" ] && shift
-	[ $# -lt 1 ] && usage
+
 	name=${opt_name:-rumprun-$(basename $1)}
 	app=$(readlink -f $1)
 	shift
@@ -523,7 +508,6 @@ vcpus=1
 memory=${opt_mem}
 on_crash="preserve"
 ${opt_destroy}
-extra="$@"
 ${conf_vif}
 ${conf_disk}
 EOM
@@ -538,9 +522,8 @@ EOM
 	domid=$(${DUMPCMD} ${sudo} xl domid ${name})
 	# Write provisioning information for domain to xenstore.
 	prefix=/local/domain/${domid}/rumprun
-	cat ${xenstore} | while read key value; do
-		${DUMPCMD} ${sudo} xenstore-write "${prefix}/${key}" "${value}"
-	done
+	${DUMPCMD} ${sudo} xenstore-write \
+	    "${prefix}/cfg" "$(cat ${TMPDIR}/json.cfg)"
 
 	nuketmpdir
 

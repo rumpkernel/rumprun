@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2014 Citrix.  All Rights Reserved.
+ * Copyright (c) 2015 Antti Kantee.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,43 +26,52 @@
 #include <mini-os/types.h>
 #include <mini-os/hypervisor.h>
 #include <mini-os/kernel.h>
+#include <mini-os/xenbus.h>
 #include <xen/xen.h>
 
-#include <bmk-core/memalloc.h>
-
+#include <rumprun-base/config.h>
 #include <rumprun-base/rumprun.h>
-#include <rumprun-base/parseargs.h>
+
+#include <bmk-core/platform.h>
+#include <bmk-core/printf.h>
+
+static char hardcoded_jsoncfg[] = "";
+
+static char *
+jsonordie(void)
+{
+
+	if (hardcoded_jsoncfg[0] == '\0')
+		bmk_platform_halt("could not get configuration");
+
+	bmk_printf("using hardcoded_jsoncfg\n");
+	return hardcoded_jsoncfg;
+}
+
+static char *
+get_config(void)
+{
+	xenbus_transaction_t txn;
+	char *cfg;
+	int retry;
+
+	if (xenbus_transaction_start(&txn))
+		jsonordie();
+	if (xenbus_read(txn, "rumprun/cfg", &cfg) != NULL)
+		jsonordie();
+	xenbus_transaction_end(txn, 0, &retry);
+
+	return cfg;
+}
 
 int
 app_main(start_info_t *si)
 {
-	char argv0[] = "rumprun-xen";
-	char *rawcmdline = (char *)si->cmd_line;
-	int nargs;
-	char **argv;
 	void *cookie;
 
-	rumprun_parseargs(rawcmdline, &nargs, 0);
-	argv = bmk_xmalloc(sizeof(*argv) * (nargs+3));
-	argv[0] = argv0;
-	rumprun_parseargs(rawcmdline, &nargs, argv+1);
-	argv[nargs+1] = 0;
-	argv[nargs+2] = 0;
+	rumprun_boot(get_config());
 
-	rumprun_boot(NULL); /* Xen doesn't use cmdline the same way (yet?) */
-
-	cookie = rumprun(main, nargs+1, argv);
+	cookie = rumprun(main, rumprun_cmdline_argc, rumprun_cmdline_argv);
 	rumprun_wait(cookie);
-
 	rumprun_reboot();
 }
-
-/*
- * Local variables:
- *  c-file-style: "linux"
- *  indent-tabs-mode: t
- *  c-indent-level: 8
- *  c-basic-offset: 8
- *  tab-width: 8
- * End:
- */
