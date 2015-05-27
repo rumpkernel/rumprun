@@ -44,7 +44,6 @@ set -e
 		sleep 5
 	fi
 )
-[ "$1" = "justcheckout" ] && { echo ">> $0 done" ; exit 0; }
 
 # build tools
 ${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k \
