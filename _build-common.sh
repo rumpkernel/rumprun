@@ -24,13 +24,15 @@ set -e
 . ${BUILDRUMP}/subr.sh
 
 # old git versions need to run submodule in the repo root. *sheesh*
+# We assume that if the git submodule command fails, it's because
+# we're using external $RUMPSRC
 (
 	cd $(git rev-parse --show-cdup)
-	if git submodule status ${RUMPSRC} | grep -q '^-' ; then
+	if git submodule status ${RUMPSRC} 2>/dev/null | grep -q '^-' ; then
 		echo '>> submodules missing.  run "git submodule update --init"'
 		exit 1
 	fi
-	if git submodule status ${RUMPSRC} | grep -q '^+' ; then
+	if git submodule status ${RUMPSRC} 2>/dev/null | grep -q '^+' ; then
 		echo '>>'
 		echo '>> Your git submodules are out-of-date'
 		echo '>> Did you forget to run "git submodule update"?'
