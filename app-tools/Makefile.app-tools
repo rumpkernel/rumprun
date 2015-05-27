@@ -11,7 +11,7 @@ ifdef _APPTOOLS_MISSING
 $(error ${_APPTOOLS_MISSING} not defined)
 endif
 
-APP_TOOL_FILES=		cc c++ configure make gmake ar specs
+APP_TOOL_FILES=		cc c++ configure make gmake ar specs-inter specs-stub specs-final
 
 _APP_TOOL_TARGETS:= \
     $(APP_TOOL_FILES:%=$(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-%)
@@ -19,6 +19,7 @@ _APP_TOOL_TARGETS:= \
 .PHONY: app-tools
 app-tools: $(_APP_TOOL_TARGETS)
 
+APP_TOOLS_STUBLDLIBS := $(RUMP_STUBLDLIBS)
 APP_TOOLS_LDLIBS := $(RUMP_LDLIBS)
 APP_TOOLS_LDFLAGS := $(LDFLAGS)
 
@@ -41,6 +42,7 @@ $(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-${1}: \
 		-e 's#!CXXFLAGS!#$(BUILDRUMP_TOOL_CXXFLAGS)#g;' \
 		-e 's#!OBJS!#$(APP_TOOLS_OBJS)#g;' \
 		-e 's#!LDLIBS!#$(APP_TOOLS_LDLIBS)#g;' \
+		-e 's#!STUBLDLIBS!#$(APP_TOOLS_STUBLDLIBS)#g;' \
 		-e 's#!LDFLAGS!#$(APP_TOOLS_LDFLAGS)#g;' \
 		-e 's#!HEAD_OBJ!#$(APP_TOOLS_HEADOBJ)#g;' \
 		-e 's#!LDSCRIPT!#$(APP_TOOLS_LDSCRIPT)#g;'

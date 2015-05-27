@@ -1,4 +1,105 @@
 #!/bin/sh
+#
+# Copyright (c) 2015 Martin Lucina.  All Rights Reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
+# OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
 
-exec !CC! !CFLAGS! -no-integrated-cpp \
-    -specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs "$@"
+#
+# cc.in/c++.in: rumprun backend C/C++ compiler wrapper script
+#
+
+STUNTOUTFILE=
+die()
+{
+	[ -n "$STUNTOUTFILE" ] && rm -f $STUNTOUTFILE
+	exit 1
+}
+
+# Determine if we're being run as C or C++.
+WHAT=${0##*-*-}
+case ${WHAT} in
+cc)
+	CC="!CC!"
+	CFLAGS="!CFLAGS!"
+	EXTRALIBS=
+	;;
+c++)
+	CC="!CXX!"
+	CFLAGS="!CXXFLAGS!"
+	EXTRALIBS=-lrumprun_unwind
+	;;
+*)
+	echo "$0: internal error, unknown invocation"
+	exit 1
+	;;
+esac
+
+# Figure out what we're supposed to be doing. If called with '-bake' then we're
+# definitely baking. Otherwise assume we're linking and switch to compilation
+# if -c / -S / -E was passed.
+if [ "$1" = "-bake" ]; then
+	shift
+	MODE=bake
+else
+	MODE=link
+fi
+WANTARG=
+# OUTFILE gets set to whatever is specified with -o (the real output file).
+OUTFILE=a.out
+for arg in "$@"; do
+	[ "${arg}" = "-c" ] && MODE=compile
+	[ "${arg}" = "-S" ] && MODE=compile
+	[ "${arg}" = "-E" ] && MODE=compile
+	[ "${arg}" = "-o" ] && WANTARG=yes && continue
+	[ -n "${WANTARG}" ] && OUTFILE=${arg} && WANTARG=
+done
+
+case ${MODE} in
+compile|bake)
+	# If we're compiling we don't really care which specs get used, might
+	# as well use the -final ones. In either case we just pass through to
+	# the backend compiler here.
+	exec ${CC} ${CFLAGS} -no-integrated-cpp \
+		-specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs-final \
+		"$@" ${EXTRALIBS}
+	;;
+link)
+	STUNTOUTFILE=$(tempfile) || exit 1
+	# Link the real (from user's PoV) output file as a relocatable object,
+	# with no rump components. '-u main' is necessary to pull in main if the
+	# user is linking it in from a library.
+	${CC} ${CFLAGS} -no-integrated-cpp \
+		-specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs-inter \
+		-Wl,-r -Wl,-u -Wl,main "$@" || die
+	# Try a stub link with minimal rump components. If that fails then stop.
+	${CC} ${CFLAGS} -no-integrated-cpp \
+		-specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs-stub \
+		${OUTFILE} -o ${STUNTOUTFILE} ${EXTRALIBS} || die
+	# Stub link succeded so we're good to go. Throw away the result.
+	rm -f $STUNTOUTFILE
+	;;
+*)
+	echo "$0: internal error, unknown mode"
+	exit 1
+	;;
+esac

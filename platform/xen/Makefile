@@ -40,18 +40,13 @@ ifeq (${CONFIG_SYSPROXY},yes)
 RUMP_LIBS_SYSPROXY = -lrumpkern_sysproxy
 endif
 
-RUMP_LIBS_PCI = -lrumpdev_pci -lrumpdev_pci_if_wm -lrumpdev_miiphy
-RUMP_LIBS_FS = -lrumpfs_ffs -lrumpfs_cd9660 -lrumpfs_tmpfs
-RUMP_LIBS_FS+= -lrumpdev_disk -lrumpdev -lrumpvfs
-RUMP_LIBS_NET = -lrumpnet_config -lrumpdev_bpf -lrumpnet_xenif -lrumpnet_netinet
-RUMP_LIBS_NET+= -lrumpnet_netinet6 -lrumpnet_local -lrumpnet_net
-RUMP_LIBS_NET+= -lrumpxen_xendev -lrumpnet
+RUMPKERN_LIB=	-lrump
+LIBS_USER=	-L${BASEDIR}/xen -L${COREDIR}/xen -L${RUMPUSERDIR}/xen --start-group -lrumprun_base -lpthread -lc --end-group -lbmk_rumpuser -lbmk_core
+LIBS_USERSTUB=	-L${BASEDIR}/xen -L${COREDIR}/xen -L${RUMPUSERDIR}/xen --start-group -lpthread -lc --end-group -lbmk_core ${BASEDIR}/xen/librumprun_base_stubs.o
 
-# Define some default flags for linking.
-RUMP_LDLIBS = --whole-archive ${RUMP_LIBS_FS} ${RUMP_LIBS_NET} ${RUMP_LIBS_PCI} ${RUMP_LIBS_SYSPROXY} -lrumpxen_tc -lrump --no-whole-archive
-RUMP_LDLIBS := ${RUMP_LDLIBS} -L${BASEDIR}/xen -L${COREDIR}/xen -L${RUMPUSERDIR}/xen --start-group -lrumprun_base -lpthread -lc --end-group -lbmk_rumpuser -lbmk_core
-
-LDFLAGS := -L$(abspath rump/lib)
+LDFLAGS=	-L$(abspath rump/lib)
+RUMP_LDLIBS=	--whole-archive ${RUMP_LIBS_SYSPROXY} ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USER}
+RUMP_STUBLDLIBS=--whole-archive ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USERSTUB}
 
 rump-src-y += rumphyper_bio.c
 rump-src-y += rumphyper_net.c
@@ -82,6 +77,10 @@ ${BASEDIR}/xen/librumprun_base.a:
 	    && ${RUMPMAKE} MAKEOBJDIR=xen obj \
 	    && ${RUMPMAKE} MAKEOBJDIR=xen dependall )
 
+.PHONY: ${BASEDIR}/xen/librumprun_base_stubs.o
+${BASEDIR}/xen/librumprun_base_stubs.o: ${BASEDIR}/librumprun_base_stubs.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 .PHONY: ${COREDIR}/xen/libbmk_core.a
 ${COREDIR}/xen/libbmk_core.a:
 	( cd ${COREDIR} \
@@ -100,7 +99,7 @@ rumprun: $(OBJ_DIR)/rumprun.o
 $(OBJ_DIR)/rumprun.o: $(RUMP_OBJS) ${BASEDIR}/xen/librumprun_base.a ${COREDIR}/xen/libbmk_core.a ${RUMPUSERDIR}/xen/libbmk_rumpuser.a
 	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(RUMP_OBJS) -nostdlib -o $@
 
-commonlibs: ${BASEDIR}/xen/librumprun_base.a ${COREDIR}/xen/libbmk_core.a ${RUMPUSERDIR}/xen/libbmk_rumpuser.a
+commonlibs: ${BASEDIR}/xen/librumprun_base.a ${BASEDIR}/xen/librumprun_base_stubs.o ${COREDIR}/xen/libbmk_core.a ${RUMPUSERDIR}/xen/libbmk_rumpuser.a
 
 buildtest: ../../tests/hello/hello.c $(OBJ_DIR)/rumprun.o commonlibs app-tools
 	$(APP_TOOLS_CC) -o $@ $< -lrumprun_tester

@@ -1,0 +1,98 @@
+#!/bin/sh
+#
+# Copyright (c) 2015 Martin Lucina.  All Rights Reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
+# OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+
+#
+# rumpbake: script for final stage linking ("baking") of a unikernel image
+#
+
+usage ()
+{
+	cat <<EOM
+usage: rumpbake -C CONFIG -o OUTPUT FILE
+
+TARGET is the rumprun platform configuration to use.
+Supported configurations:
+    hw_generic
+    xen_pv
+
+OUTPUT is the output file name for the unikernel image
+
+FILE is the application binary produced by rumprun CC
+EOM
+	exit 1
+}
+
+APP_TOOLS_DIR=$(dirname $0)
+CONF=${APP_TOOLS_DIR}/rumpbake.conf
+if [ ! -f ${CONF} ]; then
+	echo "rumpbake: error: Configuration file ${CONF} not found"
+	exit 1
+fi
+. ${CONF}
+
+CONFIG=
+CC=
+OUTPUT=
+
+while getopts "o:C:" opt; do
+	case "${opt}" in
+	o)
+		OUTPUT="${OPTARG}"
+		;;
+	C)
+		# Santize the config argument passed in to remove shell
+		# metacharacters
+		config="$(echo ${OPTARG} | sed -e 's/-/_/g' -e 's/[^A-Za-z0-9_]//g')"
+		# Sets CONFIG to $(CONFIG_<name>) and CC to $(CC_<name>)
+		eval CONFIG="\${CONFIG_${config}}"
+		eval CC="\${CC_${config}}"
+		if [ -z "${CONFIG}" -o -z "${CC}" ]; then
+			echo "rumpbake: error: Unsupported configuration \`${config}'"
+			usage
+		fi
+		;;
+	*)
+		usage
+		;;
+	esac
+done
+shift $((${OPTIND}-1))
+
+if [ $# -lt 1 ]; then
+	usage
+fi
+
+# Parse CONFIG, mapping each component to $LIBS_component and each resulting
+# lib to -l$lib
+LIBS=
+for component in ${CONFIG}; do
+	for lib in $(eval echo \${LIBS_${component}}); do
+		LIBS="${LIBS} -l${lib}"
+	done
+done
+
+# Run CC to produce the unikernel image
+${CC} -bake -o ${OUTPUT} "$@" -Wl,--whole-archive ${LIBS} || exit 1

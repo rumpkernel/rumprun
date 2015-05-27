@@ -43,44 +43,7 @@ OBJS_BMK+= ${OBJS_BMK-y}
 
 include arch/${MACHINE}/Makefile.inc
 
-ifeq (${HASPCI},y)
-LIBS_VIO=	-lrumpdev_pci_virtio
-LIBS_VIO_NET=	-lrumpdev_virtio_if_vioif
-LIBS_VIO_LD=	-lrumpdev_disk -lrumpdev_virtio_ld
-LIBS_VIO_RND=	-lrumpdev_virtio_viornd
-LIBS_PCI_NET=	-lrumpdev_pci_if_wm -lrumpdev_miiphy
-#LIBS_AUDIO=	-lrumpdev_audio
-#LIBS_AUDIO_EAP=-lrumpdev_pci_eap
-#LIBS_AUDIO_HDA=-lrumpdev_pci_hdaudio -lrumpdev_hdaudio_hdafg
-LIBS_PCI=	-lrumpdev_pci
-#LIBS_USB=	-lrumpdev_pci_usbhc -lrumpdev_usb -lrumpdev_umass
-#LIBS_SCSI=	-lrumpdev_scsipi
-LIBS_VND=	-lrumpdev_vnd
-endif
-LIBS_NETINET=	-lrumpnet_netinet6 -lrumpnet_netinet -lrumpnet_net -lrumpnet
-LIBS_NETCONFIG=	-lrumpnet_config
-LIBS_NETBPF=	-lrumpdev_bpf
-LIBS_NETUNIX=	-lrumpnet_local
-LIBS_FS=	-lrumpfs_ffs -lrumpfs_cd9660 -lrumpfs_tmpfs
-
-RUMPKERN_LIB=	${LIBS_VIO_NET}					\
-		${LIBS_VIO_LD}					\
-		${LIBS_VIO_RND}					\
-		${LIBS_VIO}					\
-		${LIBS_AUDIO}					\
-		${LIBS_AUDIO_EAP}				\
-		${LIBS_AUDIO_HDA}				\
-		${LIBS_PCI_NET}					\
-		${LIBS_USB}					\
-		${LIBS_SCSI}					\
-		${LIBS_PCI}					\
-		${LIBS_NETINET}					\
-		${LIBS_NETCONFIG}				\
-		${LIBS_NETBPF}					\
-		${LIBS_VND}					\
-		${LIBS_FS}					\
-		${LIBS_SYSPROXY}				\
-		-lrumpdev -lrumpvfs -lrump
+RUMPKERN_LIB=	-lrump
 
 COREDIR:=	$(shell pwd)/../../lib/libbmk_core
 RUMPUSERDIR:=	$(shell pwd)/../../lib/libbmk_rumpuser
@@ -88,7 +51,9 @@ BASEDIR:=	$(shell pwd)/../../lib/librumprun_base
 
 OBJS_BMK+=	init.o
 LIBS_USER=	-L${BASEDIR}/hw -L${COREDIR}/hw -L${RUMPUSERDIR}/hw --start-group -lrumprun_base -lpthread -lc --end-group -lbmk_rumpuser -lbmk_core
-RUMP_LDLIBS=	--whole-archive ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USER}
+LIBS_USERSTUB=	-L${BASEDIR}/hw -L${COREDIR}/hw -L${RUMPUSERDIR}/hw --start-group -lrumprun_base -lpthread -lc --end-group -lbmk_core ${BASEDIR}/hw/librumprun_base_stubs.o
+RUMP_LDLIBS=	--whole-archive ${LIBS_SYSPROXY} ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USER}
+RUMP_STUBLDLIBS=--whole-archive ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USERSTUB}
 
 OBJS= ${OBJS_BMK} ${OBJS_APP}
 
@@ -112,6 +77,10 @@ ${BASEDIR}/hw/librumprun_base.a:
 	    && ${RUMPMAKE} MAKEOBJDIR=hw obj \
 	    && ${RUMPMAKE} MAKEOBJDIR=hw dependall )
 
+.PHONY: ${BASEDIR}/hw/librumprun_base_stubs.o
+${BASEDIR}/hw/librumprun_base_stubs.o: ${BASEDIR}/librumprun_base_stubs.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
 .PHONY: ${COREDIR}/hw/libbmk_core.a
 ${COREDIR}/hw/libbmk_core.a:
 	( cd ${COREDIR} \
@@ -127,7 +96,7 @@ ${RUMPUSERDIR}/hw/libbmk_rumpuser.a:
 rumprun.o: ${OBJS}
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@
 
-commonlibs: ${BASEDIR}/hw/librumprun_base.a ${COREDIR}/hw/libbmk_core.a ${RUMPUSERDIR}/hw/libbmk_rumpuser.a
+commonlibs: ${BASEDIR}/hw/librumprun_base.a ${BASEDIR}/hw/librumprun_base_stubs.o ${COREDIR}/hw/libbmk_core.a ${RUMPUSERDIR}/hw/libbmk_rumpuser.a
 
 buildtest: ../../tests/hello/hello.c rumprun.o commonlibs app-tools
 	$(APP_TOOLS_CC) -g -o $@ $< -lrumprun_tester
