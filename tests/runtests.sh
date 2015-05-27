@@ -34,7 +34,7 @@ export RUMPRUN_WARNING_STFU=please
 
 # TODO: use a more scalable way of specifying tests
 TESTS='hello/hello basic/ctor_test basic/pthread_test basic/tls_test
-	crypto/md5'
+	basic/misc_test crypto/md5'
 [ -x hello/hellopp ] && TESTS="${TESTS} hello/hellopp"
 
 STARTMAGIC='=== FOE RUMPRUN 12345 TES-TER 54321 ==='
