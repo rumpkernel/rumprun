@@ -82,8 +82,8 @@ script args are:
    -T same as -t, except do not remove temporary directory
 
 guest args are:
-	[-dip] [-b blkspec] [-D port] [-e VAR[=VALUE]] [-I ifopts] [-M mem]
-	[-N name] [-n netspec]
+	[-dip] [-b blkspec] [-D port] [-e VAR[=VALUE]] [-I iftag,ifopts]
+	[-M mem] [-N name] [-W iftag,netspec]
 
    -b configures a block device.  The format of "blkspec" is:
        hostpath[,mountpoint] where:
@@ -99,13 +99,11 @@ guest args are:
    -i attaches to guest console on startup
    -M set the guest's memory to mem megabytes, default is ${MEM_DEFAULT}
    -N set the guest's name to name, default is rumprun-APP
-   -n configures a network interface, where netspec is one of:
+   -p creates the guest but leaves it paused
+   -W configure network interface new style, where "netspec" is
 	inet,dhcp - IPv4 with DHCP
 	inet,static,addr/mask[,gateway] - IPv4 with static IP
 	inet6,auto - IPv6 with stateless autoconfiguration
-   -p creates the guest but leaves it paused
-   -W configure network interface new style
-	iftag,type,method[,params]
 	e.g. -W qnet0,inet,static,1.2.3.4/24
 
 EOM
