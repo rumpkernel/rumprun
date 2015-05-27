@@ -132,6 +132,13 @@ buildrump ()
 	    -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes		\
 	    "$@" tools
 
+	cat >> ${RUMPTOOLS}/mk.conf << EOF
+.if defined(LIB) && \${LIB} == "pthread"
+.PATH:  $(pwd)/lib/librumprun_base/pthread
+PTHREAD_MAKELWP=pthread_makelwp_rumprun.c
+CPPFLAGS.pthread_makelwp_rumprun.c= -I$(pwd)/include
+.endif  # LIB == pthread
+EOF
 	[ -n "${BUILDXENMETAL_MKCONF}" ] \
 	    && echo "${BUILDXENMETAL_MKCONF}" >> ${RUMPTOOLS}/mk.conf
 
