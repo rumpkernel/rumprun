@@ -24,18 +24,10 @@ done
 shift $((${OPTIND} - 1))
 
 [ $# -gt 0 ] || die Need platform argument
+
 platform=$1
-case ${platform} in
-'hw')
-	script=buildme.sh
-	;;
-'xen')
-	script=buildxen.sh
-	;;
-*)
-	die Platform \"$platform\" not supported!
-	;;
-esac
+export PLATFORMDIR=platform/${platform}
+[ -d ${PLATFORMDIR} ] || die Platform \"$platform\" not supported!
 
 shift
 if [ $# -gt 0 ]; then
@@ -57,7 +49,26 @@ esac
 export RUMPSRC
 export BUILD_QUIET
 
-( cd platform/${platform} && ./${script} -V RUMP_CURLWP=__thread "$@" )
-[ $? -eq 0 ] || die Build script \"$script\" failed!
+if [ ! -f ${BUILDRUMP}/subr.sh ]; then
+	# old git versions need to run submodule in the repo root.
+	(
+		cd $(git rev-parse --show-cdup)
+		git submodule update --init ${BUILDRUMP}
+	)
+fi
+. ${BUILDRUMP}/subr.sh
 
-ln -sf platform/${platform}/rump .
+. ${PLATFORMDIR}/platform.conf
+./_build-common.sh -V RUMP_CURLWP=__thread "$@" || die _build-common.sh failed
+
+export RUMPMAKE=$(pwd)/${PLATFORMDIR}/rumptools/rumpmake
+doextras || die 'platforms extras failed.  tillerman needs tea?'
+
+( cd ${PLATFORMDIR} && make || exit 1)
+[ $? -eq 0 ] || die platform make failed!
+
+ln -sf ${PLATFORMDIR}/rump .
+
+echo
+echo ">> $0 ran successfully"
+exit 0
