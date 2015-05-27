@@ -33,9 +33,9 @@ RUMPSTOP=$(pwd)/../app-tools/rumpstop
 export RUMPRUN_WARNING_STFU=please
 
 # TODO: use a more scalable way of specifying tests
-TESTS='hello/hello basic/ctor_test basic/pthread_test basic/tls_test
-	basic/misc_test crypto/md5'
-[ -x hello/hellopp ] && TESTS="${TESTS} hello/hellopp"
+TESTS='hello/hello.bin basic/ctor_test.bin basic/pthread_test.bin
+	basic/tls_test.bin basic/misc_test.bin crypto/md5.bin'
+[ -x hello/hellopp.bin ] && TESTS="${TESTS} hello/hellopp.bin"
 
 STARTMAGIC='=== FOE RUMPRUN 12345 TES-TER 54321 ==='
 ENDMAGIC='=== RUMPRUN 12345 TES-TER 54321 EOF ==='
