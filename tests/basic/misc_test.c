@@ -12,7 +12,7 @@ test_times(void)
 {
 	struct tms tms;
 	
-	printf("checking that calling times() does not crash ...\n");
+	printf("checking that calling times() does not crash ... ");
 	times(&tms);
 	printf("OK!\n");
 
