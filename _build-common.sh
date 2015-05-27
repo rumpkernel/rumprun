@@ -29,7 +29,9 @@ set -e
 (
 	cd $(git rev-parse --show-cdup)
 	if git submodule status ${RUMPSRC} 2>/dev/null | grep -q '^-' ; then
-		echo '>> submodules missing.  run "git submodule update --init"'
+		echo '>>'
+		echo '>> src-netbsd missing.  run "git submodule update --init"'
+		echo '>>'
 		exit 1
 	fi
 	if git submodule status ${RUMPSRC} 2>/dev/null | grep -q '^+' ; then
