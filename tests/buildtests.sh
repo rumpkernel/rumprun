@@ -32,7 +32,7 @@ export DOCXX=$(grep ^CONFIG_CXX ../platform/${PLATFORM}/config.mk)
 
 export MAKE=${APPTOOLSDIR}/rumprun-${TOOLS_PLATFORM}-make
 
-${MAKE} ${DOCXX} RUMPBAKE="${RUMPBAKE}"
+${MAKE} ${DOCXX} RUMPBAKE="${APPTOOLSDIR}/${RUMPBAKE}"
 
 if [ "$1" != '-q' ]; then
 	cd configure
