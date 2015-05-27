@@ -15,9 +15,11 @@ PLATFORM=$1
 case ${PLATFORM} in
 hw)
 	TOOLS_PLATFORM=bmk
+        RUMPBAKE="rumpbake -C hw_generic"
 	;;
 xen)
 	TOOLS_PLATFORM=xen
+        RUMPBAKE="rumpbake -C xen_pv"
 	;;
 *)
 	echo ">> unknown platform \"$PLATFORM\""
@@ -30,7 +32,7 @@ export DOCXX=$(grep ^CONFIG_CXX ../platform/${PLATFORM}/config.mk)
 
 export MAKE=${APPTOOLSDIR}/rumprun-${TOOLS_PLATFORM}-make
 
-${MAKE} ${DOCXX}
+${MAKE} ${DOCXX} RUMPBAKE="${RUMPBAKE}"
 
 if [ "$1" != '-q' ]; then
 	cd configure

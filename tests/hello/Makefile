@@ -1,9 +1,9 @@
 include ../Makefile.inc
 
-ALL=hello
+ALL=hello.bin
 
 ifeq ($(CONFIG_CXX),yes)
-ALL += hellopp
+ALL += hellopp.bin
 endif
 
 all: $(ALL)
@@ -11,6 +11,9 @@ all: $(ALL)
 hello: hello.c
 
 hellopp: hellopp.cc
+
+%.bin: %
+	$(RUMPBAKE) -o $@ $<
 
 clean:
 	rm -f hello hellopp
