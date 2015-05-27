@@ -26,7 +26,7 @@ shift $((${OPTIND} - 1))
 [ $# -gt 0 ] || die Need platform argument
 platform=$1
 case ${platform} in
-'baremetal')
+'hw')
 	script=buildme.sh
 	;;
 'xen')

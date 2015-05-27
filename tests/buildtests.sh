@@ -13,7 +13,7 @@ APPTOOLSDIR=$(pwd)/../app-tools
 PLATFORM=$1
 
 case ${PLATFORM} in
-baremetal)
+hw)
 	TOOLS_PLATFORM=bmk
 	;;
 xen)

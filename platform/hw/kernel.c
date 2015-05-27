@@ -182,7 +182,7 @@ bmk_platform_halt(const char *panicstring)
 
 	if (panicstring)
 		bmk_printf("PANIC: %s\n", panicstring);
-	bmk_printf("baremetal halted (well, spinning ...)\n");
+	bmk_printf("halted (well, spinning ...)\n");
 	for (;;)
 		continue;
 }

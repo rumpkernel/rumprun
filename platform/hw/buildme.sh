@@ -24,7 +24,7 @@ if [ ! -f ${BUILDRUMP}/subr.sh ]; then
 	)
 fi
 . ${BUILDRUMP}/subr.sh
-../../_build-common.sh baremetal "$@" || die _build-common.sh failed
+../../_build-common.sh hw "$@" || die _build-common.sh failed
 
 # build the image
 make

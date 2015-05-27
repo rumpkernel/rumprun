@@ -78,8 +78,6 @@ main(int argc, char *argv[])
 
 	/*
 	 * XXX: need a better way to determine disk device!
-	 * e.g. rumpconfig (which has currently not been
-	 * implemented for baremetal)
 	 */
 	for (i = 0; i < __arraycount(trydisk); i++) {
 		logfd = open(trydisk[i], O_RDWR);

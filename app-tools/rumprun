@@ -65,8 +65,8 @@ usage: rumprun [script args] PLATFORM [guest args] APP [ -- ] [app args]
 
 PLATFORM is the rumprun runtime platform to use
     iso  : bake app and config into a bootable iso image
-    kvm  : baremetal guest via qemu -enable-kvm
-    qemu : baremetal guest via qemu -no-kvm
+    kvm  : hw guest via qemu -enable-kvm
+    qemu : hw guest via qemu -no-kvm
     xen  : xen guest via xl(1)
 
 APP is the binary to rumprun.  app args are processed by APP.
