@@ -38,6 +38,10 @@ STDJ='-j4'
 RUMPSRC=src-netbsd
 BUILDRUMP=$(pwd)/buildrump.sh
 
+#
+# SUBROUTINES
+#
+
 parseargs ()
 {
 
@@ -83,6 +87,10 @@ parseargs ()
 	export RUMPSRC
 	export BUILD_QUIET
 
+	RUMPTOOLS=${PLATFORMDIR}/rumptools
+	RUMPOBJ=${PLATFORMDIR}/rumpobj
+	RUMPDEST=${PLATFORMDIR}/rump
+
 	ARGSSHIFT=$((${orignargs} - $#))
 }
 
@@ -114,6 +122,49 @@ checksubmodules ()
 	fi )
 }
 
+buildrump ()
+{
+
+	# build tools
+	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
+	    -s ${RUMPSRC} -T ${RUMPTOOLS} -o ${RUMPOBJ} -d ${RUMPDEST}	\
+	    -V MKPIC=no -V RUMP_CURLWP=__thread				\
+	    -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes		\
+	    "$@" tools
+
+	[ -n "${BUILDXENMETAL_MKCONF}" ] \
+	    && echo "${BUILDXENMETAL_MKCONF}" >> ${RUMPTOOLS}/mk.conf
+
+	# build rump kernel
+	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
+	    -s ${RUMPSRC} -T ${RUMPTOOLS} -o ${RUMPOBJ} -d ${RUMPDEST}	\
+	    -V MKPIC=no	-V RUMP_CURLWP=__thread				\
+	    -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes		\
+	    "$@" build kernelheaders install
+}
+
+makeconfigmk ()
+{
+
+	echo "BUILDRUMP=${BUILDRUMP}" > ${1}
+	echo "RUMPSRC=${RUMPSRC}" >> ${1}
+	echo "CONFIG_CXX=${CONFIG_CXX}" >> ${1}
+	echo "RUMPMAKE=${RUMPMAKE}" >> ${1}
+	echo "BUILDRUMP_TOOLFLAGS=$(pwd)/${RUMPTOOLS}/toolchain-conf.mk" >> ${1}
+	echo "MACHINE=${MACHINE}" >> ${1}
+
+	tools="AR CPP CC INSTALL NM OBJCOPY"
+	havecxx && tools="${tools} CXX"
+	for t in ${tools}; do
+		echo "${t}=$(${RUMPMAKE} -f bsd.own.mk -V "\${${t}}")" >> ${1}
+	done
+}
+
+
+#
+# BEGIN SCRIPT
+#
+
 parseargs "$@"
 shift ${ARGSSHIFT}
 
@@ -122,39 +173,20 @@ checksubmodules
 . ${BUILDRUMP}/subr.sh
 . ${PLATFORMDIR}/platform.conf
 
-rumptools=${PLATFORMDIR}/rumptools
-rumpobj=${PLATFORMDIR}/rumpobj
-rumpdest=${PLATFORMDIR}/rump
+buildrump
 
-# build tools
-${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k \
-    -V MKPIC=no -s ${RUMPSRC} -T ${rumptools} -o ${rumpobj} -d ${rumpdest} \
-    -V RUMP_CURLWP=__thread \
-    -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes "$@" tools
-
-[ -n "${BUILDXENMETAL_MKCONF}" ] \
-    && echo "${BUILDXENMETAL_MKCONF}" >> ${rumptools}/mk.conf
-
-RUMPMAKE=$(pwd)/${rumptools}/rumpmake
+RUMPMAKE=$(pwd)/${RUMPTOOLS}/rumpmake
 MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
 [ -z "${MACHINE}" ] && die could not figure out target machine
 
-# build rump kernel
-${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k \
-    -V MKPIC=no -s ${RUMPSRC} -T ${rumptools} -o ${rumpobj} -d ${rumpdest} \
-    -V RUMP_CURLWP=__thread \
-    -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes "$@" \
-    build kernelheaders install
-
 LIBS="$(stdlibs ${RUMPSRC}) $(pwd)/lib/librumprun_tester"
-if [ "$(${RUMPMAKE} -f ${rumptools}/mk.conf -V '${_BUILDRUMP_CXX}')" = 'yes' ]
+if [ "$(${RUMPMAKE} -f ${RUMPTOOLS}/mk.conf -V '${_BUILDRUMP_CXX}')" = 'yes' ]
 then
 	LIBS="${LIBS} $(stdlibsxx ${RUMPSRC})"
 fi
 
-usermtree ${rumpdest}
+usermtree ${RUMPDEST}
 userincludes ${RUMPSRC} ${LIBS}
-
 for lib in ${LIBS}; do
 	makeuserlib ${lib}
 done
@@ -170,30 +202,19 @@ else
         CONFIG_CXX=no
 fi
 
-configmk=${PLATFORMDIR}/config.mk
+makeconfigmk ${PLATFORMDIR}/config.mk
 
-echo "BUILDRUMP=${BUILDRUMP}" > ${configmk}
-echo "RUMPSRC=${RUMPSRC}" >> ${configmk}
-echo "CONFIG_CXX=${CONFIG_CXX}" >> ${configmk}
-echo "RUMPMAKE=${RUMPMAKE}" >> ${configmk}
-echo "BUILDRUMP_TOOLFLAGS=$(pwd)/${rumptools}/toolchain-conf.mk" >> ${configmk}
-echo "MACHINE=${MACHINE}" >> ${configmk}
-
-tools="AR CPP CC INSTALL NM OBJCOPY"
-havecxx && tools="${tools} CXX"
-for t in ${tools}; do
-	echo "${t}=$(${RUMPMAKE} -f bsd.own.mk -V "\${${t}}")" >> ${configmk}
-done
-
-export RUMPMAKE=$(pwd)/${PLATFORMDIR}/rumptools/rumpmake
+# run routine specified in platform.conf
 doextras || die 'platforms extras failed.  tillerman needs tea?'
 
+# do final build
 ( cd ${PLATFORMDIR} && make || exit 1)
 [ $? -eq 0 ] || die platform make failed!
 
+# link result to top level (por que?!?)
 ln -sf ${PLATFORMDIR}/rump .
+
 
 echo
 echo ">> $0 ran successfully"
-
 exit 0
