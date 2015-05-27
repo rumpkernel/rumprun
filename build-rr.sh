@@ -173,7 +173,7 @@ checksubmodules
 . ${BUILDRUMP}/subr.sh
 . ${PLATFORMDIR}/platform.conf
 
-buildrump
+buildrump "$@"
 
 RUMPMAKE=$(pwd)/${RUMPTOOLS}/rumpmake
 MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
