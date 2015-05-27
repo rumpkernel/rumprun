@@ -96,7 +96,6 @@ guest args are:
       iftag to it.  the format is:
 	iftag,ifbasename,[,backendopts]
 	e.g. -I 'qnet0,vioif,-net tap=/dev/tap0'
-	(NOTE: currently available only for kvm/qemu)
    -i attaches to guest console on startup
    -M set the guest's memory to mem megabytes, default is ${MEM_DEFAULT}
    -N set the guest's name to name, default is rumprun-APP
@@ -108,7 +107,6 @@ guest args are:
    -W configure network interface new style
 	iftag,type,method[,params]
 	e.g. -W qnet0,inet,static,1.2.3.4/24
-	(NOTE: currently available only for kvm/qemu)
 
 EOM
 	exit 1
