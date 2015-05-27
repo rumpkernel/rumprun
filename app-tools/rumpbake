@@ -95,4 +95,4 @@ for component in ${CONFIG}; do
 done
 
 # Run CC to produce the unikernel image
-${CC} -bake -o ${OUTPUT} "$@" -Wl,--whole-archive ${LIBS} || exit 1
+${APP_TOOLS_DIR}/${CC} -bake -o ${OUTPUT} "$@" -Wl,--whole-archive ${LIBS} || exit 1
