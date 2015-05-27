@@ -36,83 +36,95 @@ set -e
 # defaults
 STDJ='-j4'
 RUMPSRC=src-netbsd
+BUILDRUMP=$(pwd)/buildrump.sh
 
-while getopts '?qs:' opt; do
-	case "$opt" in
-	's')
-		RUMPSRC=${OPTARG}
-		;;
-	'q')
-		BUILD_QUIET=${BUILD_QUIET:=-}q
-		;;
-	'?')
-		echo HELP!
-		exit 1
-	esac
-done
-shift $((${OPTIND} - 1))
+parseargs ()
+{
 
-[ $# -gt 0 ] || die Need platform argument
+	orignargs=$#
+	while getopts '?qs:' opt; do
+		case "$opt" in
+		's')
+			RUMPSRC=${OPTARG}
+			;;
+		'q')
+			BUILD_QUIET=${BUILD_QUIET:=-}q
+			;;
+		'?')
+			echo HELP!
+			exit 1
+		esac
+	done
+	shift $((${OPTIND} - 1))
 
-platform=$1
-export PLATFORMDIR=platform/${platform}
-[ -d ${PLATFORMDIR} ] || die Platform \"$platform\" not supported!
+	[ $# -gt 0 ] || die Need platform argument
 
-shift
-if [ $# -gt 0 ]; then
-	if [ $1 = '--' ]; then
-		shift
-	else
-		die Invalid argument: $1
+	platform=$1
+	export PLATFORMDIR=platform/${platform}
+	[ -d ${PLATFORMDIR} ] || die Platform \"$platform\" not supported!
+	shift
+
+	if [ $# -gt 0 ]; then
+		if [ $1 = '--' ]; then
+			shift
+		else
+			die Invalid argument: $1
+		fi
 	fi
-fi
 
-export BUILDRUMP=$(pwd)/buildrump.sh
-case ${RUMPSRC} in
-/*)
-	;;
-*)
-	RUMPSRC=$(pwd)/${RUMPSRC}
-	;;
-esac
-export RUMPSRC
-export BUILD_QUIET
+	case ${RUMPSRC} in
+	/*)
+		;;
+	*)
+		RUMPSRC=$(pwd)/${RUMPSRC}
+		;;
+	esac
 
-if [ ! -f ${BUILDRUMP}/subr.sh ]; then
-	# old git versions need to run submodule in the repo root.
-	(
-		cd $(git rev-parse --show-cdup)
-		git submodule update --init ${BUILDRUMP}
-	)
-fi
+	export RUMPSRC
+	export BUILD_QUIET
+
+	ARGSSHIFT=$((${orignargs} - $#))
+}
+
+checksubmodules ()
+{
+
+	# old git versions need to run submodule in the repo root. *sheesh*
+	# We assume that if the git submodule command fails, it's because
+	# we're using external $RUMPSRC
+	( cd $(git rev-parse --show-cdup)
+	if git submodule status ${RUMPSRC} 2>/dev/null | grep -q '^-' \
+	    || git submodule status ${BUILDRUMP} 2>/dev/null | grep -q '^-';
+	then
+		echo '>>'
+		echo '>> submodules missing.  run "git submodule update --init"'
+		echo '>>'
+		exit 1
+	fi
+
+	if git submodule status ${RUMPSRC} 2>/dev/null | grep -q '^+' \
+	    || git submodule status ${BUILDRUMP} 2>/dev/null | grep -q '^+'
+	then
+		echo '>>'
+		echo '>> Your git submodules are out-of-date'
+		echo '>> Forgot to run "git submodule update" after pull?'
+		echo '>> (sleeping for 5s, press ctrl-C to abort)'
+		echo '>>'
+		sleep 5
+	fi )
+}
+
+parseargs "$@"
+shift ${ARGSSHIFT}
+
+checksubmodules
+
 . ${BUILDRUMP}/subr.sh
-
 . ${PLATFORMDIR}/platform.conf
 
 rumptools=${PLATFORMDIR}/rumptools
 rumpobj=${PLATFORMDIR}/rumpobj
 rumpdest=${PLATFORMDIR}/rump
-
-# old git versions need to run submodule in the repo root. *sheesh*
-# We assume that if the git submodule command fails, it's because
-# we're using external $RUMPSRC
-(
-	cd $(git rev-parse --show-cdup)
-	if git submodule status ${RUMPSRC} 2>/dev/null | grep -q '^-' ; then
-		echo '>>'
-		echo '>> src-netbsd missing.  run "git submodule update --init"'
-		echo '>>'
-		exit 1
-	fi
-	if git submodule status ${RUMPSRC} 2>/dev/null | grep -q '^+' ; then
-		echo '>>'
-		echo '>> Your git submodules are out-of-date'
-		echo '>> Did you forget to run "git submodule update"?'
-		echo '>> (sleeping for 5s)'
-		echo '>>'
-		sleep 5
-	fi
-)
 
 # build tools
 ${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k \
