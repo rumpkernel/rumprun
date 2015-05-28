@@ -1,3 +1,7 @@
+/* TODO: This list of stubs is somewhat haphazardly copied from the old
+ * platform/xen/configure_stubs.c. We should be able to generate most of this
+ * using the symbol tables in the libraries we're stubbing out. */
+
 int _stub_func(void); int _stub_func(void) {return 0;}
 
 #define STUB(name) \
