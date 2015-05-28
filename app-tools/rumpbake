@@ -31,7 +31,7 @@
 usage ()
 {
 	cat <<EOM
-usage: rumpbake -C CONFIG -o OUTPUT FILE
+usage: rumpbake -T TARGET -o OUTPUT FILE
 
 TARGET is the rumprun platform configuration to use.
 Supported configurations:
@@ -57,12 +57,12 @@ CONFIG=
 TOOLCHAIN=
 OUTPUT=
 
-while getopts "o:C:" opt; do
+while getopts "o:T:" opt; do
 	case "${opt}" in
 	o)
 		OUTPUT="${OPTARG}"
 		;;
-	C)
+	T)
 		# Santize the config argument passed in to remove shell
 		# metacharacters
 		config="$(echo ${OPTARG} | sed -e 's/-/_/g' -e 's/[^A-Za-z0-9_]//g')"
@@ -81,7 +81,7 @@ while getopts "o:C:" opt; do
 done
 shift $((${OPTIND}-1))
 
-if [ $# -ne 1 -o -z "${OUTPUT}" ]; then
+if [ $# -ne 1 -o -z "${OUTPUT}" -o -z "${CONFIG}" ]; then
 	usage
 fi
 FILE=$1
