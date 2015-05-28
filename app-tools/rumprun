@@ -176,9 +176,12 @@ createif_xen ()
 {
 	local iftag
 	local ifbasename
+	local scratch
 
 	iftag="${1%%,*}"
-	ifbasename="${1#*,}"
+	scratch="${1#*,}"
+	ifbasename="${scratch%%,*}"
+	backendopts="${scratch#*,}"
 
 	[ "${iftag}" != "${ifbasename}" ] || usage
 
@@ -189,7 +192,7 @@ createif_xen ()
 	nindex=$(expr $nindex + 1)
 
 	# it's magic ;)
-	conf_vif="${conf_vif}'',"
+	conf_vif="${conf_vif}'${backendopts}',"
 }
 
 json_depth=0
