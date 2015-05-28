@@ -100,7 +100,8 @@ checksubmodules ()
 	# old git versions need to run submodule in the repo root. *sheesh*
 	# We assume that if the git submodule command fails, it's because
 	# we're using external $RUMPSRC
-	( cd $(git rev-parse --show-cdup)
+	( top="$(git rev-parse --show-cdup)"
+	[ -z "${top}" ] || cd "${top}"
 	if git submodule status ${RUMPSRC} 2>/dev/null | grep -q '^-' \
 	    || git submodule status ${BUILDRUMP} 2>/dev/null | grep -q '^-';
 	then
