@@ -152,8 +152,20 @@ EOF
 	    -s ${RUMPSRC} -T ${RUMPTOOLS} -o ${RUMPOBJ} -d ${RUMPDEST}	\
 	    "$@" build kernelheaders install
 
-	eval ${BUILDXENMETAL_PCI_P} \
-	    && makepci ${RUMPSRC} ${BUILDXENMETAL_PCI_ARGS}
+	if eval ${BUILDXENMETAL_PCI_P}; then
+		pcilibs=$(${RUMPMAKE} \
+		    -f ${RUMPSRC}/sys/rump/dev/Makefile.rumpdevcomp \
+		    -V '${RUMPPCIDEVS}')
+
+		for lib in ${pcilibs}; do
+			(
+				cd ${RUMPSRC}/sys/rump/dev/lib/lib${lib}
+				${RUMPMAKE} obj
+				${RUMPMAKE} ${BUILDXENMETAL_PCI_ARGS} dependall
+				${RUMPMAKE} install
+			)
+		done
+	fi
 }
 
 builduserspace ()
