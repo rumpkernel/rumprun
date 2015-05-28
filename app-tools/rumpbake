@@ -54,7 +54,7 @@ fi
 . ${CONF}
 
 CONFIG=
-CC=
+TOOLCHAIN=
 OUTPUT=
 
 while getopts "o:C:" opt; do
@@ -68,8 +68,8 @@ while getopts "o:C:" opt; do
 		config="$(echo ${OPTARG} | sed -e 's/-/_/g' -e 's/[^A-Za-z0-9_]//g')"
 		# Sets CONFIG to $(CONFIG_<name>) and CC to $(CC_<name>)
 		eval CONFIG="\${CONFIG_${config}}"
-		eval CC="\${CC_${config}}"
-		if [ -z "${CONFIG}" -o -z "${CC}" ]; then
+		eval TOOLCHAIN="\${TOOLCHAIN_${config}}"
+		if [ -z "${CONFIG}" -o -z "${TOOLCHAIN}" ]; then
 			echo "rumpbake: error: Unsupported configuration \`${config}'"
 			usage
 		fi
@@ -81,9 +81,10 @@ while getopts "o:C:" opt; do
 done
 shift $((${OPTIND}-1))
 
-if [ $# -lt 1 ]; then
+if [ $# -ne 1 -o -z "${OUTPUT}" ]; then
 	usage
 fi
+FILE=$1
 
 # Parse CONFIG, mapping each component to $LIBS_component and each resulting
 # lib to -l$lib
@@ -94,5 +95,13 @@ for component in ${CONFIG}; do
 	done
 done
 
-# Run CC to produce the unikernel image
-${APP_TOOLS_DIR}/${CC} -bake -o ${OUTPUT} "$@" -Wl,--whole-archive ${LIBS} || exit 1
+# Check if the file is a relocatable object produced by a rumprun toolchain
+if ! nm ${FILE} | grep -q __rumprun_fermented__; then
+	echo "rumpbake: error: ${FILE}: not a rumprun relocatable object"
+	exit 1
+fi
+
+# Final link using cc to produce the unikernel image.
+${APP_TOOLS_DIR}/${TOOLCHAIN}-cc \
+	-bake -o ${OUTPUT} ${FILE} -Wl,--whole-archive ${LIBS} \
+	|| exit 1

@@ -91,6 +91,7 @@ link)
 	${CC} ${CFLAGS} -no-integrated-cpp \
 		-specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs-inter \
 		-Wl,-r -Wl,-u -Wl,main \
+		-Wl,--defsym=__rumprun_fermented__=0 \
 		"$@" ${EXTRALIBS} || die
 	# Try a stub link with minimal rump components. If that fails then stop.
 	${CC} ${CFLAGS} -no-integrated-cpp \
