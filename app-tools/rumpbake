@@ -31,12 +31,11 @@
 usage ()
 {
 	cat <<EOM
-usage: rumpbake -T TARGET -o OUTPUT FILE
+usage: rumpbake -T [ TARGET | list ] -o OUTPUT FILE
 
 TARGET is the rumprun platform configuration to use.
-Supported configurations:
-    hw_generic
-    xen_pv
+
+Run with -T list to list supported configurations.
 
 OUTPUT is the output file name for the unikernel image
 
@@ -63,6 +62,12 @@ while getopts "o:T:" opt; do
 		OUTPUT="${OPTARG}"
 		;;
 	T)
+		if [ "${OPTARG}" = "list" ]; then
+			echo "rumpbake: Supported configurations:"
+			echo
+			set | sed -ne 's/^CONFIG_\([a-zA-Z0-9_]*\)=.*$/\1/p'
+			exit 0
+		fi
 		# Santize the config argument passed in to remove shell
 		# metacharacters
 		config="$(echo ${OPTARG} | sed -e 's/-/_/g' -e 's/[^A-Za-z0-9_]//g')"
