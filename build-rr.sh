@@ -119,7 +119,8 @@ checksubmodules ()
 		echo '>> Forgot to run "git submodule update" after pull?'
 		echo '>> (sleeping for 5s, press ctrl-C to abort)'
 		echo '>>'
-		sleep 5
+		echo -n '>>'
+		for x in 1 2 3 4 5; do echo -n ' !' ; sleep 1 ; done
 	fi )
 }
 
