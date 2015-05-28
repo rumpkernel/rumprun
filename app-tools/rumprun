@@ -137,7 +137,7 @@ setuptmpdir ()
 
 check_app ()
 {
-	if ! nm $1 | grep -q __rumprun_baked__; then
+	if ! grep -q __RuMpRuN_baked__ $1; then
 		die "$1: not a rumprun unikernel (did you forget rumpbake?)"
 	fi
 }

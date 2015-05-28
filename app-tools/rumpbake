@@ -96,7 +96,7 @@ for component in ${CONFIG}; do
 done
 
 # Check if the file is a relocatable object produced by a rumprun toolchain
-if ! nm ${FILE} | grep -q __rumprun_fermented__; then
+if ! grep -q __RuMpRuN_fermented__ ${FILE}; then
 	echo "rumpbake: error: ${FILE}: not a rumprun relocatable object"
 	exit 1
 fi
