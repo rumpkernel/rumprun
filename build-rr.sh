@@ -132,6 +132,10 @@ buildrump ()
 	    -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes		\
 	    "$@" tools
 
+	RUMPMAKE=$(pwd)/${RUMPTOOLS}/rumpmake
+	MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
+	[ -z "${MACHINE}" ] && die could not figure out target machine
+
 	cat >> ${RUMPTOOLS}/mk.conf << EOF
 .if defined(LIB) && \${LIB} == "pthread"
 .PATH:  $(pwd)/lib/librumprun_base/pthread
@@ -148,6 +152,32 @@ EOF
 	    -V MKPIC=no	-V RUMP_CURLWP=__thread				\
 	    -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes		\
 	    "$@" build kernelheaders install
+
+	eval ${BUILDXENMETAL_PCI_P} \
+	    && makepci ${RUMPSRC} ${BUILDXENMETAL_PCI_ARGS}
+}
+
+builduserspace ()
+{
+
+	usermtree ${RUMPDEST}
+
+	LIBS="$(stdlibs ${RUMPSRC}) $(pwd)/lib/librumprun_tester"
+	havecxx && LIBS="${LIBS} $(stdlibsxx ${RUMPSRC})"
+
+	userincludes ${RUMPSRC} ${LIBS}
+	for lib in ${LIBS}; do
+		makeuserlib ${lib}
+	done
+
+	# build unwind bits if we support c++
+	if havecxx; then
+		( cd lib/librumprun_unwind
+		    ${RUMPMAKE} dependall && ${RUMPMAKE} install )
+		CONFIG_CXX=yes
+	else
+		CONFIG_CXX=no
+	fi
 }
 
 makeconfigmk ()
@@ -181,40 +211,14 @@ checksubmodules
 . ${PLATFORMDIR}/platform.conf
 
 buildrump "$@"
-
-RUMPMAKE=$(pwd)/${RUMPTOOLS}/rumpmake
-MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
-[ -z "${MACHINE}" ] && die could not figure out target machine
-
-LIBS="$(stdlibs ${RUMPSRC}) $(pwd)/lib/librumprun_tester"
-if [ "$(${RUMPMAKE} -f ${RUMPTOOLS}/mk.conf -V '${_BUILDRUMP_CXX}')" = 'yes' ]
-then
-	LIBS="${LIBS} $(stdlibsxx ${RUMPSRC})"
-fi
-
-usermtree ${RUMPDEST}
-userincludes ${RUMPSRC} ${LIBS}
-for lib in ${LIBS}; do
-	makeuserlib ${lib}
-done
-
-eval ${BUILDXENMETAL_PCI_P} && makepci ${RUMPSRC} ${BUILDXENMETAL_PCI_ARGS}
-
-# build unwind bits if we support c++
-if havecxx; then
-        ( cd lib/librumprun_unwind
-	    ${RUMPMAKE} dependall && ${RUMPMAKE} install )
-        CONFIG_CXX=yes
-else
-        CONFIG_CXX=no
-fi
+builduserspace
 
 makeconfigmk ${PLATFORMDIR}/config.mk
 
 # run routine specified in platform.conf
 doextras || die 'platforms extras failed.  tillerman needs tea?'
 
-# do final build
+# do final build of the platform bits
 ( cd ${PLATFORMDIR} && make || exit 1)
 [ $? -eq 0 ] || die platform make failed!
 
