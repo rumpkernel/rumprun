@@ -173,13 +173,14 @@ builduserspace ()
 
 	usermtree ${RUMPDEST}
 
-	LIBS="$(stdlibs ${RUMPSRC}) $(pwd)/lib/librumprun_tester"
+	LIBS="$(stdlibs ${RUMPSRC})"
 	havecxx && LIBS="${LIBS} $(stdlibsxx ${RUMPSRC})"
 
 	userincludes ${RUMPSRC} ${LIBS}
 	for lib in ${LIBS}; do
 		makeuserlib ${lib}
 	done
+	makeuserlib $(pwd)/lib/librumprun_tester ${platform}
 
 	# build unwind bits if we support c++
 	if havecxx; then
