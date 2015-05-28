@@ -145,15 +145,15 @@ PTHREAD_MAKELWP=pthread_makelwp_rumprun.c
 CPPFLAGS.pthread_makelwp_rumprun.c= -I$(pwd)/include
 .endif  # LIB == pthread
 EOF
-	[ -n "${BUILDXENMETAL_MKCONF}" ] \
-	    && echo "${BUILDXENMETAL_MKCONF}" >> ${RUMPTOOLS}/mk.conf
+	[ -n "${PLATFORM_MKCONF}" ] \
+	    && echo "${PLATFORM_MKCONF}" >> ${RUMPTOOLS}/mk.conf
 
 	# build rump kernel
 	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
 	    -s ${RUMPSRC} -T ${RUMPTOOLS} -o ${RUMPOBJ} -d ${RUMPDEST}	\
 	    "$@" build kernelheaders install
 
-	if eval ${BUILDXENMETAL_PCI_P}; then
+	if eval ${PLATFORM_PCI_P}; then
 		pcilibs=$(${RUMPMAKE} \
 		    -f ${RUMPSRC}/sys/rump/dev/Makefile.rumpdevcomp \
 		    -V '${RUMPPCIDEVS}')
@@ -162,7 +162,7 @@ EOF
 			(
 				cd ${RUMPSRC}/sys/rump/dev/lib/lib${lib}
 				${RUMPMAKE} obj
-				${RUMPMAKE} ${BUILDXENMETAL_PCI_ARGS} dependall
+				${RUMPMAKE} ${PLATFORM_PCI_ARGS} dependall
 				${RUMPMAKE} install
 			)
 		done
