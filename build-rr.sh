@@ -150,8 +150,6 @@ EOF
 	# build rump kernel
 	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
 	    -s ${RUMPSRC} -T ${RUMPTOOLS} -o ${RUMPOBJ} -d ${RUMPDEST}	\
-	    -V MKPIC=no	-V RUMP_CURLWP=__thread				\
-	    -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes		\
 	    "$@" build kernelheaders install
 
 	eval ${BUILDXENMETAL_PCI_P} \
