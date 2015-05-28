@@ -162,7 +162,8 @@ EOF
 			(
 				cd ${RUMPSRC}/sys/rump/dev/lib/lib${lib}
 				${RUMPMAKE} obj
-				${RUMPMAKE} ${PLATFORM_PCI_ARGS} dependall
+				${RUMPMAKE} \
+				    ${STDJ} ${PLATFORM_PCI_ARGS} dependall
 				${RUMPMAKE} install
 			)
 		done
