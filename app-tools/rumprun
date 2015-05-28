@@ -94,7 +94,7 @@ guest args are:
    -e set environment VAR to VALUE
    -I create guest network interface and attach the user-specified
       iftag to it.  the format is:
-	iftag,ifbasename,[,backendopts]
+	iftag,ifbasename[,backendopts]
 	e.g. -I 'qnet0,vioif,-net tap=/dev/tap0'
    -i attaches to guest console on startup
    -M set the guest's memory to mem megabytes, default is ${MEM_DEFAULT}
@@ -176,9 +176,12 @@ createif_xen ()
 {
 	local iftag
 	local ifbasename
+	local scratch
 
 	iftag="${1%%,*}"
-	ifbasename="${1#*,}"
+	scratch="${1#*,}"
+	ifbasename="${scratch%%,*}"
+	backendopts="${scratch#*,}"
 
 	[ "${iftag}" != "${ifbasename}" ] || usage
 
@@ -189,7 +192,7 @@ createif_xen ()
 	nindex=$(expr $nindex + 1)
 
 	# it's magic ;)
-	conf_vif="${conf_vif}'',"
+	conf_vif="${conf_vif}'${backendopts}',"
 }
 
 json_depth=0
