@@ -1,9 +1,16 @@
+PLATFORM=xen
+
+.PHONY: default
+default: prepare mini-os commonlibs rumprun app-tools buildtest
+
 include ../../config.mk
 include ../../global.mk
 -include config.mk
 ifdef BUILDRUMP_TOOLFLAGS
 include ${BUILDRUMP_TOOLFLAGS}
 endif
+
+include ../Makefile.inc
 
 #
 # Rumprun-xen Makefile.
@@ -32,10 +39,6 @@ ifeq ($(TARGET_ARCH),x86_64)
 CFLAGS += -mno-red-zone -fno-reorder-blocks -fno-asynchronous-unwind-tables
 endif
 
-COREDIR:=       $(shell pwd)/../../lib/libbmk_core
-RUMPUSERDIR:=	$(shell pwd)/../../lib/libbmk_rumpuser
-BASEDIR:=       $(shell pwd)/../../lib/librumprun_base
-
 ifeq (${CONFIG_SYSPROXY},yes)
 RUMP_LIBS_SYSPROXY = -lrumpkern_sysproxy
 endif
@@ -60,9 +63,6 @@ RUMP_OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(rump-src-y))
 $(OBJ_DIR)/%.o: %.c $(HDRS) $(EXTRA_DEPS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
 
-.PHONY: default
-default: prepare mini-os commonlibs rumprun app-tools buildtest
-
 .PHONY: prepare
 prepare:
 	mkdir -p $(OBJ_DIR)/lib
@@ -71,35 +71,11 @@ prepare:
 mini-os:
 	$(MAKE) -C xen OBJ_DIR=$(OBJ_DIR)/xen
 
-.PHONY: ${BASEDIR}/xen/librumprun_base.a
-${BASEDIR}/xen/librumprun_base.a:
-	( cd ${BASEDIR} \
-	    && ${RUMPMAKE} MAKEOBJDIR=xen obj \
-	    && ${RUMPMAKE} MAKEOBJDIR=xen dependall )
-
-.PHONY: ${BASEDIR}/xen/librumprun_base_stubs.o
-${BASEDIR}/xen/librumprun_base_stubs.o: ${BASEDIR}/librumprun_base_stubs.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-.PHONY: ${COREDIR}/xen/libbmk_core.a
-${COREDIR}/xen/libbmk_core.a:
-	( cd ${COREDIR} \
-	    && ${RUMPMAKE} MAKEOBJDIR=xen obj \
-	    && ${RUMPMAKE} MAKEOBJDIR=xen dependall )
-
-.PHONY: ${RUMPUSERDIR}/xen/libbmk_rumpuser.a
-${RUMPUSERDIR}/xen/libbmk_rumpuser.a:
-	( cd ${RUMPUSERDIR} \
-	    && ${RUMPMAKE} MAKEOBJDIR=xen obj \
-	    && ${RUMPMAKE} MAKEOBJDIR=xen dependall )
-
 .PHONY: rumprun
 rumprun: $(OBJ_DIR)/rumprun.o
 
-$(OBJ_DIR)/rumprun.o: $(RUMP_OBJS) ${BASEDIR}/xen/librumprun_base.a ${COREDIR}/xen/libbmk_core.a ${RUMPUSERDIR}/xen/libbmk_rumpuser.a
+$(OBJ_DIR)/rumprun.o: $(RUMP_OBJS) commonlibs
 	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(RUMP_OBJS) -nostdlib -o $@
-
-commonlibs: ${BASEDIR}/xen/librumprun_base.a ${BASEDIR}/xen/librumprun_base_stubs.o ${COREDIR}/xen/libbmk_core.a ${RUMPUSERDIR}/xen/libbmk_rumpuser.a
 
 buildtest: ../../tests/hello/hello.c $(OBJ_DIR)/rumprun.o commonlibs app-tools
 	$(APP_TOOLS_CC) -o $@ $< -lrumprun_tester
@@ -133,3 +109,5 @@ cleanrump: clean
 distcleanrump: cleanrump
 	rm -f config.mk
 	$(MAKE) -C ../../tests clean
+
+include ../Makefile.inc

@@ -1,9 +1,15 @@
+PLATFORM=hw
+
+all: app-tools include/bmk/machine rumprun.o commonlibs buildtest
+
 include ../../config.mk
 include ../../global.mk
 -include config.mk
 ifdef BUILDRUMP_TOOLFLAGS
 include ${BUILDRUMP_TOOLFLAGS}
 endif
+
+include ../Makefile.inc
 
 CPPFLAGS=	-Iinclude -Irump/include -I../../include -nostdinc
 CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
@@ -34,8 +40,6 @@ ifeq (${CONFIG_SYSPROXY},yes)
 LIBS_SYSPROXY=	-lrumpkern_sysproxy
 endif
 
-all: app-tools include/bmk/machine rumprun.o commonlibs buildtest
-
 OBJS_BMK-y+=		intr.o clock.o kernel.o multiboot.o undefs.o
 OBJS_BMK-${HASPCI}+=	rumppci.o
 
@@ -43,11 +47,9 @@ OBJS_BMK+= ${OBJS_BMK-y}
 
 include arch/${MACHINE}/Makefile.inc
 
-RUMPKERN_LIB=	-lrump
+include ../Makefile.inc
 
-COREDIR:=	$(shell pwd)/../../lib/libbmk_core
-RUMPUSERDIR:=	$(shell pwd)/../../lib/libbmk_rumpuser
-BASEDIR:=	$(shell pwd)/../../lib/librumprun_base
+RUMPKERN_LIB=	-lrump
 
 OBJS_BMK+=	init.o
 LIBS_USER=	-L${BASEDIR}/hw -L${COREDIR}/hw -L${RUMPUSERDIR}/hw --start-group -lrumprun_base -lpthread -lc --end-group -lbmk_rumpuser -lbmk_core
@@ -71,32 +73,8 @@ include $(APP_TOOLS_DIR)/Makefile.app-tools
 include/bmk/machine:
 	ln -s ../arch/${MACHINE} include/bmk/machine
 
-.PHONY: ${BASEDIR}/hw/librumprun_base.a
-${BASEDIR}/hw/librumprun_base.a:
-	( cd ${BASEDIR} \
-	    && ${RUMPMAKE} MAKEOBJDIR=hw obj \
-	    && ${RUMPMAKE} MAKEOBJDIR=hw dependall )
-
-.PHONY: ${BASEDIR}/hw/librumprun_base_stubs.o
-${BASEDIR}/hw/librumprun_base_stubs.o: ${BASEDIR}/librumprun_base_stubs.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-.PHONY: ${COREDIR}/hw/libbmk_core.a
-${COREDIR}/hw/libbmk_core.a:
-	( cd ${COREDIR} \
-	    && ${RUMPMAKE} MAKEOBJDIR=hw obj \
-	    && ${RUMPMAKE} MAKEOBJDIR=hw dependall )
-
-.PHONY: ${RUMPUSERDIR}/hw/libbmk_rumpuser.a
-${RUMPUSERDIR}/hw/libbmk_rumpuser.a:
-	( cd ${RUMPUSERDIR} \
-	    && ${RUMPMAKE} MAKEOBJDIR=hw obj \
-	    && ${RUMPMAKE} MAKEOBJDIR=hw dependall )
-
 rumprun.o: ${OBJS}
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@
-
-commonlibs: ${BASEDIR}/hw/librumprun_base.a ${BASEDIR}/hw/librumprun_base_stubs.o ${COREDIR}/hw/libbmk_core.a ${RUMPUSERDIR}/hw/libbmk_rumpuser.a
 
 buildtest: ../../tests/hello/hello.c rumprun.o commonlibs app-tools
 	$(APP_TOOLS_CC) -g -o $@ $< -lrumprun_tester
