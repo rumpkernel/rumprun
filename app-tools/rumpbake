@@ -37,9 +37,9 @@ TARGET is the rumprun platform configuration to use.
 
 Run with -T list to list supported configurations.
 
-OUTPUT is the output file name for the unikernel image
+OUTPUT is the output file name for the unikernel image.
 
-FILE is the application binary produced by rumprun CC
+FILE is the intermediate binary produced by the rumprun compiler toolchain.
 EOM
 	exit 1
 }
