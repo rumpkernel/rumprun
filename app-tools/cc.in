@@ -99,6 +99,8 @@ link)
 		${OUTFILE} -o ${STUNTOUTFILE} || die
 	# Stub link succeded so we're good to go. Throw away the result.
 	rm -f $STUNTOUTFILE
+	# Some build systems insist that the output looks like an executable.
+	chmod +x ${OUTFILE}
 	;;
 *)
 	echo "$0: internal error, unknown mode"
