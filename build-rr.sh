@@ -178,7 +178,7 @@ builduserspace ()
 	LIBS="$(stdlibs ${RUMPSRC})"
 	havecxx && LIBS="${LIBS} $(stdlibsxx ${RUMPSRC})"
 
-	userincludes ${RUMPSRC} ${LIBS}
+	userincludes ${RUMPSRC} ${LIBS} $(pwd)/lib/librumprun_tester
 	for lib in ${LIBS}; do
 		makeuserlib ${lib}
 	done
