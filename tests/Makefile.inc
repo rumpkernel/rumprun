@@ -5,7 +5,7 @@ LDLIBS= -lrumprun_tester
 	$(CC) $(CFLAGS) $< -o $@ $(LDLIBS)
 
 %:: %.cc
-	$(CXX) $(CFLAGS) $< -o $@ $(LDLIBS)
+	$(CXX) $(CXXFLAGS) $< -o $@ $(LDLIBS)
 
 %.bin: %
 	$(RUMPBAKE) -o $@ $<
