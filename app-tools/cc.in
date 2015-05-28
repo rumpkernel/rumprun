@@ -36,14 +36,13 @@ die()
 }
 
 # Determine if we're being run as C or C++.
-WHAT=${0##*-*-}
-case ${WHAT} in
-cc)
+case $0 in
+*-cc)
 	CC="!CC!"
 	CFLAGS="!CFLAGS!"
 	EXTRALIBS=
 	;;
-c++)
+*-c++)
 	CC="!CXX!"
 	CFLAGS="!CXXFLAGS!"
 	EXTRALIBS=-lrumprun_unwind
