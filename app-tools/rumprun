@@ -135,6 +135,13 @@ setuptmpdir ()
 	trap nuketmpdir 0 INT TERM
 }
 
+check_app ()
+{
+	if ! nm $1 | grep -q __rumprun_baked__; then
+		die "$1: not a rumprun unikernel (did you forget rumpbake?)"
+	fi
+}
+
 store_netspec=usage
 store_blkspec=usage
 
@@ -508,6 +515,7 @@ run_xen ()
 	name=${opt_name:-rumprun-$(basename $1)}
 	app=$(readlink -f $1)
 	shift
+	check_app ${app}
 	# Generate xl configuration file.
 	cat <<EOM >"${TMPDIR}/xr.conf"
 kernel="${app}"
@@ -632,6 +640,8 @@ run_qemu ()
 
 	[ -n "${opt_netif}" ] || opt_netif="-net none"
 
+	check_app $1
+
 	qemucmd="${DUMPCMD} qemu-system-i386 ${opt_netif} ${opt_kvm}	\
 	    ${opt_drivespec} ${opt_debug} ${opt_pause} -m ${opt_mem}	\
 	    -kernel $1"
@@ -710,6 +720,7 @@ bake_iso ()
 	done
 	shift $((${OPTIND}-1))
 	bootimage=$1
+	check_app ${bootimage}
 	: ${opt_name:=rumprun-$(echo ${bootimage} | tr / _).iso}
 
 	[ ! -f ${opt_name} ] || die target ${opt_name} already exists

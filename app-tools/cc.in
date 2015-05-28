@@ -75,12 +75,17 @@ for arg in "$@"; do
 done
 
 case ${MODE} in
-compile|bake)
+compile)
 	# If we're compiling we don't really care which specs get used, might
-	# as well use the -final ones. In either case we just pass through to
-	# the backend compiler here.
+	# as well use the -final ones.
 	exec ${CC} ${CFLAGS} -no-integrated-cpp \
 		-specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs-final \
+		"$@" ${EXTRALIBS}
+	;;
+bake)
+	exec ${CC} ${CFLAGS} -no-integrated-cpp \
+		-specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs-final \
+		-Wl,--defsym=__rumprun_baked__=0 \
 		"$@" ${EXTRALIBS}
 	;;
 link)
