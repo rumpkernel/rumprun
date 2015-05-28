@@ -27,7 +27,7 @@
 #ifdef __i386__
 typedef struct { unsigned long pte_low, pte_high; } pte_t;
 
-#elif defined(__x86_64__) || defined(__ia64__)
+#elif defined(__x86_64__)
 
 typedef struct { unsigned long pte; } pte_t;
 #endif /* __i386__ || __x86_64__ */

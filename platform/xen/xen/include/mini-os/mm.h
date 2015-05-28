@@ -29,8 +29,6 @@
 #include <xen/arch-x86_32.h>
 #elif defined(__x86_64__)
 #include <xen/arch-x86_64.h>
-#elif defined(__ia64__)
-#include <xen/arch-ia64.h>
 #else
 #error "Unsupported architecture"
 #endif
