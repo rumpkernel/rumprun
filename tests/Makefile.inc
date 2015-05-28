@@ -1,2 +1,11 @@
 CFLAGS+= -Wall -Werror -Wmissing-prototypes -Wstrict-prototypes -g
-LDFLAGS= -lrumprun_tester
+LDLIBS= -lrumprun_tester
+
+%:: %.c
+	$(CC) $(CFLAGS) $< -o $@ $(LDLIBS)
+
+%:: %.cc
+	$(CXX) $(CFLAGS) $< -o $@ $(LDLIBS)
+
+%.bin: %
+	$(RUMPBAKE) -o $@ $<

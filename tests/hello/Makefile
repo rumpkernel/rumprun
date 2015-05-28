@@ -8,12 +8,5 @@ ALL=hello.bin
 
 all: $(ALL)
 
-hello: hello.c
-
-hellopp: hellopp.cc
-
-%.bin: %
-	$(RUMPBAKE) -o $@ $<
-
 clean:
-	rm -f hello hellopp
+	rm -f $(ALL)
