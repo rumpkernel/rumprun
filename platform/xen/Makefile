@@ -96,12 +96,9 @@ tests:
 
 .PHONY: clean arch_clean app-tools_clean
 
-clean:	app-tools_clean
+clean:	app-tools_clean commonclean
 	$(MAKE) -C xen OBJ_DIR=$(OBJ_DIR)/xen clean
 	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/lib/*.o buildtest
-	( cd ${BASEDIR} && ${RUMPMAKE} MAKEOBJDIR=xen cleandir )
-	( cd ${COREDIR} && ${RUMPMAKE} MAKEOBJDIR=xen cleandir )
-	( cd ${RUMPUSERDIR} && ${RUMPMAKE} MAKEOBJDIR=xen cleandir )
 
 cleanrump: clean
 	rm -rf rump rumpobj rumptools

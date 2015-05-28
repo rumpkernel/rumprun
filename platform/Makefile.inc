@@ -29,3 +29,9 @@ ${RUMPUSERDIR}/${PLATFORM}/libbmk_rumpuser.a:
 	    && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} dependall )
 
 commonlibs: ${BASEDIR}/${PLATFORM}/librumprun_base.a ${BASEDIR}/${PLATFORM}/librumprun_base_stubs.o ${COREDIR}/${PLATFORM}/libbmk_core.a ${RUMPUSERDIR}/${PLATFORM}/libbmk_rumpuser.a
+
+.PHONY: commonclean
+commonclean:
+	( cd ${BASEDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
+	( cd ${COREDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
+	( cd ${RUMPUSERDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )

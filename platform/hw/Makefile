@@ -83,11 +83,8 @@ tests: rumprun.o commonlibs app-tools
 	RUMPRUN_PLATFORM=bmk ../../tests/buildtests.sh
 	../../tests/runtests.sh qemu
 
-clean: app-tools_clean
+clean: app-tools_clean commonclean
 	rm -f ${OBJS} include/bmk/machine buildtest
-	( cd ${BASEDIR} && ${RUMPMAKE} MAKEOBJDIR=hw cleandir )
-	( cd ${COREDIR} && ${RUMPMAKE} MAKEOBJDIR=hw cleandir )
-	( cd ${RUMPUSERDIR} && ${RUMPMAKE} MAKEOBJDIR=hw cleandir )
 
 cleandir: clean
 
