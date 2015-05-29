@@ -35,5 +35,6 @@ char *bmk_strcpy(char *, const char *);
 char *bmk_strncpy(char *, const char *, unsigned long);
 int bmk_strcmp(const char *, const char *);
 int bmk_strncmp(const char *, const char *, unsigned long);
+unsigned long bmk_strtoul(const char *, char **, int);
 
 #endif /* _BMK_CORE_STRING_H_ */
