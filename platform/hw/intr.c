@@ -25,6 +25,7 @@
 
 #include <bmk/kernel.h>
 
+#include <bmk-core/core.h>
 #include <bmk-core/memalloc.h>
 #include <bmk-core/printf.h>
 #include <bmk-core/queue.h>
@@ -75,10 +76,10 @@ isr(void *arg)
 			spl0();
 
 			rumpkern_sched(nlocks, NULL);
-			for (i = isr_lowest;
-			    isrcopy && i < sizeof(isrcopy)*8;
-			    i++) {
+			for (i = isr_lowest; isrcopy; i++) {
 				struct intrhand *ih;
+
+				bmk_assert(i < sizeof(isrcopy)*8);
 
 				if ((isrcopy & (1<<i)) == 0)
 					continue;
