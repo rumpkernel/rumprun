@@ -26,6 +26,8 @@
 #include <bmk/types.h>
 #include <bmk/kernel.h>
 
+#include <bmk-core/pgalloc.h>
+
 #include "pci_user.h"
 
 #define PCI_CONF_ADDR 0xcf8
@@ -106,14 +108,19 @@ int
 rumpcomp_pci_dmalloc(size_t size, size_t align,
 	unsigned long *pap, unsigned long *vap)
 {
-	void *rv;
+	unsigned long mem;
+	int i;
 
-	rv = bmk_allocpg(round_page(size) / PAGE_SIZE);
-	if (rv == NULL)
-		return 1;
+        for (i = 0; size >> (i + PAGE_SHIFT); i++)
+                continue;
 
-	*pap = (unsigned long)rv;
-	*vap = (unsigned long)rv;
+	mem = bmk_pgalloc(i);
+	if (!mem)
+		return BMK_ENOMEM;
+
+	*pap = mem;
+	*vap = mem;
+
 	return 0;
 }
 

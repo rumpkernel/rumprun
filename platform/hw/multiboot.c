@@ -28,6 +28,7 @@
 #include <bmk/kernel.h>
 
 #include <bmk-core/core.h>
+#include <bmk-core/pgalloc.h>
 #include <bmk-core/printf.h>
 #include <bmk-core/string.h>
 
@@ -63,6 +64,8 @@ parsemem(uint32_t addr, uint32_t len)
 
 	bmk_membase = mbm->addr + ossize;
 	bmk_memsize = memsize - ossize;
+
+	bmk_pgalloc_loadmem(bmk_membase, bmk_membase + bmk_memsize);
 
 	bmk_assert((bmk_membase & (PAGE_SIZE-1)) == 0);
 
