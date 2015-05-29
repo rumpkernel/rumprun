@@ -54,7 +54,8 @@ struct shadow_time_info {
 	int tsc_shift;
 	uint32_t version;
 };
-static struct timespec shadow_ts;
+static uint64_t shadow_sec;
+static uint32_t shadow_nsec;
 static uint32_t shadow_ts_version;
 
 static struct shadow_time_info shadow;
@@ -177,8 +178,8 @@ static void update_wallclock(void)
 	do {
 		shadow_ts_version = s->wc_version;
 		rmb();
-		shadow_ts.tv_sec  = s->wc_sec;
-		shadow_ts.tv_nsec = s->wc_nsec;
+		shadow_sec  = s->wc_sec;
+		shadow_nsec = s->wc_nsec;
 		rmb();
 	}
 	while ((s->wc_version & 1) | (shadow_ts_version ^ s->wc_version));
@@ -191,20 +192,17 @@ void minios_clock_wall(uint32_t *sec, uint64_t *nsec)
 {
         uint64_t now = minios_clock_monotonic();
 
-        *sec = shadow_ts.tv_sec + NSEC_TO_SEC(now);
-        *nsec = shadow_ts.tv_nsec + (now / 1000000000UL);
+        *sec = shadow_sec + NSEC_TO_SEC(now);
+        *nsec = shadow_nsec + (now / 1000000000UL);
 }
 
 /* return monotonic clock offset to wall epoch */
 bmk_time_t
 bmk_platform_clock_epochoffset(void)
 {
-	struct timespec myts;
 
 	/* where to we pretend get a consistent copy? */
-	myts = shadow_ts;
-
-	return SECONDS(myts.tv_sec) + myts.tv_nsec;
+	return SECONDS(shadow_sec) + shadow_nsec;
 }
 
 void block_domain(s_time_t until)

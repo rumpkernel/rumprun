@@ -42,7 +42,6 @@ typedef int64_t s_time_t;
 #define NSEC_TO_MSEC(_nsec)     ((_nsec) / 1000000ULL)
 #define NSEC_TO_SEC(_nsec)      ((_nsec) / 1000000000ULL)
 
-#include <sys/time.h>
 
 
 /* prototypes */
