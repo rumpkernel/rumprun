@@ -24,8 +24,6 @@
 #include <xen/io/xs_wire.h>
 #include <mini-os/spinlock.h>
 
-#include <string.h> /* XXX: strdup */
-
 #define _BMK_PRINTF_VA
 #include <bmk-core/memalloc.h>
 #include <bmk-core/printf.h>
@@ -658,7 +656,8 @@ char* xenbus_watch_path_token( xenbus_transaction_t xbt, const char *path, const
     if (!events)
         events = &xenbus_default_watch_queue;
 
-    watch->token = strdup(token);
+    watch->token = bmk_xmalloc(bmk_strlen(token)+1);
+    bmk_strcpy(watch->token, token);
     watch->events = events;
 
     spin_lock(&xenbus_req_lock);
