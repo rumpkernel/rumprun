@@ -40,14 +40,12 @@ ifeq (${CONFIG_SYSPROXY},yes)
 LIBS_SYSPROXY=	-lrumpkern_sysproxy
 endif
 
-OBJS_BMK-y+=		intr.o clock.o kernel.o multiboot.o undefs.o
+OBJS_BMK-y+=		intr.o clock.o kernel.o multiboot.o pgalloc.o undefs.o
 OBJS_BMK-${HASPCI}+=	rumppci.o
 
 OBJS_BMK+= ${OBJS_BMK-y}
 
 include arch/${MACHINE}/Makefile.inc
-
-include ../Makefile.inc
 
 RUMPKERN_LIB=	-lrump
 
