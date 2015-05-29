@@ -24,9 +24,9 @@
 #include <xen/io/xs_wire.h>
 #include <mini-os/spinlock.h>
 
-#include <stdio.h>
 #include <string.h> /* XXX: strdup */
 
+#define _BMK_PRINTF_VA
 #include <bmk-core/memalloc.h>
 #include <bmk-core/printf.h>
 #include <bmk-core/string.h>
@@ -828,11 +828,14 @@ char* xenbus_printf(xenbus_transaction_t xbt,
     char fullpath[BUFFER_SIZE];
     char val[BUFFER_SIZE];
     va_list args;
+    int rv;
 
-    BUG_ON(bmk_strlen(node) + bmk_strlen(path) + 1 >= BUFFER_SIZE);
-    sprintf(fullpath,"%s/%s", node, path);
+    rv = bmk_snprintf(fullpath,sizeof(fullpath),"%s/%s", node, path);
+    BUG_ON(rv >= BUFFER_SIZE);
+
     va_start(args, fmt);
-    vsprintf(val, fmt, args);
+    rv = bmk_vsnprintf(val, sizeof(val), fmt, args);
+    BUG_ON(rv >= BUFFER_SIZE);
     va_end(args);
     return xenbus_write(xbt,fullpath,val);
 }
