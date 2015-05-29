@@ -15,10 +15,9 @@
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
 #include <bmk-core/printf.h>
+#include <bmk-core/string.h>
 
 #include <string.h>
-
-#include <stdlib.h> /* XXX: strtoul() */
 
 /* Note: we generally don't need to disable IRQs since we hardly do anything in
  * the interrupt handler.  */
@@ -164,7 +163,7 @@ done:
 
     minios_printk("blkfront: node=%s backend=%s\n", nodename, dev->backend);
 
-    dev->handle = strtoul(strrchr(nodename, '/')+1, NULL, 10);
+    dev->handle = bmk_strtoul(strrchr(nodename, '/')+1, NULL, 10);
 
     {
         XenbusState state;

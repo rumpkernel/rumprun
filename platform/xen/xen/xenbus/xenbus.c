@@ -25,7 +25,6 @@
 #include <mini-os/spinlock.h>
 
 #include <stdio.h>
-#include <stdlib.h> /* XXX: strtoul */
 #include <string.h> /* XXX: strdup */
 
 #include <bmk-core/memalloc.h>
@@ -773,7 +772,7 @@ char *xenbus_transaction_start(xenbus_transaction_t *xbt)
 	return err;
 
     /* hint: typeof(*xbt) == unsigned long */
-    *xbt = strtoul((char *)(rep+1), NULL, 10);
+    *xbt = bmk_strtoul((char *)(rep+1), NULL, 10);
 
     bmk_memfree(rep);
     return NULL;
@@ -816,7 +815,7 @@ int xenbus_read_integer(const char *path)
 	bmk_memfree(res);
 	return -1;
     }
-    t = strtoul(buf, NULL, 10);
+    t = bmk_strtoul(buf, NULL, 10);
     bmk_memfree(buf);
     return t;
 }
@@ -844,7 +843,7 @@ domid_t xenbus_get_self_id(void)
     domid_t ret;
 
     BUG_ON(xenbus_read(XBT_NIL, "domid", &dom_id));
-    ret = strtoul(dom_id, NULL, 10);
+    ret = bmk_strtoul(dom_id, NULL, 10);
 
     return ret;
 }

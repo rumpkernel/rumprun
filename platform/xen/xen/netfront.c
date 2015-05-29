@@ -17,10 +17,9 @@
 
 #include <bmk-core/memalloc.h>
 #include <bmk-core/printf.h>
+#include <bmk-core/string.h>
 
 #include <string.h>
-
-#include <stdlib.h> /* XXX: strtoul() */
 
 DECLARE_WAIT_QUEUE_HEAD(netfront_queue);
 
@@ -409,7 +408,7 @@ done:
 	    unsigned long v;
 	    char *ep;
 
-	    v = strtoul(p, &ep, 16);
+	    v = bmk_strtoul(p, &ep, 16);
 	    if (v > 255 || (*ep && *ep != ':')) {
 		minios_printk("invalid mac string %s\n", dev->mac);
 		minios_do_exit();

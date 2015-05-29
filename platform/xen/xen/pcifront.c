@@ -12,11 +12,10 @@
 
 #include <string.h>
 
-#include <stdlib.h> /* XXX: strtoul() */
-
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
 #include <bmk-core/printf.h>
+#include <bmk-core/string.h>
 
 #define PCI_DEVFN(slot, func) ((((slot) & 0x1f) << 3) | ((func) & 0x07))
 
@@ -286,22 +285,22 @@ parsepciaddr(const char *s, unsigned int *domain, unsigned int *bus,
 {
     char *ep;
 
-    *domain = strtoul(s, &ep, 16);
+    *domain = bmk_strtoul(s, &ep, 16);
     if (*ep != ':') {
         minios_printk("\"%s\" does not look like a PCI device address\n", s);
         return 0;
     }
-    *bus = strtoul(ep+1, &ep, 16);
+    *bus = bmk_strtoul(ep+1, &ep, 16);
     if (*ep != ':') {
         minios_printk("\"%s\" does not look like a PCI device address\n", s);
         return 0;
     }
-    *slot = strtoul(ep+1, &ep, 16);
+    *slot = bmk_strtoul(ep+1, &ep, 16);
     if (*ep != '.') {
         minios_printk("\"%s\" does not look like a PCI device address\n", s);
         return 0;
     }
-    *fun = strtoul(ep+1, &ep, 16);
+    *fun = bmk_strtoul(ep+1, &ep, 16);
     if (*ep != '\0') {
         minios_printk("\"%s\" does not look like a PCI device address\n", s);
         return 0;
