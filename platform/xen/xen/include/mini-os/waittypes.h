@@ -2,8 +2,7 @@
 #define __MINIOS_WAITTYPE_H__
 
 #include <bmk-core/sched.h>
-
-#include <sys/queue.h>
+#include <bmk-core/queue.h>
 
 struct wait_queue
 {

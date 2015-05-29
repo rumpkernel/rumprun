@@ -1,7 +1,7 @@
 #ifndef MINIOS_QUEUE_H__
 #define MINIOS_QUEUE_H__
 
-#include <sys/queue.h>
+#include <bmk-core/queue.h>
 
 #define MINIOS_SLIST_EMPTY		SLIST_EMPTY
 #define MINIOS_SLIST_ENTRY		SLIST_ENTRY
