@@ -17,7 +17,8 @@
 #include <bmk-core/printf.h>
 #include <bmk-core/string.h>
 
-#include <string.h>
+/* SHARED_RING_INIT() uses memset() */
+#define memset(a,b,c) bmk_memset(a,b,c)
 
 /* Note: we generally don't need to disable IRQs since we hardly do anything in
  * the interrupt handler.  */
@@ -42,7 +43,7 @@ struct blkfront_dev {
     evtchn_port_t evtchn;
     blkif_vdev_t handle;
 
-    char *nodename;
+    char nodename[64];
     char *backend;
     struct blkfront_info info;
 
@@ -80,20 +81,21 @@ struct blkfront_dev *blkfront_init(char *_nodename, struct blkfront_info *info)
     char* msg = NULL;
     char* c;
     char* nodename = _nodename ? _nodename : "device/vbd/768";
+    unsigned long len;
 
     struct blkfront_dev *dev;
 
-    char path[strlen(nodename) + 1 + 10 + 1];
+    char path[bmk_strlen(nodename) + 1 + 10 + 1];
 
     dev = bmk_memcalloc(1, sizeof(*dev));
-    dev->nodename = strdup(nodename);
+    bmk_strncpy(dev->nodename, nodename, sizeof(dev->nodename)-1);
 
     bmk_snprintf(path, sizeof(path), "%s/backend-id", nodename);
     dev->dom = xenbus_read_integer(path); 
     minios_evtchn_alloc_unbound(dev->dom, blkfront_handler, dev, &dev->evtchn);
 
     s = (struct blkif_sring*) minios_alloc_page();
-    memset(s,0,PAGE_SIZE);
+    bmk_memset(s,0,PAGE_SIZE);
 
 
     SHARED_RING_INIT(s);
@@ -163,11 +165,12 @@ done:
 
     minios_printk("blkfront: node=%s backend=%s\n", nodename, dev->backend);
 
-    dev->handle = bmk_strtoul(strrchr(nodename, '/')+1, NULL, 10);
+    len = bmk_strlen(nodename);
+    dev->handle = bmk_strtoul((char *)bmk_memrchr(nodename+len, '/', len)+1, NULL, 10);
 
     {
         XenbusState state;
-        char path[strlen(dev->backend) + 1 + 19 + 1];
+        char path[bmk_strlen(dev->backend) + 1 + 19 + 1];
         bmk_snprintf(path, sizeof(path), "%s/mode", dev->backend);
         msg = xenbus_read(XBT_NIL, path, &c);
         if (msg) {
@@ -230,8 +233,8 @@ void blkfront_shutdown(struct blkfront_dev *dev)
     char* err = NULL;
     XenbusState state;
 
-    char path[strlen(dev->backend) + 1 + 5 + 1];
-    char nodename[strlen(dev->nodename) + 1 + 5 + 1];
+    char path[bmk_strlen(dev->backend) + 1 + 5 + 1];
+    char nodename[bmk_strlen(dev->nodename) + 1 + 5 + 1];
 
     blkfront_sync(dev);
 
