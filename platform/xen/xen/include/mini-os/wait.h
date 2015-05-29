@@ -7,7 +7,7 @@
 
 #include <bmk-core/core.h>
 
-#include <sys/queue.h>
+#include <bmk-core/queue.h>
 
 #define DEFINE_WAIT(name)                          \
 struct wait_queue name = {                         \
