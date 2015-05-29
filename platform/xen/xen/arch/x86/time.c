@@ -190,19 +190,28 @@ static void update_wallclock(void)
  */
 void minios_clock_wall(uint32_t *sec, uint64_t *nsec)
 {
-        uint64_t now = minios_clock_monotonic();
+	uint64_t now;
+	unsigned long flags;
 
-        *sec = shadow_sec + NSEC_TO_SEC(now);
-        *nsec = shadow_nsec + (now / 1000000000UL);
+	local_irq_save(flags);
+	now  = minios_clock_monotonic();
+	*sec = shadow_sec + NSEC_TO_SEC(now);
+	*nsec = shadow_nsec + (now / 1000000000UL);
+	local_irq_restore(flags);
 }
 
 /* return monotonic clock offset to wall epoch */
 bmk_time_t
 bmk_platform_clock_epochoffset(void)
 {
+	unsigned long flags;
+	bmk_time_t rv;
 
-	/* where to we pretend get a consistent copy? */
-	return SECONDS(shadow_sec) + shadow_nsec;
+	local_irq_save(flags);
+	rv = SECONDS(shadow_sec) + shadow_nsec;
+	local_irq_restore(flags);
+
+	return rv;
 }
 
 void block_domain(s_time_t until)
