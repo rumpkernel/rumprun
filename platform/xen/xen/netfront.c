@@ -19,7 +19,8 @@
 #include <bmk-core/printf.h>
 #include <bmk-core/string.h>
 
-#include <string.h>
+/* SHARED_RING_INIT() uses memset() */
+#define memset(a,b,c) bmk_memset(a,b,c)
 
 DECLARE_WAIT_QUEUE_HEAD(netfront_queue);
 
@@ -47,7 +48,8 @@ struct netfront_dev {
     grant_ref_t rx_ring_ref;
     evtchn_port_t evtchn;
 
-    char *nodename;
+    char nodename[64];
+
     char *backend;
     char *mac;
 
@@ -247,20 +249,19 @@ struct netfront_dev *netfront_init(char *_nodename, void (*thenetif_rx)(struct n
     int retry=0;
     int i;
     char* msg = NULL;
-    char nodename[256];
-    char path[256];
+    char path[64];
     struct netfront_dev *dev;
     static int netfrontends = 0;
 
-    if (!_nodename)
-        bmk_snprintf(nodename, sizeof(nodename), "device/vif/%d", netfrontends);
-    else
-        strncpy(nodename, _nodename, strlen(nodename));
-    netfrontends++;
-
     dev = bmk_memcalloc(1, sizeof(*dev));
-    dev->nodename = strdup(nodename);
     dev->netfront_priv = priv;
+
+    if (!_nodename)
+        bmk_snprintf(dev->nodename, sizeof(dev->nodename),
+	    "device/vif/%d", netfrontends);
+    else
+        bmk_strncpy(dev->nodename, _nodename, sizeof(dev->nodename)-1);
+    netfrontends++;
 
     minios_printk("net TX ring size %d\n", NET_TX_RING_SIZE);
     minios_printk("net RX ring size %d\n", NET_RX_RING_SIZE);
@@ -277,14 +278,14 @@ struct netfront_dev *netfront_init(char *_nodename, void (*thenetif_rx)(struct n
         dev->rx_buffers[i].page = (char*)minios_alloc_page();
     }
 
-    bmk_snprintf(path, sizeof(path), "%s/backend-id", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/backend-id", dev->nodename);
     dev->dom = xenbus_read_integer(path);
         minios_evtchn_alloc_unbound(dev->dom, netfront_handler, dev, &dev->evtchn);
 
     txs = (struct netif_tx_sring *) minios_alloc_page();
     rxs = (struct netif_rx_sring *) minios_alloc_page();
-    memset(txs,0,PAGE_SIZE);
-    memset(rxs,0,PAGE_SIZE);
+    bmk_memset(txs,0,PAGE_SIZE);
+    bmk_memset(rxs,0,PAGE_SIZE);
 
 
     SHARED_RING_INIT(txs);
@@ -308,38 +309,38 @@ again:
         bmk_memfree(err);
     }
 
-    err = xenbus_printf(xbt, nodename, "tx-ring-ref","%u",
+    err = xenbus_printf(xbt, dev->nodename, "tx-ring-ref","%u",
                 dev->tx_ring_ref);
     if (err) {
         message = "writing tx ring-ref";
         goto abort_transaction;
     }
-    err = xenbus_printf(xbt, nodename, "rx-ring-ref","%u",
+    err = xenbus_printf(xbt, dev->nodename, "rx-ring-ref","%u",
                 dev->rx_ring_ref);
     if (err) {
         message = "writing rx ring-ref";
         goto abort_transaction;
     }
-    err = xenbus_printf(xbt, nodename,
+    err = xenbus_printf(xbt, dev->nodename,
                 "event-channel", "%u", dev->evtchn);
     if (err) {
         message = "writing event-channel";
         goto abort_transaction;
     }
-    err = xenbus_printf(xbt, nodename, "feature-no-csum-offload", "%u", 1);
+    err = xenbus_printf(xbt, dev->nodename, "feature-no-csum-offload", "%u", 1);
     if (err) {
         message = "writing feature-no-csum-offload";
         goto abort_transaction;
     }
 
-    err = xenbus_printf(xbt, nodename, "request-rx-copy", "%u", 1);
+    err = xenbus_printf(xbt, dev->nodename, "request-rx-copy", "%u", 1);
 
     if (err) {
         message = "writing request-rx-copy";
         goto abort_transaction;
     }
 
-    bmk_snprintf(path, sizeof(path), "%s/state", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/state", dev->nodename);
     err = xenbus_switch_state(xbt, path, XenbusStateConnected);
     if (err) {
         message = "switching state";
@@ -363,9 +364,9 @@ abort_transaction:
 
 done:
 
-    bmk_snprintf(path, sizeof(path), "%s/backend", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/backend", dev->nodename);
     msg = xenbus_read(XBT_NIL, path, &dev->backend);
-    bmk_snprintf(path, sizeof(path), "%s/mac", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/mac", dev->nodename);
     msg = xenbus_read(XBT_NIL, path, &dev->mac);
 
     if ((dev->backend == NULL) || (dev->mac == NULL)) {
@@ -373,12 +374,12 @@ done:
         goto error;
     }
 
-    minios_printk("netfront: node=%s backend=%s\n", nodename, dev->backend);
+    minios_printk("netfront: node=%s backend=%s\n", dev->nodename, dev->backend);
     minios_printk("netfront: MAC %s\n", dev->mac);
 
     {
         XenbusState state;
-        char path[strlen(dev->backend) + 1 + 5 + 1];
+        char path[bmk_strlen(dev->backend) + 1 + 5 + 1];
         bmk_snprintf(path, sizeof(path), "%s/state", dev->backend);
 
         xenbus_watch_path_token(XBT_NIL, path, path, &dev->events);
@@ -432,8 +433,8 @@ void netfront_shutdown(struct netfront_dev *dev)
     char* err = NULL;
     XenbusState state;
 
-    char path[strlen(dev->backend) + 1 + 5 + 1];
-    char nodename[strlen(dev->nodename) + 1 + 5 + 1];
+    char path[bmk_strlen(dev->backend) + 1 + 5 + 1];
+    char nodename[bmk_strlen(dev->nodename) + 1 + 5 + 1];
 
     minios_printk("close network: backend at %s\n",dev->backend);
 
@@ -546,7 +547,7 @@ void netfront_xmit(struct netfront_dev *dev, unsigned char* data,int len)
     i = dev->tx.req_prod_pvt;
     tx = RING_GET_REQUEST(&dev->tx, i);
 
-    memcpy(page,data,len);
+    bmk_memcpy(page,data,len);
 
     buf->gref = 
         tx->gref = gnttab_grant_access(dev->dom,virt_to_mfn(page),1);
