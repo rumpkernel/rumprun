@@ -53,7 +53,7 @@ struct consfront_dev {
     grant_ref_t ring_ref;
     evtchn_port_t evtchn;
 
-    char *nodename;
+    char nodename[64];
     char *backend;
 
     struct xenbus_event_queue events;

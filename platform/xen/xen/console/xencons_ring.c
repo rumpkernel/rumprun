@@ -12,6 +12,7 @@
 #include <mini-os/gnttab.h>
 
 #include <bmk-core/memalloc.h>
+#include <bmk-core/string.h>
 
 #include "console.h"
 
@@ -110,7 +111,7 @@ struct consfront_dev *xencons_ring_init(void)
 		return 0;
 
 	dev = bmk_memcalloc(1, sizeof(struct consfront_dev));
-	dev->nodename = "device/console";
+        bmk_strncpy(dev->nodename, "device/console", sizeof(dev->nodename)-1);
 	dev->dom = 0;
 	dev->backend = 0;
 	dev->ring_ref = 0;

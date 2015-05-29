@@ -17,8 +17,6 @@
 #include <bmk-core/printf.h>
 #include <bmk-core/string.h>
 
-#include <string.h> /* XXX: for strdup */
-
 void free_consfront(struct consfront_dev *dev)
 {
     char* err = NULL;
@@ -68,24 +66,23 @@ struct consfront_dev *init_consfront(char *_nodename)
     char* message=NULL;
     int retry=0;
     char* msg = NULL;
-    char nodename[256];
-    char path[256];
+    char path[64];
     static int consfrontends = 3;
     struct consfront_dev *dev;
     int res;
 
-    if (!_nodename)
-        bmk_snprintf(nodename, sizeof(nodename), "device/console/%d", consfrontends);
-    else
-        bmk_strncpy(nodename, _nodename, sizeof(nodename));
-
-    minios_printk("******************* CONSFRONT for %s **********\n\n\n", nodename);
-
-    consfrontends++;
     dev = bmk_memcalloc(1, sizeof(*dev));
-    dev->nodename = strdup(nodename);
 
-    bmk_snprintf(path, sizeof(path), "%s/backend-id", nodename);
+    if (!_nodename)
+        bmk_snprintf(dev->nodename, sizeof(dev->nodename),
+	  "device/console/%d", consfrontends);
+    else
+        bmk_strncpy(dev->nodename, _nodename, sizeof(dev->nodename)-1);
+    consfrontends++;
+
+    minios_printk("******************* CONSFRONT for %s **********\n\n\n", dev->nodename);
+
+    bmk_snprintf(path, sizeof(path), "%s/backend-id", dev->nodename);
     if ((res = xenbus_read_integer(path)) < 0) 
         return NULL;
     else
@@ -105,32 +102,32 @@ again:
         bmk_memfree(err);
     }
 
-    err = xenbus_printf(xbt, nodename, "ring-ref","%u",
+    err = xenbus_printf(xbt, dev->nodename, "ring-ref","%u",
                 dev->ring_ref);
     if (err) {
         message = "writing ring-ref";
         goto abort_transaction;
     }
-    err = xenbus_printf(xbt, nodename,
+    err = xenbus_printf(xbt, dev->nodename,
                 "port", "%u", dev->evtchn);
     if (err) {
         message = "writing event-channel";
         goto abort_transaction;
     }
-    err = xenbus_printf(xbt, nodename,
+    err = xenbus_printf(xbt, dev->nodename,
                 "protocol", "%s", XEN_IO_PROTO_ABI_NATIVE);
     if (err) {
         message = "writing protocol";
         goto abort_transaction;
     }
 
-    err = xenbus_printf(xbt, nodename, "type", "%s", "ioemu");
+    err = xenbus_printf(xbt, dev->nodename, "type", "%s", "ioemu");
     if (err) {
         message = "writing type";
         goto abort_transaction;
     }
 
-    bmk_snprintf(path, sizeof(path), "%s/state", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/state", dev->nodename);
     err = xenbus_switch_state(xbt, path, XenbusStateConnected);
     if (err) {
         message = "switching state";
@@ -155,7 +152,7 @@ abort_transaction:
 
 done:
 
-    bmk_snprintf(path, sizeof(path), "%s/backend", nodename);
+    bmk_snprintf(path, sizeof(path), "%s/backend", dev->nodename);
     msg = xenbus_read(XBT_NIL, path, &dev->backend);
     if (msg) {
         minios_printk("Error %s when reading the backend path %s\n", msg, path);
