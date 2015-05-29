@@ -57,11 +57,13 @@ bmk_isr_clock(void)
 static void
 isr(void *arg)
 {
-	int rv, i;
+	int i, didwork;
 
         rumpuser__hyp.hyp_schedule();
         rumpuser__hyp.hyp_lwproc_newlwp(0);
         rumpuser__hyp.hyp_unschedule();
+
+	didwork = 0;
 	for (;;) {
 		splhigh();
 		if (isr_todo) {
@@ -73,7 +75,7 @@ isr(void *arg)
 			spl0();
 
 			rumpkern_sched(nlocks, NULL);
-			for (rv = 0, i = isr_lowest;
+			for (i = isr_lowest;
 			    isrcopy && i < sizeof(isrcopy)*8;
 			    i++) {
 				struct intrhand *ih;
@@ -84,14 +86,14 @@ isr(void *arg)
 
 				SLIST_FOREACH(ih, &isr_ih[i], ih_entries) {
 					if (ih->ih_fun(ih->ih_arg) != 0) {
-						rv = 1;
+						didwork = 1;
 					}
 				}
 			}
 			rumpkern_unsched(&nlocks, NULL);
-
 			bmk_cpu_intr_ack();
-			if (!rv) {
+
+			if (!didwork) {
 				bmk_printf("stray interrupt\n");
 			}
 		} else {
@@ -99,6 +101,7 @@ isr(void *arg)
 			bmk_sched_blockprepare();
 			spl0();
 			bmk_sched_block();
+			didwork = 0;
 		}
 	}
 }
