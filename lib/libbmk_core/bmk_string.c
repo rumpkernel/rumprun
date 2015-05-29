@@ -133,3 +133,16 @@ bmk_memchr(const void *d, int c, unsigned long n)
 	}
 	return NULL;
 }
+
+void *
+bmk_memrchr(const void *d, int c, unsigned long n)
+{
+	const unsigned char *p = d;
+
+	while (n--) {
+		if (*p == (unsigned char)c)
+			return (void *)(unsigned long)p;
+		p--;
+	}
+	return NULL;
+}
