@@ -50,7 +50,7 @@ die ()
 }
 
 scriptopts='DhSt:T:'
-guestopts='b:dD:e:iI:M:n:N:pW:'
+guestopts='b:dD:e:g:iI:M:n:N:pW:'
 
 # script option default values
 DUMPCMD=
@@ -82,8 +82,8 @@ script args are:
    -T same as -t, except do not remove temporary directory
 
 guest args are:
-	[-dip] [-b blkspec] [-D port] [-e VAR[=VALUE]] [-I iftag,ifopts]
-	[-M mem] [-N name] [-W iftag,netspec]
+	[-dip] [-b blkspec] [-D port] [-e VAR[=VALUE]] [-g args]
+	[-I iftag,ifopts] [-M mem] [-N name] [-W iftag,netspec]
 
    -b configures a block device.  The format of "blkspec" is:
        hostpath[,mountpoint] where:
@@ -92,6 +92,7 @@ guest args are:
    -D attaches a gdb server on port to the guest
    -d destroys the guest on poweroff
    -e set environment VAR to VALUE
+   -g specify 'args' to guest.  handling, if any, is guest-dependent.
    -I create guest network interface and attach the user-specified
       iftag to it.  the format is:
 	iftag,ifbasename,[backendopts]
@@ -572,6 +573,7 @@ run_qemu ()
 	opt_debug=
 	opt_pause=
 	opt_netif=
+	opt_guestargs=
 	opt_mem=${MEM_DEFAULT}
 
 	json_open_block
@@ -591,6 +593,10 @@ run_qemu ()
 			;;
 		e)
 			json_append_ln "\"env\": \"${OPTARG}\""
+			;;
+		g)
+			# toimii ku gunan vessa
+			opt_guestargs="${opt_guestargs} ${OPTARG}"
 			;;
 		i)
 			opt_interactive=1
@@ -644,7 +650,7 @@ run_qemu ()
 
 	qemucmd="${DUMPCMD} qemu-system-i386 ${opt_netif} ${opt_kvm}	\
 	    ${opt_drivespec} ${opt_debug} ${opt_pause} -m ${opt_mem}	\
-	    -kernel $1"
+	    ${opt_guestargs} -kernel $1"
 	if [ -n "$opt_interactive" ]; then
 		${qemucmd} -append "${json_coma}"
 	else
