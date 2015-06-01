@@ -19,7 +19,7 @@ LIBS_USER:=	${BASELIBDIRS}						\
 		--start-group -lrumprun_base -lpthread -lc --end-group	\
 		-lbmk_rumpuser -lbmk_core
 LIBS_USERSTUB:=	--start-group -lpthread -lc --end-group			\
-		${BASEDIR}/${PLATFORM}/librumprun_base_stubs.o
+		$(shell pwd)/pseudolinkstubs.o
 
 RUMP_LDLIBS:=	--whole-archive ${LIBS_SYSPROXY} ${RUMPKERN_LIB}	\
 		--no-whole-archive ${LIBS_USER}
