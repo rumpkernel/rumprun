@@ -25,6 +25,7 @@ STUB(mprotect);
 STUB(munmap);
 STUB(realloc);
 STUB(mincore);
+STUB(mlockall);
 
 STUB(__sigaction14);
 WEAK_STUB(__sigprocmask14);
