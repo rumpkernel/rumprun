@@ -6,6 +6,23 @@ COREDIR:=       $(shell pwd)/../../lib/libbmk_core
 RUMPUSERDIR:=   $(shell pwd)/../../lib/libbmk_rumpuser
 BASEDIR:=       $(shell pwd)/../../lib/librumprun_base
 
+RUMPKERN_LIB:=	-lrump
+
+BASELIBDIRS:=	-L${BASEDIR}/${PLATFORM} -L${COREDIR}/${PLATFORM}	\
+		-L${RUMPUSERDIR}/${PLATFORM}
+
+LIBS_USER:=	${BASELIBDIRS}						\
+		--start-group -lrumprun_base -lpthread -lc --end-group	\
+		-lbmk_rumpuser -lbmk_core
+LIBS_USERSTUB:=	${BASELIBDIRS}						\
+		--start-group -lpthread -lc --end-group			\
+		-lbmk_core ${BASEDIR}/${PLATFORM}/librumprun_base_stubs.o
+
+RUMP_LDLIBS:=	--whole-archive ${LIBS_SYSPROXY} ${RUMPKERN_LIB}	\
+		--no-whole-archive ${LIBS_USER}
+RUMP_STUBLDLIBS:=--whole-archive ${RUMPKERN_LIB} --no-whole-archive	\
+		${LIBS_USERSTUB}
+
 .PHONY: ${BASEDIR}/${PLATFORM}/librumprun_base.a
 ${BASEDIR}/${PLATFORM}/librumprun_base.a:
 	( cd ${BASEDIR} \

@@ -43,13 +43,7 @@ ifeq (${CONFIG_SYSPROXY},yes)
 RUMP_LIBS_SYSPROXY = -lrumpkern_sysproxy
 endif
 
-RUMPKERN_LIB=	-lrump
-LIBS_USER=	-L${BASEDIR}/xen -L${COREDIR}/xen -L${RUMPUSERDIR}/xen --start-group -lrumprun_base -lpthread -lc --end-group -lbmk_rumpuser -lbmk_core
-LIBS_USERSTUB=	-L${BASEDIR}/xen -L${COREDIR}/xen -L${RUMPUSERDIR}/xen --start-group -lpthread -lc --end-group -lbmk_core ${BASEDIR}/xen/librumprun_base_stubs.o
-
 LDFLAGS=	-L$(abspath rump/lib)
-RUMP_LDLIBS=	--whole-archive ${RUMP_LIBS_SYSPROXY} ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USER}
-RUMP_STUBLDLIBS=--whole-archive ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USERSTUB}
 
 rump-src-y += rumphyper_bio.c
 rump-src-y += rumphyper_net.c

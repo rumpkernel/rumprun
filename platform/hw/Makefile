@@ -47,13 +47,7 @@ OBJS_BMK+= ${OBJS_BMK-y}
 
 include arch/${MACHINE}/Makefile.inc
 
-RUMPKERN_LIB=	-lrump
-
 OBJS_BMK+=	init.o
-LIBS_USER=	-L${BASEDIR}/hw -L${COREDIR}/hw -L${RUMPUSERDIR}/hw --start-group -lrumprun_base -lpthread -lc --end-group -lbmk_rumpuser -lbmk_core
-LIBS_USERSTUB=	-L${BASEDIR}/hw -L${COREDIR}/hw -L${RUMPUSERDIR}/hw --start-group -lpthread -lc --end-group -lbmk_core ${BASEDIR}/hw/librumprun_base_stubs.o
-RUMP_LDLIBS=	--whole-archive ${LIBS_SYSPROXY} ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USER}
-RUMP_STUBLDLIBS=--whole-archive ${RUMPKERN_LIB} --no-whole-archive ${LIBS_USERSTUB}
 
 OBJS= ${OBJS_BMK} ${OBJS_APP}
 
