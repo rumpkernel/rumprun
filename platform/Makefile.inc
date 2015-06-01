@@ -31,8 +31,8 @@ ${BASEDIR}/${PLATFORM}/librumprun_base.a:
 	    && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} obj \
 	    && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} dependall )
 
-${BASEDIR}/${PLATFORM}/librumprun_base_stubs.o: ${BASEDIR}/librumprun_base_stubs.c
-	${CC} ${CFLAGS} ${CPPFLAGS} -c -o $@ $<
+pseudolinkstubs.c: ${BASEDIR}/${PLATFORM}/librumprun_base.a
+	sh ../makepseudolinkstubs.sh ${NM} ${RUMPSRC} $< $@
 
 .PHONY: ${COREDIR}/${PLATFORM}/libbmk_core.a
 ${COREDIR}/${PLATFORM}/libbmk_core.a:
@@ -46,10 +46,11 @@ ${RUMPUSERDIR}/${PLATFORM}/libbmk_rumpuser.a:
 	    && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} obj \
 	    && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} dependall )
 
-commonlibs: ${BASEDIR}/${PLATFORM}/librumprun_base.a ${BASEDIR}/${PLATFORM}/librumprun_base_stubs.o ${COREDIR}/${PLATFORM}/libbmk_core.a ${RUMPUSERDIR}/${PLATFORM}/libbmk_rumpuser.a
+commonlibs: ${BASEDIR}/${PLATFORM}/librumprun_base.a ${COREDIR}/${PLATFORM}/libbmk_core.a ${RUMPUSERDIR}/${PLATFORM}/libbmk_rumpuser.a pseudolinkstubs.o
 
 .PHONY: commonclean
 commonclean:
 	( cd ${BASEDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
 	( cd ${COREDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
 	( cd ${RUMPUSERDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
+	rm -f pseudolinkstubs.c
