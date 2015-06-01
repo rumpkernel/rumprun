@@ -30,12 +30,11 @@ CPPFLAGS+= -no-integrated-cpp -nostdinc
 CFLAGS += -fno-builtin ${BUILDRUMP_TOOL_CFLAGS}
 
 # This is semi-duplicated from xen/arch/x86/arch.mk, can we avoid that?
-TARGET_ARCH := ${MACHINE}
 # XXX Which parts of the rumprun source *must* be compiled with these flags?
-ifeq ($(TARGET_ARCH),i386)
+ifeq ($(MACHINE),i386)
 CFLAGS += -march=i686
 endif
-ifeq ($(TARGET_ARCH),x86_64)
+ifeq ($(MACHINE),x86_64)
 CFLAGS += -mno-red-zone -fno-reorder-blocks -fno-asynchronous-unwind-tables
 endif
 
@@ -70,7 +69,7 @@ $(OBJ_DIR)/rumprun.o: $(RUMP_OBJS) commonlibs
 buildtest: ../../tests/hello/hello.c $(OBJ_DIR)/rumprun.o commonlibs app-tools
 	$(APP_TOOLS_CC) -o $@ $< -lrumprun_tester
 
-APP_TOOLS_TARGETARCH= $(TARGET_ARCH)
+APP_TOOLS_TARGETARCH= $(MACHINE)
 APP_TOOLS_PLATFORM= xen
 APP_TOOLS_HEADOBJ= $(abspath $(OBJ_DIR)/xen/minios.o)
 APP_TOOLS_OBJS= $(abspath $(OBJ_DIR)/rumprun.o)
