@@ -34,7 +34,7 @@ ${BASEDIR}/${PLATFORM}/librumprun_base.a:
 	    && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} dependall )
 
 ${BASEDIR}/${PLATFORM}/librumprun_base_stubs.o: ${BASEDIR}/librumprun_base_stubs.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c -o $@ $<
 
 .PHONY: ${COREDIR}/${PLATFORM}/libbmk_core.a
 ${COREDIR}/${PLATFORM}/libbmk_core.a:
