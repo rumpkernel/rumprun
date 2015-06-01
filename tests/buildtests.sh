@@ -15,11 +15,11 @@ PLATFORM=$1
 case ${PLATFORM} in
 hw)
 	TOOLS_PLATFORM=bmk
-        RUMPBAKE="rumpbake -T hw_generic"
+        RUMPBAKE="rumpbake hw_generic"
 	;;
 xen)
 	TOOLS_PLATFORM=xen
-        RUMPBAKE="rumpbake -T xen_pv"
+        RUMPBAKE="rumpbake xen_pv"
 	;;
 *)
 	echo ">> unknown platform \"$PLATFORM\""

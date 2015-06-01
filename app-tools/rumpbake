@@ -31,15 +31,15 @@
 usage ()
 {
 	cat <<EOM
-usage: rumpbake -T [ TARGET | list ] -o OUTPUT FILE
+usage: rumpbake TARGET OUTPUT FILE
+       rumpbake list
 
-TARGET is the rumprun platform configuration to use.
+When invoked the single argument "list", lists supported target boards.
 
-Run with -T list to list supported configurations.
-
-OUTPUT is the output file name for the unikernel image.
-
-FILE is the intermediate binary produced by the rumprun compiler toolchain.
+Else, creates a rumprunnable unikernel:
+	TARGET: rumprun board configuration to use.
+	OUTPUT: output file name for the unikernel image.
+	FILE: 	executable to bake.
 EOM
 	exit 1
 }
@@ -53,42 +53,30 @@ fi
 . ${CONF}
 
 CONFIG=
-TOOLCHAIN=
-OUTPUT=
 
-while getopts "o:T:" opt; do
-	case "${opt}" in
-	o)
-		OUTPUT="${OPTARG}"
-		;;
-	T)
-		if [ "${OPTARG}" = "list" ]; then
-			echo "rumpbake: Supported configurations:"
-			echo
-			set | sed -ne 's/^CONFIG_\([a-zA-Z0-9_]*\)=.*$/\1/p'
-			exit 0
-		fi
-		# Santize the config argument passed in to remove shell
-		# metacharacters
-		config="$(echo ${OPTARG} | sed -e 's/-/_/g' -e 's/[^A-Za-z0-9_]//g')"
-		# Sets CONFIG to $(CONFIG_<name>) and CC to $(CC_<name>)
-		eval CONFIG="\${CONFIG_${config}}"
-		eval TOOLCHAIN="\${TOOLCHAIN_${config}}"
-		if [ -z "${CONFIG}" -o -z "${TOOLCHAIN}" ]; then
-			echo "rumpbake: error: Unsupported configuration \`${config}'"
-			usage
-		fi
-		;;
-	*)
-		usage
-		;;
-	esac
-done
-shift $((${OPTIND}-1))
+TARGET="${1}"
+if [ "${TARGET}" = "list" ]; then
+	echo "rumpbake: Supported configurations:"
+	echo
+	set | sed -ne 's/^CONFIG_\([a-zA-Z0-9_]*\)=.*$/\1/p'
+	exit 0
+fi
 
-if [ $# -ne 1 -o -z "${OUTPUT}" -o -z "${CONFIG}" ]; then
+OUTPUT="${2}"
+[ $# -gt 2 ] || usage
+shift 2
+
+# Santize the config argument passed in to remove shell
+# metacharacters
+config="$(echo ${TARGET} | sed -e 's/-/_/g' -e 's/[^A-Za-z0-9_]//g')"
+# Sets CONFIG to $(CONFIG_<name>) and CC to $(CC_<name>)
+eval CONFIG="\${CONFIG_${config}}"
+eval TOOLCHAIN="\${TOOLCHAIN_${config}}"
+if [ -z "${CONFIG}" -o -z "${TOOLCHAIN}" ]; then
+	echo "rumpbake: error: Unsupported configuration \`${config}'"
 	usage
 fi
+
 FILE=$1
 
 # Parse CONFIG, mapping each component to $LIBS_component and each resulting

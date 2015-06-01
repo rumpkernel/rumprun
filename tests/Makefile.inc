@@ -8,4 +8,4 @@ LDLIBS= -lrumprun_tester
 	$(CXX) $(CXXFLAGS) $< -o $@ $(LDLIBS)
 
 %.bin: %
-	$(RUMPBAKE) -o $@ $<
+	$(RUMPBAKE) $@ $<
