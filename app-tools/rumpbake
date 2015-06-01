@@ -28,6 +28,16 @@
 # rumpbake: script for final stage linking ("baking") of a unikernel image
 #
 
+if [ "${RUMPRUN_WARNING_STFU}" != 'please' ]; then
+	exec 3>&1 1>&2
+	echo
+	echo !!!
+	echo !!! NOTE: rumpbake is experimental. syntax may change in the future
+	echo !!!
+	echo
+	exec 1>&3 3>&-
+fi
+
 usage ()
 {
 	cat <<EOM
