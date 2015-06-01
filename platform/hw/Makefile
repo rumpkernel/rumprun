@@ -66,10 +66,6 @@ include/bmk/machine:
 rumprun.o: ${OBJS}
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@
 
-buildtest: ../../tests/hello/hello.c rumprun.o commonlibs app-tools
-	${APP_TOOLS_CC} -g -o $@ $< -lrumprun_tester
-	${APP_TOOLS_DIR}/rumpbake hw_generic $@.bin $@
-
 clean: app-tools_clean commonclean
 	rm -f ${OBJS} include/bmk/machine buildtest
 
