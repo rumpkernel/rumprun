@@ -59,54 +59,6 @@ STUB(_sys___sigsuspend14);
 STUB(_sys___sigprocmask14);
 STUB(____sigtimedwait50);
 
-STUB(rumpuser_anonmmap);
-STUB(rumpuser_clock_gettime);
-STUB(rumpuser_clock_sleep);
-STUB(rumpuser_curlwp);
-STUB(rumpuser_curlwpop);
-STUB(rumpuser_cv_broadcast);
-STUB(rumpuser_cv_destroy);
-STUB(rumpuser_cv_has_waiters);
-STUB(rumpuser_cv_init);
-STUB(rumpuser_cv_signal);
-STUB(rumpuser_cv_timedwait);
-STUB(rumpuser_cv_wait);
-STUB(rumpuser_cv_wait_nowrap);
-STUB(rumpuser_daemonize_begin);
-STUB(rumpuser_daemonize_done);
-STUB(rumpuser_dl_bootstrap);
-STUB(rumpuser_dprintf);
-STUB(rumpuser_exit);
-STUB(rumpuser_free);
-STUB(rumpuser_getparam);
-STUB(rumpuser_getrandom);
-STUB(rumpuser_init);
-STUB(rumpuser_iovread);
-STUB(rumpuser_iovwrite);
-STUB(rumpuser_kill);
-STUB(rumpuser_malloc);
-STUB(rumpuser_mutex_destroy);
-STUB(rumpuser_mutex_enter);
-STUB(rumpuser_mutex_enter_nowrap);
-STUB(rumpuser_mutex_exit);
-STUB(rumpuser_mutex_init);
-STUB(rumpuser_mutex_owner);
-STUB(rumpuser_mutex_tryenter);
-STUB(rumpuser_putchar);
-STUB(rumpuser_rw_destroy);
-STUB(rumpuser_rw_downgrade);
-STUB(rumpuser_rw_enter);
-STUB(rumpuser_rw_exit);
-STUB(rumpuser_rw_held);
-STUB(rumpuser_rw_init);
-STUB(rumpuser_rw_tryenter);
-STUB(rumpuser_rw_tryupgrade);
-STUB(rumpuser_seterrno);
-STUB(rumpuser_thread_create);
-STUB(rumpuser_thread_exit);
-STUB(rumpuser_thread_join);
-STUB(rumpuser_unmap);
-
 STUB(_lwp_ctl);
 STUB(_lwp_wakeup);
 STUB(_lwp_setname);
@@ -133,15 +85,8 @@ STUB(_sched_setaffinity);
 
 STUB(posix_spawn);
 
-STUB(rumpuser__hyp);
-STUB(rumprun);
-STUB(rumprun_boot);
-STUB(rumprun_reboot);
-STUB(rumprun_wait);
-STUB(rumprun_cmdline_argv);
-STUB(rumprun_cmdline_argc);
-
 STUB(__dso_handle);
+
 /* AUTOMATICALLY GENERATED */
 
 #include <sys/cdefs.h>
