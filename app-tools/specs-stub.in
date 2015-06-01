@@ -9,7 +9,7 @@
 %(old_cc1_options) -fno-stack-protector -fno-builtin-sin -fno-builtin-sinf -fno-builtin-cos -fno-builtin-cosf
 
 *startfile:
-!HEAD_OBJ! !OBJS!
+
 
 *endfile:
 
