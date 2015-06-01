@@ -39,10 +39,6 @@ ifeq ($(TARGET_ARCH),x86_64)
 CFLAGS += -mno-red-zone -fno-reorder-blocks -fno-asynchronous-unwind-tables
 endif
 
-ifeq (${CONFIG_SYSPROXY},yes)
-RUMP_LIBS_SYSPROXY = -lrumpkern_sysproxy
-endif
-
 LDFLAGS=	-L$(abspath rump/lib)
 
 rump-src-y += rumphyper_bio.c

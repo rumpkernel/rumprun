@@ -11,6 +11,10 @@ RUMPKERN_LIB:=	-lrump
 BASELIBDIRS:=	-L${BASEDIR}/${PLATFORM} -L${COREDIR}/${PLATFORM}	\
 		-L${RUMPUSERDIR}/${PLATFORM}
 
+ifeq (${CONFIG_SYSPROXY},yes)
+LIBS_SYSPROXY=  -lrumpkern_sysproxy
+endif
+
 LIBS_USER:=	${BASELIBDIRS}						\
 		--start-group -lrumprun_base -lpthread -lc --end-group	\
 		-lbmk_rumpuser -lbmk_core

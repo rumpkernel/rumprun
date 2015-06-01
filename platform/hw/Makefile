@@ -36,10 +36,6 @@ endif
 
 LDFLAGS:= -L$(abspath rump/lib)
 
-ifeq (${CONFIG_SYSPROXY},yes)
-LIBS_SYSPROXY=	-lrumpkern_sysproxy
-endif
-
 OBJS_BMK-y+=		intr.o clock.o kernel.o multiboot.o pgalloc.o undefs.o
 OBJS_BMK-${HASPCI}+=	rumppci.o
 
