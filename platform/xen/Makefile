@@ -95,5 +95,3 @@ cleanrump: clean
 distcleanrump: cleanrump
 	rm -f config.mk
 	$(MAKE) -C ../../tests clean
-
-include ../Makefile.inc
