@@ -66,8 +66,6 @@ CONFIG=
 
 TARGET="${1}"
 if [ "${TARGET}" = "list" ]; then
-	echo "rumpbake: Supported configurations:"
-	echo
 	set | sed -ne 's/^CONFIG_\([a-zA-Z0-9_]*\)=.*$/\1/p'
 	exit 0
 fi
