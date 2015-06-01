@@ -58,7 +58,7 @@ APP_TOOLS_OBJS=
 APP_TOOLS_LDSCRIPT:= $(abspath ${LDSCRIPT})
 APP_TOOLS_DIR:= $(abspath ../../app-tools)
 
-include $(APP_TOOLS_DIR)/Makefile.app-tools
+include ${APP_TOOLS_DIR}/Makefile.app-tools
 
 include/bmk/machine:
 	ln -s ../arch/${MACHINE} include/bmk/machine
@@ -67,7 +67,7 @@ rumprun.o: ${OBJS}
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@
 
 buildtest: ../../tests/hello/hello.c rumprun.o commonlibs app-tools
-	$(APP_TOOLS_CC) -g -o $@ $< -lrumprun_tester
+	${APP_TOOLS_CC} -g -o $@ $< -lrumprun_tester
 
 clean: app-tools_clean commonclean
 	rm -f ${OBJS} include/bmk/machine buildtest
@@ -79,4 +79,4 @@ cleanrump: clean
 
 distcleanrump: cleanrump
 	rm -f config.mk
-	$(MAKE) -C ../../tests clean
+	${MAKE} -C ../../tests clean
