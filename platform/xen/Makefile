@@ -1,4 +1,5 @@
 PLATFORM=xen
+PLATFORM_DEFAULT_TESTER=xen
 
 .PHONY: default
 default: prepare mini-os commonlibs rumprun app-tools buildtest
@@ -10,8 +11,6 @@ ifdef BUILDRUMP_TOOLFLAGS
 include ${BUILDRUMP_TOOLFLAGS}
 endif
 
-include ../Makefile.inc
-
 #
 # Rumprun-xen Makefile.
 # Abandon all hope, ye who enter here:
@@ -19,6 +18,8 @@ include ../Makefile.inc
 #   Makefile is being worked out.
 #
 OBJ_DIR ?= $(CURDIR)/obj
+
+include ../Makefile.inc
 
 OBJCOPY=objcopy
 
@@ -77,11 +78,6 @@ APP_TOOLS_LDSCRIPT:= $(abspath $(OBJ_DIR)/xen/minios.lds)
 APP_TOOLS_DIR= $(abspath ../../app-tools)
 
 include $(APP_TOOLS_DIR)/Makefile.app-tools
-
-.PHONY: tests
-tests:
-	RUMPRUN_PLATFORM=xen ../../tests/buildtests.sh
-	../../tests/runtests.sh xen
 
 .PHONY: clean arch_clean app-tools_clean
 

@@ -1,4 +1,6 @@
 PLATFORM=hw
+PLATFORM_DEFAULT_TESTER=qemu
+OBJ_DIR=.
 
 all: app-tools include/bmk/machine rumprun.o commonlibs buildtest
 
@@ -66,10 +68,6 @@ rumprun.o: ${OBJS}
 
 buildtest: ../../tests/hello/hello.c rumprun.o commonlibs app-tools
 	$(APP_TOOLS_CC) -g -o $@ $< -lrumprun_tester
-
-tests: rumprun.o commonlibs app-tools
-	RUMPRUN_PLATFORM=bmk ../../tests/buildtests.sh
-	../../tests/runtests.sh qemu
 
 clean: app-tools_clean commonclean
 	rm -f ${OBJS} include/bmk/machine buildtest

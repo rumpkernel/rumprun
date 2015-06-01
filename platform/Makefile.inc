@@ -54,3 +54,8 @@ commonclean:
 	( cd ${COREDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
 	( cd ${RUMPUSERDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
 	rm -f pseudolinkstubs.c
+
+.PHONY: tests
+tests: ${OBJ_DIR}/rumprun.o commonlibs app-tools
+	../../tests/buildtests.sh ${PLATFORM}
+	../../tests/runtests.sh ${PLATFORM_DEFAULT_TESTER}
