@@ -26,16 +26,16 @@ STUB(munmap);
 STUB(realloc);
 STUB(mincore);
 STUB(mlockall);
+STUB(posix_memalign);
 
 STUB(__sigaction14);
 WEAK_STUB(__sigprocmask14);
 STUB(sigprocmask);
 STUB(sigaction);
+STUB(sigpending);
 STUB(__sigaction_sigtramp);
 STUB(__getrusage50);
 STUB(__sigpending14);
-
-WEAK_STUB(fcntl)
 
 STUB(__fork);
 STUB(__vfork14);
@@ -105,7 +105,6 @@ STUB(rumpuser_thread_exit);
 STUB(rumpuser_thread_join);
 STUB(rumpuser_unmap);
 
-STUB(_lwp_rumpxen_gettcb);
 STUB(_lwp_ctl);
 STUB(_lwp_wakeup);
 STUB(_lwp_setname);
