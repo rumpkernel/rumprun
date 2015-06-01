@@ -39,7 +39,7 @@
 .globl _bootstack
 .comm _bootstack, stack_size
 
-ENTRY(_start32)
+ENTRY(_start)
 	cld
 	movl $(_bootstack + stack_size), %esp
 
@@ -71,7 +71,7 @@ haltme:
 	cli
 	hlt
 	jmp haltme
-END(_start32)
+END(_start)
 
 nomultimesg:
 	.asciz "not multibooted, halting!"
