@@ -105,8 +105,6 @@ pusher(void *arg)
 	struct onepkt *mypkt;
 	int flags;
 
-	mypkt = bmk_xmalloc(sizeof(*mypkt));
-
 	/* give us a rump kernel context */
 	rumpuser__hyp.hyp_schedule();
 	rumpuser__hyp.hyp_lwproc_newlwp(0);
@@ -124,7 +122,7 @@ pusher(void *arg)
 			viu->viu_rcvr = NULL;
 			goto again;
 		}
-		*mypkt = viu->viu_pkts[viu->viu_read];
+		mypkt = &viu->viu_pkts[viu->viu_read];
 		local_irq_restore(flags);
 
 		iov.iov_base = mypkt->pkt_data;
