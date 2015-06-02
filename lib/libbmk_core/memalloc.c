@@ -211,8 +211,6 @@ bmk_memalloc(unsigned long nbytes, unsigned long align)
 	unsigned amt;
 	unsigned long alignpad;
 
-	malloc_lock();
-
 	if (align & (align-1))
 		return NULL;
 	if (align < MINALIGN)
@@ -244,6 +242,9 @@ bmk_memalloc(unsigned long nbytes, unsigned long align)
 			return (NULL);
 		bucket++;
 	}
+
+	malloc_lock();
+
 	/*
 	 * If nothing in hash bucket right now,
 	 * request more memory from the system.
