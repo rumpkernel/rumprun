@@ -68,6 +68,7 @@
 #include <bmk-core/string.h>
 #include <bmk-core/memalloc.h>
 #include <bmk-core/platform.h>
+#include <bmk-core/printf.h>
 
 #endif
 
@@ -134,12 +135,6 @@ static	int pagebucket;			/* page size bucket */
 static	u_int nmalloc[NBUCKETS];
 #endif
 
-#if 0
-#ifdef _REENT
-static	mutex_t malloc_mutex = MUTEX_INITIALIZER;
-#endif
-#endif
-
 /* not currently reentrant on mini-os */
 #define malloc_lock()
 #define malloc_unlock()
@@ -203,19 +198,6 @@ bmk_memalloc(unsigned long nbytes, unsigned long align)
 	if (pagesz == 0) {
 		pagesz = bmk_pagesize;
 		bmk_assert(pagesz > 0);
-
-#if 0
-		op = (union overhead *)(void *)sbrk(0);
-  		n = n - sizeof (*op) - ((long)op & (n - 1));
-		if (n < 0)
-			n += pagesz;
-		if (n) {
-			if (sbrk((int)n) == (void *)-1) {
-				malloc_unlock();
-				return (NULL);
-			}
-		}
-#endif
 
 		bucket = 0;
 		amt = 1<<MINSHIFT;
@@ -360,18 +342,20 @@ morecore(int bucket)
 		nblks = 1;
 		sz = 0; /* dummy */
 	}
+
 	op = (void *)corealloc(amt);
 	/* no more room! */
   	if (op == NULL)
   		return;
+
 	/*
 	 * Add new memory allocated to that on
 	 * free list for this hash bucket.
 	 */
   	nextf[bucket] = op;
   	while (--nblks > 0) {
-		op->ov_next =
-		    (union overhead *)(void *)((char *)(void *)op+(unsigned long)sz);
+		op->ov_next = (union overhead *)
+		    (void *)((char *)(void *)op+(unsigned long)sz);
 		op = op->ov_next;
   	}
 	op->ov_next = NULL;
@@ -391,8 +375,10 @@ bmk_memfree(void *cp)
 	if (op->ov_magic != MAGIC) {
 #ifdef MEMALLOC_TESTING
 		bmk_assert(0);
+#else
+		bmk_printf("bmk_memfree: invalid pointer %p\n", cp);
+		return;
 #endif
-		return;				/* sanity */
 	}
 
 #ifdef RCHECK
@@ -501,6 +487,11 @@ mstats(const char *s)
 	    totused, totfree);
 }
 #endif
+
+
+/*
+ * The rest of this file contains unit tests which run in userspace.
+ */
 
 #ifdef MEMALLOC_TESTING
 
