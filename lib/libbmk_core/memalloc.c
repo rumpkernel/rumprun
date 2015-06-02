@@ -183,6 +183,24 @@ botch(const char *s)
 }
 #endif
 
+void
+bmk_memalloc_init(void)
+{
+	unsigned amt;
+	int bucket;
+
+	pagesz = bmk_pagesize;
+	bmk_assert(pagesz > 0);
+
+	bucket = 0;
+	amt = 1<<MINSHIFT;
+	while (pagesz > amt) {
+		amt <<= 1;
+		bucket++;
+	}
+	pagebucket = bucket;
+}
+
 void *
 bmk_memalloc(unsigned long nbytes, unsigned long align)
 {
@@ -194,19 +212,6 @@ bmk_memalloc(unsigned long nbytes, unsigned long align)
 	unsigned long alignpad;
 
 	malloc_lock();
-
-	if (pagesz == 0) {
-		pagesz = bmk_pagesize;
-		bmk_assert(pagesz > 0);
-
-		bucket = 0;
-		amt = 1<<MINSHIFT;
-		while (pagesz > amt) {
-			amt <<= 1;
-			bucket++;
-		}
-		pagebucket = bucket;
-	}
 
 	if (align & (align-1))
 		return NULL;

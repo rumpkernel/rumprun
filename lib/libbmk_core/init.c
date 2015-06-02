@@ -25,6 +25,8 @@
 
 #include <bmk-core/core.h>
 
+#include <bmk-core/memalloc.h>
+
 unsigned long bmk_stackpageorder;
 unsigned long bmk_stacksize;
 unsigned long bmk_pagesize;
@@ -36,6 +38,8 @@ bmk_core_init(unsigned long stackpageorder, unsigned long pagesize)
 	bmk_stackpageorder = stackpageorder;
 	bmk_stacksize = (1<<stackpageorder) * pagesize;
 	bmk_pagesize = pagesize;
+
+	bmk_memalloc_init();
 
 	return 0;
 }
