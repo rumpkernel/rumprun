@@ -4,6 +4,9 @@
 # tests for configure.  I'm sure it would be possible to do it
 # with just "make", but a script seems vastly simpler now.
 
+# we know, we knooooooow
+export RUMPRUN_WARNING_STFU=please
+
 set -e
 
 [ -n "${1}" ] || { echo '>> need platform' ; exit 1; }
