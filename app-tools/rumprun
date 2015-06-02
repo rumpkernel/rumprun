@@ -138,6 +138,8 @@ setuptmpdir ()
 
 check_app ()
 {
+	[ -f $1 ] || die "file not found: $1"
+
 	if ! grep -q __RuMpRuN_baked__ $1; then
 		die "$1: not a rumprun unikernel (did you forget rumpbake?)"
 	fi
