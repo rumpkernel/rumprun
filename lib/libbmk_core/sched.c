@@ -357,7 +357,7 @@ schedule(void)
 		TAILQ_REMOVE(&zombieq, thread, bt_threadq);
 		if ((thread->bt_flags & THR_EXTSTACK) == 0)
 			stackfree(thread);
-		bmk_memfree(thread);
+		bmk_memfree(thread, BMK_MEMWHO_WIREDBMK);
 	}
 }
 
@@ -370,7 +370,7 @@ bmk_sched_tls_alloc(void)
 {
 	char *tlsmem;
 
-	tlsmem = bmk_memalloc(TLSAREASIZE, 0);
+	tlsmem = bmk_memalloc(TLSAREASIZE, 0, BMK_MEMWHO_WIREDBMK);
 	bmk_memcpy(tlsmem, _tdata_start, TDATASIZE);
 	bmk_memset(tlsmem + TDATASIZE, 0, TBSSSIZE);
 
@@ -385,7 +385,7 @@ bmk_sched_tls_free(void *mem)
 {
 
 	mem = (void *)((unsigned long)mem - TCBOFFSET);
-	bmk_memfree(mem);
+	bmk_memfree(mem, BMK_MEMWHO_WIREDBMK);
 }
 
 void *
@@ -427,7 +427,7 @@ bmk_sched_create_withtls(const char *name, void *cookie, int joinable,
 	struct bmk_thread *thread;
 	unsigned long flags;
 
-	thread = bmk_xmalloc(sizeof(*thread));
+	thread = bmk_xmalloc_bmk(sizeof(*thread));
 	bmk_memset(thread, 0, sizeof(*thread));
 	bmk_strncpy(thread->bt_name, name, sizeof(thread->bt_name)-1);
 

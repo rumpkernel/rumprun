@@ -91,7 +91,8 @@ gntmap_set_max_grants(struct gntmap *map, int count)
     if (map->nentries != 0)
         return -BMK_EBUSY;
 
-    map->entries = bmk_memcalloc(count, sizeof(struct gntmap_entry));
+    map->entries = bmk_memcalloc(count,
+	sizeof(struct gntmap_entry), BMK_MEMWHO_WIREDBMK);
     if (map->entries == NULL)
         return -BMK_ENOMEM;
 
@@ -247,7 +248,7 @@ gntmap_fini(struct gntmap *map)
             (void) _gntmap_unmap_grant_ref(ent);
     }
 
-    bmk_memfree(map->entries);
+    bmk_memfree(map->entries, BMK_MEMWHO_WIREDBMK);
     map->entries = NULL;
     map->nentries = 0;
 }

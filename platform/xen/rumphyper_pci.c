@@ -100,7 +100,7 @@ rumpcomp_pci_irq_establish(unsigned cookie, int (*handler)(void *), void *data)
 		return NULL;
 	pirq = myintr;
 
-	ihan = bmk_memalloc(sizeof(*ihan), 0);
+	ihan = bmk_memalloc(sizeof(*ihan), 0, BMK_MEMWHO_WIREDBMK);
 	if (!ihan)
 		return NULL;
 	ihan->i_handler = handler;

@@ -36,7 +36,7 @@ posix_memalign(void **rv, size_t align, size_t nbytes)
 	void *v;
 	int error = BMK_ENOMEM;
 
-	if ((v = bmk_memalloc(nbytes, align)) != NULL) {
+	if ((v = bmk_memalloc(nbytes, align, BMK_MEMWHO_USER)) != NULL) {
 		*rv = v;
 		error = 0;
 	}
@@ -48,26 +48,26 @@ void *
 malloc(size_t size)
 {
 
-	return bmk_memalloc(size, 8);
+	return bmk_memalloc(size, 8, BMK_MEMWHO_USER);
 }
 
 void *
 calloc(size_t n, size_t size)
 {
 
-	return bmk_memcalloc(n, size);
+	return bmk_memcalloc(n, size, BMK_MEMWHO_USER);
 }
 
 void *
 realloc(void *cp, size_t nbytes)
 {
 
-	return bmk_memrealloc(cp, nbytes);
+	return bmk_memrealloc_user(cp, nbytes);
 }
 
 void
 free(void *cp)
 {
 
-	bmk_memfree(cp);
+	bmk_memfree(cp, BMK_MEMWHO_USER);
 }

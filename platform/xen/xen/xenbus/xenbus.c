@@ -150,7 +150,7 @@ void xenbus_wait_for_watch(struct xenbus_event_queue *queue)
         queue = &xenbus_default_watch_queue;
     ret = xenbus_wait_for_watch_return(queue);
     if (ret)
-        bmk_memfree(ret);
+        bmk_memfree(ret, BMK_MEMWHO_WIREDBMK);
     else
         minios_printk("unexpected path returned by watch\n");
 }
@@ -168,7 +168,7 @@ char* xenbus_wait_for_value(const char* path, const char* value, struct xenbus_e
         if(msg) return msg;
 
         r = bmk_strcmp(value,res);
-        bmk_memfree(res);
+        bmk_memfree(res, BMK_MEMWHO_WIREDBMK);
 
         if(r==0) break;
         else xenbus_wait_for_watch(queue);
@@ -197,7 +197,7 @@ char *xenbus_switch_state(xenbus_transaction_t xbt, const char* path, XenbusStat
         if (msg) goto exit;
 
         rs = (XenbusState) (current_state[0] - '0');
-        bmk_memfree(current_state);
+        bmk_memfree(current_state, BMK_MEMWHO_WIREDBMK);
         if (rs == state) {
             msg = NULL;
             goto exit;
@@ -231,7 +231,7 @@ char *xenbus_wait_for_state_change(const char* path, XenbusState *state, struct 
         if(msg) return msg;
 
         rs = (XenbusState) (res[0] - 48);
-        bmk_memfree(res);
+        bmk_memfree(res, BMK_MEMWHO_WIREDBMK);
 
         if (rs == *state)
             xenbus_wait_for_watch(queue);
@@ -277,7 +277,7 @@ static void xenbus_thread_func(void *ign)
             if(msg.type == XS_WATCH_EVENT)
             {
 		struct xenbus_event *event
-		    = bmk_memalloc(sizeof(*event) + msg.len, 0);
+		    = bmk_xmalloc_bmk(sizeof(*event) + msg.len);
                 struct xenbus_event_queue *events = NULL;
 		char *data = (char*)event + sizeof(*event);
                 struct xenbus_watch *watch;
@@ -305,7 +305,7 @@ static void xenbus_thread_func(void *ign)
                     queue_event(events, event);
                 } else {
                     minios_printk("unexpected watch token %s\n", event->token);
-                    bmk_memfree(event);
+                    bmk_memfree(event, BMK_MEMWHO_WIREDBMK);
                 }
 
                 spin_unlock(&xenbus_req_lock);
@@ -314,7 +314,7 @@ static void xenbus_thread_func(void *ign)
             else
             {
                 req_info[msg.req_id].for_queue->reply =
-                    bmk_memalloc(sizeof(msg) + msg.len, 0);
+                    bmk_xmalloc_bmk(sizeof(msg) + msg.len);
                 memcpy_from_ring(xenstore_buf->rsp,
                     req_info[msg.req_id].for_queue->reply,
                     MASK_XENSTORE_IDX(xenstore_buf->rsp_cons),
@@ -391,7 +391,7 @@ void xenbus_watch_prepare(struct xenbus_watch *watch)
 {
     BUG_ON(!watch->events);
     size_t size = sizeof(void*)*2 + 5;
-    watch->token = bmk_memalloc(size, 0);
+    watch->token = bmk_xmalloc_bmk(size);
     int r = bmk_snprintf(watch->token,size,"*%p",(void*)watch);
     BUG_ON(!(r > 0 && r < size));
     spin_lock(&xenbus_req_lock);
@@ -406,7 +406,7 @@ void xenbus_watch_release(struct xenbus_watch *watch)
     spin_lock(&xenbus_req_lock);
     MINIOS_LIST_REMOVE(watch, entry);
     spin_unlock(&xenbus_req_lock);
-    bmk_memfree(watch->token);
+    bmk_memfree(watch->token, BMK_MEMWHO_WIREDBMK);
     watch->token = 0;
 }
 
@@ -540,7 +540,7 @@ xenbus_msg_reply(int type,
     return rep;
 }
 
-void xenbus_free(void *p) { bmk_memfree(p); }
+void xenbus_free(void *p) { bmk_memfree(p, BMK_MEMWHO_WIREDBMK); }
 
 static char *errmsg(struct xsd_sockmsg *rep)
 {
@@ -548,14 +548,14 @@ static char *errmsg(struct xsd_sockmsg *rep)
     if (!rep) {
 	char msg[] = "No reply";
 	size_t len = bmk_strlen(msg) + 1;
-	return bmk_memcpy(bmk_memalloc(len, 0), msg, len);
+	return bmk_memcpy(bmk_xmalloc_bmk(len), msg, len);
     }
     if (rep->type != XS_ERROR)
 	return NULL;
-    res = bmk_memalloc(rep->len + 1, 0);
+    res = bmk_xmalloc_bmk(rep->len + 1);
     bmk_memcpy(res, rep + 1, rep->len);
     res[rep->len] = 0;
-    bmk_memfree(rep);
+    bmk_memfree(rep, BMK_MEMWHO_WIREDBMK);
     return res;
 }	
 
@@ -593,15 +593,15 @@ char *xenbus_ls(xenbus_transaction_t xbt, const char *pre, char ***contents)
     reply = repmsg + 1;
     for (x = nr_elems = 0; x < repmsg->len; x++)
         nr_elems += (((char *)reply)[x] == 0);
-    res = bmk_memcalloc(nr_elems+1, sizeof(res[0]));
+    res = bmk_memcalloc(nr_elems+1, sizeof(res[0]), BMK_MEMWHO_WIREDBMK);
     for (x = i = 0; i < nr_elems; i++) {
         int l = bmk_strlen((char *)reply + x);
-        res[i] = bmk_memalloc(l + 1, 0);
+        res[i] = bmk_xmalloc_bmk(l + 1);
         bmk_memcpy(res[i], (char *)reply + x, l + 1);
         x += l + 1;
     }
     res[i] = NULL;
-    bmk_memfree(repmsg);
+    bmk_memfree(repmsg, BMK_MEMWHO_WIREDBMK);
     *contents = res;
     return NULL;
 }
@@ -617,10 +617,10 @@ char *xenbus_read(xenbus_transaction_t xbt, const char *path, char **value)
 	*value = NULL;
 	return msg;
     }
-    res = bmk_memalloc(rep->len + 1, 0);
+    res = bmk_xmalloc_bmk(rep->len + 1);
     bmk_memcpy(res, rep + 1, rep->len);
     res[rep->len] = 0;
-    bmk_memfree(rep);
+    bmk_memfree(rep, BMK_MEMWHO_WIREDBMK);
     *value = res;
     return NULL;
 }
@@ -636,7 +636,7 @@ char *xenbus_write(xenbus_transaction_t xbt, const char *path, const char *value
     rep = xenbus_msg_reply(XS_WRITE, xbt, req, ARRAY_SIZE(req));
     msg = errmsg(rep);
     if (msg) return msg;
-    bmk_memfree(rep);
+    bmk_memfree(rep, BMK_MEMWHO_WIREDBMK);
     return NULL;
 }
 
@@ -649,14 +649,14 @@ char* xenbus_watch_path_token( xenbus_transaction_t xbt, const char *path, const
 	{token, bmk_strlen(token) + 1},
     };
 
-    struct xenbus_watch *watch = bmk_memalloc(sizeof(*watch), 0);
+    struct xenbus_watch *watch = bmk_xmalloc_bmk(sizeof(*watch));
 
     char *msg;
 
     if (!events)
         events = &xenbus_default_watch_queue;
 
-    watch->token = bmk_xmalloc(bmk_strlen(token)+1);
+    watch->token = bmk_xmalloc_bmk(bmk_strlen(token)+1);
     bmk_strcpy(watch->token, token);
     watch->events = events;
 
@@ -668,7 +668,7 @@ char* xenbus_watch_path_token( xenbus_transaction_t xbt, const char *path, const
 
     msg = errmsg(rep);
     if (msg) return msg;
-    bmk_memfree(rep);
+    bmk_memfree(rep, BMK_MEMWHO_WIREDBMK);
 
     return NULL;
 }
@@ -690,14 +690,14 @@ char* xenbus_unwatch_path_token( xenbus_transaction_t xbt, const char *path, con
 
     msg = errmsg(rep);
     if (msg) return msg;
-    bmk_memfree(rep);
+    bmk_memfree(rep, BMK_MEMWHO_WIREDBMK);
 
     spin_lock(&xenbus_req_lock);
     MINIOS_LIST_FOREACH(watch, &watches, entry)
         if (!bmk_strcmp(watch->token, token)) {
-            bmk_memfree(watch->token);
+            bmk_memfree(watch->token, BMK_MEMWHO_WIREDBMK);
             MINIOS_LIST_REMOVE(watch, entry);
-            bmk_memfree(watch);
+            bmk_memfree(watch, BMK_MEMWHO_WIREDBMK);
             break;
         }
     spin_unlock(&xenbus_req_lock);
@@ -714,7 +714,7 @@ char *xenbus_rm(xenbus_transaction_t xbt, const char *path)
     msg = errmsg(rep);
     if (msg)
 	return msg;
-    bmk_memfree(rep);
+    bmk_memfree(rep, BMK_MEMWHO_WIREDBMK);
     return NULL;
 }
 
@@ -729,10 +729,10 @@ char *xenbus_get_perms(xenbus_transaction_t xbt, const char *path, char **value)
 	*value = NULL;
 	return msg;
     }
-    res = bmk_memalloc(rep->len + 1, 0);
+    res = bmk_xmalloc_bmk(rep->len + 1);
     bmk_memcpy(res, rep + 1, rep->len);
     res[rep->len] = 0;
-    bmk_memfree(rep);
+    bmk_memfree(rep, BMK_MEMWHO_WIREDBMK);
     *value = res;
     return NULL;
 }
@@ -753,7 +753,7 @@ char *xenbus_set_perms(xenbus_transaction_t xbt, const char *path, domid_t dom, 
     msg = errmsg(rep);
     if (msg)
 	return msg;
-    bmk_memfree(rep);
+    bmk_memfree(rep, BMK_MEMWHO_WIREDBMK);
     return NULL;
 }
 
@@ -773,7 +773,7 @@ char *xenbus_transaction_start(xenbus_transaction_t *xbt)
     /* hint: typeof(*xbt) == unsigned long */
     *xbt = bmk_strtoul((char *)(rep+1), NULL, 10);
 
-    bmk_memfree(rep);
+    bmk_memfree(rep, BMK_MEMWHO_WIREDBMK);
     return NULL;
 }
 
@@ -793,13 +793,13 @@ xenbus_transaction_end(xenbus_transaction_t t, int abort, int *retry)
     if (err) {
 	if (!bmk_strcmp(err, "EAGAIN")) {
 	    *retry = 1;
-	    bmk_memfree(err);
+	    bmk_memfree(err, BMK_MEMWHO_WIREDBMK);
 	    return NULL;
 	} else {
 	    return err;
 	}
     }
-    bmk_memfree(rep);
+    bmk_memfree(rep, BMK_MEMWHO_WIREDBMK);
     return NULL;
 }
 
@@ -811,11 +811,11 @@ int xenbus_read_integer(const char *path)
     res = xenbus_read(XBT_NIL, path, &buf);
     if (res) {
 	minios_printk("Failed to read %s.\n", path);
-	bmk_memfree(res);
+	bmk_memfree(res, BMK_MEMWHO_WIREDBMK);
 	return -1;
     }
     t = bmk_strtoul(buf, NULL, 10);
-    bmk_memfree(buf);
+    bmk_memfree(buf, BMK_MEMWHO_WIREDBMK);
     return t;
 }
 
@@ -859,15 +859,15 @@ static void do_ls_test(const char *pre)
     msg = xenbus_ls(XBT_NIL, pre, &dirs);
     if (msg) {
 	minios_printk("Error in xenbus ls: %s\n", msg);
-	bmk_memfree(msg);
+	bmk_memfree(msg, BMK_MEMWHO_WIREDBMK);
 	return;
     }
     for (x = 0; dirs[x]; x++) 
     {
         minios_printk("ls %s[%d] -> %s\n", pre, x, dirs[x]);
-        bmk_memfree(dirs[x]);
+        bmk_memfree(dirs[x], BMK_MEMWHO_WIREDBMK);
     }
-    bmk_memfree(dirs);
+    bmk_memfree(dirs, BMK_MEMWHO_WIREDBMK);
 }
 
 static void do_read_test(const char *path)
@@ -877,11 +877,11 @@ static void do_read_test(const char *path)
     msg = xenbus_read(XBT_NIL, path, &res);
     if (msg) {
 	minios_printk("Error in xenbus read: %s\n", msg);
-	bmk_memfree(msg);
+	bmk_memfree(msg, BMK_MEMWHO_WIREDBMK);
 	return;
     }
     minios_printk("Read %s -> %s.\n", path, res);
-    bmk_memfree(res);
+    bmk_memfree(res, BMK_MEMWHO_WIREDBMK);
 }
 
 static void do_write_test(const char *path, const char *val)
@@ -891,7 +891,7 @@ static void do_write_test(const char *path, const char *val)
     msg = xenbus_write(XBT_NIL, path, val);
     if (msg) {
 	minios_printk("Result %s\n", msg);
-	bmk_memfree(msg);
+	bmk_memfree(msg, BMK_MEMWHO_WIREDBMK);
     } else {
 	minios_printk("Success.\n");
     }
@@ -904,7 +904,7 @@ static void do_rm_test(const char *path)
     msg = xenbus_rm(XBT_NIL, path);
     if (msg) {
 	minios_printk("Result %s\n", msg);
-	bmk_memfree(msg);
+	bmk_memfree(msg, BMK_MEMWHO_WIREDBMK);
     } else {
 	minios_printk("Success.\n");
     }

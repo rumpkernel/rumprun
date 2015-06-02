@@ -36,7 +36,7 @@ void free_consfront(struct consfront_dev *dev)
     state = xenbus_read_integer(path);
     while (err == NULL && state < XenbusStateClosing)
         err = xenbus_wait_for_state_change(path, &state, &dev->events);
-    if (err) bmk_memfree(err);
+    if (err) bmk_memfree(err, BMK_MEMWHO_WIREDBMK);
 
     if ((err = xenbus_switch_state(XBT_NIL, nodename, XenbusStateClosed)) != NULL) {
         minios_printk("free_consfront: error changing state to %d: %s\n",
@@ -45,18 +45,18 @@ void free_consfront(struct consfront_dev *dev)
     }
 
 close:
-    if (err) bmk_memfree(err);
+    if (err) bmk_memfree(err, BMK_MEMWHO_WIREDBMK);
     xenbus_unwatch_path_token(XBT_NIL, path, path);
 
     minios_mask_evtchn(dev->evtchn);
     minios_unbind_evtchn(dev->evtchn);
-    bmk_memfree(dev->backend);
-    bmk_memfree(dev->nodename);
+    bmk_memfree(dev->backend, BMK_MEMWHO_WIREDBMK);
+    bmk_memfree(dev->nodename, BMK_MEMWHO_WIREDBMK);
 
     gnttab_end_access(dev->ring_ref);
 
     minios_free_page(dev->ring);
-    bmk_memfree(dev);
+    bmk_memfree(dev, BMK_MEMWHO_WIREDBMK);
 }
 
 struct consfront_dev *init_consfront(char *_nodename)
@@ -71,7 +71,7 @@ struct consfront_dev *init_consfront(char *_nodename)
     struct consfront_dev *dev;
     int res;
 
-    dev = bmk_memcalloc(1, sizeof(*dev));
+    dev = bmk_memcalloc(1, sizeof(*dev), BMK_MEMWHO_WIREDBMK);
 
     if (!_nodename)
         bmk_snprintf(dev->nodename, sizeof(dev->nodename),
@@ -99,7 +99,7 @@ again:
     err = xenbus_transaction_start(&xbt);
     if (err) {
         minios_printk("starting transaction\n");
-        bmk_memfree(err);
+        bmk_memfree(err, BMK_MEMWHO_WIREDBMK);
     }
 
     err = xenbus_printf(xbt, dev->nodename, "ring-ref","%u",
@@ -136,7 +136,7 @@ again:
 
 
     err = xenbus_transaction_end(xbt, 0, &retry);
-    if (err) bmk_memfree(err);
+    if (err) bmk_memfree(err, BMK_MEMWHO_WIREDBMK);
     if (retry) {
             goto again;
         minios_printk("completing transaction\n");
@@ -145,7 +145,7 @@ again:
     goto done;
 
 abort_transaction:
-    bmk_memfree(err);
+    bmk_memfree(err, BMK_MEMWHO_WIREDBMK);
     err = xenbus_transaction_end(xbt, 1, &retry);
     minios_printk("Abort transaction %s\n", message);
     goto error;
@@ -184,8 +184,8 @@ done:
     return dev;
 
 error:
-    bmk_memfree(msg);
-    bmk_memfree(err);
+    bmk_memfree(msg, BMK_MEMWHO_WIREDBMK);
+    bmk_memfree(err, BMK_MEMWHO_WIREDBMK);
     free_consfront(dev);
     return NULL;
 }

@@ -116,12 +116,12 @@ bmk_isr_init(int (*func)(void *), void *arg, int intr)
 	if (intr > sizeof(isr_todo)*8 || intr > BMK_MAXINTR)
 		return BMK_EGENERIC;
 
-	ih = bmk_xmalloc(sizeof(*ih));
+	ih = bmk_xmalloc_bmk(sizeof(*ih));
 	if (!ih)
 		return BMK_ENOMEM;
 
 	if ((error = bmk_cpu_intr_init(intr)) != 0) {
-		bmk_memfree(ih);
+		bmk_memfree(ih, BMK_MEMWHO_WIREDBMK);
 		return error;
 	}
 	ih->ih_fun = func;

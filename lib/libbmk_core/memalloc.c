@@ -86,9 +86,13 @@
 union	overhead {
 	union	overhead *ov_next;	/* when free */
 	struct {
-		unsigned long  ovu_alignpad;	/* padding for alignment */
+		unsigned long	ovu_alignpad;	/* padding for alignment */
 		unsigned char	ovu_magic;	/* magic number */
 		unsigned char	ovu_index;	/* bucket # */
+
+		/* this will be put under RCHECK later */
+		unsigned short	ovu_who;	/* who allocated */
+
 #ifdef RCHECK
 		unsigned short	ovu_rmagic;	/* range magic number */
 		unsigned long	ovu_size;	/* actual block size */
@@ -99,6 +103,7 @@ union	overhead {
 #define	ov_index	ovu.ovu_index
 #define	ov_rmagic	ovu.ovu_rmagic
 #define	ov_size		ovu.ovu_size
+#define	ov_who		ovu.ovu_who
 };
 
 #define	MAGIC		0xef		/* magic # on accounting info */
@@ -202,7 +207,7 @@ bmk_memalloc_init(void)
 }
 
 void *
-bmk_memalloc(unsigned long nbytes, unsigned long align)
+bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 {
   	union overhead *op;
 	void *rv;
@@ -271,6 +276,7 @@ bmk_memalloc(unsigned long nbytes, unsigned long align)
 	op->ov_magic = MAGIC;
 	op->ov_index = bucket;
 	op->ov_alignpad = alignpad;
+	op->ov_who = who;
 #ifdef MSTATS
   	nmalloc[bucket]++;
 #endif
@@ -289,18 +295,18 @@ bmk_memalloc(unsigned long nbytes, unsigned long align)
 }
 
 void *
-bmk_xmalloc(unsigned long howmuch)
+bmk_xmalloc_bmk(unsigned long howmuch)
 {
 	void *rv;
 
-	rv = bmk_memalloc(howmuch, 0);
+	rv = bmk_memalloc(howmuch, 0, BMK_MEMWHO_WIREDBMK);
 	if (rv == NULL)
 		bmk_platform_halt("xmalloc failed");
 	return rv;
 }
 
 void *
-bmk_memcalloc(unsigned long n, unsigned long size)
+bmk_memcalloc(unsigned long n, unsigned long size, enum bmk_memwho who)
 {
 	void *v;
 	unsigned long tot = n * size;
@@ -308,7 +314,7 @@ bmk_memcalloc(unsigned long n, unsigned long size)
 	if (size != 0 && tot / size != n)
 		return NULL;
 
-	if ((v = bmk_memalloc(tot, MINALIGN)) != NULL) {
+	if ((v = bmk_memalloc(tot, MINALIGN, who)) != NULL) {
 		bmk_memset(v, 0, tot);
 	}
 	return v;
@@ -368,7 +374,7 @@ morecore(int bucket)
 }
 
 void
-bmk_memfree(void *cp)
+bmk_memfree(void *cp, enum bmk_memwho who)
 {   
 	long size;
 	union overhead *op;
@@ -385,6 +391,11 @@ bmk_memfree(void *cp)
 		bmk_printf("bmk_memfree: invalid pointer %p\n", cp);
 		return;
 #endif
+	}
+	if (op->ov_who != who) {
+		bmk_printf("bmk_memfree: mismatch %d vs. %d for %p",
+		    op->ov_who, who, cp);
+		bmk_platform_halt("bmk_memalloc error");
 	}
 
 #ifdef RCHECK
@@ -428,7 +439,7 @@ bmk_memfree(void *cp)
  *   + else ==> realloc
  */
 void *
-bmk_memrealloc(void *cp, unsigned long nbytes)
+bmk_memrealloc_user(void *cp, unsigned long nbytes)
 {   
 	union overhead *op;
   	unsigned long size;
@@ -436,10 +447,10 @@ bmk_memrealloc(void *cp, unsigned long nbytes)
 	void *np;
 
 	if (cp == NULL)
-		return bmk_memalloc(nbytes, MINALIGN);
+		return bmk_memalloc(nbytes, MINALIGN, BMK_MEMWHO_USER);
 
 	if (nbytes == 0) {
-		bmk_memfree(cp);
+		bmk_memfree(cp, BMK_MEMWHO_USER);
 		return NULL;
 	}
 
@@ -452,12 +463,12 @@ bmk_memrealloc(void *cp, unsigned long nbytes)
 		return cp;
 
 	/* we're gonna need a bigger bucket */
-	np = bmk_memalloc(nbytes, 8);
+	np = bmk_memalloc(nbytes, 8, BMK_MEMWHO_USER);
 	if (np == NULL)
 		return NULL;
 
 	bmk_memcpy(np, cp, (1<<(size+MINSHIFT)) - alignpad);
-	bmk_memfree(cp);
+	bmk_memfree(cp, BMK_MEMWHO_USER);
 	return np;
 }
 
@@ -520,7 +531,7 @@ testalloc(void)
 	size1 = random() % ((TEST_MAXALLOC-TEST_MINALLOC)+1) + TEST_MINALLOC;
 	align = random() % ((TEST_MAXALIGN-TEST_MINALIGN)+1) + TEST_MINALIGN;
 
-	v = bmk_memalloc(size1, 1<<align);
+	v = bmk_memalloc(size1, 1<<align, BMK_MEMWHO_USER);
 	if (!v)
 		return NULL;
 	bmk_assert(((uintptr_t)v & (align-1)) == 0);
@@ -557,7 +568,7 @@ main()
 		ring_free = &rings[((n + NRING/2) % NRING) * NALLOC];
 		for (i = 0; i < NALLOC; i++) {
 			ring_alloc[i] = testalloc();
-			bmk_memfree(ring_free[i]);
+			bmk_memfree(ring_free[i], BMK_MEMWHO_USER);
 		}
 	}
 }

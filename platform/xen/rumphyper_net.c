@@ -147,7 +147,7 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 
 	rumpkern_unsched(&nlocks, NULL);
 
-	viu = bmk_memalloc(sizeof(*viu), 0);
+	viu = bmk_memalloc(sizeof(*viu), 0, BMK_MEMWHO_WIREDBMK);
 	if (viu == NULL) {
 		rv = BMK_ENOMEM;
 		goto out;
@@ -158,7 +158,7 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 	viu->viu_dev = netfront_init(NULL, myrecv, enaddr, NULL, viu);
 	if (!viu->viu_dev) {
 		rv = BMK_EINVAL; /* ? */
-		bmk_memfree(viu);
+		bmk_memfree(viu, BMK_MEMWHO_WIREDBMK);
 		goto out;
 	}
 
@@ -190,7 +190,8 @@ VIFHYPER_SEND(struct virtif_user *viu,
 	rumpkern_unsched(&nlocks, NULL);
 	/*
 	 * netfront doesn't do scatter-gather, so just simply
-	 * copy the data into one lump here.
+	 * copy the data into one lump here.  drop packet if we
+	 * can't allocate temp memory space.
 	 */
 	if (iovlen == 1) {
 		d = iov->iov_base;
@@ -199,7 +200,16 @@ VIFHYPER_SEND(struct virtif_user *viu,
 		for (i = 0, tlen = 0; i < iovlen; i++) {
 			tlen += iov[i].iov_len;
 		}
-		d = d0 = bmk_xmalloc(tlen);
+
+		/*
+		 * allocate the temp space from RUMPKERN instead of BMK
+		 * since there are no huge repercussions if we fail or
+		 * succeed.
+		 */
+		d = d0 = bmk_memalloc(tlen, 0, BMK_MEMWHO_RUMPKERN);
+		if (d == NULL)
+			goto out;
+
 		for (i = 0; i < iovlen; i++) {
 			bmk_memcpy(d0, iov[i].iov_base, iov[i].iov_len);
 			d0 += iov[i].iov_len;
@@ -209,8 +219,9 @@ VIFHYPER_SEND(struct virtif_user *viu,
 	netfront_xmit(viu->viu_dev, d, tlen);
 
 	if (iovlen != 1)
-		bmk_memfree(d);
+		bmk_memfree(d, BMK_MEMWHO_RUMPKERN);
 
+ out:
 	rumpkern_sched(nlocks, NULL);
 }
 
@@ -231,5 +242,5 @@ VIFHYPER_DESTROY(struct virtif_user *viu)
 
 	bmk_sched_join(viu->viu_thr);
 	netfront_shutdown(viu->viu_dev);
-	bmk_memfree(viu);
+	bmk_memfree(viu, BMK_MEMWHO_WIREDBMK);
 }

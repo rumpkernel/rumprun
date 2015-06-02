@@ -110,7 +110,7 @@ struct consfront_dev *xencons_ring_init(void)
 	if (!start_info.console.domU.evtchn)
 		return 0;
 
-	dev = bmk_memcalloc(1, sizeof(struct consfront_dev));
+	dev = bmk_memcalloc(1, sizeof(struct consfront_dev), BMK_MEMWHO_WIREDBMK);
         bmk_strncpy(dev->nodename, "device/console", sizeof(dev->nodename)-1);
 	dev->dom = 0;
 	dev->backend = 0;
@@ -122,7 +122,7 @@ struct consfront_dev *xencons_ring_init(void)
 	err = minios_bind_evtchn(dev->evtchn, console_handle_input, dev);
 	if (err <= 0) {
 		minios_printk("XEN console request chn bind failed %i\n", err);
-                bmk_memfree(dev);
+                bmk_memfree(dev, BMK_MEMWHO_WIREDBMK);
 		return NULL;
 	}
         minios_unmask_evtchn(dev->evtchn);

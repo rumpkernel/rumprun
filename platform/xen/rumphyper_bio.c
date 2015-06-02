@@ -184,7 +184,7 @@ biocomp(struct blkfront_aiocb *aiocb, int ret)
 		bio->bio_done(bio->bio_arg, bio->bio_aiocb.aio_nbytes, 0);
 	rumpkern_unsched(&dummy, NULL);
 	num = bio->bio_num;
-	bmk_memfree(bio);
+	bmk_memfree(bio, BMK_MEMWHO_WIREDBMK);
 
 	rumpuser_mutex_enter_nowrap(bio_mtx);
 	bio_outstanding_total--;
@@ -236,7 +236,7 @@ rumpuser_bio(int fd, int op, void *data, size_t dlen, int64_t off,
 	rump_biodone_fn biodone, void *donearg)
 {
 	static int bio_inited;
-	struct biocb *bio = bmk_memalloc(sizeof(*bio), 0);
+	struct biocb *bio = bmk_xmalloc_bmk(sizeof(*bio));
 	struct blkfront_aiocb *aiocb = &bio->bio_aiocb;
 	int nlocks;
 	int num = fd - BLKFDOFF;

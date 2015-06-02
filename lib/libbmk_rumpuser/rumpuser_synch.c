@@ -136,7 +136,7 @@ rumpuser_mutex_init(struct rumpuser_mtx **mtxp, int flags)
 {
 	struct rumpuser_mtx *mtx;
 
-	mtx = bmk_memcalloc(1, sizeof(*mtx));
+	mtx = bmk_memcalloc(1, sizeof(*mtx), BMK_MEMWHO_WIREDBMK);
 	mtx->flags = flags;
 	TAILQ_INIT(&mtx->waiters);
 	*mtxp = mtx;
@@ -201,7 +201,7 @@ rumpuser_mutex_destroy(struct rumpuser_mtx *mtx)
 {
 
 	bmk_assert(TAILQ_EMPTY(&mtx->waiters) && mtx->o == NULL);
-	bmk_memfree(mtx);
+	bmk_memfree(mtx, BMK_MEMWHO_WIREDBMK);
 }
 
 void
@@ -223,7 +223,7 @@ rumpuser_rw_init(struct rumpuser_rw **rwp)
 {
 	struct rumpuser_rw *rw;
 
-	rw = bmk_memcalloc(1, sizeof(*rw));
+	rw = bmk_memcalloc(1, sizeof(*rw), BMK_MEMWHO_WIREDBMK);
 	TAILQ_INIT(&rw->rwait);
 	TAILQ_INIT(&rw->wwait);
 
@@ -305,7 +305,7 @@ void
 rumpuser_rw_destroy(struct rumpuser_rw *rw)
 {
 
-	bmk_memfree(rw);
+	bmk_memfree(rw, BMK_MEMWHO_WIREDBMK);
 }
 
 void
@@ -354,7 +354,7 @@ rumpuser_cv_init(struct rumpuser_cv **cvp)
 {
 	struct rumpuser_cv *cv;
 
-	cv = bmk_memcalloc(1, sizeof(*cv));
+	cv = bmk_memcalloc(1, sizeof(*cv), BMK_MEMWHO_WIREDBMK);
 	TAILQ_INIT(&cv->waiters);
 	*cvp = cv;
 }
@@ -364,7 +364,7 @@ rumpuser_cv_destroy(struct rumpuser_cv *cv)
 {
 
 	bmk_assert(cv->nwaiters == 0);
-	bmk_memfree(cv);
+	bmk_memfree(cv, BMK_MEMWHO_WIREDBMK);
 }
 
 static void
