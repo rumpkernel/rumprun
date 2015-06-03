@@ -39,7 +39,6 @@ endif
 LDFLAGS:= -L$(abspath rump/lib)
 
 OBJS_BMK-y+=		intr.o clock.o kernel.o multiboot.o pgalloc.o undefs.o
-OBJS_BMK-${HASPCI}+=	rumppci.o
 
 OBJS_BMK+= ${OBJS_BMK-y}
 
@@ -61,7 +60,9 @@ APP_TOOLS_DIR:= $(abspath ../../app-tools)
 include ${APP_TOOLS_DIR}/Makefile.app-tools
 
 include/bmk/machine:
-	ln -s ../arch/${MACHINE} include/bmk/machine
+	@ln -s ../arch/${MACHINE} include/bmk/machine
+
+links: include/bmk/machine
 
 rumprun.o: ${OBJS}
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@

@@ -43,7 +43,6 @@ LDFLAGS=	-L$(abspath rump/lib)
 
 rump-src-y += rumphyper_bio.c
 rump-src-y += rumphyper_net.c
-rump-src-y += rumphyper_pci.c
 
 rump-src-y += callmain.c
 
@@ -60,6 +59,9 @@ prepare:
 .PHONY: mini-os
 mini-os:
 	$(MAKE) -C xen OBJ_DIR=$(OBJ_DIR)/xen
+
+links:
+	$(MAKE) -C xen links
 
 .PHONY: rumprun
 rumprun: $(OBJ_DIR)/rumprun.o

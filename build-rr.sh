@@ -152,22 +152,6 @@ EOF
 	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
 	    -s ${RUMPSRC} -T ${RUMPTOOLS} -o ${RUMPOBJ} -d ${RUMPDEST}	\
 	    "$@" build kernelheaders install
-
-	if eval ${PLATFORM_PCI_P}; then
-		pcilibs=$(${RUMPMAKE} \
-		    -f ${RUMPSRC}/sys/rump/dev/Makefile.rumpdevcomp \
-		    -V '${RUMPPCIDEVS}')
-
-		for lib in ${pcilibs}; do
-			(
-				cd ${RUMPSRC}/sys/rump/dev/lib/lib${lib}
-				${RUMPMAKE} obj
-				${RUMPMAKE} \
-				    ${STDJ} ${PLATFORM_PCI_ARGS} dependall
-				${RUMPMAKE} install
-			)
-		done
-	fi
 }
 
 builduserspace ()
@@ -191,6 +175,19 @@ builduserspace ()
 		CONFIG_CXX=yes
 	else
 		CONFIG_CXX=no
+	fi
+}
+
+buildpci ()
+{
+
+	# need links to build the hypercall module
+	make -C ${PLATFORMDIR} links
+
+	if eval ${PLATFORM_PCI_P}; then
+		${RUMPMAKE} -f ${PLATFORMDIR}/pci/Makefile.pci obj
+		${RUMPMAKE} -f ${PLATFORMDIR}/pci/Makefile.pci dependall
+		${RUMPMAKE} -f ${PLATFORMDIR}/pci/Makefile.pci install
 	fi
 }
 
@@ -228,6 +225,9 @@ buildrump "$@"
 builduserspace
 
 makeconfigmk ${PLATFORMDIR}/config.mk
+
+# depends on config.mk
+buildpci
 
 # run routine specified in platform.conf
 doextras || die 'platforms extras failed.  tillerman needs tea?'
