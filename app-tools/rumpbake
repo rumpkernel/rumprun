@@ -41,7 +41,7 @@ fi
 usage ()
 {
 	cat <<EOM
-usage: rumpbake TARGET OUTPUT FILE [FILE ...]
+usage: rumpbake [ -v ] [ -R PATH ] TARGET OUTPUT FILE [FILE ...]
        rumpbake list
 
 When invoked the single argument "list", lists supported target boards.
@@ -49,7 +49,13 @@ When invoked the single argument "list", lists supported target boards.
 Else, creates a rumprunnable unikernel:
 	TARGET: rumprun board configuration to use.
 	OUTPUT: output file name for the unikernel image.
-	FILE: 	executable to bake.
+        FILE: 	executable(s) to bake.
+
+The -R option will add the contents of PATH to an in-memory root filesystem
+baked into the unikernel. This option may be specified multiple times, in
+this case the contents of all specified PATHs will be included.
+
+The -v option bakes verbosely.
 EOM
 	exit 1
 }
@@ -83,6 +89,24 @@ if [ ! -f ${CONF} ]; then
 	exit 1
 fi
 . ${CONF}
+
+ROOTFSPATHS=
+V=
+while getopts "vR:" opt; do
+	case "${opt}" in
+	R)
+		if [ ! -d ${OPTARG} ]; then
+			echo "rumpbake: error: -R ${OPTARG}: not a directory"
+			exit 1
+		fi
+		ROOTFSPATHS="${ROOTFSPATHS} ${OPTARG}"
+		;;
+	v)
+		V=yes
+		;;
+	esac
+done
+shift $((${OPTIND}-1))
 
 TARGET="${1}"
 if [ "${TARGET}" = "list" ]; then
@@ -139,6 +163,37 @@ for f in "$@"; do
 	objnum=$((${objnum}+1))
 done
 
+# Build root filesytem to bake into image if requested.
+if [ -n "${ROOTFSPATHS}" ]; then
+	ROOTFSTAR=${TMPDIR}/rootfs.tar
+	ROOTFSOBJ=${TMPDIR}/rootfs.tar.o
+	if [ -n "$V" ]; then
+		TAROPT=-vv
+	else
+		TAROPT=
+	fi
+	# Append contents of each PATH to the rootfs.tar.
+	# XXX: This will create multiple entries for ".".
+	for path in ${ROOTFSPATHS}; do
+		[ -n "$V" ] && echo "Adding ${path}:"
+		tar -C ${path} ${TAROPT} -rf ${TMPDIR}/rootfs.tar .
+	done
+	# Symbol naming in the "binary" output format depends on the absolute
+	# file name being created; hence 'ld' must be run in the directory
+	# containing rootfs.tar.
+	(
+	cd ${TMPDIR} &&
+	ld -r -o rootfs.tar.o -z noexecstack --format=binary rootfs.tar
+	)
+	objcopy --rename-section \
+		.data=.rodata,alloc,load,readonly,data,contents \
+		${TMPDIR}/rootfs.tar.o
+	allobjs="${allobjs} ${TMPDIR}/rootfs.tar.o"
+fi
+
 # Final link using cc to produce the unikernel image.
-${APP_TOOLS_DIR}/${TOOLCHAIN}-cc \
-    -bake -o ${OUTPUT} ${allobjs} -Wl,--whole-archive ${LIBS} || exit 1
+LINK="${APP_TOOLS_DIR}/${TOOLCHAIN}-cc \
+	-bake -o ${OUTPUT} ${allobjs} -Wl,--whole-archive ${LIBS}"
+[ -n "$V" ] && echo "Link command: ${LINK}"
+${LINK}
+RESULT=$?

@@ -50,6 +50,7 @@
 #include <rump/netconfig.h>
 
 #include <rumprun-base/config.h>
+#include <rumprun-base/extract.h>
 #include <rumprun-base/parseargs.h>
 
 #include <bmk-core/jsmn.h>
@@ -472,6 +473,9 @@ _rumprun_config(char *cmdline)
 	const size_t rootcfglen = sizeof(ROOTCFG)-1;
 	unsigned int i;
 	int ntok;
+
+	/* Extract the baked-in rootfs if present */
+	_rumprun_extract();
 
 	/* is the config file on rootfs?  if so, mount & dig it out */
 	if (strncmp(cmdline, ROOTCFG, rootcfglen) == 0) {
