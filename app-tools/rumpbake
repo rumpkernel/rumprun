@@ -41,7 +41,7 @@ fi
 usage ()
 {
 	cat <<EOM
-usage: rumpbake TARGET OUTPUT FILE
+usage: rumpbake TARGET OUTPUT FILE [FILE ...]
        rumpbake list
 
 When invoked the single argument "list", lists supported target boards.
@@ -52,6 +52,14 @@ Else, creates a rumprunnable unikernel:
 	FILE: 	executable to bake.
 EOM
 	exit 1
+}
+
+nuketmpdir ()
+{
+
+	nukeme="${TMPDIR}"
+	TMPDIR=''
+	rm -rf ${nukeme}
 }
 
 APP_TOOLS_DIR=$(dirname $0)
@@ -74,6 +82,8 @@ OUTPUT="${2}"
 [ $# -gt 2 ] || usage
 shift 2
 
+[ $# -le 8 ] || { echo '>> max 8 binaries supported currently' ; exit 1; }
+
 # Santize the config argument passed in to remove shell
 # metacharacters
 config="$(echo ${TARGET} | sed -e 's/-/_/g' -e 's/[^A-Za-z0-9_]//g')"
@@ -85,8 +95,6 @@ if [ -z "${CONFIG}" -o -z "${TOOLCHAIN}" ]; then
 	usage
 fi
 
-FILE=$1
-
 # Parse CONFIG, mapping each component to $LIBS_component and each resulting
 # lib to -l$lib
 LIBS=
@@ -96,13 +104,26 @@ for component in ${CONFIG}; do
 	done
 done
 
-# Check if the file is a relocatable object produced by a rumprun toolchain
-if ! grep -q __RuMpRuN_fermented__ ${FILE}; then
-	echo "rumpbake: error: ${FILE}: not a rumprun relocatable object"
-	exit 1
-fi
+TMPDIR=$(mktemp -d /tmp/rumpbake.XXXXXX)
+trap nuketmpdir 0 INT TERM
+
+# Check if the file is a relocatable object produced by a rumprun toolchain.
+# Create a temporary object with a unique "main"
+objnum=1
+allobjs=
+for f in "$@"; do
+	if ! grep -q __RuMpRuN_fermented__ ${f}; then
+		echo "rumpbake: error: ${f}: not a rumprun relocatable object"
+		exit 1
+	fi
+	${APP_TOOLS_DIR}/${TOOLCHAIN}-objcopy				\
+	    --redefine-sym main=rumpbake_main${objnum}			\
+	    ${f} ${TMPDIR}/tmp${objnum}.obj
+	allobjs="${allobjs} ${TMPDIR}/tmp${objnum}.obj"
+	objnum=$((${objnum}+1))
+done
 
 # Final link using cc to produce the unikernel image.
 ${APP_TOOLS_DIR}/${TOOLCHAIN}-cc \
-	-bake -o ${OUTPUT} ${FILE} -Wl,--whole-archive ${LIBS} \
+	-bake -o ${OUTPUT} ${allobjs} -Wl,--whole-archive ${LIBS} \
 	|| exit 1

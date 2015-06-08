@@ -23,6 +23,8 @@
  * SUCH DAMAGE.
  */
 
+#include <sys/cdefs.h>
+
 #include <sys/types.h>
 #include <sys/mount.h>
 #include <sys/queue.h>
@@ -51,6 +53,21 @@
 
 static pthread_mutex_t w_mtx;
 static pthread_cond_t w_cv;
+
+int
+rumprun_notmain(int argc, char **argv)
+{
+
+	return ENOSYS;
+}
+__weak_alias(rumpbake_main1,rumprun_notmain);
+__weak_alias(rumpbake_main2,rumprun_notmain);
+__weak_alias(rumpbake_main3,rumprun_notmain);
+__weak_alias(rumpbake_main4,rumprun_notmain);
+__weak_alias(rumpbake_main5,rumprun_notmain);
+__weak_alias(rumpbake_main6,rumprun_notmain);
+__weak_alias(rumpbake_main7,rumprun_notmain);
+__weak_alias(rumpbake_main8,rumprun_notmain);
 
 void
 rumprun_boot(char *cmdline)

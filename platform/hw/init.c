@@ -35,7 +35,8 @@ bmk_mainthread(void *cmdline)
 
 	rumprun_boot(cmdline);
 
-	rumprun(main, rumprun_cmdline_argc, rumprun_cmdline_argv);
+	RUNMAINS();
+
 	while ((cookie = rumprun_get_finished()) != NULL)
 		rumprun_wait(cookie);
 
