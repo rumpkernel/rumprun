@@ -169,11 +169,6 @@ void *
 rumprun(int (*mainfun)(int, char *[]), int argc, char *argv[])
 {
 	struct rumprunner *rr;
-	static int called;
-
-	if (called)
-		bmk_platform_halt(">1 rumprun() calls not implemented yet");
-	called = 1;
 
 	rr = malloc(sizeof(*rr));
 
@@ -219,8 +214,10 @@ rumprun_get_finished(void)
 		pthread_cond_wait(&w_cv, &w_mtx);
 	}
 	LIST_FOREACH(rr, &rumprunners, rr_entries) {
-		if (rr->rr_done)
+		if (rr->rr_done) {
+			LIST_REMOVE(rr, rr_entries);
 			break;
+		}
 	}
 	pthread_mutex_unlock(&w_mtx);
 	assert(rr);
