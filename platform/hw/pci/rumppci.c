@@ -136,6 +136,16 @@ rumpcomp_pci_dmamem_map(struct rumpcomp_pci_dmaseg *dss, size_t nseg,
 	return 0;
 }
 
+void
+rumpcomp_pci_free(unsigned long mem, size_t size)
+{
+	int i;
+
+        for (i = 0; size >> (i + PAGE_SHIFT); i++)
+                continue;
+	bmk_pgfree((void *)mem, i);
+}
+
 unsigned long
 rumpcomp_pci_virt_to_mach(void *virt)
 {

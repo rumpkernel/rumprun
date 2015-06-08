@@ -1,1 +1,1 @@
-/*	empty	*/
+#define rumpcomp_pci_free rumpcomp_pci_free
