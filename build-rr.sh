@@ -38,6 +38,13 @@ STDJ='-j4'
 RUMPSRC=src-netbsd
 BUILDRUMP=$(pwd)/buildrump.sh
 
+# figure out where gmake lies
+if [ -z "${MAKE}" ]; then
+	MAKE=make
+	type gmake >/dev/null && MAKE=gmake
+fi
+
+
 #
 # SUBROUTINES
 #
@@ -182,7 +189,7 @@ buildpci ()
 {
 
 	# need links to build the hypercall module
-	make -C ${PLATFORMDIR} links
+	${MAKE} -C ${PLATFORMDIR} links
 
 	if eval ${PLATFORM_PCI_P}; then
 		${RUMPMAKE} -f ${PLATFORMDIR}/pci/Makefile.pci obj
@@ -233,7 +240,7 @@ buildpci
 doextras || die 'platforms extras failed.  tillerman needs tea?'
 
 # do final build of the platform bits
-( cd ${PLATFORMDIR} && make || exit 1)
+( cd ${PLATFORMDIR} && ${MAKE} || exit 1)
 [ $? -eq 0 ] || die platform make failed!
 
 # link result to top level (por que?!?)

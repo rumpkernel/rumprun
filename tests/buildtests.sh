@@ -33,7 +33,7 @@ shift
 # XXX
 export DOCXX=$(grep ^CONFIG_CXX ../platform/${PLATFORM}/config.mk)
 
-export MAKE=${APPTOOLSDIR}/rumprun-${TOOLS_PLATFORM}-make
+export MAKE=${APPTOOLSDIR}/rumprun-${TOOLS_PLATFORM}-${MAKE-make}
 
 ${MAKE} ${DOCXX} RUMPBAKE="${APPTOOLSDIR}/${RUMPBAKE}"
 
