@@ -71,7 +71,9 @@ app_main(start_info_t *si)
 
 	rumprun_boot(get_config());
 
-	cookie = rumprun(main, rumprun_cmdline_argc, rumprun_cmdline_argv);
-	rumprun_wait(cookie);
+	rumprun(main, rumprun_cmdline_argc, rumprun_cmdline_argv);
+	while ((cookie = rumprun_get_finished()) != NULL)
+		rumprun_wait(cookie);
+
 	rumprun_reboot();
 }
