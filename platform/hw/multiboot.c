@@ -48,7 +48,7 @@ parsemem(uint32_t addr, uint32_t len)
 	 * starting at MEMSTART.
 	 */
 	for (off = 0; off < len; off += mbm->size + sizeof(mbm->size)) {
-		mbm = (void *)(addr + off);
+		mbm = (void *)(uintptr_t)(addr + off);
 		if (mbm->addr == MEMSTART
 		    && mbm->type == MULTIBOOT_MEMORY_AVAILABLE) {
 			break;
@@ -78,6 +78,7 @@ void
 bmk_multiboot(struct multiboot_info *mbi)
 {
 	unsigned long cmdlinelen;
+	char *cmdline;
 
 	bmk_printf_init(bmk_cons_putc, NULL);
 	bmk_core_init(BMK_THREAD_STACK_PAGE_ORDER, PAGE_SIZE);
@@ -85,11 +86,12 @@ bmk_multiboot(struct multiboot_info *mbi)
 	bmk_printf("rump kernel bare metal multibootstrap\n\n");
 
 	/* save the command line before something overwrites it */
-	cmdlinelen = bmk_strlen((char *)mbi->cmdline);
+	cmdline = (char *)(uintptr_t)mbi->cmdline;
+	cmdlinelen = bmk_strlen(cmdline);
 	if (cmdlinelen >= BMK_MULTIBOOT_CMDLINE_SIZE)
 		bmk_platform_halt("command line too long, "
 		    "increase BMK_MULTIBOOT_CMDLINE_SIZE");
-	bmk_strcpy(bmk_multiboot_cmdline, (char *)mbi->cmdline);
+	bmk_strcpy(bmk_multiboot_cmdline, cmdline);
 
 	if ((mbi->flags & MULTIBOOT_MEMORY_INFO) == 0)
 		bmk_platform_halt("multiboot memory info not available\n");
