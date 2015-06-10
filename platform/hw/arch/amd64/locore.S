@@ -69,9 +69,9 @@ ENTRY(_start)
 	 * x86_64 switch to long mode
 	 */
 
-	/* 1: enable pae */
+	/* 1: enable pae and sse */
 	movl %cr4, %eax
-	orl $0x20, %eax
+	orl $0x620, %eax
 	movl %eax, %cr4
 
 	/* 2: enable long mode */
