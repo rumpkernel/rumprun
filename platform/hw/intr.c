@@ -33,6 +33,12 @@
 
 #include <bmk-rumpuser/rumpuser.h>
 
+#ifdef BMK_SCREW_INTERRUPT_ROUTING
+#define BMK_INTRLEVS 1
+#else
+#define BMK_INTRLEVS BMK_MAXINTR
+#endif
+
 struct intrhand {
 	int (*ih_fun)(void *);
 	void *ih_arg;
@@ -41,7 +47,7 @@ struct intrhand {
 };
 
 SLIST_HEAD(isr_ihead, intrhand);
-static struct isr_ihead isr_ih[BMK_MAXINTR];
+static struct isr_ihead isr_ih[BMK_INTRLEVS];
 static unsigned int isr_todo;
 static unsigned int isr_lowest = sizeof(isr_todo)*8;
 
@@ -79,11 +85,15 @@ isr(void *arg)
 			for (i = isr_lowest; isrcopy; i++) {
 				struct intrhand *ih;
 
+#if BMK_INTRLEVS == 1
+				isrcopy = 0;
+				i = 0;
+#else
 				bmk_assert(i < sizeof(isrcopy)*8);
-
 				if ((isrcopy & (1<<i)) == 0)
 					continue;
 				isrcopy &= ~(1<<i);
+#endif
 
 				SLIST_FOREACH(ih, &isr_ih[i], ih_entries) {
 					if (ih->ih_fun(ih->ih_arg) != 0) {
@@ -126,7 +136,7 @@ bmk_isr_init(int (*func)(void *), void *arg, int intr)
 	}
 	ih->ih_fun = func;
 	ih->ih_arg = arg;
-	SLIST_INSERT_HEAD(&isr_ih[intr], ih, ih_entries);
+	SLIST_INSERT_HEAD(&isr_ih[intr % BMK_INTRLEVS], ih, ih_entries);
 	if ((unsigned)intr < isr_lowest)
 		isr_lowest = intr;
 
@@ -147,7 +157,7 @@ bmk_intr_init(void)
 {
 	int i;
 
-	for (i = 0; i < BMK_MAXINTR; i++) {
+	for (i = 0; i < BMK_INTRLEVS; i++) {
 		SLIST_INIT(&isr_ih[i]);
 	}
 
