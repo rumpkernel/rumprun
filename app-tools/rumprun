@@ -650,7 +650,15 @@ run_qemu ()
 
 	check_app $1
 
-	qemucmd="${DUMPCMD} qemu-system-i386 ${opt_netif} ${opt_kvm}	\
+	# XXX: using host objdump here is wrong, but xen uses it too,
+	# and both offenses should be easy to fix at the same time
+	if objdump -f ${1} | grep -q elf64; then
+		qemu=qemu-system-x86_64
+	else
+		qemu=qemu-system-i386
+	fi
+
+	qemucmd="${DUMPCMD} ${qemu} ${opt_netif} ${opt_kvm}		\
 	    ${opt_drivespec} ${opt_debug} ${opt_pause} -m ${opt_mem}	\
 	    ${opt_guestargs} -kernel $1"
 	if [ -n "$opt_interactive" ]; then

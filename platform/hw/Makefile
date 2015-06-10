@@ -16,14 +16,15 @@ include ../Makefile.inc
 CPPFLAGS=	-Iinclude -Irump/include -I../../include -nostdinc
 CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
 
-# Check if we're building for a supported target. For the time being,
-# we build x86_64 in 32bit mode, because someone was lazy and did
-# not write the 64bit bootstrap.
+# Check if we're building for a supported target.
 supported= false
 HASPCI= y
 # assume we're doing "make clean"
 MACHINE?= i386
 ifeq (${MACHINE},i386)
+supported:= true
+endif
+ifeq (${MACHINE},amd64)
 supported:= true
 endif
 ifeq (${MACHINE},arm)

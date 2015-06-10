@@ -18,6 +18,7 @@ void bmk_run(char *);
 
 void bmk_cons_clear(void);
 void bmk_cons_putc(int);
+void bmk_cons_puts(const char *);
 
 void bmk_cpu_init(void);
 void bmk_cpu_nanohlt(void);
