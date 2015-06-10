@@ -58,7 +58,7 @@ parsemem(uint32_t addr, uint32_t len)
 		bmk_platform_halt("multiboot memory chunk not found");
 
 	memsize = mbm->len;
-	osbegin = round_page((unsigned long)_begin);
+	osbegin = trunc_page((unsigned long)_begin);
 	osend = round_page((unsigned long)_end);
 	ossize = osend - osbegin;
 
