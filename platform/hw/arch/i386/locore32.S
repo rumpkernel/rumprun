@@ -142,6 +142,7 @@ ENTRY(bmk_cpu_isr_##intnum)						\
 	iret								;\
 END(bmk_cpu_isr_##intnum)
 
+INTRSTUB(9)
 INTRSTUB(10)
 INTRSTUB(11)
 INTRSTUB(14)

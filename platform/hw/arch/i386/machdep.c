@@ -59,6 +59,7 @@ void bmk_cpu_insr(void);
 
 /* actual interrupt service routines */
 void bmk_cpu_isr_clock(void);
+void bmk_cpu_isr_9(void);
 void bmk_cpu_isr_10(void);
 void bmk_cpu_isr_11(void);
 void bmk_cpu_isr_14(void);
@@ -229,6 +230,7 @@ bmk_cpu_intr_init(int intr)
 
 #define FILLGATE(n) case n: fillgate(&idt[32+n], bmk_cpu_isr_##n); break;
 	switch (intr) {
+		FILLGATE(9);
 		FILLGATE(10);
 		FILLGATE(11);
 		FILLGATE(14);
