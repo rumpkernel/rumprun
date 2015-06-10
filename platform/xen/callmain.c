@@ -56,9 +56,9 @@ get_config(void)
 	int retry;
 
 	if (xenbus_transaction_start(&txn))
-		jsonordie();
+		return jsonordie();
 	if (xenbus_read(txn, "rumprun/cfg", &cfg) != NULL)
-		jsonordie();
+		cfg = jsonordie();
 	xenbus_transaction_end(txn, 0, &retry);
 
 	return cfg;
