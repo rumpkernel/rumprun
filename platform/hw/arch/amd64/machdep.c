@@ -24,6 +24,8 @@
  */
 
 #include <bmk/kernel.h>
+
+#include <bmk-core/printf.h>
 #include <bmk-core/sched.h>
 
 int bmk_spldepth = 1;
@@ -55,6 +57,22 @@ static struct gate_descriptor idt[256];
 
 /* interrupt-not-service-routine */
 void bmk_cpu_insr(void);
+
+/* trap "handlers" */
+void bmk_cpu_trap_0(void);
+void bmk_cpu_trap_2(void);
+void bmk_cpu_trap_3(void);
+void bmk_cpu_trap_4(void);
+void bmk_cpu_trap_5(void);
+void bmk_cpu_trap_6(void);
+void bmk_cpu_trap_7(void);
+void bmk_cpu_trap_8(void);
+void bmk_cpu_trap_10(void);
+void bmk_cpu_trap_11(void);
+void bmk_cpu_trap_12(void);
+void bmk_cpu_trap_13(void);
+void bmk_cpu_trap_14(void);
+void bmk_cpu_trap_17(void);
 
 /* actual interrupt service routines */
 void bmk_cpu_isr_clock(void);
@@ -139,6 +157,23 @@ bmk_cpu_init(void)
 		fillgate(&idt[i], bmk_cpu_insr);
 	}
 
+#define FILLGATE(n) fillgate(&idt[n], bmk_cpu_trap_##n)
+	FILLGATE(0);
+	FILLGATE(2);
+	FILLGATE(3);
+	FILLGATE(4);
+	FILLGATE(5);
+	FILLGATE(6);
+	FILLGATE(7);
+	FILLGATE(8);
+	FILLGATE(10);
+	FILLGATE(11);
+	FILLGATE(12);
+	FILLGATE(13);
+	FILLGATE(14);
+	FILLGATE(17);
+#undef FILLGATE
+
 	initpic();
 
 	/*
@@ -152,6 +187,15 @@ bmk_cpu_init(void)
 	outb(TIMER_MODE, TIMER_RATEGEN | TIMER_16BIT);
 	outb(TIMER_CNTR, (TIMER_HZ/HZ) & 0xff);
 	outb(TIMER_CNTR, (TIMER_HZ/HZ) >> 8);
+}
+
+void bmk_cpu_pagefault(void *, void *);
+void
+bmk_cpu_pagefault(void *addr, void *rip)
+{
+
+	bmk_printf("FATAL pagefault at address %p (rip %p)\n", addr, rip);
+	hlt();
 }
 
 int
