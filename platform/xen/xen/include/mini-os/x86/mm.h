@@ -228,7 +228,7 @@ static __inline__ paddr_t machine_to_phys(maddr_t machine)
 
 #define map_frames(f, n) minios_map_frames_ex(f, n, 1, 0, 1, DOMID_SELF, NULL, L1_PROT)
 #define map_zero(n, a) minios_map_frames_ex(&mfn_zero, n, 0, 0, a, DOMID_SELF, NULL, L1_PROT_RO)
-#define do_map_zero(start, n) do_map_frames(start, &mfn_zero, n, 0, 0, DOMID_SELF, NULL, L1_PROT_RO)
+#define do_map_zero(start, n) minios_map_frames(start, &mfn_zero, n, 0, 0, DOMID_SELF, NULL, L1_PROT_RO)
 
 pgentry_t *need_pgt(unsigned long addr);
 int mfn_is_ram(unsigned long mfn);

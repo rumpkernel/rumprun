@@ -63,8 +63,8 @@ void *minios_map_frames_ex(const unsigned long *f, unsigned long n,
 	unsigned long stride,
 	unsigned long increment, unsigned long alignment, domid_t id,
 	int *err, unsigned long prot);
-void do_map_frames(unsigned long addr,
-        const unsigned long *f, unsigned long n, unsigned long stride,
+void minios_map_frames(unsigned long addr,
+    const unsigned long *f, unsigned long n, unsigned long stride,
 	unsigned long increment, domid_t id, int *err, unsigned long prot);
 int unmap_frames(unsigned long va, unsigned long num_frames);
 unsigned long minios_alloc_contig_pages(int order, unsigned int addr_bits);

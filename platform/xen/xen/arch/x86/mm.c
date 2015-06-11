@@ -553,10 +553,10 @@ unsigned long allocate_ondemand(unsigned long n, unsigned long alignment)
  * va. map f[i*stride]+i*increment for i in 0..n-1.
  */
 #define MAP_BATCH ((STACK_SIZE / 2) / sizeof(mmu_update_t))
-void do_map_frames(unsigned long va,
-                   const unsigned long *mfns, unsigned long n, 
-                   unsigned long stride, unsigned long incr, 
-                   domid_t id, int *err, unsigned long prot)
+void minios_map_frames(unsigned long va,
+		       const unsigned long *mfns, unsigned long n,
+		       unsigned long stride, unsigned long incr,
+		       domid_t id, int *err, unsigned long prot)
 {
     pgentry_t *pgt = NULL;
     unsigned long done = 0;
@@ -565,7 +565,7 @@ void do_map_frames(unsigned long va,
 
     if ( !mfns ) 
     {
-        minios_printk("do_map_frames: no mfns supplied\n");
+        minios_printk("minios_map_frames: no mfns supplied\n");
         return;
     }
     DEBUG("va=%p n=0x%lx, mfns[0]=0x%lx stride=0x%lx incr=0x%lx prot=0x%lx\n",
@@ -629,7 +629,7 @@ void *minios_map_frames_ex(const unsigned long *mfns, unsigned long n,
     if ( !va )
         return NULL;
 
-    do_map_frames(va, mfns, n, stride, incr, id, err, prot);
+    minios_map_frames(va, mfns, n, stride, incr, id, err, prot);
 
     return (void *)va;
 }
