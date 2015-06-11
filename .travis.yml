@@ -13,6 +13,7 @@ before_script:
 env:
   - PLATFORM=xen TESTS=none EXTRAFLAGS=
   - PLATFORM=xen TESTS=none EXTRAFLAGS='-- -F ACLFLAGS=-m32'
+  - PLATFORM=hw TESTS=none EXTRAFLAGS=
   - PLATFORM=hw TESTS=qemu EXTRAFLAGS='-- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686'
 
 script:
