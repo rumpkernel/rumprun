@@ -6,9 +6,15 @@
 
 BEGIN {
 	MAXGIGS=512
+	MINGIGS=4
 
 	if (mapgigs == 0)
-		mapgigs = 1
+		mapgigs = MINGIGS
+	if (mapgigs < MINGIGS) {
+		printf("currently need min 4G for mmio space, you want %d\n", \
+		    MINGIGS, mapgigs) | "cat 1>&2";
+		exit(1);
+	}
 	if (mapgigs > MAXGIGS) {
 		printf("up to %dG supported, you have %d\n", \
 		    MAXGIGS, mapgigs) | "cat 1>&2";
