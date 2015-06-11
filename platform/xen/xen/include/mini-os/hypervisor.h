@@ -41,6 +41,9 @@ void minios_do_hypervisor_callback(struct pt_regs *regs);
 void minios_mask_evtchn(uint32_t port);
 void minios_unmask_evtchn(uint32_t port);
 void minios_clear_evtchn(uint32_t port);
+int minios_hypercall(unsigned op, unsigned long a0,
+		     unsigned long a1, unsigned long a2,
+		     unsigned long a3, unsigned long a4);
 
 extern int _minios_in_hypervisor_callback;
 

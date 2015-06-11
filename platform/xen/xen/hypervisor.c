@@ -120,3 +120,22 @@ inline void minios_clear_evtchn(uint32_t port)
     shared_info_t *s = HYPERVISOR_shared_info;
     synch_clear_bit(port, &s->evtchn_pending[0]);
 }
+
+int minios_hypercall(unsigned op, unsigned long a0,
+		     unsigned long a1, unsigned long a2,
+		     unsigned long a3, unsigned long a4)
+{
+	multicall_entry_t call;
+	int ret;
+
+	call.op = op;
+	call.args[0] = a0;
+	call.args[1] = a1;
+	call.args[2] = a2;
+	call.args[3] = a3;
+	call.args[4] = a4;
+
+	ret = HYPERVISOR_multicall(&call, 1);
+
+	return ret;
+}
