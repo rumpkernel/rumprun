@@ -3,6 +3,7 @@ LIB=	rumpxen_xendev
 SRCS=	xendev_component.c
 SRCS+=	busdev.c
 SRCS+=	evtdev.c
+SRCS+=	privcmd.c
 
 RUMPTOP= ${TOPRUMP}
 

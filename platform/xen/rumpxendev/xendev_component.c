@@ -33,6 +33,8 @@ __KERNEL_RCSID(0, "$NetBSD: $");
 #include "rump_vfs_private.h"
 
 #include <sys/vfs_syscalls.h>
+#include <sys/dirent.h>
+#include <miscfs/kernfs/kernfs.h>
 
 char *xbd_strdup(const char *s)
 {
@@ -112,6 +114,17 @@ static const struct cdevsw xen_dev_cdevsw = {
 	.d_flag = D_OTHER
 };
 
+#define DIR_MODE        (S_IRUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH)
+kernfs_parentdir_t *kernxen_pkt;
+static void xenkernfs_init(void)
+{
+	kernfs_entry_t *dkt;
+	KERNFS_ALLOCENTRY(dkt, M_TEMP, M_WAITOK);
+	KERNFS_INITENTRY(dkt, DT_DIR, "xen", NULL, KFSsubdir, VDIR, DIR_MODE);
+	kernfs_addentry(NULL, dkt);
+	kernxen_pkt = KERNFS_ENTOPARENTDIR(dkt);
+}
+
 RUMP_COMPONENT(RUMP_COMPONENT_DEV)
 {
         devmajor_t bmaj, cmaj;
@@ -141,6 +154,9 @@ RUMP_COMPONENT(RUMP_COMPONENT_DEV)
 	     DPRINTF(("%s: created, %lu.%lu\n",
 		      xdinfo->path, (unsigned long)cmaj, (unsigned long)cmin));
 	}
+
+	xenkernfs_init();
+	xenprivcmd_init();
 }
 
 /*
