@@ -53,6 +53,33 @@ struct gate_descriptor {
 	unsigned long gd_xx3:19;	/* reserved */
 } __attribute__((__packed__));
 
+struct taskgate_descriptor {
+	unsigned long td_lolimit:16;	/* segment extent (lsb) */
+	unsigned long td_lobase:24;	/* segment base address (lsb) */
+	unsigned long td_type:5;	/* segment type */
+	unsigned long td_dpl:2;		/* segment descriptor priority level */
+	unsigned long td_p:1;		/* segment descriptor present */
+	unsigned long td_hilimit:4;	/* segment extent (msb) */
+	unsigned long td_xx1:3;		/* avl, long and def32 (not used) */
+	unsigned long td_gran:1;	/* limit granularity (byte/page) */
+	unsigned long td_hibase:40;	/* segment base address (msb) */
+	unsigned long td_xx2:8;		/* reserved */
+	unsigned long td_zero:5;	/* must be zero */
+	unsigned long td_xx3:19;	/* reserved */
+} __packed;
+
+struct tss {
+	unsigned int	tss_reserved1;
+	unsigned long	tss_rsp0;
+	unsigned long	tss_rsp1;
+	unsigned long	tss_rsp2;
+	unsigned long	tss_reserved2;
+	unsigned long	tss_ist[7];
+	unsigned long	tss_reserved3;
+	unsigned int	tss_iobase;
+	unsigned int	tss_reserved4;
+} __attribute__((__packed__)) mytss;
+
 static struct gate_descriptor idt[256];
 
 /* interrupt-not-service-routine */
@@ -82,15 +109,17 @@ void bmk_cpu_isr_11(void);
 void bmk_cpu_isr_14(void);
 void bmk_cpu_isr_15(void);
 
+extern unsigned long bmk_cpu_gdt64[];
+
 static void
-fillgate(struct gate_descriptor *gd, void *fun)
+fillgate(struct gate_descriptor *gd, void *fun, int ist)
 {
 
 	gd->gd_hioffset = (unsigned long)fun >> 16;
 	gd->gd_looffset = (unsigned long)fun & 0xffff;
 
 	gd->gd_selector = 0x8;
-	gd->gd_ist = 0;
+	gd->gd_ist = ist;
 	gd->gd_type = 14;
 	gd->gd_dpl = 0;
 	gd->gd_p = 1;
@@ -139,6 +168,12 @@ initpic(void)
 #define TIMER_HZ	1193182
 #define HZ		100
 
+static char intrstack[4096];
+static char nmistack[4096];
+static char dfstack[4096];
+
+void bmk_cpu_ltr(unsigned long id);
+
 /*
  * This routine fills out the interrupt descriptors so that
  * we can handle interrupts without involving a jump to hyperspace.
@@ -149,15 +184,11 @@ bmk_cpu_init(void)
 	struct region_descriptor region;
 	int i;
 
-	region.rd_limit = sizeof(idt)-1;
-	region.rd_base = (uintptr_t)(void *)idt;
-	bmk_cpu_lidt(&region);
-
 	for (i = 0; i < 32; i++) {
-		fillgate(&idt[i], bmk_cpu_insr);
+		fillgate(&idt[i], bmk_cpu_insr, 0);
 	}
 
-#define FILLGATE(n) fillgate(&idt[n], bmk_cpu_trap_##n)
+#define FILLGATE(n) fillgate(&idt[n], bmk_cpu_trap_##n, 0)
 	FILLGATE(0);
 	FILLGATE(2);
 	FILLGATE(3);
@@ -173,6 +204,12 @@ bmk_cpu_init(void)
 	FILLGATE(14);
 	FILLGATE(17);
 #undef FILLGATE
+	fillgate(&idt[2], bmk_cpu_trap_2, 2);
+	fillgate(&idt[8], bmk_cpu_trap_8, 3);
+
+	region.rd_limit = sizeof(idt)-1;
+	region.rd_base = (uintptr_t)(void *)idt;
+	bmk_cpu_lidt(&region);
 
 	initpic();
 
@@ -181,7 +218,26 @@ bmk_cpu_init(void)
 	 * note, it's still disabled in the PIC, we only enable it
 	 * during nanohlt
 	 */
-	fillgate(&idt[32], bmk_cpu_isr_clock);
+	fillgate(&idt[32], bmk_cpu_isr_clock, 0);
+
+	/*
+	 * fill TSS
+	 */
+	mytss.tss_ist[0] = (unsigned long)intrstack + sizeof(intrstack)-16;
+	mytss.tss_ist[1] = (unsigned long)nmistack + sizeof(nmistack)-16;
+	mytss.tss_ist[2] = (unsigned long)dfstack + sizeof(dfstack)-16;
+
+	struct taskgate_descriptor *td = (void *)&bmk_cpu_gdt64[4];
+	td->td_lolimit = 0;
+	td->td_lobase = 0;
+	td->td_type = 0x9;
+	td->td_dpl = 0;
+	td->td_p = 1;
+	td->td_hilimit = 0xf;
+	td->td_gran = 0;
+	td->td_hibase = 0xffffffffffUL;
+	td->td_zero = 0;
+	bmk_cpu_ltr(4*8);
 
 	/* initialize the timer to 100Hz */
 	outb(TIMER_MODE, TIMER_RATEGEN | TIMER_16BIT);
@@ -206,7 +262,7 @@ bmk_cpu_intr_init(int intr)
 	if (intr < 8)
 		return BMK_EGENERIC;
 
-#define FILLGATE(n) case n: fillgate(&idt[32+n], bmk_cpu_isr_##n); break;
+#define FILLGATE(n) case n: fillgate(&idt[32+n], bmk_cpu_isr_##n, 0); break;
 	switch (intr) {
 		FILLGATE(9);
 		FILLGATE(10);

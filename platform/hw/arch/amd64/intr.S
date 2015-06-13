@@ -31,6 +31,11 @@ ENTRY(bmk_cpu_lidt)
 	ret
 END(bmk_cpu_lidt)
 
+ENTRY(bmk_cpu_ltr)
+	ltr %di
+	ret
+END(bmk_cpu_ltr)
+
 /*
  * Default trap handlers, which just print info on what type of trap
  * it was.  Generally speaking, we don't except trouble here.
@@ -69,6 +74,7 @@ ENTRY(bmk_cpu_trap_14)
 	mov %cr2, %rdi
 	mov 8(%rsp), %rsi
 	call bmk_cpu_pagefault
+	hlt
 END(bmk_cpu_trap_14)
 
 /*
@@ -87,8 +93,10 @@ END(bmk_cpu_insr)
 ENTRY(bmk_cpu_isr_clock)
 	cli
 	call bmk_isr_clock
+	pushq %rax
 	movb $0x20, %al
 	outb %al, $0x20
+	popq %rax
 	sti
 	iretq
 END(bmk_cpu_isr_clock)

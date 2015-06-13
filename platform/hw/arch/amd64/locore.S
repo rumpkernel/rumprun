@@ -30,6 +30,7 @@
     (MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO | MULTIBOOT_AOUT_KLUDGE)
 
 .section .bootstrap, "ax"
+
 .code32
 
 .align 4
@@ -65,6 +66,21 @@ ENTRY(_start)
 	/* store multiboot structure address, process contents later in C */
 	movl %ebx, bmk_cpu_multiboot_info
 
+	lgdt (gdt64_ptr)
+	pushl $0x0
+	pushw $0x10
+	pushl $1f
+	lret
+
+1:	movl $0x18, %eax
+	movl %eax, %ds
+	movl %eax, %es
+	movl %eax, %ss
+
+	xorl %eax, %eax
+	movl %eax, %fs
+	movl %eax, %gs
+
 	/*
 	 * x86_64 switch to long mode
 	 */
@@ -86,12 +102,13 @@ ENTRY(_start)
 
 	/* 4: enable paging */
 	movl %cr0, %eax
-	orl $0x80010000, %eax
+	orl $0x80010001, %eax
 	movl %eax, %cr0
 
 	/* 5: poetically longjump to longmode */
-	lgdt (gdt64_ptr)
-	ljmp $0x8, $_start64
+	pushw $0x08
+	pushl $_start64
+	lret
 
 	/* NOTREACHED */
 	jmp haltme
@@ -109,17 +126,6 @@ END(_start)
 
 #include "pagetable.S"
 
-.code64
-ENTRY(_start64)
-	movq $bootstack, %rsp
-
-	pushq $0x0
-	pushq $0x0
-
-	call bmk_cpu_boot
-	hlt
-END(_start64)
-
 /*
  * amd64 programmer's manual:
  *
@@ -128,13 +134,33 @@ END(_start64)
  * Uuuyea, exceptions.
  */
 
+.data
 .align 64
-gdt64_start:
-        .quad 0x0000000000000000        /* empty */
-        .quad 0x00af9a000000ffff        /* CS */
-        .quad 0x00cf92000000ffff        /* DS */
+.globl bmk_cpu_gdt64
+bmk_cpu_gdt64:
+	.quad 0x0000000000000000
+	.quad 0x00af9b000000ffff	/* 64bit CS		*/
+	.quad 0x00cf9b000000ffff	/* 32bit CS		*/
+	.quad 0x00cf93000000ffff	/* DS			*/
+	.quad 0x0000000000000000	/* TSS part 1 (via C)	*/
+	.quad 0x0000000000000000	/* TSS part 2 (via C)	*/
 gdt64_end:
+.align 64
 
+.type gdt64_ptr, @object
 gdt64_ptr:
-	.word gdt64_end-gdt64_start-1
-	.quad gdt64_start
+	.word gdt64_end-bmk_cpu_gdt64-1
+	.quad bmk_cpu_gdt64
+
+.code64
+
+ENTRY(_start64)
+	movq $bootstack, %rsp
+	xorq %rbp, %rbp
+
+	pushq $0x0
+	pushq $0x0
+
+	call bmk_cpu_boot
+	hlt
+END(_start64)
