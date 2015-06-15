@@ -1,6 +1,8 @@
 OBJS_BMK+=	arch/amd64/locore.o arch/amd64/intr.o
 OBJS_BMK+=	arch/amd64/machdep.o arch/amd64/boot.o
-OBJS_BMK+=	arch/i386/vgacons.o
+
+OBJS_BMK+=	arch/x86/vgacons.o
+OBJS_BMK+=	arch/x86/x86_subr.o
 
 LDSCRIPT=	arch/amd64/kern.ldscript
 
