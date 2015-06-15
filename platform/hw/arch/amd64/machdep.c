@@ -148,10 +148,10 @@ bmk_cpu_init(void)
 	int i;
 
 	for (i = 0; i < 32; i++) {
-		bmk_cpu_fillgate(i, bmk_cpu_insr, 0);
+		bmk_x86_fillgate(i, bmk_cpu_insr, 0);
 	}
 
-#define FILLGATE(n) bmk_cpu_fillgate(n, bmk_cpu_trap_##n, 0)
+#define FILLGATE(n) bmk_x86_fillgate(n, bmk_cpu_trap_##n, 0)
 	FILLGATE(0);
 	FILLGATE(2);
 	FILLGATE(3);
@@ -167,21 +167,21 @@ bmk_cpu_init(void)
 	FILLGATE(14);
 	FILLGATE(17);
 #undef FILLGATE
-	bmk_cpu_fillgate(2, bmk_cpu_trap_2, 2);
-	bmk_cpu_fillgate(8, bmk_cpu_trap_8, 3);
+	bmk_x86_fillgate(2, bmk_cpu_trap_2, 2);
+	bmk_x86_fillgate(8, bmk_cpu_trap_8, 3);
 
 	region.rd_limit = sizeof(idt)-1;
 	region.rd_base = (uintptr_t)(void *)idt;
 	bmk_cpu_lidt(&region);
 
-	bmk_cpu_initpic();
+	bmk_x86_initpic();
 
 	/*
 	 * map clock interrupt.
 	 * note, it's still disabled in the PIC, we only enable it
 	 * during nanohlt
 	 */
-	bmk_cpu_fillgate(32, bmk_cpu_isr_clock, 0);
+	bmk_x86_fillgate(32, bmk_cpu_isr_clock, 0);
 
 	/*
 	 * fill TSS
