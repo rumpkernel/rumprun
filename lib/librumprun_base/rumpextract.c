@@ -33,7 +33,9 @@
 
 #include <rumprun-base/extract.h>
 
-#include "libuntar.c"
+#define LIBUNTAR_STATIC
+#include "libuntar.h"
+#include "untar.c"
 
 extern const char _binary_rootfs_tar_start[] __attribute__((weak));
 extern const char _binary_rootfs_tar_end[] __attribute__((weak));

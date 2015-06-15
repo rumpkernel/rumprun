@@ -3,24 +3,137 @@
 **  Copyright 1998-2003 Mark D. Roth
 **  All rights reserved.
 **
-**  block.c - libtar code to handle tar archive header blocks
-**
 **  Mark D. Roth <roth@uiuc.edu>
 **  Campus Information Technologies and Educational Services
 **  University of Illinois at Urbana-Champaign
 */
 
-#include "libuntar.h"
+#include <sys/param.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
+#include <fcntl.h>
+#include <utime.h>
+#include <libgen.h>
+#include <unistd.h>
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-
-#ifdef DEBUG
 #include <stdio.h>
+#include <pwd.h>
+#include <grp.h>
+
+#include "libuntar.h"
+
+#ifdef LIBUNTAR_STATIC
+#define EXPORT static
+#else
+#define EXPORT
 #endif
 
-static int th_read_internal(TAR *t);
+/* headers */
+
+static int th_crc_calc(TAR *t);
+static int th_signed_crc_calc(TAR *t);
+/* compare checksums in a forgiving way */
+#define th_crc_ok(t) (th_get_crc(t) == th_crc_calc(t) || th_get_crc(t) == th_signed_crc_calc(t))
+
+static int oct_to_int(char *oct);
+
+/* macros for reading/writing tarchive blocks */
+#define tar_block_read(t, buf) \
+        (*((t)->type->readfunc))((t)->fd, (char *)(buf), T_BLOCKSIZE)
+
+/* read a header block */
+static int th_read(TAR *t);
+
+/* determine file type */
+#define TH_ISREG(t)     ((t)->th_buf.typeflag == REGTYPE \
+                         || (t)->th_buf.typeflag == AREGTYPE \
+                         || (t)->th_buf.typeflag == CONTTYPE \
+                         || (S_ISREG((mode_t)oct_to_int((t)->th_buf.mode)) \
+                             && (t)->th_buf.typeflag != LNKTYPE))
+#define TH_ISLNK(t)     ((t)->th_buf.typeflag == LNKTYPE)
+#define TH_ISSYM(t)     ((t)->th_buf.typeflag == SYMTYPE \
+                         || S_ISLNK((mode_t)oct_to_int((t)->th_buf.mode)))
+#define TH_ISCHR(t)     ((t)->th_buf.typeflag == CHRTYPE \
+                         || S_ISCHR((mode_t)oct_to_int((t)->th_buf.mode)))
+#define TH_ISBLK(t)     ((t)->th_buf.typeflag == BLKTYPE \
+                         || S_ISBLK((mode_t)oct_to_int((t)->th_buf.mode)))
+#define TH_ISDIR(t)     ((t)->th_buf.typeflag == DIRTYPE \
+                         || S_ISDIR((mode_t)oct_to_int((t)->th_buf.mode)) \
+                         || ((t)->th_buf.typeflag == AREGTYPE \
+                             && strlen((t)->th_buf.name) \
+                             && ((t)->th_buf.name[strlen((t)->th_buf.name) - 1] == '/')))
+#define TH_ISFIFO(t)    ((t)->th_buf.typeflag == FIFOTYPE \
+                         || S_ISFIFO((mode_t)oct_to_int((t)->th_buf.mode)))
+#define TH_ISLONGNAME(t)        ((t)->th_buf.typeflag == GNU_LONGNAME_TYPE)
+#define TH_ISLONGLINK(t)        ((t)->th_buf.typeflag == GNU_LONGLINK_TYPE)
+
+/* decode tar header info */
+#define th_get_crc(t) oct_to_int((t)->th_buf.chksum)
+/* We cast from int (what oct_to_int() returns) to
+   unsigned int, to avoid unwieldy sign extensions
+   from occurring on systems where size_t is bigger than int,
+   since th_get_size() is often stored into a size_t. */
+#define th_get_size(t) ((unsigned int)oct_to_int((t)->th_buf.size))
+#define th_get_mtime(t) oct_to_int((t)->th_buf.mtime)
+#define th_get_devmajor(t) oct_to_int((t)->th_buf.devmajor)
+#define th_get_devminor(t) oct_to_int((t)->th_buf.devminor)
+#define th_get_linkname(t) ((t)->th_buf.gnu_longlink \
+                            ? (t)->th_buf.gnu_longlink \
+                            : (t)->th_buf.linkname)
+static char *th_get_pathname(TAR *t);
+static mode_t th_get_mode(TAR *t);
+static uid_t th_get_uid(TAR *t);
+static gid_t th_get_gid(TAR *t);
+
+/*
+**  util.c - miscellaneous utility code for libtar
+*/
+
+/* calculate header checksum */
+static int
+th_crc_calc(TAR *t)
+{
+	int i, sum = 0;
+
+	for (i = 0; i < T_BLOCKSIZE; i++)
+		sum += ((unsigned char *)(&(t->th_buf)))[i];
+	for (i = 0; i < 8; i++)
+		sum += (' ' - (unsigned char)t->th_buf.chksum[i]);
+
+	return sum;
+}
+
+
+/* calculate a signed header checksum */
+static int
+th_signed_crc_calc(TAR *t)
+{
+	int i, sum = 0;
+
+	for (i = 0; i < T_BLOCKSIZE; i++)
+		sum += ((signed char *)(&(t->th_buf)))[i];
+	for (i = 0; i < 8; i++)
+		sum += (' ' - (signed char)t->th_buf.chksum[i]);
+
+	return sum;
+}
+
+
+/* string-octal to integer conversion */
+static int
+oct_to_int(char *oct)
+{
+	int i;
+
+	return sscanf(oct, "%o", &i) == 1 ? i : 0;
+}
+
+/*
+**  block.c - libtar code to handle tar archive header blocks
+*/
 
 #define BIT_ISSET(bitmask, bit) ((bitmask) & (bit))
 
@@ -227,7 +340,7 @@ th_read(TAR *t)
 		}
 	}
 
-#if 0 /* compiler complains these are defined but not used, we don't need em */
+#if 0
 	/*
 	** work-around for old archive files with broken typeflag fields
 	** NOTE: I fixed this in the TH_IS*() macros instead
@@ -276,15 +389,6 @@ th_read(TAR *t)
 **  Campus Information Technologies and Educational Services
 **  University of Illinois at Urbana-Champaign
 */
-
-#include "libuntar.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/param.h>
-#include <pwd.h>
-#include <grp.h>
-#include <string.h>
 
 /* determine full path name */
 static char *
@@ -352,7 +456,6 @@ th_get_gid(TAR *t)
 	return gid;
 }
 
-
 static mode_t
 th_get_mode(TAR *t)
 {
@@ -397,31 +500,8 @@ th_get_mode(TAR *t)
 
 
 /*
-**  Copyright 1998-2003 University of Illinois Board of Trustees
-**  Copyright 1998-2003 Mark D. Roth
-**  All rights reserved.
-**
 **  extract.c - libtar code to extract a file from a tar archive
-**
-**  Mark D. Roth <roth@uiuc.edu>
-**  Campus Information Technologies and Educational Services
-**  University of Illinois at Urbana-Champaign
 */
-
-#include "libuntar.h"
-
-#include <stdio.h>
-#include <string.h>
-#include <sys/param.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <utime.h>
-#include <sys/stat.h>
-#include <libgen.h>
-
-#include <stdlib.h>
-#include <unistd.h>
 
 static int tar_extract_file(TAR *t, char *realname);
 
@@ -433,7 +513,7 @@ static int tar_extract_blockdev(TAR *t, char *filename);
 static int tar_extract_fifo(TAR *t, char *filename);
 static int tar_extract_regfile(TAR *t, char *filename);
 
-static int
+EXPORT int
 tar_extract_all(TAR *t, char *prefix)
 {
 	char *filename;
@@ -853,32 +933,12 @@ tar_extract_fifo(TAR *t, char *filename)
 
 	return 0;
 }
+
 /*
-**  Copyright 1998-2003 University of Illinois Board of Trustees
-**  Copyright 1998-2003 Mark D. Roth
-**  All rights reserved.
-**
 **  handle.c - libtar code for initializing a TAR handle
-**
-**  Mark D. Roth <roth@uiuc.edu>
-**  Campus Information Technologies and Educational Services
-**  University of Illinois at Urbana-Champaign
 */
 
-#include "libuntar.h"
-
-#include <stdio.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#include <unistd.h>
-
-#include <stdlib.h>
-
 static tartype_t default_type = { open, close, read };
-
 
 static int
 tar_init(TAR **t, tartype_t *type,
@@ -903,9 +963,8 @@ tar_init(TAR **t, tartype_t *type,
 	return 0;
 }
 
-
 /* open a new tarfile handle */
-static int
+EXPORT int
 tar_open(TAR **t, const char *pathname, tartype_t *type,
 	 int oflags, int mode, int options)
 {
@@ -925,8 +984,9 @@ tar_open(TAR **t, const char *pathname, tartype_t *type,
 	return 0;
 }
 
-#if 0
-static int
+
+#if 0 /* UNUSED */
+EXPORT int
 tar_fdopen(TAR **t, int fd, const char *pathname, tartype_t *type,
 	   int oflags, int mode, int options)
 {
@@ -937,17 +997,16 @@ tar_fdopen(TAR **t, int fd, const char *pathname, tartype_t *type,
 	return 0;
 }
 
-
-static int
+EXPORT int
 tar_fd(TAR *t)
 {
+
 	return t->fd;
 }
 #endif
 
-
 /* close tarfile handle */
-static int
+EXPORT int
 tar_close(TAR *t)
 {
 	int i;
@@ -960,62 +1019,5 @@ tar_close(TAR *t)
 
 	return i;
 }
-/*
-**  Copyright 1998-2003 University of Illinois Board of Trustees
-**  Copyright 1998-2003 Mark D. Roth
-**  All rights reserved.
-**
-**  util.c - miscellaneous utility code for libtar
-**
-**  Mark D. Roth <roth@uiuc.edu>
-**  Campus Information Technologies and Educational Services
-**  University of Illinois at Urbana-Champaign
-*/
 
-#include "libuntar.h"
-
-#include <stdio.h>
-#include <sys/param.h>
-#include <errno.h>
-#include <string.h>
-
-
-/* calculate header checksum */
-static int
-th_crc_calc(TAR *t)
-{
-	int i, sum = 0;
-
-	for (i = 0; i < T_BLOCKSIZE; i++)
-		sum += ((unsigned char *)(&(t->th_buf)))[i];
-	for (i = 0; i < 8; i++)
-		sum += (' ' - (unsigned char)t->th_buf.chksum[i]);
-
-	return sum;
-}
-
-
-/* calculate a signed header checksum */
-static int
-th_signed_crc_calc(TAR *t)
-{
-	int i, sum = 0;
-
-	for (i = 0; i < T_BLOCKSIZE; i++)
-		sum += ((signed char *)(&(t->th_buf)))[i];
-	for (i = 0; i < 8; i++)
-		sum += (' ' - (signed char)t->th_buf.chksum[i]);
-
-	return sum;
-}
-
-
-/* string-octal to integer conversion */
-static int
-oct_to_int(char *oct)
-{
-	int i;
-
-	return sscanf(oct, "%o", &i) == 1 ? i : 0;
-}
-
+#undef EXPORT
