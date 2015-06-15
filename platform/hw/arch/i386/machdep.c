@@ -66,7 +66,7 @@ void bmk_cpu_isr_14(void);
 void bmk_cpu_isr_15(void);
 
 static void
-fillgate(struct gate_descriptor *gd, void *fun)
+fillgate(struct gate_descriptor *gd, void *fun, int unused)
 {
 
 	gd->gd_hioffset = (unsigned long)fun >> 16; 
@@ -202,7 +202,7 @@ bmk_cpu_init(void)
 	 * so let's not.  (p.s. don't ship this code)
 	 */
 	for (i = 0; i < 32; i++) {
-		fillgate(&idt[i], bmk_cpu_insr);
+		fillgate(&idt[i], bmk_cpu_insr, 0);
 	}
 
 	initpic();
@@ -212,7 +212,7 @@ bmk_cpu_init(void)
 	 * note, it's still disabled in the PIC, we only enable it
 	 * during nanohlt
 	 */
-	fillgate(&idt[32], bmk_cpu_isr_clock);
+	fillgate(&idt[32], bmk_cpu_isr_clock, 0);
 
 	/* initialize the timer to 100Hz */
 	outb(TIMER_MODE, TIMER_RATEGEN | TIMER_16BIT);
@@ -228,7 +228,7 @@ bmk_cpu_intr_init(int intr)
 	if (intr < 8)
 		return BMK_EGENERIC;
 
-#define FILLGATE(n) case n: fillgate(&idt[32+n], bmk_cpu_isr_##n); break;
+#define FILLGATE(n) case n: fillgate(&idt[32+n], bmk_cpu_isr_##n, 0); break;
 	switch (intr) {
 		FILLGATE(9);
 		FILLGATE(10);
