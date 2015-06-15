@@ -172,10 +172,7 @@ bmk_cpu_init(void)
 	 */
 	bmk_x86_fillgate(32, bmk_cpu_isr_clock, 0);
 
-	/* initialize the timer to 100Hz */
-	outb(TIMER_MODE, TIMER_RATEGEN | TIMER_16BIT);
-	outb(TIMER_CNTR, (TIMER_HZ/HZ) & 0xff);
-	outb(TIMER_CNTR, (TIMER_HZ/HZ) >> 8);
+	bmk_x86_inittimer();
 }
 
 void

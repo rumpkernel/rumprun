@@ -6,5 +6,6 @@
 
 #ifndef _LOCORE
 void	bmk_x86_initpic(void);
+void	bmk_x86_inittimer(void);
 void	bmk_x86_fillgate(int, void *, int);
 #endif

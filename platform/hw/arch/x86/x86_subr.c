@@ -45,3 +45,13 @@ bmk_x86_initpic(void)
 	outb(PIC2_DATA, ICW4_8086);
 	outb(PIC2_DATA, 0xff);	/* all masked */
 }
+
+void
+bmk_x86_inittimer(void)
+{
+
+	/* initialize the timer to 100Hz */
+	outb(TIMER_MODE, TIMER_RATEGEN | TIMER_16BIT);
+	outb(TIMER_CNTR, (TIMER_HZ/HZ) & 0xff);
+	outb(TIMER_CNTR, (TIMER_HZ/HZ) >> 8);
+}

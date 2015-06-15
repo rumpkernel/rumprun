@@ -202,10 +202,7 @@ bmk_cpu_init(void)
 	td->td_zero = 0;
 	bmk_cpu_ltr(4*8);
 
-	/* initialize the timer to 100Hz */
-	outb(TIMER_MODE, TIMER_RATEGEN | TIMER_16BIT);
-	outb(TIMER_CNTR, (TIMER_HZ/HZ) & 0xff);
-	outb(TIMER_CNTR, (TIMER_HZ/HZ) >> 8);
+	bmk_x86_inittimer();
 }
 
 void bmk_cpu_pagefault(void *, void *);
