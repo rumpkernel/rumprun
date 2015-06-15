@@ -12,7 +12,8 @@
 #include <bmk-core/platform.h>
 
 struct region_descriptor;
-void bmk_cpu_lidt(struct region_descriptor *);
+void bmk_amd64_lidt(struct region_descriptor *);
+void bmk_amd64_ltr(unsigned long);
 
 #include <arch/x86/reg.h>
 #include <arch/x86/inline.h>

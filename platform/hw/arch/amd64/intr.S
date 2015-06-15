@@ -26,16 +26,6 @@
 #include <bmk/multiboot.h>
 #include <bmk/kernel.h>
 
-ENTRY(bmk_cpu_lidt)
-	lidt (%rdi)
-	ret
-END(bmk_cpu_lidt)
-
-ENTRY(bmk_cpu_ltr)
-	ltr %di
-	ret
-END(bmk_cpu_ltr)
-
 /*
  * Default trap handlers, which just print info on what type of trap
  * it was.  Generally speaking, we don't except trouble here.

@@ -164,3 +164,13 @@ ENTRY(_start64)
 	call bmk_cpu_boot
 	hlt
 END(_start64)
+
+ENTRY(bmk_amd64_lidt)
+	lidt (%rdi)
+	ret
+END(bmk_amd64_lidt)
+
+ENTRY(bmk_amd64_ltr)
+	ltr %di
+	ret
+END(bmk_amd64_ltr)

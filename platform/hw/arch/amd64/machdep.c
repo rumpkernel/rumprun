@@ -135,8 +135,6 @@ static char intrstack[4096];
 static char nmistack[4096];
 static char dfstack[4096];
 
-void bmk_cpu_ltr(unsigned long id);
-
 /*
  * This routine fills out the interrupt descriptors so that
  * we can handle interrupts without involving a jump to hyperspace.
@@ -172,7 +170,7 @@ bmk_cpu_init(void)
 
 	region.rd_limit = sizeof(idt)-1;
 	region.rd_base = (uintptr_t)(void *)idt;
-	bmk_cpu_lidt(&region);
+	bmk_amd64_lidt(&region);
 
 	bmk_x86_initpic();
 
@@ -200,7 +198,7 @@ bmk_cpu_init(void)
 	td->td_gran = 0;
 	td->td_hibase = 0xffffffffffUL;
 	td->td_zero = 0;
-	bmk_cpu_ltr(4*8);
+	bmk_amd64_ltr(4*8);
 
 	bmk_x86_inittimer();
 }
