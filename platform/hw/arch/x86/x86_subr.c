@@ -55,3 +55,35 @@ bmk_x86_inittimer(void)
 	outb(TIMER_CNTR, (TIMER_HZ/HZ) & 0xff);
 	outb(TIMER_CNTR, (TIMER_HZ/HZ) >> 8);
 }
+
+/* interrupt-not-service-routine */
+void bmk_cpu_insr(void);
+
+void
+bmk_x86_initidt(void)
+{
+	int i;
+
+	for (i = 0; i < 32; i++) {
+		bmk_x86_fillgate(i, bmk_cpu_insr, 0);
+	}
+
+#define FILLGATE(n) bmk_x86_fillgate(n, bmk_x86_trap_##n, 0)
+	FILLGATE(0);
+	FILLGATE(2);
+	FILLGATE(3);
+	FILLGATE(4);
+	FILLGATE(5);
+	FILLGATE(6);
+	FILLGATE(7);
+	FILLGATE(8);
+	FILLGATE(10);
+	FILLGATE(11);
+	FILLGATE(12);
+	FILLGATE(13);
+	FILLGATE(14);
+	FILLGATE(17);
+#undef FILLGATE
+	bmk_x86_fillgate(2, bmk_x86_trap_2, 2);
+	bmk_x86_fillgate(8, bmk_x86_trap_8, 3);
+}

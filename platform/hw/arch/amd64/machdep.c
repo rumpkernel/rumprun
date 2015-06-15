@@ -82,25 +82,6 @@ struct tss {
 
 static struct gate_descriptor idt[256];
 
-/* interrupt-not-service-routine */
-void bmk_cpu_insr(void);
-
-/* trap "handlers" */
-void bmk_cpu_trap_0(void);
-void bmk_cpu_trap_2(void);
-void bmk_cpu_trap_3(void);
-void bmk_cpu_trap_4(void);
-void bmk_cpu_trap_5(void);
-void bmk_cpu_trap_6(void);
-void bmk_cpu_trap_7(void);
-void bmk_cpu_trap_8(void);
-void bmk_cpu_trap_10(void);
-void bmk_cpu_trap_11(void);
-void bmk_cpu_trap_12(void);
-void bmk_cpu_trap_13(void);
-void bmk_cpu_trap_14(void);
-void bmk_cpu_trap_17(void);
-
 /* actual interrupt service routines */
 void bmk_cpu_isr_clock(void);
 void bmk_cpu_isr_9(void);
@@ -143,42 +124,15 @@ void
 bmk_cpu_init(void)
 {
 	struct region_descriptor region;
-	int i;
 
-	for (i = 0; i < 32; i++) {
-		bmk_x86_fillgate(i, bmk_cpu_insr, 0);
-	}
-
-#define FILLGATE(n) bmk_x86_fillgate(n, bmk_cpu_trap_##n, 0)
-	FILLGATE(0);
-	FILLGATE(2);
-	FILLGATE(3);
-	FILLGATE(4);
-	FILLGATE(5);
-	FILLGATE(6);
-	FILLGATE(7);
-	FILLGATE(8);
-	FILLGATE(10);
-	FILLGATE(11);
-	FILLGATE(12);
-	FILLGATE(13);
-	FILLGATE(14);
-	FILLGATE(17);
-#undef FILLGATE
-	bmk_x86_fillgate(2, bmk_cpu_trap_2, 2);
-	bmk_x86_fillgate(8, bmk_cpu_trap_8, 3);
-
+	bmk_x86_initidt();
 	region.rd_limit = sizeof(idt)-1;
 	region.rd_base = (uintptr_t)(void *)idt;
 	bmk_amd64_lidt(&region);
 
 	bmk_x86_initpic();
 
-	/*
-	 * map clock interrupt.
-	 * note, it's still disabled in the PIC, we only enable it
-	 * during nanohlt
-	 */
+	/* fill clock interrupt */
 	bmk_x86_fillgate(32, bmk_cpu_isr_clock, 0);
 
 	/*

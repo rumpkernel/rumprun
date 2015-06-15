@@ -141,7 +141,6 @@ void
 bmk_cpu_init(void)
 {
 	struct region_descriptor region;
-	int i;
 
 	fillsegment(&gdt[SEGMENT_CODE], SDT_MEMERA);
 	fillsegment(&gdt[SEGMENT_DATA], SDT_MEMRWA);
@@ -151,17 +150,10 @@ bmk_cpu_init(void)
 	region.rd_base = (unsigned int)(uintptr_t)(void *)gdt;
 	bmk_cpu_lgdt(&region);
 
+	bmk_x86_initidt();
 	region.rd_limit = sizeof(idt)-1;
 	region.rd_base = (unsigned int)(uintptr_t)(void *)idt;
 	bmk_cpu_lidt(&region);
-
-	/*
-	 * Apparently things work fine if we don't handle anything,
-	 * so let's not.  (p.s. don't ship this code)
-	 */
-	for (i = 0; i < 32; i++) {
-		bmk_x86_fillgate(i, bmk_cpu_insr, 0);
-	}
 
 	bmk_x86_initpic();
 

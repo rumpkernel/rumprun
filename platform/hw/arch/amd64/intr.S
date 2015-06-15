@@ -35,7 +35,7 @@ itsatrap:
 #define SYSTRAP(num, reason) \
 trapstr##num: ;\
 	.asciz reason ;\
-ENTRY(bmk_cpu_trap_##num) \
+ENTRY(bmk_x86_trap_##num) \
 	movq $itsatrap, %rdi ;\
 	call bmk_cons_puts ;\
 	movq $trapstr##num, %rdi ;\
@@ -43,7 +43,7 @@ ENTRY(bmk_cpu_trap_##num) \
 	movq $'\n', %rdi ;\
 	call bmk_cons_putc ;\
 	iretq ;\
-END(bmk_cpu_trap_##num)
+END(bmk_x86_trap_##num)
 
 SYSTRAP(0, "#DE")
 SYSTRAP(2, "#NMI")
@@ -60,12 +60,12 @@ SYSTRAP(13, "#GP")
 SYSTRAP(17, "#AC")
 
 /* page fault */
-ENTRY(bmk_cpu_trap_14)
+ENTRY(bmk_x86_trap_14)
 	mov %cr2, %rdi
 	mov 8(%rsp), %rsi
 	call bmk_cpu_pagefault
 	hlt
-END(bmk_cpu_trap_14)
+END(bmk_x86_trap_14)
 
 /*
  * we just ignore most interrupts and traps with this

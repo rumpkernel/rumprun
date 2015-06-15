@@ -99,6 +99,41 @@ ENTRY(bmk_cpu_lidt)
 END(bmk_cpu_lidt)
 
 /*
+ * Default trap handlers, which just print info on what type of trap
+ * it was.  Generally speaking, we don't except trouble here.
+ */
+itsatrap:
+	.asciz "trap: "
+#define SYSTRAP(num, reason)						 \
+trapstr##num:								;\
+	.asciz reason							;\
+ENTRY(bmk_x86_trap_##num)						 \
+	pushl $itsatrap							;\
+	call bmk_cons_puts						;\
+	pushl $trapstr##num						;\
+	call bmk_cons_puts						;\
+	pushl $'\n'							;\
+	call bmk_cons_putc						;\
+	addl $12, %esp							;\
+	iret								;\
+END(bmk_x86_trap_##num)
+
+SYSTRAP(0, "#DE")
+SYSTRAP(2, "#NMI")
+SYSTRAP(3, "#BP")
+SYSTRAP(4, "#OF")
+SYSTRAP(5, "#BR")
+SYSTRAP(6, "#UD")
+SYSTRAP(7, "#NM")
+SYSTRAP(8, "#DF")
+SYSTRAP(10, "#TS")
+SYSTRAP(11, "#NP")
+SYSTRAP(12, "#SS")
+SYSTRAP(13, "#GP")
+SYSTRAP(14, "#PF")
+SYSTRAP(17, "#AC")
+
+/*
  * we just ignore most interrupts and traps with this
  * convenient inservice routine
  */
