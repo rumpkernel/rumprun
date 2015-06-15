@@ -61,7 +61,7 @@ void bmk_cpu_insr(void);
 void bmk_cpu_isr_clock(void);
 
 void
-bmk_cpu_fillgate(int num, void *fun, int unused)
+bmk_x86_fillgate(int num, void *fun, int unused)
 {
 	struct gate_descriptor *gd = &idt[num];
 
@@ -160,17 +160,17 @@ bmk_cpu_init(void)
 	 * so let's not.  (p.s. don't ship this code)
 	 */
 	for (i = 0; i < 32; i++) {
-		bmk_cpu_fillgate(i, bmk_cpu_insr, 0);
+		bmk_x86_fillgate(i, bmk_cpu_insr, 0);
 	}
 
-	bmk_cpu_initpic();
+	bmk_x86_initpic();
 
 	/*
 	 * map clock interrupt.
 	 * note, it's still disabled in the PIC, we only enable it
 	 * during nanohlt
 	 */
-	bmk_cpu_fillgate(32, bmk_cpu_isr_clock, 0);
+	bmk_x86_fillgate(32, bmk_cpu_isr_clock, 0);
 
 	/* initialize the timer to 100Hz */
 	outb(TIMER_MODE, TIMER_RATEGEN | TIMER_16BIT);

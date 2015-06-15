@@ -125,7 +125,7 @@ END(bmk_cpu_isr_clock)
  * note: interrupt is acked on the PIC as part of bmk_isr
  */
 #define INTRSTUB(intnum)						\
-ENTRY(bmk_cpu_isr_##intnum)						\
+ENTRY(bmk_x86_isr_##intnum)						\
 	cli								;\
 	pushl %eax							;\
 	pushl %ebx							;\
@@ -140,7 +140,7 @@ ENTRY(bmk_cpu_isr_##intnum)						\
 	popl %eax							;\
 	sti								;\
 	iret								;\
-END(bmk_cpu_isr_##intnum)
+END(bmk_x86_isr_##intnum)
 
 INTRSTUB(9)
 INTRSTUB(10)

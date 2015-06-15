@@ -112,7 +112,7 @@ void bmk_cpu_isr_15(void);
 extern unsigned long bmk_cpu_gdt64[];
 
 void
-bmk_cpu_fillgate(int num, void *fun, int ist)
+bmk_x86_fillgate(int num, void *fun, int ist)
 {
 	struct gate_descriptor *gd = &idt[num];
 

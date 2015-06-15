@@ -25,23 +25,77 @@
 
 #include <bmk/kernel.h>
 
+void bmk_x86_isr_9(void);
+void bmk_x86_isr_10(void);
+void bmk_x86_isr_11(void);
+void bmk_x86_isr_14(void);
+void bmk_x86_isr_15(void);
+
+int pic2mask = 0xff;
+
+int
+bmk_cpu_intr_init(int intr)
+{
+
+	/* XXX: too lazy to keep PIC1 state */
+	if (intr < 8)
+		return BMK_EGENERIC;
+
+#define FILLGATE(n) case n: bmk_x86_fillgate(32+n, bmk_x86_isr_##n, 0); break
+	switch (intr) {
+		FILLGATE(9);
+		FILLGATE(10);
+		FILLGATE(11);
+		FILLGATE(14);
+		FILLGATE(15);
+	default:
+		return BMK_EGENERIC;
+	}
+#undef FILLGATE
+
+	/* unmask interrupt in PIC */
+	pic2mask &= ~(1<<(intr-8));
+	outb(PIC2_DATA, pic2mask);
+
+	return 0;
+}
+
 void
-bmk_x86_initpic(void)
+bmk_cpu_intr_ack(void)
 {
 
 	/*
-	 * init pic1: cycle is write to cmd followed by 3 writes to data
+	 * ACK interrupts on PIC
 	 */
-	outb(PIC1_CMD, ICW1_INIT | ICW1_IC4);
-	outb(PIC1_DATA, 32);	/* interrupts start from 32 in IDT */
-	outb(PIC1_DATA, 1<<2);	/* slave is at IRQ2 */
-	outb(PIC1_DATA, ICW4_8086);
-	outb(PIC1_DATA, 0xff & ~(1<<2));	/* unmask slave IRQ */
+	__asm__ __volatile(
+	    "movb $0x20, %%al\n"
+	    "outb %%al, $0xa0\n"
+	    "outb %%al, $0x20\n"
+	    ::: "al");
+}
 
-	/* do the slave PIC */
-	outb(PIC2_CMD, ICW1_INIT | ICW1_IC4);
-	outb(PIC2_DATA, 32+8);	/* interrupts start from 40 in IDT */
-	outb(PIC2_DATA, 2);	/* interrupt at irq 2 */
-	outb(PIC2_DATA, ICW4_8086);
-	outb(PIC2_DATA, 0xff);	/* all masked */
+bmk_time_t
+bmk_cpu_clock_now(void)
+{
+	uint64_t val;
+	unsigned long eax, edx;
+
+	/* um um um */
+	__asm__ __volatile__("rdtsc" : "=a"(eax), "=d"(edx));
+	val = ((uint64_t)edx<<32)|(eax);
+
+	/* just approximate that 1 cycle = 1ns.  "good enuf" for now */
+	return val;
+}
+
+void
+bmk_cpu_nanohlt(void)
+{
+
+	/*
+	 * Enable clock interrupt and wait for the next whichever interrupt
+	 */
+	outb(PIC1_DATA, 0xff & ~(1<<2|1<<0));
+	hlt();
+	outb(PIC1_DATA, 0xff & ~(1<<2));
 }
