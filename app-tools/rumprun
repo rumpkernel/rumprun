@@ -331,7 +331,7 @@ parse_newnetspec ()
 json_store_xen_blkspec ()
 {
 
-	vdev=hd$(echo ${bindex} | tr '[0-9]' '[a-j]')
+	vdev=xvd$(echo ${bindex} | tr '[0-9]' '[a-j]')
 	conf_disk="${conf_disk}'file:$image,$vdev,w',"
 
 	json_open_block blk
