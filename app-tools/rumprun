@@ -336,9 +336,8 @@ json_store_xen_blkspec ()
 
 	json_open_block blk
 
-	# XXX: should not assume ld (virtio)
 	json_append_ln	'"source":	"'etfs'"'
-	json_append_ln	'"path":	"'blk${bindex}'"'
+	json_append_ln	'"path":	"'${vdev}'"'
 
 	# if the image does not need to be mounted, we're done
 	[ -n "${mountpoint}" ] || { json_finalize_block ; return ; }

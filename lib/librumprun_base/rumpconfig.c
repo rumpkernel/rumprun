@@ -290,11 +290,13 @@ static char *
 configetfs(const char *path)
 {
 	char buf[32];
+	char epath[32];
 	char *p;
 	int rv;
 
+	snprintf(epath, sizeof(epath), "XENBLK_%s", path);
 	snprintf(buf, sizeof(buf), "/dev/%s", path);
-	rv = rump_pub_etfs_register(buf, path, RUMP_ETFS_BLK);
+	rv = rump_pub_etfs_register(buf, epath, RUMP_ETFS_BLK);
 	if (rv != 0)
 		errx(1, "etfs register for \"%s\" failed: %d", path, rv);
 
