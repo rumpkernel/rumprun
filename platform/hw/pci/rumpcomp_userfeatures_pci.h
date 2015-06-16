@@ -1,1 +1,2 @@
-#define rumpcomp_pci_free rumpcomp_pci_free
+#define RUMPCOMP_USERFEATURE_PCI_IOSPACE
+#define RUMPCOMP_USERFEATURE_PCI_DMAFREE

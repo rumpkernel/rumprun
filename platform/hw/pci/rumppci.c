@@ -33,6 +33,13 @@
 #define PCI_CONF_ADDR 0xcf8
 #define PCI_CONF_DATA 0xcfc
 
+int
+rumpcomp_pci_iospace_init(void)
+{
+
+	return 0;
+}
+
 static uint32_t
 makeaddr(unsigned bus, unsigned dev, unsigned fun, int reg)
 {
@@ -137,7 +144,7 @@ rumpcomp_pci_dmamem_map(struct rumpcomp_pci_dmaseg *dss, size_t nseg,
 }
 
 void
-rumpcomp_pci_free(unsigned long mem, size_t size)
+rumpcomp_pci_dmafree(unsigned long mem, size_t size)
 {
 	int i;
 

@@ -7,6 +7,4 @@ PCI_HYPERCALLS=		rumphyper_pci.c
 PCI_HYPERCALLS_PATH:=	${PCIDIR}
 PCI_CPPFLAGS:=		-I${PCIDIR}/../xen/include
 
-RUMP_PCI_IOSPACE=	yes
-
 .include "${PCIDIR}/../../../lib/Makefile.pcicommon"
