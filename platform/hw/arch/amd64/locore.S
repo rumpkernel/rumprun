@@ -40,7 +40,7 @@ bootstrap:
 .long -(MULTIBOOT_HEADER_MAGIC+MYMULTIBOOT_FLAGS)
 .long bootstrap
 .long 0x100000
-.long _edata
+.long _tdata_end
 .long _ebss
 .long _start
 
