@@ -55,7 +55,6 @@ SECTIONS
 		*(.data)
 		*(.data.*)
 	}
-	_edata = . ;
 
 	. = ALIGN(0x1000);
 
@@ -66,6 +65,7 @@ SECTIONS
 		*(.tdata)
 		_tdata_end = . ;
 	}
+	_edata = . ;
 
 	. = ALIGN(0x1000);
 
