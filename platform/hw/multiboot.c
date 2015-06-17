@@ -38,9 +38,8 @@ static int
 parsemem(uint32_t addr, uint32_t len)
 {
 	struct multiboot_mmap_entry *mbm;
-	unsigned long memsize;
-	unsigned long ossize, osbegin, osend;
-	extern char _end[], _begin[];
+	unsigned long osend;
+	extern char _end[];
 	uint32_t off;
 
 	/*
@@ -57,17 +56,11 @@ parsemem(uint32_t addr, uint32_t len)
 	if (!(off < len))
 		bmk_platform_halt("multiboot memory chunk not found");
 
-	memsize = mbm->len;
-	osbegin = trunc_page((unsigned long)_begin);
 	osend = round_page((unsigned long)_end);
-	ossize = osend - osbegin;
+	bmk_assert(osend > mbm->addr && osend < mbm->addr + mbm->len);
 
-	bmk_membase = mbm->addr + ossize;
-	bmk_memsize = memsize - ossize;
-
-	bmk_pgalloc_loadmem(bmk_membase, bmk_membase + bmk_memsize);
-
-	bmk_assert((bmk_membase & (PAGE_SIZE-1)) == 0);
+	bmk_pgalloc_loadmem(osend, mbm->addr + mbm->len);
+	bmk_memsize = mbm->addr + mbm->len - osend;
 
 	return 0;
 }
