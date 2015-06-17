@@ -54,6 +54,7 @@ SECTIONS
   __bss_start = .;		/* BSS */
   .bss : {
 	*(.bss)
+	*(.bss.*)
 	}
   _end = . ;
 
