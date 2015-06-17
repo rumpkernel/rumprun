@@ -374,13 +374,15 @@ handle_blk(jsmntok_t *t, int left, char *data)
 		if (mkdir(mp, 0777) == -1)
 			errx(1, "creating mountpoint \"%s\" failed", mp);
 
-		if (strcmp(fstype, "ffs") == 0) {
+		if (strcmp(fstype, "ffs") == 0
+		    || strcmp(fstype, "ext2fs") == 0) {
 			struct ufs_args mntargs =
 			    { .fspec = __UNCONST(path) };
 
-			if (mount(MOUNT_FFS, mp, 0,
+			if (mount(fstype, mp, 0,
 			    &mntargs, sizeof(mntargs)) == -1) {
-				errx(1, "rumprun_config: mount_ffs failed");
+				errx(1, "rumprun_config: mount_%s failed",
+				    fstype);
 			}
 		} else if(strcmp(fstype, "cd9660") == 0) {
 			struct iso_args mntargs = { .fspec = path };
