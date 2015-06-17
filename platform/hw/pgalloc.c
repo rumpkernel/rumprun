@@ -34,6 +34,7 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#include <bmk-core/core.h>
 #include <bmk-core/pgalloc.h>
 #include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
@@ -195,6 +196,8 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	chunk_head_t *ch;
 	chunk_tail_t *ct;
 	int i;
+
+	bmk_assert(max > min);
 
 	for (i = 0; i < FREELIST_SIZE; i++) {
 		free_head[i]       = &free_tail[i];
