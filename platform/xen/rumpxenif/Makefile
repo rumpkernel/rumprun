@@ -13,7 +13,7 @@ CPPFLAGS+=	-I${RUMPTOP}/librump/rumpkern -I${RUMPTOP}/librump/rumpnet
 CPPFLAGS+=	-I${.CURDIR}
 CPPFLAGS+=	${IFBASE}
 
-RUMPCOMP_USER_SRCS=	 rumphyper_net.c
+RUMPCOMP_USER_SRCS=	 xenif_user.c
 RUMPCOMP_USER_CPPFLAGS+= -I${.CURDIR}/..
 RUMPCOMP_USER_CPPFLAGS+= -I${.CURDIR}/../xen/include
 RUMPCOMP_USER_CPPFLAGS+= -I${.CURDIR}/../../../include
