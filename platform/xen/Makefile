@@ -25,7 +25,6 @@ OBJCOPY=objcopy
 
 CPPFLAGS = -isystem rump/include -isystem xen/include -I. -I../../include
 CPPFLAGS+= -nostdinc
-CPPFLAGS += -DVIRTIF_BASE=xenif
 CPPFLAGS+= -no-integrated-cpp -nostdinc
 
 CFLAGS += -fno-builtin ${BUILDRUMP_TOOL_CFLAGS}
@@ -42,7 +41,6 @@ endif
 LDFLAGS=	-L$(abspath rump/lib)
 
 rump-src-y += rumphyper_bio.c
-rump-src-y += rumphyper_net.c
 
 rump-src-y += callmain.c
 
