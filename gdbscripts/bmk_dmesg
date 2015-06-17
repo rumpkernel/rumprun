@@ -1,0 +1,5 @@
+set pagination off
+target remote:1234
+printf "%s", bmk_dmesg
+detach
+quit
