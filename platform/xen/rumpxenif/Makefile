@@ -3,7 +3,7 @@
 LIB=	rumpnet_xenif
 
 SRCS=	if_virt.c
-SRCS+=	component.c
+SRCS+=	xenif_component.c
 
 RUMPTOP= ${TOPRUMP}
 
