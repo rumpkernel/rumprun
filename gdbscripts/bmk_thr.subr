@@ -1,0 +1,27 @@
+define bmk_thr_pr
+	set $thr = (struct bmk_thread *)$arg0
+	printf "n: %-10s\tsp: 0x%016x\tf: 0x%08x\tw: %ld\n", $thr->bt_name, \
+	    $thr->bt_tcb.btcb_sp, $thr->bt_flags, $thr->bt_wakeup_time
+end
+
+define bmk_thr_apply_name
+	set $thr = threadq->tqh_first
+	while ($thr)
+		if (strncmp($thr->bt_name, $arg0, strlen($arg0)) == 0)
+			$arg1 $thr
+		end
+		set $thr = $thr->bt_threadq.tqe_next
+	end
+end
+
+define bmk_thr_apply
+	set $thr = threadq->tqh_first
+	while ($thr)
+		$arg0 $thr
+		set $thr = $thr->bt_threadq.tqe_next
+	end
+end
+	
+define bmk_thr_pr_all
+	bmk_thr_apply bmk_thr_pr
+end
