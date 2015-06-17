@@ -67,6 +67,7 @@ SECTIONS
 	AT (LOADADDR(.text) + (ADDR(.bss) - ADDR(.text)))
 	{
 		*(.bss)
+		*(.bss.*)
 		*(COMMON)
 		*(.bootstack)
 	}
