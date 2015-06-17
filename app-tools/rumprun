@@ -421,7 +421,7 @@ run_xen ()
 	unset gdbsx
 	for x in gdbsx /usr/lib/xen-4.4/bin/gdbsx ; do
 		if type ${x}> /dev/null 2>&1; then
-			gdbsx="$x"
+			gdbsx=$(which ${x})
 			break
 		fi
 	done
@@ -552,7 +552,7 @@ EOM
 		else
 			bits=32
 		fi
-		${DUMPCMD} ${gdbsx} -a ${domid} ${bits} ${opt_debug} &
+		${DUMPCMD} ${sudo} ${gdbsx} -a ${domid} ${bits} ${opt_debug} &
 	fi
 	# Go go go!
 	[ -z "$opt_pause" ] && ${DUMPCMD} ${sudo} xl unpause ${domid}
