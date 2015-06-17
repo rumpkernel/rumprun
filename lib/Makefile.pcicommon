@@ -20,8 +20,6 @@ RUMPCOMP_CPPFLAGS.rumpdev_pci=		-I${PCI_HYPERCALLS_PATH}
 .export RUMPCOMP_USER_CPPFLAGS.rumpdev_pci
 .export RUMPCOMP_CPPFLAGS.rumpdev_pci
 
-.export RUMP_PCI_IOSPACE
-
 .include "${RUMPTOP}/dev/Makefile.rumpdevcomp"
 
 .for pcidev in ${RUMPPCIDEVS}
