@@ -51,7 +51,6 @@ close:
     minios_mask_evtchn(dev->evtchn);
     minios_unbind_evtchn(dev->evtchn);
     bmk_memfree(dev->backend, BMK_MEMWHO_WIREDBMK);
-    bmk_memfree(dev->nodename, BMK_MEMWHO_WIREDBMK);
 
     gnttab_end_access(dev->ring_ref);
 

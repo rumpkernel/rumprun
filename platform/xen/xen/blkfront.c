@@ -67,7 +67,6 @@ static void free_blkfront(struct blkfront_dev *dev)
 
     minios_unbind_evtchn(dev->evtchn);
 
-    bmk_memfree(dev->nodename, BMK_MEMWHO_WIREDBMK);
     bmk_memfree(dev, BMK_MEMWHO_WIREDBMK);
 }
 

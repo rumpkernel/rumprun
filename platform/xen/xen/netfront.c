@@ -235,7 +235,6 @@ static void free_netfront(struct netfront_dev *dev)
 	if (dev->tx_buffers[i].page)
 	    minios_free_page(dev->tx_buffers[i].page);
 
-    bmk_memfree(dev->nodename, BMK_MEMWHO_WIREDBMK);
     bmk_memfree(dev, BMK_MEMWHO_WIREDBMK);
 }
 

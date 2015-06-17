@@ -51,7 +51,6 @@ static void free_pcifront(struct pcifront_dev *dev)
     minios_unbind_evtchn(dev->evtchn);
 
     bmk_memfree(dev->backend, BMK_MEMWHO_WIREDBMK);
-    bmk_memfree(dev->nodename, BMK_MEMWHO_WIREDBMK);
     bmk_memfree(dev, BMK_MEMWHO_WIREDBMK);
 }
 
