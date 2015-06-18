@@ -40,6 +40,7 @@
 
 #include <assert.h>
 #include <err.h>
+#include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -308,7 +309,8 @@ configetfs(const char *path)
 static int
 handle_blk(jsmntok_t *t, int left, char *data)
 {
-	const char *source, *path, *fstype, *mp;
+	const char *source, *path, *fstype;
+	char *mp;
 	jsmntok_t *key, *value;
 	int i, objsize;
 
@@ -324,7 +326,7 @@ handle_blk(jsmntok_t *t, int left, char *data)
 	fstype = source = path = mp = NULL;
 
 	for (i = 0; i < objsize; i++, t+=2) {
-		const char *valuestr;
+		char *valuestr;
 		key = t;
 		value = t+1;
 
@@ -366,13 +368,33 @@ handle_blk(jsmntok_t *t, int left, char *data)
 
 	/* we only need to do something only if a mountpoint is specified */
 	if (mp) {
+		char *chunk;
+
 		if (!fstype) {
 			err(1, "no fstype for mountpoint \"%s\"\n", mp);
 		}
 
-		/* XXX: handles only one component */
-		if (mkdir(mp, 0777) == -1)
-			errx(1, "creating mountpoint \"%s\" failed", mp);
+		for (chunk = mp;;) {
+			bool end;
+
+			/* find & terminate the next chunk */
+			chunk += strspn(chunk, "/");
+			chunk += strcspn(chunk, "/");
+			end = (*chunk == '\0');
+			*chunk = '\0';
+
+			if (mkdir(mp, 0755) == -1) {
+				if (errno != EEXIST)
+					err(1, "failed to create mp dir \"%s\"",
+					    chunk);
+			}
+
+			/* restore path */
+			if (!end)
+				*chunk = '/';
+			else
+				break;
+		}
 
 		if (strcmp(fstype, "ffs") == 0
 		    || strcmp(fstype, "ext2fs") == 0) {
