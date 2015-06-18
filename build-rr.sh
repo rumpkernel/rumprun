@@ -192,9 +192,9 @@ buildpci ()
 	${MAKE} -C ${PLATFORMDIR} links
 
 	if eval ${PLATFORM_PCI_P}; then
-		${RUMPMAKE} -f ${PLATFORMDIR}/pci/Makefile.pci obj
-		${RUMPMAKE} -f ${PLATFORMDIR}/pci/Makefile.pci dependall
-		${RUMPMAKE} -f ${PLATFORMDIR}/pci/Makefile.pci install
+		${RUMPMAKE} -f ${PLATFORMDIR}/pci/Makefile.pci ${STDJ} obj
+		${RUMPMAKE} -f ${PLATFORMDIR}/pci/Makefile.pci ${STDJ} dependall
+		${RUMPMAKE} -f ${PLATFORMDIR}/pci/Makefile.pci ${STDJ} install
 	fi
 }
 
