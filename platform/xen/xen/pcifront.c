@@ -12,6 +12,7 @@
 
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/pgalloc.h>
 #include <bmk-core/printf.h>
 #include <bmk-core/string.h>
 
@@ -46,7 +47,7 @@ static void free_pcifront(struct pcifront_dev *dev)
     minios_mask_evtchn(dev->evtchn);
 
     gnttab_end_access(dev->info_ref);
-    minios_free_page(dev->info);
+    bmk_pgfree_one(dev->info);
 
     minios_unbind_evtchn(dev->evtchn);
 
@@ -167,7 +168,7 @@ struct pcifront_dev *init_pcifront(char *_nodename)
 
     minios_evtchn_alloc_unbound(dev->dom, pcifront_handler, dev, &dev->evtchn);
 
-    dev->info = (struct xen_pci_sharedinfo*) minios_alloc_page();
+    dev->info = (struct xen_pci_sharedinfo*) bmk_pgalloc_one();
     bmk_memset(dev->info,0,PAGE_SIZE);
 
     dev->info_ref = gnttab_grant_access(dev->dom,virt_to_mfn(dev->info),0);

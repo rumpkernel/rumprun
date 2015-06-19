@@ -43,10 +43,6 @@
 
 
 void init_mm(void);
-unsigned long minios_alloc_pages(int order);
-#define minios_alloc_page()    minios_alloc_pages(0)
-void minios_free_pages(void *pointer, int order);
-#define minios_free_page(p)    minios_free_pages(p, 0)
 
 static __inline__ int get_order(unsigned long size)
 {

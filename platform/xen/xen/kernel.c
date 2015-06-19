@@ -44,6 +44,7 @@
 #include <xen/version.h>
 
 #include <bmk-core/core.h>
+#include <bmk-core/pgalloc.h>
 #include <bmk-core/printf.h>
 
 uint8_t _minios_xen_features[XENFEAT_NR_SUBMAPS * 32];
@@ -90,14 +91,14 @@ void *
 bmk_platform_allocpg2(int shift)
 {
 
-	return (void *)minios_alloc_pages(shift);
+	return (void *)bmk_pgalloc(shift);
 }
 
 void
 bmk_platform_freepg2(void *p, int shift)
 {
 
-	minios_free_pages(p, shift);
+	bmk_pgfree(p, shift);
 }
 
 void

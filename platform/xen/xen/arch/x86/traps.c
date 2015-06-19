@@ -6,6 +6,7 @@
 
 #include <mini-os/machine/traps.h>
 
+#include <bmk-core/pgalloc.h>
 #include <bmk-core/string.h>
 
 /*
@@ -146,7 +147,7 @@ static int handle_cow(unsigned long addr) {
 	if (PHYS_PFN(page) != _minios_mfn_zero)
 	    return 0;
 
-	new_page = minios_alloc_pages(0);
+	new_page = bmk_pgalloc_one();
 	bmk_memset((void*) new_page, 0, PAGE_SIZE);
 
 	rc = HYPERVISOR_update_va_mapping(addr & PAGE_MASK, __pte(virt_to_mach(new_page) | L1_PROT), UVMF_INVLPG);

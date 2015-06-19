@@ -16,6 +16,7 @@
 #include <mini-os/semaphore.h>
 
 #include <bmk-core/memalloc.h>
+#include <bmk-core/pgalloc.h>
 #include <bmk-core/printf.h>
 #include <bmk-core/string.h>
 
@@ -221,19 +222,19 @@ static void free_netfront(struct netfront_dev *dev)
     gnttab_end_access(dev->rx_ring_ref);
     gnttab_end_access(dev->tx_ring_ref);
 
-    minios_free_page(dev->rx.sring);
-    minios_free_page(dev->tx.sring);
+    bmk_pgfree_one(dev->rx.sring);
+    bmk_pgfree_one(dev->tx.sring);
 
     minios_unbind_evtchn(dev->evtchn);
 
     for(i=0;i<NET_RX_RING_SIZE;i++) {
 	gnttab_end_access(dev->rx_buffers[i].gref);
-	minios_free_page(dev->rx_buffers[i].page);
+	bmk_pgfree_one(dev->rx_buffers[i].page);
     }
 
     for(i=0;i<NET_TX_RING_SIZE;i++)
 	if (dev->tx_buffers[i].page)
-	    minios_free_page(dev->tx_buffers[i].page);
+	    bmk_pgfree_one(dev->tx_buffers[i].page);
 
     bmk_memfree(dev, BMK_MEMWHO_WIREDBMK);
 }
@@ -274,15 +275,15 @@ struct netfront_dev *netfront_init(char *_nodename, void (*thenetif_rx)(struct n
     for(i=0;i<NET_RX_RING_SIZE;i++)
     {
 	/* TODO: that's a lot of memory */
-        dev->rx_buffers[i].page = (char*)minios_alloc_page();
+        dev->rx_buffers[i].page = (char*)bmk_pgalloc_one();
     }
 
     bmk_snprintf(path, sizeof(path), "%s/backend-id", dev->nodename);
     dev->dom = xenbus_read_integer(path);
         minios_evtchn_alloc_unbound(dev->dom, netfront_handler, dev, &dev->evtchn);
 
-    txs = (struct netif_tx_sring *) minios_alloc_page();
-    rxs = (struct netif_rx_sring *) minios_alloc_page();
+    txs = (struct netif_tx_sring *) bmk_pgalloc_one();
+    rxs = (struct netif_rx_sring *) bmk_pgalloc_one();
     bmk_memset(txs,0,PAGE_SIZE);
     bmk_memset(rxs,0,PAGE_SIZE);
 
@@ -541,7 +542,7 @@ void netfront_xmit(struct netfront_dev *dev, unsigned char* data,int len)
     buf = &dev->tx_buffers[id];
     page = buf->page;
     if (!page)
-	page = buf->page = (char*) minios_alloc_page();
+	page = buf->page = (char*) bmk_pgalloc_one();
 
     i = dev->tx.req_prod_pvt;
     tx = RING_GET_REQUEST(&dev->tx, i);

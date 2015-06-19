@@ -14,6 +14,7 @@
 
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/pgalloc.h>
 #include <bmk-core/printf.h>
 #include <bmk-core/string.h>
 
@@ -63,7 +64,7 @@ static void free_blkfront(struct blkfront_dev *dev)
     bmk_memfree(dev->backend, BMK_MEMWHO_WIREDBMK);
 
     gnttab_end_access(dev->ring_ref);
-    minios_free_page(dev->ring.sring);
+    bmk_pgfree_one(dev->ring.sring);
 
     minios_unbind_evtchn(dev->evtchn);
 
@@ -93,7 +94,7 @@ struct blkfront_dev *blkfront_init(char *_nodename, struct blkfront_info *info)
     dev->dom = xenbus_read_integer(path); 
     minios_evtchn_alloc_unbound(dev->dom, blkfront_handler, dev, &dev->evtchn);
 
-    s = (struct blkif_sring*) minios_alloc_page();
+    s = (struct blkif_sring*) bmk_pgalloc_one();
     bmk_memset(s,0,PAGE_SIZE);
 
 

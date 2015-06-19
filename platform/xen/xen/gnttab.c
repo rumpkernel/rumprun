@@ -20,6 +20,7 @@
 #include <mini-os/gnttab.h>
 #include <mini-os/semaphore.h>
 
+#include <bmk-core/pgalloc.h>
 #include <bmk-core/string.h>
 
 #define NR_RESERVED_ENTRIES 8
@@ -153,7 +154,7 @@ gnttab_alloc_and_grant(void **map)
     unsigned long mfn;
     grant_ref_t gref;
 
-    *map = (void *)minios_alloc_page();
+    *map = (void *)bmk_pgalloc_one();
     mfn = virt_to_mfn(*map);
     gref = gnttab_grant_access(0, mfn, 0);
     return gref;
