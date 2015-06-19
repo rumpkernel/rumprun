@@ -392,6 +392,19 @@ json_store_iso_blkspec ()
 	json_finalize_block
 }
 
+json_store_kernfs ()
+{
+
+	json_open_block blk
+
+	json_append_ln	'"source":	"dev"' # XXX: not really dev
+	json_append_ln	'"path":	"virtual"'
+	json_append_ln	'"fstype":	"kernfs"'
+	json_append_ln	'"mountpoint":	"/kern"'
+
+	json_finalize_block
+}
+
 parse_blkspec ()
 {
 	spec=$1
@@ -504,6 +517,9 @@ run_xen ()
 	shift $((OPTIND-1))
 	[ "$1" = "--" ] && shift
 	[ $# -lt 1 ] && usage
+
+	# kernfs is always present on Xen
+	json_store_kernfs
 
 	json_append_ln "\"cmdline\": \""$@"\""
 	json_finalize_block
