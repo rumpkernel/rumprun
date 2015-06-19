@@ -325,6 +325,14 @@ mount_cd9660(const char *fstype, const char *dev, const char *mp)
 		errx(1, "rumprun_config: mount_cd9660 failed");
 }
 
+static void
+mount_kernfs(const char *fstype, const char *dev, const char *mp)
+{
+
+	if (mount(MOUNT_KERNFS, mp, 0, NULL, 0) == -1)
+		errx(1, "rumprun_config: mount_%s failed", fstype);
+}
+
 struct {
 	const char *mt_fstype;
 	void (*mt_mount)(const char *, const char *, const char *);
@@ -332,6 +340,7 @@ struct {
 	{ "ffs",	mount_ufs, },
 	{ "ext2fs",	mount_ufs, },
 	{ "cd9660",	mount_cd9660 },
+	{ "kernfs",	mount_kernfs },
 };
 
 static int
