@@ -121,7 +121,7 @@ void page_walk(unsigned long virt_address)
 
 static int handle_cow(unsigned long addr) {
         pgentry_t *tab = (pgentry_t *)start_info.pt_base, page;
-	unsigned long new_page;
+	void *new_page;
 	int rc;
 
 #if defined(__x86_64__)
@@ -148,7 +148,7 @@ static int handle_cow(unsigned long addr) {
 	    return 0;
 
 	new_page = bmk_pgalloc_one();
-	bmk_memset((void*) new_page, 0, PAGE_SIZE);
+	bmk_memset(new_page, 0, PAGE_SIZE);
 
 	rc = HYPERVISOR_update_va_mapping(addr & PAGE_MASK, __pte(virt_to_mach(new_page) | L1_PROT), UVMF_INVLPG);
 	if (!rc)

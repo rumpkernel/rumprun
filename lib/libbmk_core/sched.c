@@ -237,7 +237,7 @@ static void
 stackalloc(void **stack, unsigned long *ss)
 {
 
-	*stack = (void *)bmk_pgalloc(bmk_stackpageorder);
+	*stack = bmk_pgalloc(bmk_stackpageorder);
 	*ss = bmk_stacksize;
 }
 

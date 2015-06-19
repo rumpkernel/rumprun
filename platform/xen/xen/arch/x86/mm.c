@@ -735,7 +735,7 @@ unsigned long minios_alloc_contig_pages(int order, unsigned int addr_bits)
     }
 
     /* Allocate some potentially discontiguous pages */
-    in_va = bmk_pgalloc(order);
+    in_va = (unsigned long)bmk_pgalloc(order);
     if ( !in_va )
     {
         minios_printk("alloc_contig_pages: could not get enough pages (order=0x%x\n",
@@ -878,12 +878,12 @@ void arch_init_p2m(unsigned long max_pfn)
     unsigned long *l1_list = NULL, *l2_list = NULL, *l3_list;
     unsigned long pfn;
     
-    l3_list = (unsigned long *)bmk_pgalloc_one(); 
+    l3_list = bmk_pgalloc_one(); 
     for ( pfn=0; pfn<max_pfn; pfn++ )
     {
         if ( !(pfn % (L1_P2M_ENTRIES * L2_P2M_ENTRIES)) )
         {
-            l2_list = (unsigned long*)bmk_pgalloc_one();
+            l2_list = bmk_pgalloc_one();
             if ( (pfn >> L3_P2M_SHIFT) > 0 )
             {
                 minios_printk("Error: Too many pfns.\n");
@@ -893,7 +893,7 @@ void arch_init_p2m(unsigned long max_pfn)
         }
         if ( !(pfn % (L1_P2M_ENTRIES)) )
         {
-            l1_list = (unsigned long*)bmk_pgalloc_one();
+            l1_list = bmk_pgalloc_one();
             l2_list[(pfn >> L1_P2M_SHIFT) & L2_P2M_MASK] = 
                 virt_to_mfn(l1_list); 
         }

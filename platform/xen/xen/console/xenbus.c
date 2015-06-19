@@ -89,7 +89,7 @@ struct consfront_dev *init_consfront(char *_nodename)
         dev->dom = res;
     minios_evtchn_alloc_unbound(dev->dom, console_handle_input, dev, &dev->evtchn);
 
-    dev->ring = (struct xencons_interface *) bmk_pgalloc_one();
+    dev->ring = bmk_pgalloc_one();
     bmk_memset(dev->ring, 0, PAGE_SIZE);
     dev->ring_ref = gnttab_grant_access(dev->dom, virt_to_mfn(dev->ring), 0);
 

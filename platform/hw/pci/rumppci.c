@@ -115,7 +115,7 @@ int
 rumpcomp_pci_dmalloc(size_t size, size_t align,
 	unsigned long *pap, unsigned long *vap)
 {
-	unsigned long mem;
+	void *mem;
 	int i;
 
         for (i = 0; size >> (i + PAGE_SHIFT); i++)
@@ -125,8 +125,8 @@ rumpcomp_pci_dmalloc(size_t size, size_t align,
 	if (!mem)
 		return BMK_ENOMEM;
 
-	*pap = mem;
-	*vap = mem;
+	*pap = (unsigned long)mem;
+	*vap = (unsigned long)mem;
 
 	return 0;
 }

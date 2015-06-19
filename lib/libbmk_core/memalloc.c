@@ -329,7 +329,7 @@ corealloc(int shift)
 #ifdef MEMALLOC_TESTING
 	v = malloc((1<<shift) * pagesz);
 #else
-	v = (void *)bmk_pgalloc(shift);
+	v = bmk_pgalloc(shift);
 #endif
 
 	return v;

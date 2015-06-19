@@ -275,15 +275,15 @@ struct netfront_dev *netfront_init(char *_nodename, void (*thenetif_rx)(struct n
     for(i=0;i<NET_RX_RING_SIZE;i++)
     {
 	/* TODO: that's a lot of memory */
-        dev->rx_buffers[i].page = (char*)bmk_pgalloc_one();
+        dev->rx_buffers[i].page = bmk_pgalloc_one();
     }
 
     bmk_snprintf(path, sizeof(path), "%s/backend-id", dev->nodename);
     dev->dom = xenbus_read_integer(path);
         minios_evtchn_alloc_unbound(dev->dom, netfront_handler, dev, &dev->evtchn);
 
-    txs = (struct netif_tx_sring *) bmk_pgalloc_one();
-    rxs = (struct netif_rx_sring *) bmk_pgalloc_one();
+    txs = bmk_pgalloc_one();
+    rxs = bmk_pgalloc_one();
     bmk_memset(txs,0,PAGE_SIZE);
     bmk_memset(rxs,0,PAGE_SIZE);
 
@@ -542,7 +542,7 @@ void netfront_xmit(struct netfront_dev *dev, unsigned char* data,int len)
     buf = &dev->tx_buffers[id];
     page = buf->page;
     if (!page)
-	page = buf->page = (char*) bmk_pgalloc_one();
+	page = buf->page = bmk_pgalloc_one();
 
     i = dev->tx.req_prod_pvt;
     tx = RING_GET_REQUEST(&dev->tx, i);

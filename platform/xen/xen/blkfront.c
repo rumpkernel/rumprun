@@ -94,7 +94,7 @@ struct blkfront_dev *blkfront_init(char *_nodename, struct blkfront_info *info)
     dev->dom = xenbus_read_integer(path); 
     minios_evtchn_alloc_unbound(dev->dom, blkfront_handler, dev, &dev->evtchn);
 
-    s = (struct blkif_sring*) bmk_pgalloc_one();
+    s = bmk_pgalloc_one();
     bmk_memset(s,0,PAGE_SIZE);
 
 

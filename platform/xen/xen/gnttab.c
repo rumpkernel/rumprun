@@ -154,7 +154,7 @@ gnttab_alloc_and_grant(void **map)
     unsigned long mfn;
     grant_ref_t gref;
 
-    *map = (void *)bmk_pgalloc_one();
+    *map = bmk_pgalloc_one();
     mfn = virt_to_mfn(*map);
     gref = gnttab_grant_access(0, mfn, 0);
     return gref;

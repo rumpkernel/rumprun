@@ -168,7 +168,7 @@ struct pcifront_dev *init_pcifront(char *_nodename)
 
     minios_evtchn_alloc_unbound(dev->dom, pcifront_handler, dev, &dev->evtchn);
 
-    dev->info = (struct xen_pci_sharedinfo*) bmk_pgalloc_one();
+    dev->info = bmk_pgalloc_one();
     bmk_memset(dev->info,0,PAGE_SIZE);
 
     dev->info_ref = gnttab_grant_access(dev->dom,virt_to_mfn(dev->info),0);

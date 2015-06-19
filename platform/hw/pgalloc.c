@@ -248,7 +248,7 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 }
 
 /* Allocate 2^@order contiguous pages. Returns a VIRTUAL address. */
-unsigned long
+void *
 bmk_pgalloc(int order)
 {
 	int i;
@@ -291,7 +291,7 @@ bmk_pgalloc(int order)
 	}
 
 	map_alloc(PHYS_PFN(to_phys(alloc_ch)), 1UL<<order);
-	return (unsigned long)alloc_ch;
+	return alloc_ch;
 }
 
 void
