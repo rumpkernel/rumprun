@@ -306,6 +306,34 @@ configetfs(const char *path)
 	return p;
 }
 
+static void
+mount_ufs(const char *fstype, const char *dev, const char *mp)
+{
+	struct ufs_args mntargs = { .fspec = __UNCONST(dev) };
+
+	if (mount(fstype, mp, 0, &mntargs, sizeof(mntargs)) == -1)
+		errx(1, "rumprun_config: mount_%s failed", fstype);
+}
+
+static void
+mount_cd9660(const char *fstype, const char *dev, const char *mp)
+{
+	struct iso_args mntargs = { .fspec = dev };
+
+	if (mount(MOUNT_CD9660,
+	    mp, MNT_RDONLY, &mntargs, sizeof(mntargs)) == -1)
+		errx(1, "rumprun_config: mount_cd9660 failed");
+}
+
+struct {
+	const char *mt_fstype;
+	void (*mt_mount)(const char *, const char *, const char *);
+} mounters[] = {
+	{ "ffs",	mount_ufs, },
+	{ "ext2fs",	mount_ufs, },
+	{ "cd9660",	mount_cd9660 },
+};
+
 static int
 handle_blk(jsmntok_t *t, int left, char *data)
 {
@@ -369,6 +397,7 @@ handle_blk(jsmntok_t *t, int left, char *data)
 	/* we only need to do something only if a mountpoint is specified */
 	if (mp) {
 		char *chunk;
+		unsigned mi;
 
 		if (!fstype) {
 			err(1, "no fstype for mountpoint \"%s\"\n", mp);
@@ -396,26 +425,14 @@ handle_blk(jsmntok_t *t, int left, char *data)
 				break;
 		}
 
-		if (strcmp(fstype, "ffs") == 0
-		    || strcmp(fstype, "ext2fs") == 0) {
-			struct ufs_args mntargs =
-			    { .fspec = __UNCONST(path) };
-
-			if (mount(fstype, mp, 0,
-			    &mntargs, sizeof(mntargs)) == -1) {
-				errx(1, "rumprun_config: mount_%s failed",
-				    fstype);
+		for (mi = 0; mi < __arraycount(mounters); mi++) {
+			if (strcmp(fstype, mounters[mi].mt_fstype) == 0) {
+				mounters[mi].mt_mount(fstype, path, mp);
+				break;
 			}
-		} else if(strcmp(fstype, "cd9660") == 0) {
-			struct iso_args mntargs = { .fspec = path };
-
-			if (mount(MOUNT_CD9660, mp, MNT_RDONLY,
-			    &mntargs, sizeof(mntargs)) == -1) {
-				errx(1, "rumprun_config: mount_cd9660 failed");
-			}
-		} else {
-			errx(1, "unknown fstype \"%s\"", fstype);
 		}
+		if (mi == __arraycount(mounters))
+			errx(1, "unknown fstype \"%s\"", fstype);
 	}
 
 	return 2*objsize + 1;
