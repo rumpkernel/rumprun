@@ -192,10 +192,15 @@ print_chunks(void *start, int nr_pages)
 void
 bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 {
+	static int called;
 	unsigned long range, bitmap_size;
 	chunk_head_t *ch;
 	chunk_tail_t *ct;
 	int i;
+
+	if (called)
+		bmk_platform_halt("bmk_pgalloc_loadmem called more than once");
+	called = 1;
 
 	bmk_assert(max > min);
 
