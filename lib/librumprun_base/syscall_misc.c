@@ -123,6 +123,30 @@ mlockall(int flags)
 }
 
 int
+munlockall(void)
+{
+
+	/* no vm => no need to unlock */
+	return 0;
+}
+
+int
+mlock(const void *addr, size_t len)
+{
+
+	/* no vm => everything is automatically locked */
+	return 0;
+}
+
+int
+munlock(const void *addr, size_t len)
+{
+
+	/* no vm => no need to unlock */
+	return 0;
+}
+
+int
 munmap(void *addr, size_t len)
 {
 
