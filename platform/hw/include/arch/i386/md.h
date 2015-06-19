@@ -3,6 +3,8 @@
 
 #include <bmk/kernel.h>
 
+#include <bmk-core/i386/asm.h>
+
 #define BMK_THREAD_STACK_PAGE_ORDER 1
 #define BMK_THREAD_STACKSIZE ((1<<BMK_THREAD_STACK_PAGE_ORDER) * PAGE_SIZE)
 
