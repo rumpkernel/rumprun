@@ -145,6 +145,8 @@ buildrump ()
 	MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
 	[ -z "${MACHINE}" ] && die could not figure out target machine
 
+	makeconfigmk ${PLATFORMDIR}/config.mk
+
 	cat >> ${RUMPTOOLS}/mk.conf << EOF
 .if defined(LIB) && \${LIB} == "pthread"
 .PATH:  $(pwd)/lib/librumprun_base/pthread
@@ -198,6 +200,19 @@ buildpci ()
 	fi
 }
 
+wraponetool ()
+{
+
+	configfile=$1
+	tool=$2
+
+	tpath=$(${RUMPMAKE} -f bsd.own.mk -V "\${${tool}}")
+	if ! [ -n "${tpath}" -a -x ${tpath} ]; then
+		die Could not locate buildrump.sh tool \"${tool}\".
+	fi
+	echo "${tool}=${tpath}" >> ${configfile}
+}
+
 makeconfigmk ()
 {
 
@@ -208,11 +223,14 @@ makeconfigmk ()
 	echo "BUILDRUMP_TOOLFLAGS=$(pwd)/${RUMPTOOLS}/toolchain-conf.mk" >> ${1}
 	echo "MACHINE=${MACHINE}" >> ${1}
 
-	tools="AR CPP CC INSTALL NM OBJCOPY"
-	havecxx && tools="${tools} CXX"
-	for t in ${tools}; do
-		echo "${t}=$(${RUMPMAKE} -f bsd.own.mk -V "\${${t}}")" >> ${1}
+	# wrap mandatory toolchain bits
+	for t in AR AS CC CPP LD NM OBJCOPY OBJDUMP RANLIB READELF \
+            SIZE STRINGS STRIP; do
+		wraponetool ${1} ${t}
 	done
+
+	# c++ is optional, wrap it iff available
+	havecxx && wraponetool ${1} CXX
 }
 
 
@@ -230,8 +248,6 @@ checksubmodules
 
 buildrump "$@"
 builduserspace
-
-makeconfigmk ${PLATFORMDIR}/config.mk
 
 # depends on config.mk
 buildpci
