@@ -28,8 +28,6 @@
 
 #include <bmk-core/types.h>
 
-void *bmk_platform_allocpg2(int);
-void bmk_platform_freepg2(void *, int);
 void bmk_platform_block(bmk_time_t);
 unsigned long bmk_platform_memsize(void);
 

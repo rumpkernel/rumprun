@@ -33,6 +33,7 @@
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
 #include <bmk-core/platform.h>
+#include <bmk-core/pgalloc.h>
 #include <bmk-core/printf.h>
 #include <bmk-core/queue.h>
 #include <bmk-core/string.h>
@@ -236,7 +237,7 @@ static void
 stackalloc(void **stack, unsigned long *ss)
 {
 
-	*stack = bmk_platform_allocpg2(bmk_stackpageorder);
+	*stack = (void *)bmk_pgalloc(bmk_stackpageorder);
 	*ss = bmk_stacksize;
 }
 
@@ -244,7 +245,7 @@ static void
 stackfree(struct bmk_thread *thread)
 {
 
-	bmk_platform_freepg2(thread->bt_stackbase, bmk_stackpageorder);
+	bmk_pgfree(thread->bt_stackbase, bmk_stackpageorder);
 }
 
 void

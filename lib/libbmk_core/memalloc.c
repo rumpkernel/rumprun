@@ -68,6 +68,7 @@
 #include <bmk-core/string.h>
 #include <bmk-core/memalloc.h>
 #include <bmk-core/platform.h>
+#include <bmk-core/pgalloc.h>
 #include <bmk-core/printf.h>
 
 #endif
@@ -328,7 +329,7 @@ corealloc(int shift)
 #ifdef MEMALLOC_TESTING
 	v = malloc((1<<shift) * pagesz);
 #else
-	v = bmk_platform_allocpg2(shift);
+	v = (void *)bmk_pgalloc(shift);
 #endif
 
 	return v;

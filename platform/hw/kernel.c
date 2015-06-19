@@ -39,20 +39,6 @@
 unsigned long bmk_membase;
 unsigned long bmk_memsize;
 
-void *
-bmk_platform_allocpg2(int shift)
-{
-
-	return (void *)bmk_pgalloc(shift);
-}
-
-void
-bmk_platform_freepg2(void *mem, int shift)
-{
-
-	bmk_pgfree(mem, shift);
-}
-
 unsigned long
 bmk_platform_memsize(void)
 {

@@ -26,6 +26,7 @@
 #include <bmk-core/core.h>
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
+#include <bmk-core/pgalloc.h>
 #include <bmk-core/null.h>
 
 #include <bmk-rumpuser/core_types.h>
@@ -54,7 +55,7 @@ rumpuser_malloc(size_t len, int alignment, void **retval)
 	 */
 	if (len == bmk_pagesize) {
 		bmk_assert((unsigned long)alignment <= bmk_pagesize);
-		*retval = bmk_platform_allocpg2(0);
+		*retval = (void *)bmk_pgalloc_one();
 	} else {
 		*retval = bmk_memalloc(len, alignment, BMK_MEMWHO_RUMPKERN);
 	}
@@ -69,7 +70,7 @@ rumpuser_free(void *buf, size_t buflen)
 {
 
 	if (buflen == bmk_pagesize)
-		bmk_platform_freepg2(buf, 0);
+		bmk_pgfree_one(buf);
 	else
 		bmk_memfree(buf, BMK_MEMWHO_RUMPKERN);
 }

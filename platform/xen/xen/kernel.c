@@ -87,20 +87,6 @@ bmk_platform_halt(const char *panicstring)
 	minios_do_halt(MINIOS_HALT_POWEROFF);
 }
 
-void *
-bmk_platform_allocpg2(int shift)
-{
-
-	return (void *)bmk_pgalloc(shift);
-}
-
-void
-bmk_platform_freepg2(void *p, int shift)
-{
-
-	bmk_pgfree(p, shift);
-}
-
 void
 bmk_platform_block(bmk_time_t until)
 {
