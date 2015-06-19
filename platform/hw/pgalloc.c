@@ -42,10 +42,15 @@
 
 #include <bmk/machine/md.h>
 
-#define to_virt(x) x
-#define to_phys(x) x
-#define virt_to_pfn(x) (((unsigned long)x)>>PAGE_SHIFT)
-#define PHYS_PFN(x) (((unsigned long)x)>>PAGE_SHIFT)
+/*
+ * The allocation bitmap is offset to the first page loaded, which is
+ * nice if someone loads memory starting in high ranges.  Notably,
+ * we don't need a pg->va operation since allocation is always done
+ * through the freelists in va, and the pgmap is used only as a lookup
+ * table for coalescing entries when pages are freed.
+ */
+static unsigned long minpage_addr;
+#define va_to_pg(x) (((unsigned long)x - minpage_addr)>>PAGE_SHIFT)
 
 /*
  * ALLOCATION BITMAP
@@ -67,17 +72,18 @@ static unsigned long *alloc_bitmap;
  *  *_off == Bit offset within an element of the `alloc_bitmap' array.
  */
 
-#define PAGES_TO_MAPOPVARS(fp, np)					\
+#define PAGES_TO_MAPOPVARS(va, np)					\
 	unsigned long start, end, curr_idx, end_idx;			\
+	unsigned long first_page = va_to_pg(va);			\
 	curr_idx= first_page / PAGES_PER_MAPWORD;			\
 	start	= first_page & (PAGES_PER_MAPWORD-1);			\
 	end_idx	= (first_page + nr_pages) / PAGES_PER_MAPWORD;		\
 	end	= (first_page + nr_pages) & (PAGES_PER_MAPWORD-1);	
 
 static void
-map_alloc(unsigned long first_page, unsigned long nr_pages)
+map_alloc(void *virt, unsigned long nr_pages)
 {
-	PAGES_TO_MAPOPVARS(first_page, nr_pages);
+	PAGES_TO_MAPOPVARS(virt, nr_pages);
 
 	if (curr_idx == end_idx) {
 		alloc_bitmap[curr_idx] |= ((1UL<<end)-1) & -(1UL<<start);
@@ -90,9 +96,9 @@ map_alloc(unsigned long first_page, unsigned long nr_pages)
 }
 
 static void
-map_free(unsigned long first_page, unsigned long nr_pages)
+map_free(void *virt, unsigned long nr_pages)
 {
-	PAGES_TO_MAPOPVARS(first_page, nr_pages);
+	PAGES_TO_MAPOPVARS(virt, nr_pages);
 
 	if (curr_idx == end_idx) {
 		alloc_bitmap[curr_idx] &= -(1UL<<end) | ((1UL<<start)-1);
@@ -136,7 +142,7 @@ static chunk_head_t  free_tail[FREELIST_SIZE];
 static void
 print_allocation(void *start, int nr_pages)
 {
-	unsigned long pfn_start = virt_to_pfn(start);
+	unsigned long pfn_start = va_to_pg(start);
 	int count;
 
 	for (count = 0; count < nr_pages; count++) {
@@ -160,7 +166,7 @@ print_chunks(void *start, int nr_pages)
 	char chunks[MAXCHUNKS+1], current='A';
 	int order, count;
 	chunk_head_t *head;
-	unsigned long pfn_start = virt_to_pfn(start);
+	unsigned long pfn_start = va_to_pg(start);
 
 	bmk_memset(chunks, (int)'_', MAXCHUNKS);
 	if (nr_pages > MAXCHUNKS) {
@@ -171,9 +177,13 @@ print_chunks(void *start, int nr_pages)
 	for (order=0; order < FREELIST_SIZE; order++) {
 		head = free_head[order];
 		while (!FREELIST_EMPTY(head)) {
+			unsigned long headva;
+
+			headva = va_to_pg(head);
 			for (count = 0; count < 1UL<< head->level; count++) {
-				if(count + virt_to_pfn(head) - pfn_start < 1000)
-					chunks[count + virt_to_pfn(head) - pfn_start] = current;
+				if(count + headva - pfn_start < 1000)
+					chunks[count + headva - pfn_start]
+					    = current;
 			}
 			head = head->next;
 			current++;
@@ -216,18 +226,15 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	/* Allocate space for the allocation bitmap. */
 	bitmap_size  = (max+1) >> (PAGE_SHIFT+3);
 	bitmap_size  = round_page(bitmap_size);
-	alloc_bitmap = (unsigned long *)to_virt(min);
+	alloc_bitmap = (unsigned long *)min;
 	min         += bitmap_size;
+	minpage_addr = min;
 	range        = max - min;
 
 	/* All allocated by default. */
 	bmk_memset(alloc_bitmap, ~0, bitmap_size);
 	/* Free up the memory we've been given to play with. */
-	map_free(PHYS_PFN(min), range>>PAGE_SHIFT);
-
-	/* The buddy lists are addressed in high memory. */
-	min = (unsigned long) to_virt(min);
-	max = (unsigned long) to_virt(max);
+	map_free((void *)min, range>>PAGE_SHIFT);
 
 	while (range != 0) {
 		/*
@@ -295,7 +302,7 @@ bmk_pgalloc(int order)
 		free_head[i] = spare_ch;
 	}
 
-	map_alloc(PHYS_PFN(to_phys(alloc_ch)), 1UL<<order);
+	map_alloc(alloc_ch, 1UL<<order);
 	return alloc_ch;
 }
 
@@ -307,7 +314,7 @@ bmk_pgfree(void *pointer, int order)
 	unsigned long mask;
 
 	/* First free the chunk */
-	map_free(virt_to_pfn(pointer), 1UL << order);
+	map_free(pointer, 1UL << order);
 
 	/* Create free chunk */
 	freed_ch = (chunk_head_t *)pointer;
@@ -319,7 +326,7 @@ bmk_pgfree(void *pointer, int order)
 		mask = 1UL << (order + PAGE_SHIFT);
 		if ((unsigned long)freed_ch & mask) {
 			to_merge_ch = (chunk_head_t *)((char *)freed_ch - mask);
-			if (allocated_in_map(virt_to_pfn(to_merge_ch))
+			if (allocated_in_map(va_to_pg(to_merge_ch))
 			    || to_merge_ch->level != order)
 				break;
 
@@ -327,7 +334,7 @@ bmk_pgfree(void *pointer, int order)
 			freed_ch = to_merge_ch;   
 		} else {
 			to_merge_ch = (chunk_head_t *)((char *)freed_ch + mask);
-			if (allocated_in_map(virt_to_pfn(to_merge_ch))
+			if (allocated_in_map(va_to_pg(to_merge_ch))
 			    || to_merge_ch->level != order)
 				break;
 
@@ -364,7 +371,7 @@ sanity_check(void)
 		for (head = free_head[x];
 		    !FREELIST_EMPTY(head);
 		    head = head->next) {
-			bmk_assert(!allocated_in_map(virt_to_pfn(head)));
+			bmk_assert(!allocated_in_map(va_to_pg(head)));
 			if (head->next)
 				ASSERT(head->next->pprev == &head->next);
 		}
