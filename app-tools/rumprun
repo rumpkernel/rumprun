@@ -627,7 +627,7 @@ run_qemu ()
 			;;
 		n)
 			netname=_net${nindex}
-			createif_qemu "${netname},-net user"
+			createif_qemu "${netname},vioif,-net user"
 			parse_netspec ${netname} "${OPTARG}" || usage
 			;;
 		N)
