@@ -31,6 +31,19 @@ die ()
 	exit 1
 }
 
+helpme ()
+{
+
+	echo "Usage: $0 [-s srcdir] [-q] hw|xen [-- buildrump.sh options]"
+	printf "\t-s: specify alternative src-netbsd location (expert-only)\n"
+	printf "\t-q: quiet(er) build.  option maybe be specified twice.\n\n"
+	printf "buildrump.sh options are passed to buildrump.sh (expert-only)\n"
+	printf "\n"
+	printf "The toolchain is picked up from the environment.  See the\n"
+	printf "rumprun wiki for more information.\n"
+	exit 1
+}
+
 set -e
 
 # defaults
@@ -61,14 +74,14 @@ parseargs ()
 		'q')
 			BUILD_QUIET=${BUILD_QUIET:=-}q
 			;;
-		'?')
-			echo HELP!
+		'h'|'?')
+			helpme
 			exit 1
 		esac
 	done
 	shift $((${OPTIND} - 1))
 
-	[ $# -gt 0 ] || die Need platform argument
+	[ $# -gt 0 ] || helpme
 
 	platform=$1
 	export PLATFORMDIR=platform/${platform}
