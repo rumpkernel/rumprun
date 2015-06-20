@@ -202,9 +202,6 @@ builduserspace ()
 	if havecxx; then
 		( cd lib/librumprun_unwind
 		    ${RUMPMAKE} dependall && ${RUMPMAKE} install )
-		CONFIG_CXX=yes
-	else
-		CONFIG_CXX=no
 	fi
 }
 
@@ -239,7 +236,6 @@ makeconfigmk ()
 
 	echo "BUILDRUMP=${BUILDRUMP}" > ${1}
 	echo "RUMPSRC=${RUMPSRC}" >> ${1}
-	echo "CONFIG_CXX=${CONFIG_CXX}" >> ${1}
 	echo "RUMPMAKE=${RUMPMAKE}" >> ${1}
 	echo "BUILDRUMP_TOOLFLAGS=$(pwd)/${RUMPTOOLS}/toolchain-conf.mk" >> ${1}
 	echo "MACHINE=${MACHINE}" >> ${1}
@@ -251,7 +247,12 @@ makeconfigmk ()
 	done
 
 	# c++ is optional, wrap it iff available
-	havecxx && wraponetool ${1} CXX
+	if havecxx; then
+		echo "CONFIG_CXX=yes" >> ${1}
+		wraponetool ${1} CXX
+	else
+		echo "CONFIG_CXX=no" >> ${1}
+	fi
 }
 
 
