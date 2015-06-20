@@ -54,7 +54,7 @@ BUILDRUMP=$(pwd)/buildrump.sh
 # figure out where gmake lies
 if [ -z "${MAKE}" ]; then
 	MAKE=make
-	type gmake >/dev/null && MAKE=gmake
+	! type gmake >/dev/null || MAKE=gmake
 fi
 
 
@@ -160,11 +160,11 @@ buildrump ()
 	# place we can do it without replicating buildrump.sh compiler
 	# detection code
 	HAVE_LLVM=$(${RUMPMAKE} -f /dev/null -V '${HAVE_LLVM}')
-	[ "${HAVE_LLVM}" = "1" ] \
-	    && die rumprun does not yet support clang ${CC:+(\$CC: $CC)}
+	[ ! "${HAVE_LLVM}" = "1" ] \
+	    || die rumprun does not yet support clang ${CC:+(\$CC: $CC)}
 
 	MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
-	[ -z "${MACHINE}" ] && die could not figure out target machine
+	[ -n "${MACHINE}" ] || die could not figure out target machine
 
 	makeconfigmk ${PLATFORMDIR}/config.mk
 
@@ -175,8 +175,8 @@ PTHREAD_MAKELWP=pthread_makelwp_rumprun.c
 CPPFLAGS.pthread_makelwp_rumprun.c= -I$(pwd)/include
 .endif  # LIB == pthread
 EOF
-	[ -n "${PLATFORM_MKCONF}" ] \
-	    && echo "${PLATFORM_MKCONF}" >> ${RUMPTOOLS}/mk.conf
+	[ -z "${PLATFORM_MKCONF}" ] \
+	    || echo "${PLATFORM_MKCONF}" >> ${RUMPTOOLS}/mk.conf
 
 	# build rump kernel
 	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
@@ -190,7 +190,7 @@ builduserspace ()
 	usermtree ${RUMPDEST}
 
 	LIBS="$(stdlibs ${RUMPSRC})"
-	havecxx && LIBS="${LIBS} $(stdlibsxx ${RUMPSRC})"
+	! havecxx || LIBS="${LIBS} $(stdlibsxx ${RUMPSRC})"
 
 	userincludes ${RUMPSRC} ${LIBS} $(pwd)/lib/librumprun_tester
 	for lib in ${LIBS}; do
