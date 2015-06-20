@@ -155,6 +155,14 @@ buildrump ()
 	    "$@" tools
 
 	RUMPMAKE=$(pwd)/${RUMPTOOLS}/rumpmake
+
+	# Check that a clang build is not attempted.  This is the first
+	# place we can do it without replicating buildrump.sh compiler
+	# detection code
+	HAVE_LLVM=$(${RUMPMAKE} -f /dev/null -V '${HAVE_LLVM}')
+	[ "${HAVE_LLVM}" = "1" ] \
+	    && die rumprun does not yet support clang ${CC:+(\$CC: $CC)}
+
 	MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
 	[ -z "${MACHINE}" ] && die could not figure out target machine
 
