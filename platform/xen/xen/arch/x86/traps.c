@@ -158,13 +158,24 @@ static int handle_cow(unsigned long addr) {
 	return 0;
 }
 
+#define MAXWALKDEPTH 100
+static int walkdepth;
+
 static void do_stack_walk(unsigned long frame_base)
 {
     unsigned long *frame = (void*) frame_base;
     minios_printk("base is %#lx ", frame_base);
     minios_printk("caller is %#lx\n", frame[1]);
-    if (frame[0])
+    if (frame[0] && ++walkdepth < MAXWALKDEPTH)
 	do_stack_walk(frame[0]);
+}
+
+static void
+stack_walk_enter(unsigned long base)
+{
+
+    walkdepth = 0;
+    do_stack_walk(base);
 }
 
 void stack_walk(void)
@@ -175,7 +186,7 @@ void stack_walk(void)
 #else
     asm("movl %%ebp, %0":"=r"(bp));
 #endif
-    do_stack_walk(bp);
+    stack_walk_enter(bp);
 }
 
 static void dump_mem(unsigned long addr)
@@ -226,12 +237,12 @@ void do_page_fault(struct pt_regs *regs, unsigned long error_code)
 
     dump_regs(regs);
 #if defined(__x86_64__)
-    do_stack_walk(regs->rbp);
+    stack_walk_enter(regs->rbp);
     dump_mem(regs->rsp);
     dump_mem(regs->rbp);
     dump_mem(regs->rip);
 #else
-    do_stack_walk(regs->ebp);
+    stack_walk_enter(regs->ebp);
     dump_mem(regs->esp);
     dump_mem(regs->ebp);
     dump_mem(regs->eip);
@@ -252,12 +263,12 @@ void do_general_protection(struct pt_regs *regs, long error_code)
 #endif
     dump_regs(regs);
 #if defined(__x86_64__)
-    do_stack_walk(regs->rbp);
+    stack_walk_enter(regs->rbp);
     dump_mem(regs->rsp);
     dump_mem(regs->rbp);
     dump_mem(regs->rip);
 #else
-    do_stack_walk(regs->ebp);
+    stack_walk_enter(regs->ebp);
     dump_mem(regs->esp);
     dump_mem(regs->ebp);
     dump_mem(regs->eip);
