@@ -83,9 +83,9 @@ parseargs ()
 
 	[ $# -gt 0 ] || helpme
 
-	platform=$1
-	export PLATFORMDIR=platform/${platform}
-	[ -d ${PLATFORMDIR} ] || die Platform \"$platform\" not supported!
+	PLATFORM=$1
+	export PLATFORMDIR=platform/${PLATFORM}
+	[ -d ${PLATFORMDIR} ] || die Platform \"$PLATFORM\" not supported!
 	shift
 
 	if [ $# -gt 0 ]; then
@@ -196,7 +196,7 @@ builduserspace ()
 	for lib in ${LIBS}; do
 		makeuserlib ${lib}
 	done
-	makeuserlib $(pwd)/lib/librumprun_tester ${platform}
+	makeuserlib $(pwd)/lib/librumprun_tester ${PLATFORM}
 
 	# build unwind bits if we support c++
 	if havecxx; then
