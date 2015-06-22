@@ -68,7 +68,6 @@ STUB_ERRNO(_sys___mq_timedsend50);
 STUB_ERRNO(_sys___mq_timedreceive50);
 STUB_ERRNO(_sys_msgrcv);
 STUB_ERRNO(_sys_msgsnd);
-STUB_ERRNO(_sys___msync13);
 STUB_ERRNO(_sys___wait450);
 STUB_ERRNO(_sys___sigsuspend14);
 
