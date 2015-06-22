@@ -65,11 +65,8 @@ __KERNEL_RCSID(0, "$NetBSD: $");
 
 #include <xen/io/xs_wire.h>
 
-#pragma GCC diagnostic ignored "-Wcast-qual"
-/* mini-os/os.h has some bad casts */
 #include <mini-os/xenbus.h>
 #include <mini-os/wait.h>
-#pragma GCC diagnostic error "-Wcast-qual"
 
 /*----- data structures -----*/
 
