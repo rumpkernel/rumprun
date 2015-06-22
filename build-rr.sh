@@ -155,6 +155,10 @@ checkprevbuilds ()
 			echo '>> Building for multiple machine/platform combos'
 			echo '>> from the same rumprun source tree is currently'
 			echo '>> not supported.  See rumprun issue #35.'
+			printf '>> %20s: %s/%s\n' 'Previously built' \
+			    ${PB_PLATFORM} ${PB_MACHINE}
+			printf '>> %20s: %s/%s\n' 'Now building' \
+			    ${PLATFORM} ${MACHINE}
 			exit 1
 		fi
 	else
