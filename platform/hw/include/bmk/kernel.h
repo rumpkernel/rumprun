@@ -4,7 +4,7 @@
 
 #include <bmk/types.h>
 
-extern unsigned long bmk_memsize, bmk_membase;
+extern unsigned long bmk_memsize;
 
 #define round_page(x) (((x) + (PAGE_SIZE-1)) & ~(PAGE_SIZE-1))
 #define trunc_page(x) ((x) & ~(PAGE_SIZE-1))

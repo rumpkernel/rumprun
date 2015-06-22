@@ -36,7 +36,6 @@
 #include <bmk-core/queue.h>
 #include <bmk-core/sched.h>
 
-unsigned long bmk_membase;
 unsigned long bmk_memsize;
 
 unsigned long
