@@ -129,8 +129,8 @@ struct chunk_tail_st {
 
 /* Linked lists of free chunks of different powers-of-two in size. */
 #define FREELIST_SIZE ((sizeof(void*)<<3)-PAGE_SHIFT)
-static chunk_head_t *free_head[FREELIST_SIZE];
-static chunk_head_t  free_tail[FREELIST_SIZE];
+static chunk_head_t **free_head;
+static chunk_head_t  *free_tail;
 #define FREELIST_EMPTY(_l) ((_l)->next == NULL)
 
 #ifdef BMK_PGALLOC_DEBUG
@@ -214,14 +214,23 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 
 	bmk_assert(max > min);
 
+	/*
+	 * XXX: allocate dynamically so that we don't have to know
+	 * PAGE_SIZE at compile-time.  FIXXXME
+	 */
+	free_head = (void *)min;
+	min += FREELIST_SIZE * sizeof(*free_head);
+	free_tail = (void *)min;
+	min += FREELIST_SIZE * sizeof(*free_tail);
+
+	min = round_page(min);
+	max = trunc_page(max);
+
 	for (i = 0; i < FREELIST_SIZE; i++) {
 		free_head[i]       = &free_tail[i];
 		free_tail[i].pprev = &free_head[i];
 		free_tail[i].next  = NULL;
 	}
-
-	min = round_page(min);
-	max = trunc_page(max);
 
 	/* Allocate space for the allocation bitmap. */
 	bitmap_size  = (max+1) >> (PAGE_SHIFT+3);
