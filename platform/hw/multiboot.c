@@ -56,7 +56,7 @@ parsemem(uint32_t addr, uint32_t len)
 	if (!(off < len))
 		bmk_platform_halt("multiboot memory chunk not found");
 
-	osend = round_page((unsigned long)_end);
+	osend = bmk_round_page((unsigned long)_end);
 	bmk_assert(osend > mbm->addr && osend < mbm->addr + mbm->len);
 
 	bmk_pgalloc_loadmem(osend, mbm->addr + mbm->len);

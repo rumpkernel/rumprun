@@ -223,8 +223,8 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	free_tail = (void *)min;
 	min += FREELIST_SIZE * sizeof(*free_tail);
 
-	min = round_page(min);
-	max = trunc_page(max);
+	min = bmk_round_page(min);
+	max = bmk_trunc_page(max);
 
 	for (i = 0; i < FREELIST_SIZE; i++) {
 		free_head[i]       = &free_tail[i];
@@ -234,7 +234,7 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 
 	/* Allocate space for the allocation bitmap. */
 	bitmap_size  = (max+1) >> (PAGE_SHIFT+3);
-	bitmap_size  = round_page(bitmap_size);
+	bitmap_size  = bmk_round_page(bitmap_size);
 	alloc_bitmap = (unsigned long *)min;
 	min         += bitmap_size;
 	minpage_addr = min;
