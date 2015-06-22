@@ -35,6 +35,7 @@
  */
 
 #include <bmk-core/core.h>
+#include <bmk-core/null.h>
 #include <bmk-core/pgalloc.h>
 #include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
@@ -206,7 +207,7 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	unsigned long range, bitmap_size;
 	chunk_head_t *ch;
 	chunk_tail_t *ct;
-	int i;
+	unsigned int i;
 
 	if (called)
 		bmk_platform_halt("bmk_pgalloc_loadmem called more than once");
@@ -272,7 +273,7 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 void *
 bmk_pgalloc(int order)
 {
-	int i;
+	unsigned int i;
 	chunk_head_t *alloc_ch, *spare_ch;
 	chunk_tail_t            *spare_ct;
 
@@ -331,7 +332,7 @@ bmk_pgfree(void *pointer, int order)
 	    + (1UL<<(order + PAGE_SHIFT)))-1;
 
 	/* Now, possibly we can conseal chunks together */
-	while (order < FREELIST_SIZE) {
+	while (order < (int)FREELIST_SIZE) {
 		mask = 1UL << (order + PAGE_SHIFT);
 		if ((unsigned long)freed_ch & mask) {
 			to_merge_ch = (chunk_head_t *)((char *)freed_ch - mask);
@@ -373,7 +374,7 @@ bmk_pgfree(void *pointer, int order)
 void
 sanity_check(void)
 {
-	int x;
+	unsigned int x;
 	chunk_head_t *head;
 
 	for (x = 0; x < FREELIST_SIZE; x++) {
