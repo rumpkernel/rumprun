@@ -37,6 +37,7 @@ int bmk_core_init(unsigned long, unsigned long);
 	}								\
   } while (0)
 
-extern unsigned long bmk_stackpageorder, bmk_stacksize, bmk_pagesize;
+extern unsigned long bmk_stackpageorder, bmk_stacksize;
+extern unsigned long bmk_pageshift, bmk_pagesize;
 
 #endif /* _BMK_CORE_CORE_H_ */
