@@ -82,9 +82,9 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 #undef mmap
 __weak_alias(mmap,_mmap);
 
-int _sys__msync13(void *, size_t, int);
+int _sys___msync13(void *, size_t, int);
 int
-_sys__msync13(void *addr, size_t len, int flags)
+_sys___msync13(void *addr, size_t len, int flags)
 {
 	long pagesize = sysconf(_SC_PAGESIZE);
 
