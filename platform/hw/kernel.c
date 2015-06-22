@@ -36,15 +36,6 @@
 #include <bmk-core/queue.h>
 #include <bmk-core/sched.h>
 
-unsigned long bmk_memsize;
-
-unsigned long
-bmk_platform_memsize(void)
-{
-
-	return bmk_memsize;
-}
-
 void
 bmk_platform_block(bmk_time_t until)
 {

@@ -28,9 +28,9 @@
 
 #include <bmk-core/types.h>
 
-void bmk_platform_block(bmk_time_t);
-unsigned long bmk_platform_memsize(void);
+extern unsigned long bmk_memsize;
 
+void bmk_platform_block(bmk_time_t);
 void bmk_platform_halt(const char *) __attribute__((noreturn));
 
 unsigned long	bmk_platform_splhigh(void);

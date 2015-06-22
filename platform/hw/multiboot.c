@@ -60,6 +60,7 @@ parsemem(uint32_t addr, uint32_t len)
 	bmk_assert(osend > mbm->addr && osend < mbm->addr + mbm->len);
 
 	bmk_pgalloc_loadmem(osend, mbm->addr + mbm->len);
+
 	bmk_memsize = mbm->addr + mbm->len - osend;
 
 	return 0;

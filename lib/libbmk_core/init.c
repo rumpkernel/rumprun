@@ -31,6 +31,8 @@ unsigned long bmk_stackpageorder;
 unsigned long bmk_stacksize;
 unsigned long bmk_pagesize;
 
+unsigned long bmk_memsize;
+
 int
 bmk_core_init(unsigned long stackpageorder, unsigned long pagesize)
 {
