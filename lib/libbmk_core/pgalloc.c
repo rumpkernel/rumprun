@@ -1,4 +1,4 @@
-/* 
+/*-
  ****************************************************************************
  * (C) 2003 - Rolf Neugebauer - Intel Research Cambridge
  * (C) 2005 - Grzegorz Milos - Intel Research Cambridge
@@ -7,9 +7,9 @@
  *        File: mm.c
  *      Author: Rolf Neugebauer (neugebar@dcs.gla.ac.uk)
  *     Changes: Grzegorz Milos
- *              
+ *
  *        Date: Aug 2003, chages Aug 2005
- * 
+ *
  * Environment: Xen Minimal OS
  * Description: memory management related functions
  *              contains buddy page allocator from Xen.
@@ -21,16 +21,16 @@
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
  * sell copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE 
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER 
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
  * DEALINGS IN THE SOFTWARE.
  */
 
@@ -41,7 +41,8 @@
 #include <bmk-core/printf.h>
 #include <bmk-core/string.h>
 
-#include <bmk/machine/md.h>
+/* XXX */
+#define PAGE_SHIFT bmk_pageshift
 
 /*
  * The allocation bitmap is offset to the first page loaded, which is
@@ -66,7 +67,7 @@ static unsigned long *alloc_bitmap;
 
 /*
  * Hint regarding bitwise arithmetic in map_{alloc,free}:
- *  -(1<<n)  sets all bits >= n. 
+ *  -(1<<n)  sets all bits >= n.
  *  (1<<n)-1 sets all bits <  n.
  * Variable names in map_{alloc,free}:
  *  *_idx == Index into `alloc_bitmap' array.
@@ -79,7 +80,7 @@ static unsigned long *alloc_bitmap;
 	curr_idx= first_page / PAGES_PER_MAPWORD;			\
 	start	= first_page & (PAGES_PER_MAPWORD-1);			\
 	end_idx	= (first_page + nr_pages) / PAGES_PER_MAPWORD;		\
-	end	= (first_page + nr_pages) & (PAGES_PER_MAPWORD-1);	
+	end	= (first_page + nr_pages) & (PAGES_PER_MAPWORD-1);
 
 static void
 map_alloc(void *virt, unsigned long nr_pages)
@@ -153,7 +154,7 @@ print_allocation(void *start, int nr_pages)
 			bmk_printf("0");
 	}
 
-	bmk_printf("\n");        
+	bmk_printf("\n");
 }
 
 /*
@@ -256,8 +257,10 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 				break;
 
 		ch = (chunk_head_t *)min;
+
 		min   += (1UL<<i);
 		range -= (1UL<<i);
+
 		ct = (chunk_tail_t *)min-1;
 		i -= PAGE_SHIFT;
 		ch->level       = i;
@@ -279,7 +282,7 @@ bmk_pgalloc(int order)
 
 	/* Find smallest order which can satisfy the request. */
 	for (i = order; i < FREELIST_SIZE; i++) {
-		if (!FREELIST_EMPTY(free_head[i])) 
+		if (!FREELIST_EMPTY(free_head[i]))
 			break;
 	}
 	if (i == FREELIST_SIZE) {
@@ -293,7 +296,7 @@ bmk_pgalloc(int order)
 	alloc_ch->next->pprev = alloc_ch->pprev;
 
 	/* We may have to break the chunk a number of times. */
-	while (i != order) {
+	while (i != (unsigned)order) {
 		/* Split into two equal parts. */
 		i--;
 		spare_ch = (chunk_head_t *)((char *)alloc_ch
@@ -332,7 +335,7 @@ bmk_pgfree(void *pointer, int order)
 	    + (1UL<<(order + PAGE_SHIFT)))-1;
 
 	/* Now, possibly we can conseal chunks together */
-	while (order < (int)FREELIST_SIZE) {
+	while ((unsigned)order < FREELIST_SIZE) {
 		mask = 1UL << (order + PAGE_SHIFT);
 		if ((unsigned long)freed_ch & mask) {
 			to_merge_ch = (chunk_head_t *)((char *)freed_ch - mask);
@@ -341,7 +344,7 @@ bmk_pgfree(void *pointer, int order)
 				break;
 
 			/* Merge with predecessor */
-			freed_ch = to_merge_ch;   
+			freed_ch = to_merge_ch;
 		} else {
 			to_merge_ch = (chunk_head_t *)((char *)freed_ch + mask);
 			if (allocated_in_map(va_to_pg(to_merge_ch))
@@ -366,7 +369,7 @@ bmk_pgfree(void *pointer, int order)
 	freed_ct->level = order;
 
 	freed_ch->next->pprev = &freed_ch->next;
-	free_head[order] = freed_ch;   
+	free_head[order] = freed_ch;
 
 }
 

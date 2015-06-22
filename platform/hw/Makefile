@@ -39,7 +39,7 @@ endif
 
 LDFLAGS:= -L$(abspath rump/lib)
 
-OBJS_BMK-y+=		intr.o clock.o kernel.o multiboot.o pgalloc.o undefs.o
+OBJS_BMK-y+=		intr.o clock.o kernel.o multiboot.o undefs.o
 
 OBJS_BMK+= ${OBJS_BMK-y}
 
