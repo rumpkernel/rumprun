@@ -144,6 +144,25 @@ checksubmodules ()
 	fi )
 }
 
+checkprevbuilds ()
+{
+
+	if [ -f .prevbuild ]; then
+		. ./.prevbuild
+		if [ "${PB_MACHINE}" != "${MACHINE}" \
+		    -o "${PB_PLATFORM}" != "${PLATFORM}" ]; then
+			echo '>> ERROR:'
+			echo '>> Building for multiple machine/platform combos'
+			echo '>> from the same rumprun source tree is currently'
+			echo '>> not supported.  See rumprun issue #35.'
+			exit 1
+		fi
+	else
+		echo PB_MACHINE=${MACHINE} > ./.prevbuild
+		echo PB_PLATFORM=${PLATFORM} >> ./.prevbuild
+	fi
+}
+
 buildrump ()
 {
 
@@ -165,6 +184,8 @@ buildrump ()
 
 	MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
 	[ -n "${MACHINE}" ] || die could not figure out target machine
+
+	checkprevbuilds
 
 	makeconfigmk ${PLATFORMDIR}/config.mk
 
