@@ -173,6 +173,11 @@ buildrump ()
 	    -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes		\
 	    "$@" tools
 
+	echo '>>'
+	echo '>> Now that we have the appropriate tools, perfoming'
+	echo '>> further setup for rumprun build'
+	echo '>>'
+
 	RUMPMAKE=$(pwd)/${RUMPTOOLS}/rumpmake
 
 	# Check that a clang build is not attempted.  This is the first
@@ -203,6 +208,11 @@ EOF
 	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
 	    -s ${RUMPSRC} -T ${RUMPTOOLS} -o ${RUMPOBJ} -d ${RUMPDEST}	\
 	    "$@" build kernelheaders install
+
+	echo '>>'
+	echo '>> Rump kernel components built.  Proceeding to build'
+	echo '>> rumprun bits'
+	echo '>>'
 }
 
 builduserspace ()
