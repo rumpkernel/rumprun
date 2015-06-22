@@ -82,6 +82,22 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 #undef mmap
 __weak_alias(mmap,_mmap);
 
+int _sys__msync13(void *, size_t, int);
+int
+_sys__msync13(void *addr, size_t len, int flags)
+{
+	long pagesize = sysconf(_SC_PAGESIZE);
+
+	/* catch a few easy errors */
+	if (((uintptr_t)addr & (pagesize-1)) != 0)
+		return EINVAL;
+	if ((flags & (MS_SYNC|MS_ASYNC)) == (MS_SYNC|MS_ASYNC))
+		return EINVAL;
+
+	/* otherwise just pretend that we are the champions my friend */
+	return 0;
+}
+
 int
 munmap(void *addr, size_t len)
 {
