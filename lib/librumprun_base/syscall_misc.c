@@ -48,11 +48,6 @@
 #include <time.h>
 #include <unistd.h>
 
-#include <bmk-core/core.h>
-#include <bmk-core/sched.h>
-
-#include <rump/rump.h>
-
 #ifdef RUMPRUN_MMAP_DEBUG
 #define MMAP_PRINTF(x) printf x
 #else
@@ -65,6 +60,7 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 	void *v;
 	ssize_t nn;
 	int error;
+	long pagesize = sysconf(_SC_PAGESIZE);
 
 	if (fd != -1 && prot != PROT_READ) {
 		MMAP_PRINTF(("mmap: trying to r/w map a file. failing!\n"));
@@ -72,7 +68,7 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 		return MAP_FAILED;
 	}
 
-	if ((error = posix_memalign(&v, bmk_pagesize, len)) != 0) {
+	if ((error = posix_memalign(&v, pagesize, len)) != 0) {
 		errno = error;
 		return MAP_FAILED;
 	}
