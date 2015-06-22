@@ -73,29 +73,3 @@ bmk_cpu_intr_ack(void)
 	    "outb %%al, $0x20\n"
 	    ::: "al");
 }
-
-bmk_time_t
-bmk_cpu_clock_now(void)
-{
-	uint64_t val;
-	unsigned long eax, edx;
-
-	/* um um um */
-	__asm__ __volatile__("rdtsc" : "=a"(eax), "=d"(edx));
-	val = ((uint64_t)edx<<32)|(eax);
-
-	/* just approximate that 1 cycle = 1ns.  "good enuf" for now */
-	return val;
-}
-
-void
-bmk_cpu_nanohlt(void)
-{
-
-	/*
-	 * Enable clock interrupt and wait for the next whichever interrupt
-	 */
-	outb(PIC1_DATA, 0xff & ~(1<<2|1<<0));
-	hlt();
-	outb(PIC1_DATA, 0xff & ~(1<<2));
-}

@@ -57,9 +57,6 @@ static struct gate_descriptor idt[256];
 /* interrupt-not-service-routine */
 void bmk_cpu_insr(void);
 
-/* actual interrupt service routines */
-void bmk_cpu_isr_clock(void);
-
 void
 bmk_x86_fillgate(int num, void *fun, int unused)
 {
@@ -157,14 +154,7 @@ bmk_cpu_init(void)
 
 	bmk_x86_initpic();
 
-	/*
-	 * map clock interrupt.
-	 * note, it's still disabled in the PIC, we only enable it
-	 * during nanohlt
-	 */
-	bmk_x86_fillgate(32, bmk_cpu_isr_clock, 0);
-
-	bmk_x86_inittimer();
+	bmk_x86_initclocks();
 }
 
 void

@@ -4,6 +4,7 @@ OBJS_BMK+=	arch/amd64/machdep.o arch/amd64/boot.o
 OBJS_BMK+=	arch/x86/vgacons.o
 OBJS_BMK+=	arch/x86/cpu_subr.o
 OBJS_BMK+=	arch/x86/x86_subr.o
+OBJS_BMK+=	arch/x86/clock.o
 
 LDSCRIPT=	arch/amd64/kern.ldscript
 

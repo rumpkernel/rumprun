@@ -25,55 +25,55 @@
 
 #include <bmk/kernel.h>
 
+/* clock isr trampoline (in locore.S) */
+void bmk_cpu_isr_clock(void);
+
 void
-bmk_x86_initpic(void)
+bmk_x86_initclocks(void)
 {
 
 	/*
-	 * init pic1: cycle is write to cmd followed by 3 writes to data
+	 * map clock interrupt.
+	 * note, it's still disabled in the PIC, we only enable it
+	 * during nanohlt
 	 */
-	outb(PIC1_CMD, ICW1_INIT | ICW1_IC4);
-	outb(PIC1_DATA, 32);	/* interrupts start from 32 in IDT */
-	outb(PIC1_DATA, 1<<2);	/* slave is at IRQ2 */
-	outb(PIC1_DATA, ICW4_8086);
-	outb(PIC1_DATA, 0xff & ~(1<<2));	/* unmask slave IRQ */
+	bmk_x86_fillgate(32, bmk_cpu_isr_clock, 0);
 
-	/* do the slave PIC */
-	outb(PIC2_CMD, ICW1_INIT | ICW1_IC4);
-	outb(PIC2_DATA, 32+8);	/* interrupts start from 40 in IDT */
-	outb(PIC2_DATA, 2);	/* interrupt at irq 2 */
-	outb(PIC2_DATA, ICW4_8086);
-	outb(PIC2_DATA, 0xff);	/* all masked */
+	/* initialize the timer to 100Hz */
+	outb(TIMER_MODE, TIMER_RATEGEN | TIMER_16BIT);
+	outb(TIMER_CNTR, TIMER_HZ/HZ & 0xff);
+	outb(TIMER_CNTR, TIMER_HZ/HZ >> 8);
 }
 
-/* interrupt-not-service-routine */
-void bmk_cpu_insr(void);
+void
+bmk_isr_clock(void)
+{
+
+	/* nada */
+}
+
+bmk_time_t
+bmk_cpu_clock_now(void)
+{
+	uint64_t val;
+	unsigned long eax, edx;
+
+	/* um um um */
+	__asm__ __volatile__("rdtsc" : "=a"(eax), "=d"(edx));
+	val = ((uint64_t)edx<<32)|(eax);
+
+	/* just approximate that 1 cycle = 1ns.  "good enuf" for now */
+	return val;
+}
 
 void
-bmk_x86_initidt(void)
+bmk_cpu_nanohlt(void)
 {
-	int i;
 
-	for (i = 0; i < 32; i++) {
-		bmk_x86_fillgate(i, bmk_cpu_insr, 0);
-	}
-
-#define FILLGATE(n) bmk_x86_fillgate(n, bmk_x86_trap_##n, 0)
-	FILLGATE(0);
-	FILLGATE(2);
-	FILLGATE(3);
-	FILLGATE(4);
-	FILLGATE(5);
-	FILLGATE(6);
-	FILLGATE(7);
-	FILLGATE(8);
-	FILLGATE(10);
-	FILLGATE(11);
-	FILLGATE(12);
-	FILLGATE(13);
-	FILLGATE(14);
-	FILLGATE(17);
-#undef FILLGATE
-	bmk_x86_fillgate(2, bmk_x86_trap_2, 2);
-	bmk_x86_fillgate(8, bmk_x86_trap_8, 3);
+	/*
+	 * Enable clock interrupt and wait for the next whichever interrupt
+	 */
+	outb(PIC1_DATA, 0xff & ~(1<<2|1<<0));
+	hlt();
+	outb(PIC1_DATA, 0xff & ~(1<<2));
 }

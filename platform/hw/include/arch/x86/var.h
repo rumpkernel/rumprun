@@ -4,7 +4,7 @@
 #ifndef _LOCORE
 void	bmk_x86_initpic(void);
 void	bmk_x86_initidt(void);
-void	bmk_x86_inittimer(void);
+void	bmk_x86_initclocks(void);
 void	bmk_x86_fillgate(int, void *, int);
 
 /* trap "handlers" */

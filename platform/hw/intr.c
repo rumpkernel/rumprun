@@ -53,13 +53,6 @@ static unsigned int isr_lowest = sizeof(isr_todo)*8;
 
 static struct bmk_thread *isr_thread;
 
-void
-bmk_isr_clock(void)
-{
-
-	/* nada */
-}
-
 /* thread context we use to deliver interrupts to the rump kernel */
 static void
 isr(void *arg)
