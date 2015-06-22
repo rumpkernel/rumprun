@@ -148,6 +148,7 @@ do {									\
 #define LOCK_PREFIX ""
 #define LOCK ""
 #define ADDR (*(volatile long *) addr)
+#define CONSTADDR (*(const volatile long *) addr)
 /*
  * Make sure gcc doesn't try to be clever and move things around
  * on us. We need to use _exactly_ the address the user gave us,
@@ -161,7 +162,7 @@ typedef struct { volatile int counter; } atomic_t;
 
 #define xchg(ptr,v) ((__typeof__(*(ptr)))__xchg((unsigned long)(v),(ptr),sizeof(*(ptr))))
 struct __xchg_dummy { unsigned long a[100]; };
-#define __xg(x) ((struct __xchg_dummy *)(x))
+#define __xg(x) ((volatile struct __xchg_dummy *)(x))
 static inline unsigned long __xchg(unsigned long x, volatile void * ptr, int size)
 {
 	switch (size) {
@@ -219,7 +220,7 @@ static inline int variable_test_bit(int nr, const volatile unsigned long * addr)
 	__asm__ __volatile__(
 		"btl %2,%1\n\tsbbl %0,%0"
 		:"=r" (oldbit)
-		:"m" (ADDR),"Ir" (nr));
+		:"m" (CONSTADDR),"Ir" (nr));
 	return oldbit;
 }
 
@@ -365,7 +366,7 @@ static __inline__ int variable_test_bit(int nr, volatile const void * addr)
 	__asm__ __volatile__(
 		"btl %2,%1\n\tsbbl %0,%0"
 		:"=r" (oldbit)
-		:"m" (ADDR),"dIr" (nr));
+		:"m" (CONSTADDR),"dIr" (nr));
 	return oldbit;
 }
 
@@ -447,7 +448,7 @@ static __inline__ unsigned long __ffs(unsigned long word)
 
 /********************* common i386 and x86_64  ****************************/
 struct __synch_xchg_dummy { unsigned long a[100]; };
-#define __synch_xg(x) ((struct __synch_xchg_dummy *)(x))
+#define __synch_xg(x) ((volatile struct __synch_xchg_dummy *)(x))
 
 #define synch_cmpxchg(ptr, old, new) \
 ((__typeof__(*(ptr)))__synch_cmpxchg((ptr),\
