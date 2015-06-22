@@ -143,7 +143,7 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 
 	rumpkern_unsched(&nlocks, NULL);
 
-	viu = bmk_memalloc(sizeof(*viu), 0, BMK_MEMWHO_WIREDBMK);
+	viu = bmk_memalloc(sizeof(*viu), 0, BMK_MEMWHO_RUMPKERN);
 	if (viu == NULL) {
 		rv = BMK_ENOMEM;
 		goto out;
@@ -154,7 +154,7 @@ VIFHYPER_CREATE(int devnum, struct virtif_sc *vif_sc, uint8_t *enaddr,
 	viu->viu_dev = netfront_init(NULL, myrecv, enaddr, NULL, viu);
 	if (!viu->viu_dev) {
 		rv = BMK_EINVAL; /* ? */
-		bmk_memfree(viu, BMK_MEMWHO_WIREDBMK);
+		bmk_memfree(viu, BMK_MEMWHO_RUMPKERN);
 		goto out;
 	}
 
@@ -238,5 +238,5 @@ VIFHYPER_DESTROY(struct virtif_user *viu)
 
 	bmk_sched_join(viu->viu_thr);
 	netfront_shutdown(viu->viu_dev);
-	bmk_memfree(viu, BMK_MEMWHO_WIREDBMK);
+	bmk_memfree(viu, BMK_MEMWHO_RUMPKERN);
 }
