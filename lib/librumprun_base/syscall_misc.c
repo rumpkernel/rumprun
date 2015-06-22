@@ -23,17 +23,7 @@
  * SUCH DAMAGE.
  */
 
-/*
- * Emulate a bit of mmap.  Currently just MAP_ANON
- * and MAP_FILE+PROT_READ are supported.  For files, it's not true
- * mmap, but should cover a good deal of the cases anyway.
- */
-
-/* for libc namespace */
-#define mmap _mmap
-
 #include <sys/cdefs.h>
-#include <sys/mman.h>
 #include <sys/resource.h>
 #include <sys/time.h>
 
@@ -47,108 +37,6 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
-
-#ifdef RUMPRUN_MMAP_DEBUG
-#define MMAP_PRINTF(x) printf x
-#else
-#define MMAP_PRINTF(x)
-#endif
-
-void *
-mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
-{
-	void *v;
-	ssize_t nn;
-	int error;
-	long pagesize = sysconf(_SC_PAGESIZE);
-
-	if (fd != -1 && prot != PROT_READ) {
-		MMAP_PRINTF(("mmap: trying to r/w map a file. failing!\n"));
-		errno = ENOTSUP;
-		return MAP_FAILED;
-	}
-
-	if ((error = posix_memalign(&v, pagesize, len)) != 0) {
-		errno = error;
-		return MAP_FAILED;
-	}
-
-	if (flags & MAP_ANON)
-		return v;
-
-	if ((nn = pread(fd, v, len, off)) == -1) {
-		MMAP_PRINTF(("mmap: failed to populate r/o file mapping!\n"));
-		error = errno;
-		free(v);
-		errno = error;
-		return MAP_FAILED;
-	}
-	return v;
-}
-#undef mmap
-__weak_alias(mmap,_mmap);
-
-int
-madvise(void *addr, size_t len, int adv)
-{
-
-	/* thanks for the advise, pal */
-	return 0;
-}
-
-int
-mprotect(void *addr, size_t len, int prot)
-{
-	/* no protection */
-	return 0;
-}
-
-int
-minherit(void *addr, size_t len, int inherit)
-{
-	/* nothing to inherit */
-	return 0;
-}
-
-int
-mlockall(int flags)
-{
-
-	/* no vm => everything is automatically locked */
-	return 0;
-}
-
-int
-munlockall(void)
-{
-
-	/* no vm => no need to unlock */
-	return 0;
-}
-
-int
-mlock(const void *addr, size_t len)
-{
-
-	/* no vm => everything is automatically locked */
-	return 0;
-}
-
-int
-munlock(const void *addr, size_t len)
-{
-
-	/* no vm => no need to unlock */
-	return 0;
-}
-
-int
-munmap(void *addr, size_t len)
-{
-
-	free(addr);
-	return 0;
-}
 
 void __dead
 _exit(int eval)
@@ -207,14 +95,4 @@ __getrusage50(int who, struct rusage *usage)
 
 	/* XXX: wrong in many ways */
 	return ENOTSUP;
-}
-
-/* there is no virtual memory, tada */
-int
-mincore(void *addr, size_t length, char *vec)
-{
-	long page_size = sysconf(_SC_PAGESIZE);
-
-	memset(vec, 0x01, (length + page_size - 1) / page_size);
-	return 0;
 }
