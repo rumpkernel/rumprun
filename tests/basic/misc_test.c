@@ -22,8 +22,9 @@ test_times(void)
 int
 rumprun_test(int argc, char *argv[])
 {
+	int rv = 0;
 
-	test_times();
+	rv += test_times();
 
-	return 0;
+	return rv;
 }
