@@ -47,12 +47,10 @@ static char *initial_env[] = {
 };
 
 extern void *environ;
-void _libc_init(void);
 extern char *__progname;
-
-/* XXX */
-static struct ps_strings thestrings;
 extern struct ps_strings *__ps_strings;
+
+void _libc_init(void);
 
 typedef void (*initfini_fn)(void);
 extern const initfini_fn __init_array_start[1];
@@ -81,19 +79,27 @@ runfini(void)
 		(*fn)();
 }
 
+struct initinfo {
+	char *argv_dummy;
+	char *env_dummy;
+	AuxInfo ai[2];
+} __attribute__((__packed__));
+
 void
 _netbsd_userlevel_init(void)
 {
-	static AuxInfo auxinfo[2];
+	static struct initinfo ii;
+	static struct ps_strings ps;
+	AuxInfo *ai = ii.ai;
 	int rv;
 
-	auxinfo[0].a_type = AT_STACKBASE;
-	auxinfo[0].a_v = (unsigned long)bmk_mainstackbase;
-	auxinfo[1].a_type = AT_NULL;
-	auxinfo[1].a_v = 0;
+	ai[0].a_type = AT_STACKBASE;
+	ai[0].a_v = (unsigned long)bmk_mainstackbase;
+	ai[1].a_type = AT_NULL;
+	ai[1].a_v = 0;
 
-	thestrings.ps_argvstr = (void *)((char *)&auxinfo - 2);
-	__ps_strings = &thestrings;
+	ps.ps_argvstr = &ii.argv_dummy;
+	__ps_strings = &ps;
 
 	/*
 	 * We get no "environ" from the kernel.  The initial
