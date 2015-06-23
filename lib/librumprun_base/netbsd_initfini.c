@@ -52,7 +52,6 @@ extern char *__progname;
 
 /* XXX */
 static struct ps_strings thestrings;
-static AuxInfo myaux[2];
 extern struct ps_strings *__ps_strings;
 
 typedef void (*initfini_fn)(void);
@@ -68,6 +67,7 @@ runinit(void)
 {
 	const initfini_fn *fn;
 
+	_libc_init();
 	for (fn = __init_array_start; fn < __init_array_end; fn++)
 		(*fn)();
 }
@@ -84,9 +84,15 @@ runfini(void)
 void
 _netbsd_userlevel_init(void)
 {
+	static AuxInfo auxinfo[2];
 	int rv;
 
-	thestrings.ps_argvstr = (void *)((char *)&myaux - 2);
+	auxinfo[0].a_type = AT_STACKBASE;
+	auxinfo[0].a_v = (unsigned long)bmk_mainstackbase;
+	auxinfo[1].a_type = AT_NULL;
+	auxinfo[1].a_v = 0;
+
+	thestrings.ps_argvstr = (void *)((char *)&auxinfo - 2);
 	__ps_strings = &thestrings;
 
 	/*
@@ -100,7 +106,6 @@ _netbsd_userlevel_init(void)
 	environ = initial_env;
 
 	runinit();
-	_libc_init();
 
 	/* XXX: we should probably use csu, but this is quicker for now */
 	__progname = "rumprun";
