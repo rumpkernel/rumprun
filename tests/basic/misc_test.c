@@ -4,6 +4,16 @@
 
 #include <rumprun/tester.h>
 
+static void
+prfres(int res)
+{
+
+	if (res)
+		printf("NOK\n");
+	else
+		printf("OK!\n");
+}
+
 /*
  * calling times() causes crash.  rumprun issue #4
  */
@@ -14,7 +24,7 @@ test_times(void)
 	
 	printf("checking that calling times() does not crash ... ");
 	times(&tms);
-	printf("OK!\n");
+	prfres(0);
 
 	return 0;
 }
