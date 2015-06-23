@@ -92,3 +92,8 @@ void init_mm(void)
 void fini_mm(void)
 {
 }
+
+unsigned long long minios_get_l1prot(void)
+{
+    return L1_PROT;
+}
