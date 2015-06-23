@@ -34,12 +34,17 @@
 #include <string.h>
 
 #include <bmk-core/core.h>
+#include <bmk-core/printf.h>
 
 #include <rumprun-base/config.h>
 
 #include "rumprun-private.h"
 
-static char *empty_env[1];
+static char ssbuf[32];
+static char *initial_env[] = {
+	ssbuf,
+	NULL,
+};
 
 extern void *environ;
 void _libc_init(void);
@@ -49,7 +54,6 @@ extern char *__progname;
 static struct ps_strings thestrings;
 static AuxInfo myaux[2];
 extern struct ps_strings *__ps_strings;
-extern size_t pthread__stacksize;
 
 typedef void (*initfini_fn)(void);
 extern const initfini_fn __init_array_start[1];
@@ -80,18 +84,20 @@ runfini(void)
 void
 _netbsd_userlevel_init(void)
 {
+	int rv;
+
 	thestrings.ps_argvstr = (void *)((char *)&myaux - 2);
 	__ps_strings = &thestrings;
-
-	/* XXX? */
-	pthread__stacksize = 32*bmk_pagesize;
 
 	/*
 	 * We get no "environ" from the kernel.  The initial
 	 * environment is created by rumprun_boot() depending on
 	 * what environ arguments were given (if any).
 	 */
-	environ = empty_env;
+	rv = bmk_snprintf(ssbuf, sizeof(ssbuf),
+	    "PTHREAD_STACKSIZE=%zu", RUMPRUN_DEFAULTUSERSTACK);
+	bmk_assert(rv < (int)sizeof(ssbuf));
+	environ = initial_env;
 
 	runinit();
 	_libc_init();

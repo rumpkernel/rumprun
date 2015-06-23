@@ -26,6 +26,9 @@
 #ifndef _BMKCOMMON_RUMPRUN_CONFIG_H_
 #define _BMKCOMMON_RUMPRUN_CONFIG_H_
 
+/* yeah, simple */
+#define RUMPRUN_DEFAULTUSERSTACK ((32*(sizeof(void *)/4)*4096)/1024)
+
 extern int rumprun_cmdline_argc;
 extern char **rumprun_cmdline_argv;
 
