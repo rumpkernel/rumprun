@@ -54,7 +54,7 @@ BUILDRUMP=$(pwd)/buildrump.sh
 # figure out where gmake lies
 if [ -z "${MAKE}" ]; then
 	MAKE=make
-	! type gmake >/dev/null || MAKE=gmake
+	! type gmake >/dev/null 2>&1 || MAKE=gmake
 fi
 
 
