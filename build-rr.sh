@@ -56,7 +56,7 @@ if [ -z "${MAKE}" ]; then
 	MAKE=make
 	! type gmake >/dev/null 2>&1 || MAKE=gmake
 fi
-type ${MAKE} >/dev/null 2>&1 || die ``make'' required but not found
+type ${MAKE} >/dev/null 2>&1 || die '"make" required but not found'
 
 
 #
