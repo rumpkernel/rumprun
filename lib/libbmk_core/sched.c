@@ -39,6 +39,9 @@
 #include <bmk-core/string.h>
 #include <bmk-core/sched.h>
 
+void *bmk_mainstackbase;
+unsigned long bmk_mainstacksize;
+
 /*
  * sleep for how long if there's absolutely nothing to do
  * (default 1s)
@@ -668,9 +671,10 @@ bmk_sched_startmain(void (*mainfun)(void *), void *arg)
 
 	bmk_memset(&initthread, 0, sizeof(initthread));
 	bmk_strcpy(initthread.bt_name, "init");
+	stackalloc(&bmk_mainstackbase, &bmk_mainstacksize);
 
 	mainthread = bmk_sched_create("main", NULL, 0,
-	    mainfun, arg, NULL, 0);
+	    mainfun, arg, bmk_mainstackbase, bmk_mainstacksize);
 	if (mainthread == NULL)
 		bmk_platform_halt("failed to create main thread");
 
