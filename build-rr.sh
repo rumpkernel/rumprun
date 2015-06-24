@@ -313,13 +313,12 @@ buildpci
 # run routine specified in platform.conf
 doextras || die 'platforms extras failed.  tillerman needs tea?'
 
+# create high-level link to rumprun components
+ln -sf ${PLATFORMDIR}/rump ./rumprun
+
 # do final build of the platform bits
 ( cd ${PLATFORMDIR} && ${MAKE} || exit 1)
 [ $? -eq 0 ] || die platform make failed!
-
-# link result to top level (por que?!?)
-ln -sf ${PLATFORMDIR}/rump .
-
 
 echo
 echo ">> $0 ran successfully"
