@@ -30,6 +30,8 @@
 #include <sys/cdefs.h>
 #include <sys/atomic.h>
 #include <sys/kmem.h>
+#include <sys/resource.h>
+#include <sys/vnode.h>
 
 #include "rumpxen_xendev.h"
 

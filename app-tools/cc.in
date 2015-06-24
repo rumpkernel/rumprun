@@ -53,13 +53,13 @@ esac
 LDFLAGS="!LDFLAGS!"
 
 # Figure out what we're supposed to be doing. If called with '-bake' then we're
-# definitely baking. Otherwise assume we're linking and switch to compilation
+# definitely baking. Otherwise assume we're fermenting and switch to compilation
 # if -c / -S / -E was passed.
 if [ "$1" = "-bake" ]; then
 	shift
 	MODE=bake
 else
-	MODE=link
+	MODE=ferment
 fi
 WANTARG=
 # OUTFILE gets set to whatever is specified with -o (the real output file).
@@ -86,12 +86,12 @@ bake)
 	    -Wl,--defsym=__RuMpRuN_baked__=0 \
 	    "$@" ${EXTRALIBS}
 	;;
-link)
+ferment)
 	# Link the real (from user's PoV) output file as a relocatable object,
 	# with no rump components. '-u main' is necessary to pull in main if the
 	# user is linking it in from a library.
 	${CC} ${CFLAGS} -no-integrated-cpp \
-	    -specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs-inter \
+	    -specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs-ferment \
 	    -Wl,-r -Wl,-u,main \
 	    -Wl,--defsym=__RuMpRuN_fermented__=0 \
 	    "$@" ${EXTRALIBS} || die
