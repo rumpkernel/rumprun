@@ -12,7 +12,7 @@ $(error ${_APPTOOLS_MISSING} not defined)
 endif
 
 APP_TOOL_FILES=		cc c++ configure make gmake
-APP_TOOL_FILES+=	specs-ferment specs-stub specs-bake
+APP_TOOL_FILES+=	specs-compile_or_ferment specs-stub specs-bake
 
 APP_TOOL_PASSTHROUGH=	ar as cpp ld nm objcopy objdump ranlib readelf
 APP_TOOL_PASSTHROUGH+=	size strings strip
