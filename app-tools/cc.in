@@ -75,14 +75,14 @@ done
 case ${MODE} in
 compile)
 	# If we're compiling we don't really care which specs get used, might
-	# as well use the -final ones.
+	# as well use the -bake ones.
 	exec ${CC} ${CFLAGS} -no-integrated-cpp \
-	    -specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs-final \
+	    -specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs-bake \
 	    "$@" ${EXTRALIBS}
 	;;
 bake)
 	exec ${CC} ${CFLAGS} -no-integrated-cpp \
-	    -specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs-final \
+	    -specs=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-specs-bake \
 	    -Wl,--defsym=__RuMpRuN_baked__=0 \
 	    "$@" ${EXTRALIBS}
 	;;
