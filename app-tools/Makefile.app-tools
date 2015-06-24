@@ -38,7 +38,7 @@ $(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-${1}: \
 		-e 's#!CC!#$(CC)#g;' \
 		-e 's#!CXX!#$(CXX)#g;' \
 		-e 's#!ARCH!#$(APP_TOOLS_TARGETARCH)#g;' \
-		-e 's#!BASE!#$(abspath .)#g;' \
+		-e 's#!BASE!#$(abspath ../..)#g;' \
 		-e 's#!APPTOOLS!#$(APP_TOOLS_DIR)#g;' \
 		-e 's#!APPTOOLS_PLATFORM!#$(APP_TOOLS_PLATFORM)#g;' \
 		-e 's#!CPPFLAGS!#$(BUILDRUMP_TOOL_CPPFLAGS)#g;' \
