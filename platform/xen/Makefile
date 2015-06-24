@@ -67,7 +67,6 @@ rumprun: $(OBJ_DIR)/rumprun.o
 $(OBJ_DIR)/rumprun.o: $(RUMP_OBJS) commonlibs
 	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(RUMP_OBJS) -nostdlib -o $@
 
-APP_TOOLS_TARGETARCH= $(MACHINE)
 APP_TOOLS_PLATFORM= xen
 APP_TOOLS_HEADOBJ= $(abspath $(OBJ_DIR)/xen/minios.o)
 APP_TOOLS_OBJS= $(abspath $(OBJ_DIR)/rumprun.o)

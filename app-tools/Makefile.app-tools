@@ -1,4 +1,4 @@
-_APPTOOLS_PARAMS=  APP_TOOLS_TARGETARCH APP_TOOLS_PLATFORM APP_TOOLS_DIR
+_APPTOOLS_PARAMS=  APP_TOOLS_GNUPLATFORM APP_TOOLS_PLATFORM APP_TOOLS_DIR
 _APPTOOLS_PARAMS+= APP_TOOLS_HEADOBJ APP_TOOLS_LDSCRIPT
 
 define varchk_tmpl
@@ -37,7 +37,8 @@ $(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-${1}: \
 	sed <$$< >$$@.tmp \
 		-e 's#!CC!#$(CC)#g;' \
 		-e 's#!CXX!#$(CXX)#g;' \
-		-e 's#!ARCH!#$(APP_TOOLS_TARGETARCH)#g;' \
+		-e 's#!GNUPLATFORM!#$(subst \
+		    --,-rumprun-,${APP_TOOLS_GNUPLATFORM})#g;' \
 		-e 's#!BASE!#$(abspath ../..)#g;' \
 		-e 's#!APPTOOLS!#$(APP_TOOLS_DIR)#g;' \
 		-e 's#!APPTOOLS_PLATFORM!#$(APP_TOOLS_PLATFORM)#g;' \

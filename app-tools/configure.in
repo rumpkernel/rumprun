@@ -6,4 +6,4 @@ prog=$1; shift
 export CC=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-cc
 export CXX=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-c++
 
-exec "$prog" --host=!ARCH!-rumprun-netbsd "$@"
+exec "$prog" --host=!GNUPLATFORM! "$@"

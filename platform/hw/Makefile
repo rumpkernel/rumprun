@@ -51,7 +51,6 @@ OBJS= ${OBJS_BMK} ${OBJS_APP}
 
 .PHONY:	clean cleandir test
 
-APP_TOOLS_TARGETARCH=${MACHINE}
 APP_TOOLS_PLATFORM= bmk
 APP_TOOLS_HEADOBJ= $(abspath rumprun.o)
 APP_TOOLS_OBJS=
