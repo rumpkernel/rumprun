@@ -54,7 +54,7 @@ bmk_x86_initidt(void)
 {
 	int i;
 
-	for (i = 0; i < 32; i++) {
+	for (i = 0; i < 48; i++) {
 		bmk_x86_fillgate(i, bmk_cpu_insr, 0);
 	}
 
