@@ -8,6 +8,9 @@
 
 #define TIMER_CNTR	0x40
 #define TIMER_MODE	0x43
+#define TIMER_SEL0	0x00
+#define TIMER_LATCH	0x00
 #define TIMER_RATEGEN	0x04
+#define TIMER_ONESHOT	0x08
 #define TIMER_16BIT	0x30
 #define TIMER_HZ	1193182

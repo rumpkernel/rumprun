@@ -46,7 +46,7 @@ bmk_platform_block(bmk_time_t until)
 		bmk_spldepth = 1;
 		spl0();
 	}
-	bmk_cpu_nanohlt();
+	bmk_cpu_block(until);
 	if (s) {
 		splhigh();
 		bmk_spldepth = s;
