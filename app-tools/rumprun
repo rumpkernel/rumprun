@@ -244,6 +244,10 @@ detect_fstype ()
 		TYPE=unknown
 	fi
 	case ${TYPE} in
+	ext2)
+		echo ext2fs
+		return 0
+		;;
 	ufs)
 		echo ffs
 		return 0
