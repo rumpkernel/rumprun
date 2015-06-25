@@ -312,7 +312,7 @@ mount_ufs(const char *fstype, const char *dev, const char *mp)
 	struct ufs_args mntargs = { .fspec = __UNCONST(dev) };
 
 	if (mount(fstype, mp, 0, &mntargs, sizeof(mntargs)) == -1)
-		errx(1, "rumprun_config: mount_%s failed", fstype);
+		err(1, "rumprun_config: mount_%s failed", fstype);
 }
 
 static void
@@ -322,7 +322,7 @@ mount_cd9660(const char *fstype, const char *dev, const char *mp)
 
 	if (mount(MOUNT_CD9660,
 	    mp, MNT_RDONLY, &mntargs, sizeof(mntargs)) == -1)
-		errx(1, "rumprun_config: mount_cd9660 failed");
+		err(1, "rumprun_config: mount_cd9660 failed");
 }
 
 static void
@@ -330,7 +330,7 @@ mount_kernfs(const char *fstype, const char *dev, const char *mp)
 {
 
 	if (mount(MOUNT_KERNFS, mp, 0, NULL, 0) == -1)
-		errx(1, "rumprun_config: mount_%s failed", fstype);
+		err(1, "rumprun_config: mount_%s failed", fstype);
 }
 
 struct {
