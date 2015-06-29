@@ -11,15 +11,14 @@ BASEDIR:=       $(shell pwd)/../../lib/librumprun_base
 
 RUMPKERN_LIB:=	-lrump
 
-BASELIBDIRS:=	-L${BASEDIR}/${PLATFORM} -L${COREDIR}/${PLATFORM}	\
+LDFLAGS_BAKE+=	-L${BASEDIR}/${PLATFORM} -L${COREDIR}/${PLATFORM}	\
 		-L${RUMPUSERDIR}/${PLATFORM}
 
 ifeq (${CONFIG_SYSPROXY},yes)
 LIBS_SYSPROXY=  -lrumpkern_sysproxy
 endif
 
-LIBS_USER:=	${BASELIBDIRS}						\
-		--start-group -lrumprun_base -lpthread -lc --end-group	\
+LIBS_USER:=	--start-group -lrumprun_base -lpthread -lc --end-group	\
 		-lbmk_rumpuser -lbmk_core
 LIBS_USERSTUB:=	--start-group -lpthread -lc --end-group			\
 		$(shell pwd)/pseudolinkstubs.o

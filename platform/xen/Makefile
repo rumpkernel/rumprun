@@ -38,7 +38,7 @@ ifeq ($(MACHINE),x86_64)
 CFLAGS += -mno-red-zone -fno-reorder-blocks -fno-asynchronous-unwind-tables
 endif
 
-LDFLAGS=	-L$(abspath rump/lib)
+LDFLAGS_BAKE+=	-L$(abspath rump/lib)
 
 rump-src-y += rumphyper_bio.c
 

@@ -50,7 +50,6 @@ case $0 in
 	exit 1
 	;;
 esac
-LDFLAGS="!LDFLAGS!"
 
 # Figure out what we're supposed to be doing. If called with '-bake' then we're
 # definitely baking. Otherwise assume we're fermenting and switch to compilation

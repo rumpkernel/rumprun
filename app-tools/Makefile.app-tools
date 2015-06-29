@@ -26,7 +26,6 @@ app-tools: $(_APP_TOOL_TARGETS)
 
 APP_TOOLS_STUBLDLIBS := $(RUMP_STUBLDLIBS)
 APP_TOOLS_LDLIBS := $(RUMP_LDLIBS)
-APP_TOOLS_LDFLAGS := $(LDFLAGS)
 
 APP_TOOLS_MAKE := $(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-make
 APP_TOOLS_CC := $(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-cc
@@ -48,7 +47,7 @@ $(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-${1}:			\
 		-e 's#!BAKEOBJS!#$(APP_TOOLS_BAKEOBJS)#g;'		\
 		-e 's#!LDLIBS!#$(APP_TOOLS_LDLIBS)#g;'			\
 		-e 's#!STUBLDLIBS!#$(APP_TOOLS_STUBLDLIBS)#g;'		\
-		-e 's#!LDFLAGS!#$(APP_TOOLS_LDFLAGS)#g;'		\
+		-e 's#!LDFLAGS_BAKE!#$(LDFLAGS_BAKE)#g;'		\
 		-e 's#!LDSCRIPT!#$(APP_TOOLS_LDSCRIPT)#g;'
 	if test -x $$<; then chmod +x $$@.tmp; fi
 	mv -f $$@.tmp $$@

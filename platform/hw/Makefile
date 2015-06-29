@@ -37,7 +37,7 @@ ifneq (${supported},true)
 $(error only supported target is x86, you have ${MACHINE})
 endif
 
-LDFLAGS:= -L$(abspath rump/lib)
+LDFLAGS_BAKE+=	-L$(abspath rump/lib)
 
 OBJS_BMK-y+=		intr.o clock.o kernel.o multiboot.o undefs.o
 

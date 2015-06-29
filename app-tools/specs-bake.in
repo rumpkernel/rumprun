@@ -5,7 +5,7 @@
 
 
 *lib:
-!LDFLAGS! !LDLIBS!
+!LDFLAGS_BAKE! !LDLIBS!
 
 *link:
 %{m64:-m elf_x86_64;mx32:-m elf32_x86_64;m32:-m elf_i386} -T !LDSCRIPT! %:replace-outfile(-lstdc++ -lc++) %{rdynamic:}
