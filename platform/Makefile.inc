@@ -14,10 +14,6 @@ COMMONDIR:=	$(abspath ../)
 LDFLAGS_BAKE+=	-L${BASEDIR}/${PLATFORM} -L${COREDIR}/${PLATFORM}	\
 		-L${RUMPUSERDIR}/${PLATFORM}
 
-LIBS_USERSTUB:=	${COMMONDIR}/pseudolinkstubs.o
-
-RUMP_STUBLDLIBS:=${LIBS_USERSTUB}
-
 .PHONY: ${BASEDIR}/${PLATFORM}/librumprun_base.a
 ${BASEDIR}/${PLATFORM}/librumprun_base.a:
 	( cd ${BASEDIR} \
