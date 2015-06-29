@@ -70,4 +70,7 @@ void *	rumprun_get_finished(void);
 
 void	rumprun_reboot(void) __dead;
 
+/* XXX: this prototype shouldn't be here (if it should exist at all) */
+void	rumprun_daemon(void);
+
 #endif /* _RUMPRUN_BASE_RUMPRUN_H_ */
