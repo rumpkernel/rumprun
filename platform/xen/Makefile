@@ -68,8 +68,8 @@ $(OBJ_DIR)/rumprun.o: $(RUMP_OBJS) commonlibs
 	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(RUMP_OBJS) -nostdlib -o $@
 
 APP_TOOLS_PLATFORM= xen
-APP_TOOLS_BAKEOBJS=	$(abspath $(OBJ_DIR)/xen/minios.o)
-APP_TOOLS_BAKEOBJS+=	$(abspath $(OBJ_DIR)/rumprun.o)
+APP_TOOLS_OBJS_BAKE=	$(abspath $(OBJ_DIR)/xen/minios.o)
+APP_TOOLS_OBJS_BAKE+=	$(abspath $(OBJ_DIR)/rumprun.o)
 APP_TOOLS_LDSCRIPT_BAKE:= $(abspath $(OBJ_DIR)/xen/minios.lds)
 APP_TOOLS_DIR= $(abspath ../../app-tools)
 
