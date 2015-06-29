@@ -80,14 +80,18 @@ bmk_multiboot(struct multiboot_info *mbi)
 	bmk_printf("rump kernel bare metal multibootstrap\n\n");
 
 	/* save the command line before something overwrites it */
-	cmdline = (char *)(uintptr_t)mbi->cmdline;
-	cmdlinelen = bmk_strlen(cmdline);
-	if (cmdlinelen >= BMK_MULTIBOOT_CMDLINE_SIZE)
-		bmk_platform_halt("command line too long, "
-		    "increase BMK_MULTIBOOT_CMDLINE_SIZE");
-	bmk_strcpy(bmk_multiboot_cmdline, cmdline);
+	if (mbi->flags & MULTIBOOT_INFO_CMDLINE) {
+		cmdline = (char *)(uintptr_t)mbi->cmdline;
+		cmdlinelen = bmk_strlen(cmdline);
+		if (cmdlinelen >= BMK_MULTIBOOT_CMDLINE_SIZE)
+			bmk_platform_halt("command line too long, "
+			    "increase BMK_MULTIBOOT_CMDLINE_SIZE");
+		bmk_strcpy(bmk_multiboot_cmdline, cmdline);
+	}
+	else
+		bmk_multiboot_cmdline[0] = 0;
 
-	if ((mbi->flags & MULTIBOOT_MEMORY_INFO) == 0)
+	if ((mbi->flags & MULTIBOOT_INFO_MEMORY) == 0)
 		bmk_platform_halt("multiboot memory info not available\n");
 
 	if (parsemem(mbi->mmap_addr, mbi->mmap_length) != 0)
