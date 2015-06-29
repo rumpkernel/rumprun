@@ -4,7 +4,6 @@ PLATFORM_DEFAULT_TESTER=xen
 .PHONY: default
 default: prepare mini-os commonlibs rumprun app-tools buildtest
 
-include ../../config.mk
 include ../../global.mk
 -include config.mk
 ifdef BUILDRUMP_TOOLFLAGS

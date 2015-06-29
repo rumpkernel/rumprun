@@ -54,12 +54,14 @@
 static pthread_mutex_t w_mtx;
 static pthread_cond_t w_cv;
 
+int rumprun_enosys(void);
 int
-rumprun_notmain(int argc, char **argv)
+rumprun_enosys(void)
 {
 
 	return ENOSYS;
 }
+__strong_alias(rumprun_notmain,rumprun_enosys);
 __weak_alias(rumpbake_main1,rumprun_notmain);
 __weak_alias(rumpbake_main2,rumprun_notmain);
 __weak_alias(rumpbake_main3,rumprun_notmain);
@@ -68,6 +70,8 @@ __weak_alias(rumpbake_main5,rumprun_notmain);
 __weak_alias(rumpbake_main6,rumprun_notmain);
 __weak_alias(rumpbake_main7,rumprun_notmain);
 __weak_alias(rumpbake_main8,rumprun_notmain);
+
+__weak_alias(rump_init_server,rumprun_enosys);
 
 void
 rumprun_boot(char *cmdline)

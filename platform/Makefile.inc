@@ -14,14 +14,9 @@ RUMPKERN_LIB:=	-lrump
 LDFLAGS_BAKE+=	-L${BASEDIR}/${PLATFORM} -L${COREDIR}/${PLATFORM}	\
 		-L${RUMPUSERDIR}/${PLATFORM}
 
-ifeq (${CONFIG_SYSPROXY},yes)
-LIBS_SYSPROXY=  -lrumpkern_sysproxy
-endif
-
 LIBS_USERSTUB:=	$(shell pwd)/pseudolinkstubs.o
 
-RUMP_LDLIBS:=	--whole-archive ${LIBS_SYSPROXY} ${RUMPKERN_LIB}	\
-		--no-whole-archive
+RUMP_LDLIBS:=	--whole-archive ${RUMPKERN_LIB} --no-whole-archive
 RUMP_STUBLDLIBS:=${LIBS_USERSTUB}
 
 .PHONY: ${BASEDIR}/${PLATFORM}/librumprun_base.a

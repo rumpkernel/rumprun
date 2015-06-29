@@ -4,7 +4,6 @@ OBJ_DIR=.
 
 all: app-tools include/bmk/machine rumprun.o commonlibs buildtest
 
-include ../../config.mk
 include ../../global.mk
 -include config.mk
 ifdef BUILDRUMP_TOOLFLAGS
