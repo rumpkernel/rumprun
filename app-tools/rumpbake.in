@@ -140,5 +140,8 @@ for f in "$@"; do
 done
 
 # Final link using cc to produce the unikernel image.
-${APP_TOOLS_DIR}/${TOOLCHAIN}-cc \
-    -bake -o ${OUTPUT} ${allobjs} -Wl,--whole-archive ${LIBS} || exit 1
+!CC! !CFLAGS! -specs=!APPTOOLS_DIR!/${TOOLCHAIN}-specs-bake		\
+    -Wl,--defsym=__RuMpRuN_baked__=0 -o ${OUTPUT} ${allobjs}		\
+    -Wl,--whole-archive ${LIBS} || exit 1
+
+exit 0

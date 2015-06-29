@@ -51,15 +51,9 @@ case $0 in
 	;;
 esac
 
-# Figure out what we're supposed to be doing. If called with '-bake' then we're
-# definitely baking. Otherwise assume we're fermenting and switch to compilation
-# if -c / -S / -E was passed.
-if [ "$1" = "-bake" ]; then
-	shift
-	MODE=bake
-else
-	MODE=ferment
-fi
+# Figure out what we're supposed to be doing. Assume we're fermenting
+# and switch to compilation if -c / -S / -E was passed.
+MODE=ferment
 WANTARG=
 # OUTFILE gets set to whatever is specified with -o (the real output file).
 OUTFILE=a.out
@@ -75,12 +69,6 @@ case ${MODE} in
 compile)
 	exec ${CC} ${CFLAGS} -no-integrated-cpp \
 	    -specs=!APPTOOLS_DIR!/rumprun-!APPTOOLS_PLATFORM!-specs-compile_or_ferment \
-	    "$@" ${EXTRALIBS}
-	;;
-bake)
-	exec ${CC} ${CFLAGS} -no-integrated-cpp \
-	    -specs=!APPTOOLS_DIR!/rumprun-!APPTOOLS_PLATFORM!-specs-bake \
-	    -Wl,--defsym=__RuMpRuN_baked__=0 \
 	    "$@" ${EXTRALIBS}
 	;;
 ferment)

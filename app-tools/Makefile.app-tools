@@ -20,7 +20,8 @@ APP_TOOL_PASSTHROUGH+=	size strings strip
 
 _APP_TOOL_TARGETS:= \
     $(APP_TOOL_FILES:%=$(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-%) \
-    $(APP_TOOL_PASSTHROUGH:%=$(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-%)
+    $(APP_TOOL_PASSTHROUGH:%=$(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-%) \
+    $(APP_TOOLS_DIR)/rumpbake
 
 .PHONY: app-tools
 app-tools: $(_APP_TOOL_TARGETS)
@@ -29,8 +30,8 @@ APP_TOOLS_MAKE := $(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-make
 APP_TOOLS_CC := $(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-cc
 
 define APPTOOLS_templ
-$(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-${1}:			\
-    $(APP_TOOLS_DIR)/${1}.in Makefile
+$(APP_TOOLS_DIR)/${2}:							\
+    $(APP_TOOLS_DIR)/${1} Makefile
 	sed <$$< >$$@.tmp						\
 		-e 's#!CC!#$(CC)#g;'					\
 		-e 's#!CXX!#$(CXX)#g;'					\
@@ -48,7 +49,9 @@ $(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-${1}:			\
 	if test -x $$<; then chmod +x $$@.tmp; fi
 	mv -f $$@.tmp $$@
 endef
-$(foreach tool,${APP_TOOL_FILES},$(eval $(call APPTOOLS_templ,${tool})))
+$(foreach tool,${APP_TOOL_FILES},$(eval \
+    $(call APPTOOLS_templ,${tool}.in,rumprun-$(APP_TOOLS_PLATFORM)-${tool})))
+$(eval $(call APPTOOLS_templ,rumpbake.in,rumpbake))
 
 define APPTOOLS_passthrough
 uptool_$1=$(shell echo $1 | tr '[:lower:]' '[:upper:]')
