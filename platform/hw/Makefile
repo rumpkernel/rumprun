@@ -53,7 +53,7 @@ OBJS= ${OBJS_BMK} ${OBJS_APP}
 
 APP_TOOLS_PLATFORM= bmk
 APP_TOOLS_BAKEOBJS=	$(abspath rumprun.o)
-APP_TOOLS_LDSCRIPT:= $(abspath ${LDSCRIPT})
+APP_TOOLS_LDSCRIPT_BAKE:= $(abspath ${LDSCRIPT})
 APP_TOOLS_DIR:= $(abspath ../../app-tools)
 
 include ${APP_TOOLS_DIR}/Makefile.app-tools

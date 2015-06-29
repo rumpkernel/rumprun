@@ -70,7 +70,7 @@ $(OBJ_DIR)/rumprun.o: $(RUMP_OBJS) commonlibs
 APP_TOOLS_PLATFORM= xen
 APP_TOOLS_BAKEOBJS=	$(abspath $(OBJ_DIR)/xen/minios.o)
 APP_TOOLS_BAKEOBJS+=	$(abspath $(OBJ_DIR)/rumprun.o)
-APP_TOOLS_LDSCRIPT:= $(abspath $(OBJ_DIR)/xen/minios.lds)
+APP_TOOLS_LDSCRIPT_BAKE:= $(abspath $(OBJ_DIR)/xen/minios.lds)
 APP_TOOLS_DIR= $(abspath ../../app-tools)
 
 include $(APP_TOOLS_DIR)/Makefile.app-tools
