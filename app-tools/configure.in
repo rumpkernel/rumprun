@@ -3,7 +3,7 @@
 set -e
 prog=$1; shift
 
-export CC=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-cc
-export CXX=!APPTOOLS!/rumprun-!APPTOOLS_PLATFORM!-c++
+export CC=!APPTOOLS_DIR!/rumprun-!APPTOOLS_PLATFORM!-cc
+export CXX=!APPTOOLS_DIR!/rumprun-!APPTOOLS_PLATFORM!-c++
 
 exec "$prog" --host=!GNUPLATFORM! "$@"

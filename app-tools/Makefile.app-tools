@@ -39,8 +39,8 @@ $(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-${1}:			\
 		-e 's#!CXX!#$(CXX)#g;'					\
 		-e 's#!GNUPLATFORM!#$(subst				\
 		    --,-rumprun-,${APP_TOOLS_GNUPLATFORM})#g;'		\
-		-e 's#!BASE!#$(abspath ../..)#g;'			\
-		-e 's#!APPTOOLS!#$(APP_TOOLS_DIR)#g;'			\
+		-e 's#!BASE_DIR!#$(abspath ../..)#g;'			\
+		-e 's#!APPTOOLS_DIR!#$(APP_TOOLS_DIR)#g;'		\
 		-e 's#!APPTOOLS_PLATFORM!#$(APP_TOOLS_PLATFORM)#g;'	\
 		-e 's#!CPPFLAGS!#$(BUILDRUMP_TOOL_CPPFLAGS)#g;'		\
 		-e 's#!CFLAGS!#$(BUILDRUMP_TOOL_CFLAGS)#g;'		\
