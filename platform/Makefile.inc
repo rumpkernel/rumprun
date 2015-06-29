@@ -9,10 +9,12 @@ COREDIR:=       $(shell pwd)/../../lib/libbmk_core
 RUMPUSERDIR:=   $(shell pwd)/../../lib/libbmk_rumpuser
 BASEDIR:=       $(shell pwd)/../../lib/librumprun_base
 
+COMMONDIR:=	$(abspath ../)
+
 LDFLAGS_BAKE+=	-L${BASEDIR}/${PLATFORM} -L${COREDIR}/${PLATFORM}	\
 		-L${RUMPUSERDIR}/${PLATFORM}
 
-LIBS_USERSTUB:=	$(shell pwd)/pseudolinkstubs.o
+LIBS_USERSTUB:=	${COMMONDIR}/pseudolinkstubs.o
 
 RUMP_STUBLDLIBS:=${LIBS_USERSTUB}
 
@@ -22,7 +24,7 @@ ${BASEDIR}/${PLATFORM}/librumprun_base.a:
 	    && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} obj \
 	    && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} dependall )
 
-pseudolinkstubs.c: ${BASEDIR}/${PLATFORM}/librumprun_base.a
+${COMMONDIR}/pseudolinkstubs.c: ${BASEDIR}/${PLATFORM}/librumprun_base.a
 	sh ../makepseudolinkstubs.sh ${NM} ${RUMPSRC} $< $@
 
 .PHONY: ${COREDIR}/${PLATFORM}/libbmk_core.a
@@ -37,7 +39,7 @@ ${RUMPUSERDIR}/${PLATFORM}/libbmk_rumpuser.a:
 	    && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} obj \
 	    && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} dependall )
 
-commonlibs: ${BASEDIR}/${PLATFORM}/librumprun_base.a ${COREDIR}/${PLATFORM}/libbmk_core.a ${RUMPUSERDIR}/${PLATFORM}/libbmk_rumpuser.a pseudolinkstubs.o
+commonlibs: ${BASEDIR}/${PLATFORM}/librumprun_base.a ${COREDIR}/${PLATFORM}/libbmk_core.a ${RUMPUSERDIR}/${PLATFORM}/libbmk_rumpuser.a ${COMMONDIR}/pseudolinkstubs.o
 
 .PHONY: buildtest
 buildtest: ../../tests/hello/hello.c ${OBJ_DIR}/rumprun.o commonlibs app-tools
@@ -57,7 +59,7 @@ commonclean:
 	( cd ${BASEDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
 	( cd ${COREDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
 	( cd ${RUMPUSERDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
-	rm -f pseudolinkstubs.c pseudolinkstubs.o
+	rm -f ${COMMONDIR}/pseudolinkstubs.c ${COMMONDIR}/pseudolinkstubs.o
 
 .PHONY: tests
 tests: ${OBJ_DIR}/rumprun.o commonlibs app-tools
