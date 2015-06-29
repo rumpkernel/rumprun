@@ -9,14 +9,11 @@ COREDIR:=       $(shell pwd)/../../lib/libbmk_core
 RUMPUSERDIR:=   $(shell pwd)/../../lib/libbmk_rumpuser
 BASEDIR:=       $(shell pwd)/../../lib/librumprun_base
 
-RUMPKERN_LIB:=	-lrump
-
 LDFLAGS_BAKE+=	-L${BASEDIR}/${PLATFORM} -L${COREDIR}/${PLATFORM}	\
 		-L${RUMPUSERDIR}/${PLATFORM}
 
 LIBS_USERSTUB:=	$(shell pwd)/pseudolinkstubs.o
 
-RUMP_LDLIBS:=	--whole-archive ${RUMPKERN_LIB} --no-whole-archive
 RUMP_STUBLDLIBS:=${LIBS_USERSTUB}
 
 .PHONY: ${BASEDIR}/${PLATFORM}/librumprun_base.a
