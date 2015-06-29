@@ -1,5 +1,5 @@
 _APPTOOLS_PARAMS=  APP_TOOLS_GNUPLATFORM APP_TOOLS_PLATFORM APP_TOOLS_DIR
-_APPTOOLS_PARAMS+= APP_TOOLS_HEADOBJ APP_TOOLS_LDSCRIPT
+_APPTOOLS_PARAMS+= APP_TOOLS_BAKEOBJS APP_TOOLS_LDSCRIPT
 
 define varchk_tmpl
 ifeq ($${$1},)
@@ -45,11 +45,10 @@ $(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-${1}:			\
 		-e 's#!CPPFLAGS!#$(BUILDRUMP_TOOL_CPPFLAGS)#g;'		\
 		-e 's#!CFLAGS!#$(BUILDRUMP_TOOL_CFLAGS)#g;'		\
 		-e 's#!CXXFLAGS!#$(BUILDRUMP_TOOL_CXXFLAGS)#g;'		\
-		-e 's#!OBJS!#$(APP_TOOLS_OBJS)#g;'			\
+		-e 's#!BAKEOBJS!#$(APP_TOOLS_BAKEOBJS)#g;'		\
 		-e 's#!LDLIBS!#$(APP_TOOLS_LDLIBS)#g;'			\
 		-e 's#!STUBLDLIBS!#$(APP_TOOLS_STUBLDLIBS)#g;'		\
 		-e 's#!LDFLAGS!#$(APP_TOOLS_LDFLAGS)#g;'		\
-		-e 's#!HEAD_OBJ!#$(APP_TOOLS_HEADOBJ)#g;'		\
 		-e 's#!LDSCRIPT!#$(APP_TOOLS_LDSCRIPT)#g;'
 	if test -x $$<; then chmod +x $$@.tmp; fi
 	mv -f $$@.tmp $$@

@@ -1,5 +1,5 @@
 *startfile:
-!HEAD_OBJ! !OBJS!
+!BAKEOBJS!
 
 *endfile:
 
