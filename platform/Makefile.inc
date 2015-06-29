@@ -18,13 +18,10 @@ ifeq (${CONFIG_SYSPROXY},yes)
 LIBS_SYSPROXY=  -lrumpkern_sysproxy
 endif
 
-LIBS_USER:=	--start-group -lrumprun_base -lpthread -lc --end-group	\
-		-lbmk_rumpuser -lbmk_core
-LIBS_USERSTUB:=	--start-group -lpthread -lc --end-group			\
-		$(shell pwd)/pseudolinkstubs.o
+LIBS_USERSTUB:=	$(shell pwd)/pseudolinkstubs.o
 
 RUMP_LDLIBS:=	--whole-archive ${LIBS_SYSPROXY} ${RUMPKERN_LIB}	\
-		--no-whole-archive ${LIBS_USER}
+		--no-whole-archive
 RUMP_STUBLDLIBS:=${LIBS_USERSTUB}
 
 .PHONY: ${BASEDIR}/${PLATFORM}/librumprun_base.a

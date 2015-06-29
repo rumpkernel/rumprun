@@ -5,7 +5,7 @@
 
 
 *lib:
--L!BASE_DIR!/rumprun/lib !STUBLDLIBS!
+-L!BASE_DIR!/rumprun/lib --start-group -lpthread -lc --end-group !STUBLDLIBS!
 
 *link:
 %{m64:-m elf_x86_64;mx32:-m elf32_x86_64;m32:-m elf_i386} -T !LDSCRIPT! %:replace-outfile(-lstdc++ -lc++) %{rdynamic:}
