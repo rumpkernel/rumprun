@@ -94,11 +94,11 @@ static inline uint64_t mul64_32(uint64_t a, uint32_t b)
 		: "=A" (prod), "=r" (t1), "=r" (t2)
 		: "a" (l), "1" (h), "2" (b)
 	);
-
-	return prod;
 #else
 #error
 #endif
+
+	return prod;
 }
 
 /*
