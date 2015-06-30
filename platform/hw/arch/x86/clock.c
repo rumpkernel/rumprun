@@ -25,6 +25,7 @@
  */
 
 #include <bmk/kernel.h>
+#include <bmk/clock_subr.h>
 
 #define NSEC_PER_SEC	1000000000ULL
 /* Minimum delta to sleep using PIT. Programming seems to have an overhead of
@@ -50,6 +51,9 @@ static const uint32_t pit_mult = (1ULL << 63) / ((NSEC_PER_SEC << 31) / TIMER_HZ
 /* Base time values at the last call to bmk_cpu_clock_now(). */
 static bmk_time_t time_base;
 static uint64_t tsc_base;
+
+/* RTC wall time offset at monotonic time base. */
+static bmk_time_t rtc_epochoffset;
 
 /* Set to 1 when the i8254 interrupt is handled. */
 static volatile int ticktock = 0;
@@ -147,6 +151,38 @@ rdtsc(void)
 	return val;
 }
 
+/*
+ * Read a RTC register. Due to PC platform braindead-ness also disables NMI.
+ */
+static inline uint8_t rtc_read(uint8_t reg)
+{
+
+	outb(RTC_COMMAND, reg | RTC_NMI_DISABLE);
+	return inb(RTC_DATA);
+}
+
+/*
+ * Return current RTC time. Note that due to waiting for the update cycle to
+ * complete, this call may take some time.
+ */
+static bmk_time_t rtc_gettimeofday(void)
+{
+	struct bmk_clock_ymdhms dt;
+
+	/* If time update in progress then spin until complete. */
+	while(rtc_read(RTC_STATUS_A) & RTC_UIP)
+		continue;
+
+	dt.dt_sec = bcdtobin(rtc_read(RTC_SEC));
+	dt.dt_min = bcdtobin(rtc_read(RTC_MIN));
+	dt.dt_hour = bcdtobin(rtc_read(RTC_HOUR));
+	dt.dt_day = bcdtobin(rtc_read(RTC_DAY));
+	dt.dt_mon = bcdtobin(rtc_read(RTC_MONTH));
+	dt.dt_year = bcdtobin(rtc_read(RTC_YEAR)) + 2000;
+
+	return bmk_clock_ymdhms_to_secs(&dt) * NSEC_PER_SEC;
+}
+
 void
 bmk_x86_initclocks(void)
 {
@@ -156,6 +192,12 @@ bmk_x86_initclocks(void)
 	outb(TIMER_MODE, TIMER_SEL0 | TIMER_RATEGEN | TIMER_16BIT);
 	outb(TIMER_CNTR, (TIMER_HZ / HZ) & 0xff);
 	outb(TIMER_CNTR, (TIMER_HZ / HZ) >> 8);
+
+	/*
+	 * Read RTC time to use as epoch offset. This must be done just before
+	 * tsc_base is initialised in order to get a correct offset.
+	 */
+	rtc_epochoffset = rtc_gettimeofday();
 
 	/*
 	 * Calculate TSC frequency by calibrating against an 0.1s delay
@@ -176,6 +218,11 @@ bmk_x86_initclocks(void)
 	 * (0.32) tsc_mult = NSEC_PER_SEC (32.32) / tsc_freq (32.0)
 	 */
 	tsc_mult = (NSEC_PER_SEC << 32) / tsc_freq;
+
+	/*
+	 * Monotonic time begins at tsc_base (first read of TSC before
+	 * calibration).
+	 */
 	time_base = mul64_32(tsc_base, tsc_mult);
 
 	/*
@@ -214,6 +261,16 @@ bmk_cpu_clock_now(void)
 	tsc_base = tsc_now;
 
 	return time_base;
+}
+
+/*
+ * Return epoch offset (wall time offset to monotonic clock start).
+ */
+bmk_time_t
+bmk_cpu_clock_epochoffset(void)
+{
+
+	return rtc_epochoffset;
 }
 
 /*

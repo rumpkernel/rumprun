@@ -38,5 +38,5 @@ bmk_time_t
 bmk_platform_clock_epochoffset(void)
 {
 
-	return 0; /* needs more bits */
+	return bmk_cpu_clock_epochoffset();
 }

@@ -14,3 +14,16 @@
 #define TIMER_ONESHOT	0x08
 #define TIMER_16BIT	0x30
 #define TIMER_HZ	1193182
+
+#define	RTC_COMMAND	0x70
+#define	RTC_DATA	0x71
+#define RTC_NMI_DISABLE	(1<<8)
+#define RTC_NMI_ENABLE	0
+#define	RTC_SEC		0x00
+#define	RTC_MIN		0x02
+#define	RTC_HOUR	0x04
+#define	RTC_DAY		0x07
+#define	RTC_MONTH	0x08
+#define	RTC_YEAR	0x09
+#define	RTC_STATUS_A	0x0a
+#define	RTC_UIP		(1<<7)
