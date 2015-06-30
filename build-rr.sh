@@ -118,11 +118,8 @@ parseargs ()
 checksubmodules ()
 {
 
-	# old git versions need to run submodule in the repo root. *sheesh*
 	# We assume that if the git submodule command fails, it's because
-	# we're using external $RUMPSRC
-	( top="$(git rev-parse --show-cdup)"
-	[ -z "${top}" ] || cd "${top}"
+	# we're using external $RUMPSRC.
 	if git submodule status ${RUMPSRC} 2>/dev/null | grep -q '^-' \
 	    || git submodule status ${BUILDRUMP} 2>/dev/null | grep -q '^-';
 	then
@@ -142,7 +139,7 @@ checksubmodules ()
 		echo '>>'
 		echo -n '>>'
 		for x in 1 2 3 4 5; do echo -n ' !' ; sleep 1 ; done
-	fi )
+	fi
 }
 
 checkprevbuilds ()
