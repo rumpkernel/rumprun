@@ -132,7 +132,7 @@ for f in "$@"; do
 		echo "rumpbake: error: ${f}: not a rumprun relocatable object"
 		exit 1
 	fi
-	${APP_TOOLS_DIR}/${TOOLCHAIN}-objcopy				\
+	${APP_TOOLS_DIR}/!GNUPLATFORM!-objcopy				\
 	    --redefine-sym main=rumpbake_main${objnum}			\
 	    ${f} ${TMPDIR}/tmp${objnum}.obj
 	allobjs="${allobjs} ${TMPDIR}/tmp${objnum}.obj"

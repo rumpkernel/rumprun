@@ -9,19 +9,20 @@ export RUMPRUN_WARNING_STFU=please
 
 set -e
 
-[ -n "${1}" ] || { echo '>> need platform' ; exit 1; }
+[ -n "${1}" ] || { echo '>> need machine' ; exit 1; }
+[ -n "${2}" ] || { echo '>> need platform' ; exit 1; }
 
 cd "$(dirname $0)"
 APPTOOLSDIR=$(pwd)/../app-tools
-PLATFORM=$1
+MACHINE=$1
+PLATFORM=$2
+ELF=$3
 
 case ${PLATFORM} in
 hw)
-	TOOLS_PLATFORM=bmk
         RUMPBAKE="rumpbake hw_generic"
 	;;
 xen)
-	TOOLS_PLATFORM=xen
         RUMPBAKE="rumpbake xen_pv"
 	;;
 *)
@@ -33,13 +34,13 @@ shift
 # XXX
 export DOCXX=$(grep ^CONFIG_CXX ../platform/${PLATFORM}/config.mk)
 
-export MAKE=${APPTOOLSDIR}/rumprun-${TOOLS_PLATFORM}-${MAKE-make}
+export MAKE=${APPTOOLSDIR}/${MACHINE}-rumprun-netbsd${ELF}-${MAKE-make}
 
 ${MAKE} ${DOCXX} RUMPBAKE="${APPTOOLSDIR}/${RUMPBAKE}"
 
 if [ "$1" != '-q' ]; then
 	cd configure
-	${APPTOOLSDIR}/rumprun-${TOOLS_PLATFORM}-configure ./configure
+	${APPTOOLSDIR}/${MACHINE}-rumprun-netbsd${ELF}-configure ./configure
 	${MAKE}
 fi
 

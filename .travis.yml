@@ -11,17 +11,17 @@ before_script:
   - sudo apt-get install g++-4.8 -y
 
 env:
-  - PLATFORM=xen TESTS=none EXTRAFLAGS=
-  - PLATFORM=xen TESTS=none EXTRAFLAGS='-- -F ACLFLAGS=-m32'
-  - PLATFORM=hw TESTS=qemu EXTRAFLAGS=
-  - PLATFORM=hw TESTS=qemu EXTRAFLAGS='-- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686'
+  - PLATFORM=xen MACHINE=x86_64 TESTS=none EXTRAFLAGS=
+  - PLATFORM=xen MACHINE=i486 ELF=elf TESTS=none EXTRAFLAGS='-- -F ACLFLAGS=-m32'
+  - PLATFORM=hw MACHINE=x86_64 TESTS=qemu EXTRAFLAGS=
+  - PLATFORM=hw MACHINE=i486 ELF=elf TESTS=qemu EXTRAFLAGS='-- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686'
 
 script:
   - export CC=gcc-4.8
   - export CXX=g++-4.8
   - git submodule update --init
   - ./build-rr.sh -qq ${PLATFORM} ${EXTRAFLAGS}
-  - ./tests/buildtests.sh ${PLATFORM}
+  - ./tests/buildtests.sh ${MACHINE} ${PLATFORM} ${ELF}
   - ./tests/runtests.sh ${TESTS}
 
 notifications:

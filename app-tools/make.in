@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export CC=!APPTOOLS_DIR!/rumprun-!APPTOOLS_PLATFORM!-cc
-export CXX=!APPTOOLS_DIR!/rumprun-!APPTOOLS_PLATFORM!-c++
+export CC=!APPTOOLS_DIR!/!GNUPLATFORM!-cc
+export CXX=!APPTOOLS_DIR!/!GNUPLATFORM!-c++
 
 exec make "$@"
