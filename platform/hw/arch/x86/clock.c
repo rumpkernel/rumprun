@@ -27,15 +27,25 @@
 #include <bmk/kernel.h>
 
 #define NSEC_PER_SEC	1000000000ULL
-#define TSC_SHIFT	27
-#define PIT_DIVISOR	((NSEC_PER_SEC << 32) / TIMER_HZ)
+/* Minimum delta to sleep using PIT. Programming seems to have an overhead of
+ * 3-4us, but play it safe here. */
 #define PIT_MIN_DELTA	16
 
 /* clock isr trampoline (in locore.S) */
 void bmk_cpu_isr_clock(void);
 
-/* TSC multiplier for converting ticks to nsecs, scaled by TSC_SHIFT. */
-static uint64_t tsc_mult;
+/* Multiplier for converting TSC ticks to nsecs. (0.32) fixed point. */
+static uint32_t tsc_mult;
+
+/*
+ * Multiplier for converting nsecs to PIT ticks. (1.32) fixed point.
+ *
+ * Calculated as:
+ *
+ *     f = NSEC_PER_SEC / TIMER_HZ   (0.31) fixed point.
+ *     pit_mult = 1 / f              (1.32) fixed point.
+ */
+static const uint32_t pit_mult = (1ULL << 63) / ((NSEC_PER_SEC << 31) / TIMER_HZ);
 
 /* Base time values at the last call to bmk_cpu_clock_now(). */
 static bmk_time_t time_base;
@@ -43,6 +53,49 @@ static uint64_t tsc_base;
 
 /* Set to 1 when the i8254 interrupt is handled. */
 static volatile int ticktock = 0;
+
+/*
+ * Calculate prod = (a * b) where a is (64.0) fixed point and b is (0.32) fixed
+ * point.  The intermediate product is (64.32) fixed point, discarding the
+ * fractional bits leaves us with a (64.0) fixed point result.
+ *
+ * XXX Document what range of (a, b) is safe from overflow in this calculation.
+ */
+static inline uint64_t mul64_32(uint64_t a, uint32_t b)
+{
+	uint64_t prod;
+#if defined(__x86_64__)
+	/* For x86_64 the computation can be done using 64-bit multiply and
+	 * shift. */
+	__asm__ (
+		"mul %%rdx ; "
+		"shrd $32, %%rdx, %%rax"
+		: "=a" (prod)
+		: "0" (a), "d" ((uint64_t)b)
+	);
+#elif defined(__i386__)
+	/* For i386 we compute the partial products and add them up, discarding
+	 * the lower 32 bits of the product in the process. */
+	uint32_t h = (uint32_t)(a >> 32);
+	uint32_t l = (uint32_t)a;
+	uint32_t t1, t2;
+	__asm__ (
+		"mul  %5       ; "  /* %edx:%eax = (l * b)                    */
+		"mov  %4,%%eax ; "  /* %eax = h                               */
+		"mov  %%edx,%4 ; "  /* t1 = ((l * b) >> 32)                   */
+		"mul  %5       ; "  /* %edx:%eax = (h * b)                    */
+		"add  %4,%%eax ; "
+		"xor  %5,%5    ; "
+		"adc  %5,%%edx ; "  /* %edx:%eax = (h * b) + ((l * b) >> 32)  */
+		: "=A" (prod), "=r" (t1), "=r" (t2)
+		: "a" (l), "1" (h), "2" (b)
+	);
+
+	return prod;
+#else
+#error
+#endif
+}
 
 /*
  * Read the current i8254 channel 0 tick count.
@@ -118,10 +171,12 @@ bmk_x86_initclocks(void)
 	outb(TIMER_MODE, TIMER_SEL0 | TIMER_ONESHOT | TIMER_16BIT);
 
 	/*
-	 * Calculate TSC scaling multiplier and initialiase time_base.
+	 * Calculate TSC scaling multiplier.
+	 *
+	 * (0.32) tsc_mult = NSEC_PER_SEC (32.32) / tsc_freq (32.0)
 	 */
-	tsc_mult = (NSEC_PER_SEC << TSC_SHIFT) / tsc_freq;
-	time_base = (tsc_base * tsc_mult) >> TSC_SHIFT;
+	tsc_mult = (NSEC_PER_SEC << 32) / tsc_freq;
+	time_base = mul64_32(tsc_base, tsc_mult);
 
 	/*
 	 * Map i8254 interrupt vector and enable it in the PIC.
@@ -142,6 +197,9 @@ bmk_isr_clock(void)
 	ticktock = 1;
 }
 
+/*
+ * Return monotonic time since system boot in nanoseconds.
+ */
 bmk_time_t
 bmk_cpu_clock_now(void)
 {
@@ -149,18 +207,20 @@ bmk_cpu_clock_now(void)
 
 	/*
 	 * Update time_base (monotonic time) and tsc_base (TSC time).
-	 * Ensure to use a delta between now and the last call to
-	 * bmk_cpu_clock_now() to prevent overflow.
-	 * XXX: Document when overflow would happen.
 	 */
 	tsc_now = rdtsc();
 	tsc_delta = tsc_now - tsc_base;
-	time_base += (tsc_delta * tsc_mult) >> TSC_SHIFT;
+	time_base += mul64_32(tsc_delta, tsc_mult);
 	tsc_base = tsc_now;
 
 	return time_base;
 }
 
+/*
+ * Block the CPU until monotonic time is *no later than* the specified time.
+ * Returns early if any non-timer interrupts are serviced, or if the requested
+ * delay is too short.
+ */
 void
 bmk_cpu_block(bmk_time_t until)
 {
@@ -173,10 +233,13 @@ bmk_cpu_block(bmk_time_t until)
 		return;
 
 	delta_ns = until - now;
-	delta_ticks = (delta_ns << 32) / PIT_DIVISOR;
+	/*
+	 * Compute delta in PIT ticks.
+	 */
+	delta_ticks = mul64_32(delta_ns, pit_mult);
 
 	/*
-	 * While the delay is less than a minimum sane amount of ticks,
+	 * While the delay is more than a minimum safe amount of ticks,
 	 * loop and program the timer to interrupt the CPU after the
 	 * delay has expired.
 	 */
