@@ -55,9 +55,6 @@ static uint64_t tsc_base;
 /* RTC wall time offset at monotonic time base. */
 static bmk_time_t rtc_epochoffset;
 
-/* Set to 1 when the i8254 interrupt is handled. */
-static volatile int ticktock = 0;
-
 /*
  * Calculate prod = (a * b) where a is (64.0) fixed point and b is (0.32) fixed
  * point.  The intermediate product is (64.32) fixed point, discarding the
@@ -233,10 +230,9 @@ bmk_isr_clock(void)
 {
 
 	/*
-	 * Nothing to do here except signal completion, the clock interrupt
-	 * serves only as a way to wake the CPU from halt state.
+	 * Nothing to do here, the clock interrupt serves only as a way to wake
+	 * the CPU from halt state.
 	 */
-	ticktock = 1;
 }
 
 /*
@@ -274,8 +270,8 @@ bmk_cpu_clock_epochoffset(void)
 
 /*
  * Block the CPU until monotonic time is *no later than* the specified time.
- * Returns early if any non-timer interrupts are serviced, or if the requested
- * delay is too short.
+ * Returns early if any interrupts are serviced, or if the requested delay is
+ * too short.
  */
 void
 bmk_cpu_block(bmk_time_t until)
@@ -285,21 +281,18 @@ bmk_cpu_block(bmk_time_t until)
 	unsigned int ticks;
 
 	now = bmk_cpu_clock_now();
-	if (until < now)
-		return;
 
-	delta_ns = until - now;
 	/*
 	 * Compute delta in PIT ticks.
 	 */
+	delta_ns = until - now;
 	delta_ticks = mul64_32(delta_ns, pit_mult);
 
 	/*
-	 * While the delay is more than a minimum safe amount of ticks,
-	 * loop and program the timer to interrupt the CPU after the
-	 * delay has expired.
+	 * If the delay is more than a minimum safe amount of ticks, program
+	 * the timer to interrupt the CPU after the delay has expired.
 	 */
-	while (delta_ticks >= PIT_MIN_DELTA) {
+	if ((until < now) && (delta_ticks >= PIT_MIN_DELTA)) {
 		/*
 		 * Maximum timer delay is 65535 ticks.
 		 */
@@ -316,15 +309,14 @@ bmk_cpu_block(bmk_time_t until)
 		outb(TIMER_CNTR, (ticks - 1) >> 8);
 
 		/*
-		 * Wait for any interrupt. If we got a non-timer interrupt then
+		 * Wait for any interrupt. If we got an interrupt then
 		 * just return into the scheduler which will check if there is
-		 * work to do.
+		 * work to do and send us back here if not.
+		 *
+		 * TODO: It would be more efficient for longer sleeps to be
+		 * able to distinguish if the interrupt was the PIT interrupt
+		 * and no other, but this will do for now.
 		 */
 		hlt();
-		if(!ticktock)
-			break;
-		ticktock = 0;
-
-		delta_ticks -= ticks;
 	}
 }
