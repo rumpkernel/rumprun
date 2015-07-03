@@ -206,6 +206,10 @@ EOF
 	[ -z "${PLATFORM_MKCONF}" ] \
 	    || echo "${PLATFORM_MKCONF}" >> ${RUMPTOOLS}/mk.conf
 
+	TOOLTUPLE=$(${RUMPMAKE} -f bsd.own.mk \
+	    -V '${MACHINE_GNU_PLATFORM:S/--netbsd/-rumprun-netbsd/}')
+	echo "RUMPRUN_TUPLE=${TOOLTUPLE}" >> ${RUMPTOOLS}/mk.conf
+
 	# build rump kernel
 	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
 	    -s ${RUMPSRC} -T ${RUMPTOOLS} -o ${RUMPOBJ} -d ${RUMPDEST}	\
@@ -317,6 +321,11 @@ ln -sf ${PLATFORMDIR}/rump ./rumprun
 ( cd ${PLATFORMDIR} && ${MAKE} || exit 1)
 [ $? -eq 0 ] || die platform make failed!
 
+# echo some useful information for the user
 echo
+echo '>>'
+echo ">> Built rumprun for ${PLATFORM} : ${TOOLTUPLE}"
+echo ">> cc: ${TOOLTUPLE}-$(${RUMPMAKE} -f bsd.own.mk -V '${ACTIVE_CC}')"
+echo '>>'
 echo ">> $0 ran successfully"
 exit 0

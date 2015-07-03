@@ -1,4 +1,4 @@
-_APPTOOLS_PARAMS=  APP_TOOLS_GNUPLATFORM APP_TOOLS_PLATFORM APP_TOOLS_DIR
+_APPTOOLS_PARAMS=  APP_TOOLS_PLATFORM APP_TOOLS_DIR
 _APPTOOLS_PARAMS+= APP_TOOLS_OBJS_BAKE APP_TOOLS_LDSCRIPT_BAKE
 _APPTOOLS_PARAMS+= LDFLAGS_BAKE
 
@@ -20,7 +20,7 @@ APP_TOOL_SPECS=		specs-compile_or_ferment specs-stub
 APP_TOOL_PASSTHROUGH=	ar as cpp ld nm objcopy objdump ranlib readelf
 APP_TOOL_PASSTHROUGH+=	size strings strip
 
-GNUPLATFORM:= $(subst --,-rumprun-,$(APP_TOOLS_GNUPLATFORM))
+GNUPLATFORM:= $(shell ${RUMPMAKE} -f bsd.own.mk -V '$${RUMPRUN_TUPLE}')
 
 _CCVARIANT:=$(shell ${RUMPMAKE} -f bsd.own.mk -V '$${HAVE_LLVM:Dclang:Ugcc}')
 _CXXVARIANT:=$(shell ${RUMPMAKE} -f bsd.own.mk -V '$${HAVE_LLVM:Dclang++:Ug++}')

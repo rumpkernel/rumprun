@@ -2,9 +2,6 @@ ifeq (${PLATFORM},)
 $(error need to specify $$PLATFORM!)
 endif
 
-APP_TOOLS_GNUPLATFORM:=$(shell ${RUMPMAKE} -f bsd.own.mk \
-    -V '$${MACHINE_GNU_PLATFORM}')
-
 COREDIR:=       $(shell pwd)/../../lib/libbmk_core
 RUMPUSERDIR:=   $(shell pwd)/../../lib/libbmk_rumpuser
 BASEDIR:=       $(shell pwd)/../../lib/librumprun_base
