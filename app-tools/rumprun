@@ -652,7 +652,7 @@ run_qemu ()
 	shift $((${OPTIND}-1))
 
 	if [ "${variant}" = "kvm" ]; then
-		opt_kvm=-enable-kvm
+		opt_kvm="-enable-kvm -cpu host"
 	else
 		opt_kvm=-no-kvm
 	fi
