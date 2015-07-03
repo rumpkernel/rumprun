@@ -39,6 +39,7 @@ app-tools: $(_APP_TOOL_TARGETS)
 
 APP_TOOLS_MAKE := $(APP_TOOLS_DIR)/$(GNUPLATFORM)-make
 APP_TOOLS_CC := $(APP_TOOLS_DIR)/$(GNUPLATFORM)-${_CCVARIANT}
+APP_TOOLS_CXX := $(APP_TOOLS_DIR)/$(GNUPLATFORM)-${_CXXVARIANT}
 
 define APPTOOLS_templ
 $(APP_TOOLS_DIR)/${2}:							\
@@ -46,6 +47,8 @@ $(APP_TOOLS_DIR)/${2}:							\
 	sed <$$< >$$@.tmp						\
 		-e 's#!CC!#$(CC)#g;'					\
 		-e 's#!CXX!#$(CXX)#g;'					\
+		-e 's#!APPTOOLS_CC!#$(APP_TOOLS_CC)#g;'			\
+		-e 's#!APPTOOLS_CXX!#$(APP_TOOLS_CXX)#g;'		\
 		-e 's#!GNUPLATFORM!#$(GNUPLATFORM)#g;'			\
 		-e 's#!BASE_DIR!#$(abspath ../..)#g;'			\
 		-e 's#!APPTOOLS_DIR!#$(APP_TOOLS_DIR)#g;'		\

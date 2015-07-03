@@ -1,6 +1,6 @@
 #!/bin/sh
 
-export CC=!APPTOOLS_DIR!/!GNUPLATFORM!-cc
-export CXX=!APPTOOLS_DIR!/!GNUPLATFORM!-c++
+export CC=!APPTOOLS_CC!
+export CXX=!APPTOOLS_CXX!
 
 exec gmake "$@"
