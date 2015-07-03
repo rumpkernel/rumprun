@@ -140,17 +140,6 @@ i8254_delay(unsigned int n)
 	}
 }
 
-static uint64_t
-rdtsc(void)
-{
-	uint64_t val;
-	unsigned long eax, edx;
-
-	__asm__ __volatile__("rdtsc" : "=a"(eax), "=d"(edx));
-	val = ((uint64_t)edx<<32)|(eax);
-	return val;
-}
-
 /*
  * Read a RTC register. Due to PC platform braindead-ness also disables NMI.
  */

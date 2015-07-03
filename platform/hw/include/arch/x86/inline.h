@@ -58,3 +58,14 @@ hlt(void)
 
 	__asm__ __volatile__("hlt");
 }
+
+static inline uint64_t
+rdtsc(void)
+{
+	uint64_t val;
+	unsigned long eax, edx;
+
+	__asm__ __volatile__("rdtsc" : "=a"(eax), "=d"(edx));
+	val = ((uint64_t)edx<<32)|(eax);
+	return val;
+}
