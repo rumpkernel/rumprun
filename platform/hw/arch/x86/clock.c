@@ -124,7 +124,7 @@ i8254_delay(unsigned int n)
 {
 	unsigned int cur_tick, initial_tick;
 	int remaining;
-	const unsigned long timer_rval = TIMER_HZ / HZ;
+	const unsigned long timer_rval = TIMER_HZ / 100;
 
 	initial_tick = i8254_gettick();
 
@@ -183,8 +183,8 @@ bmk_x86_initclocks(void)
 
 	/* Initialise i8254 timer channel 0 to mode 2 at 100 Hz */
 	outb(TIMER_MODE, TIMER_SEL0 | TIMER_RATEGEN | TIMER_16BIT);
-	outb(TIMER_CNTR, (TIMER_HZ / HZ) & 0xff);
-	outb(TIMER_CNTR, (TIMER_HZ / HZ) >> 8);
+	outb(TIMER_CNTR, (TIMER_HZ / 100) & 0xff);
+	outb(TIMER_CNTR, (TIMER_HZ / 100) >> 8);
 
 	/*
 	 * Read RTC time to use as epoch offset. This must be done just before
