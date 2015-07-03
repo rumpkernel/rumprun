@@ -158,6 +158,8 @@ static bmk_time_t rtc_gettimeofday(void)
 {
 	struct bmk_clock_ymdhms dt;
 
+	splhigh();
+
 	/* If time update in progress then spin until complete. */
 	while(rtc_read(RTC_STATUS_A) & RTC_UIP)
 		continue;
@@ -168,6 +170,8 @@ static bmk_time_t rtc_gettimeofday(void)
 	dt.dt_day = bcdtobin(rtc_read(RTC_DAY));
 	dt.dt_mon = bcdtobin(rtc_read(RTC_MONTH));
 	dt.dt_year = bcdtobin(rtc_read(RTC_YEAR)) + 2000;
+
+	spl0();
 
 	return bmk_clock_ymdhms_to_secs(&dt) * NSEC_PER_SEC;
 }
@@ -192,9 +196,11 @@ bmk_x86_initclocks(void)
 	 * Calculate TSC frequency by calibrating against an 0.1s delay
 	 * using the i8254 timer.
 	 */
+	spl0();
 	tsc_base = rdtsc();
 	i8254_delay(100000);
 	tsc_freq = (rdtsc() - tsc_base) * 10;
+	splhigh();
 
 	/*
 	 * Reinitialise i8254 timer channel 0 to mode 4 (one shot).
@@ -241,6 +247,8 @@ bmk_cpu_clock_now(void)
 {
 	uint64_t tsc_now, tsc_delta;
 
+	splhigh();
+
 	/*
 	 * Update time_base (monotonic time) and tsc_base (TSC time).
 	 */
@@ -248,6 +256,8 @@ bmk_cpu_clock_now(void)
 	tsc_delta = tsc_now - tsc_base;
 	time_base += mul64_32(tsc_delta, tsc_mult);
 	tsc_base = tsc_now;
+
+	spl0();
 
 	return time_base;
 }
