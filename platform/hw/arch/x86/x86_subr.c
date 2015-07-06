@@ -77,3 +77,41 @@ bmk_x86_initidt(void)
 	bmk_x86_fillgate(2, bmk_x86_trap_2, 2);
 	bmk_x86_fillgate(8, bmk_x86_trap_8, 3);
 }
+
+void
+bmk_x86_cpuid(uint32_t level, uint32_t *eax_out, uint32_t *ebx_out,
+		uint32_t *ecx_out, uint32_t *edx_out)
+{
+	uint32_t eax_, ebx_, ecx_, edx_;
+
+	/*
+	 * Verify if the requested CPUID level is supported. If not, just
+	 * zero everything and return, hoping the caller knows what to do.
+	 * This is better than the documented operation for invalid values of
+	 * level, which is to behave as if CPUID had been called with the
+	 * maximum supported level.
+	 */
+	eax_ = 0;
+	__asm__(
+		"cpuid"
+		: "=a" (eax_), "=b" (ebx_), "=c" (ecx_), "=d" (edx_)
+		: "0" (eax_)
+	);
+	if (eax_ < level) {
+		*eax_out = *ebx_out = *ecx_out = *edx_out = 0;
+		return;
+	}
+
+	/*
+	 * Call requested CPUID level.
+	 */
+	__asm__(
+		"cpuid"
+		: "=a" (eax_), "=b" (ebx_), "=c" (ecx_), "=d" (edx_)
+		: "0" (level)
+	);
+	*eax_out = eax_;
+	*ebx_out = ebx_;
+	*ecx_out = ecx_;
+	*edx_out = edx_;
+}
