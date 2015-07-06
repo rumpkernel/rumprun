@@ -27,6 +27,8 @@
 #include <bmk/kernel.h>
 #include <bmk/clock_subr.h>
 
+#include <bmk-core/printf.h>
+
 #define NSEC_PER_SEC	1000000000ULL
 /* Minimum delta to sleep using PIT. Programming seems to have an overhead of
  * 3-4us, but play it safe here. */
@@ -177,6 +179,17 @@ void
 bmk_x86_initclocks(void)
 {
 	uint64_t tsc_freq;
+	uint32_t eax, ebx, ecx, edx;
+
+	/* Verify that TSC is supported. */
+	bmk_x86_cpuid(0x1, &eax, &ebx, &ecx, &edx);
+	if (!(edx & (1 << 4)))
+		bmk_platform_halt("Processor does not support RDTSC");
+	/* And that it is invariant. TODO: Potentially halt here if not? */
+	bmk_x86_cpuid(0x80000007, &eax, &ebx, &ecx, &edx);
+	if (!(edx & (1 << 8))) {
+		bmk_printf("WARNING: Processor claims to not support invariant TSC.\n");
+	}
 
 	/* Initialise i8254 timer channel 0 to mode 2 at 100 Hz */
 	outb(TIMER_MODE, TIMER_SEL0 | TIMER_RATEGEN | TIMER_16BIT);
@@ -198,6 +211,8 @@ bmk_x86_initclocks(void)
 	i8254_delay(100000);
 	tsc_freq = (rdtsc() - tsc_base) * 10;
 	splhigh();
+	bmk_printf("bmk_x86_initclocks(): TSC frequency estimate is %llu Hz\n",
+		(unsigned long long)tsc_freq);
 
 	/*
 	 * Reinitialise i8254 timer channel 0 to mode 4 (one shot).
