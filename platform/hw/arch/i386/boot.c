@@ -35,7 +35,6 @@ void
 bmk_cpu_boot(struct multiboot_info *mbi)
 {
 
-	bmk_cons_clear();
 	bmk_printf_init(bmk_cons_putc, NULL);
 	bmk_printf("rump kernel bare metal bootstrap\n\n");
 
