@@ -91,7 +91,7 @@ bmk_x86_cpuid(uint32_t level, uint32_t *eax_out, uint32_t *ebx_out,
 	 * level, which is to behave as if CPUID had been called with the
 	 * maximum supported level.
 	 */
-	eax_ = 0;
+	eax_ = (level < 0x80000000) ? 0 : 0x80000000;
 	__asm__(
 		"cpuid"
 		: "=a" (eax_), "=b" (ebx_), "=c" (ecx_), "=d" (edx_)
