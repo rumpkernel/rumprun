@@ -74,10 +74,7 @@ bmk_multiboot(struct multiboot_info *mbi)
 	unsigned long cmdlinelen;
 	char *cmdline;
 
-	bmk_printf_init(bmk_cons_putc, NULL);
 	bmk_core_init(BMK_THREAD_STACK_PAGE_ORDER, PAGE_SHIFT);
-
-	bmk_printf("rump kernel bare metal multibootstrap\n\n");
 
 	/* save the command line before something overwrites it */
 	if (mbi->flags & MULTIBOOT_INFO_CMDLINE) {

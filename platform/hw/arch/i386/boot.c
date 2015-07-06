@@ -29,10 +29,15 @@
 
 #include <bmk-core/core.h>
 #include <bmk-core/sched.h>
+#include <bmk-core/printf.h>
 
 void
 bmk_cpu_boot(struct multiboot_info *mbi)
 {
+
+	bmk_cons_clear();
+	bmk_printf_init(bmk_cons_putc, NULL);
+	bmk_printf("rump kernel bare metal bootstrap\n\n");
 
 	bmk_cpu_init();
 	bmk_sched_init();
