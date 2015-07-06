@@ -17,7 +17,6 @@ void bmk_cons_puts(const char *);
 
 void bmk_cpu_init(void);
 void bmk_cpu_block(bmk_time_t);
-void bmk_cpu_nanohlt(void);
 int bmk_cpu_intr_init(int);
 void bmk_cpu_intr_ack(void);
 
