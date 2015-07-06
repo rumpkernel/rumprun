@@ -280,43 +280,46 @@ bmk_cpu_block(bmk_time_t until)
 	int64_t delta_ticks;
 	unsigned int ticks;
 
+	/*
+	 * Return if called too late.
+	 */
 	now = bmk_cpu_clock_now();
+	if (until < now)
+		return;
 
 	/*
-	 * Compute delta in PIT ticks.
+	 * Compute delta in PIT ticks. Return if it is less than minimum safe
+	 * amount of ticks.
 	 */
 	delta_ns = until - now;
 	delta_ticks = mul64_32(delta_ns, pit_mult);
+	if (delta_ticks < PIT_MIN_DELTA)
+		return;
 
 	/*
-	 * If the delay is more than a minimum safe amount of ticks, program
-	 * the timer to interrupt the CPU after the delay has expired.
+	 * Program the timer to interrupt the CPU after the delay has expired.
+	 * Maximum timer delay is 65535 ticks.
 	 */
-	if ((until < now) && (delta_ticks >= PIT_MIN_DELTA)) {
-		/*
-		 * Maximum timer delay is 65535 ticks.
-		 */
-		if (delta_ticks > 65535)
-			ticks = 65535;
-		else
-			ticks = delta_ticks;
+	if (delta_ticks > 65535)
+		ticks = 65535;
+	else
+		ticks = delta_ticks;
 
-		/*
-		 * Note that according to the Intel 82C54 datasheet, p12 the
-		 * interrupt is actually delivered in N + 1 ticks.
-		 */
-		outb(TIMER_CNTR, (ticks - 1) & 0xff);
-		outb(TIMER_CNTR, (ticks - 1) >> 8);
+	/*
+	 * Note that according to the Intel 82C54 datasheet, p12 the
+	 * interrupt is actually delivered in N + 1 ticks.
+	 */
+	outb(TIMER_CNTR, (ticks - 1) & 0xff);
+	outb(TIMER_CNTR, (ticks - 1) >> 8);
 
-		/*
-		 * Wait for any interrupt. If we got an interrupt then
-		 * just return into the scheduler which will check if there is
-		 * work to do and send us back here if not.
-		 *
-		 * TODO: It would be more efficient for longer sleeps to be
-		 * able to distinguish if the interrupt was the PIT interrupt
-		 * and no other, but this will do for now.
-		 */
-		hlt();
-	}
+	/*
+	 * Wait for any interrupt. If we got an interrupt then
+	 * just return into the scheduler which will check if there is
+	 * work to do and send us back here if not.
+	 *
+	 * TODO: It would be more efficient for longer sleeps to be
+	 * able to distinguish if the interrupt was the PIT interrupt
+	 * and no other, but this will do for now.
+	 */
+	hlt();
 }
