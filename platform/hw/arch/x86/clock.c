@@ -187,9 +187,8 @@ bmk_x86_initclocks(void)
 		bmk_platform_halt("Processor does not support RDTSC");
 	/* And that it is invariant. TODO: Potentially halt here if not? */
 	bmk_x86_cpuid(0x80000007, &eax, &ebx, &ecx, &edx);
-	if (!(edx & (1 << 8))) {
+	if (!(edx & (1 << 8)))
 		bmk_printf("WARNING: Processor claims to not support invariant TSC.\n");
-	}
 
 	/* Initialise i8254 timer channel 0 to mode 2 at 100 Hz */
 	outb(TIMER_MODE, TIMER_SEL0 | TIMER_RATEGEN | TIMER_16BIT);
