@@ -45,7 +45,6 @@ ENTRY(bmk_x86_trap_##num) \
 	iretq ;\
 END(bmk_x86_trap_##num)
 
-SYSTRAP(0, "#DE")
 SYSTRAP(2, "#NMI")
 SYSTRAP(3, "#BP")
 SYSTRAP(4, "#OF")
@@ -59,13 +58,28 @@ SYSTRAP(12, "#SS")
 SYSTRAP(13, "#GP")
 SYSTRAP(17, "#AC")
 
-/* page fault */
-ENTRY(bmk_x86_trap_14)
-	mov %cr2, %rdi
-	mov 8(%rsp), %rsi
-	call bmk_cpu_pagefault
-	hlt
-END(bmk_x86_trap_14)
+/*
+ * Fatal traps.  Well the previous ones might be fatal too, but let's
+ * call these especially fatal.
+ */
+#define FATTRAP(num, reason) \
+fattrapstr##num: ;\
+	.asciz reason ;\
+ENTRY(bmk_x86_trap_##num) \
+	movq $fattrapstr##num, %rdi ;\
+	movq %cr2, %rdx ;\
+	mov $##num, %rcx ;\
+	test $14, %rcx ;\
+	je 1f ;\
+	addq $8, %rsp ;\
+1: ;\
+	movq 0(%rsp), %rsi ;\
+	call bmk_cpu_fattrap ;\
+	hlt ;\
+END(bmk_x86_trap_##num)
+
+FATTRAP(0, "divide-by-zero")
+FATTRAP(14, "page fault")
 
 /*
  * we just ignore most interrupts and traps with this
