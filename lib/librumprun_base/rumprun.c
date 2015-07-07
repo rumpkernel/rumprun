@@ -110,9 +110,8 @@ rumprun_boot(char *cmdline)
 		warnx("FAILED: mount tmpfs on /tmp: %s", strerror(tmpfserrno));
 	}
 
-#ifdef RUMP_SYSPROXY
 	rump_init_server("tcp://0:12345");
-#endif
+
 	_rumprun_config(cmdline);
 
 	/*
