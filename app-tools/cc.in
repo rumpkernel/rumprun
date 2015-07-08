@@ -86,8 +86,12 @@ ferment)
 	    -specs=!APPTOOLS_DIR!/specs-stub \
 	    ${OUTFILE} -o /dev/null
 	if [ $? -ne 0 ]; then
-		[ -f "${OUTFILE}" ] && rm -f ${OUTFILE}
-		die
+		if [ "${RUMPRUN_STUBLINK}" = "succeed" ]; then
+			echo "$0: warning: stub link failed, ignoring" 1>&2
+		else
+			[ -f "${OUTFILE}" ] && rm -f ${OUTFILE}
+			die
+		fi
 	fi
 
 	# Some build systems insist that the output looks like an executable.
