@@ -81,6 +81,16 @@ ferment)
 	    -Wl,--defsym=__RuMpRuN_fermented__=0 \
 	    "$@" ${EXTRALIBS} || die
 
+	if [ "${RUMPRUN_STUBLINK}" = succeed ]; then
+		exec 3>&1 2>&1
+		echo '!!!'
+		echo '!!! WARNING: $RUMPRUN_STUBLINK may be desupported without'
+		echo '!!!          warning in the future.  Do not rely on it'
+		echo '!!!          continuing to be available.'
+		echo '!!!'
+		exec 1>&3 3>&-
+	fi
+
 	# Try a stub link with minimal rump components. If that fails then stop.
 	${CC} ${CFLAGS} -no-integrated-cpp \
 	    -specs=!APPTOOLS_DIR!/specs-stub \
