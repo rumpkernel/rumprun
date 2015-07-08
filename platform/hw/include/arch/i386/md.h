@@ -17,8 +17,6 @@ void bmk_cpu_lgdt(struct region_descriptor *);
 
 #include <bmk-core/platform.h>
 
-void bmk_x86_cpuid(uint32_t, uint32_t *, uint32_t *, uint32_t *, uint32_t *);
-
 #include <arch/x86/reg.h>
 #include <arch/x86/inline.h>
 

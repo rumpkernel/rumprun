@@ -22,4 +22,6 @@ void bmk_x86_trap_12(void);
 void bmk_x86_trap_13(void);
 void bmk_x86_trap_14(void);
 void bmk_x86_trap_17(void);
+
+void bmk_x86_cpuid(uint32_t, uint32_t *, uint32_t *, uint32_t *, uint32_t *);
 #endif

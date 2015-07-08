@@ -17,8 +17,6 @@ struct region_descriptor;
 void bmk_amd64_lidt(struct region_descriptor *);
 void bmk_amd64_ltr(unsigned long);
 
-void bmk_x86_cpuid(uint32_t, uint32_t *, uint32_t *, uint32_t *, uint32_t *);
-
 #include <arch/x86/reg.h>
 #include <arch/x86/inline.h>
 
