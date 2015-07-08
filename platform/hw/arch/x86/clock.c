@@ -246,16 +246,6 @@ bmk_x86_initclocks(void)
 	outb(PIC1_DATA, 0xff & ~(1<<2|1<<0));
 }
 
-void
-bmk_isr_clock(void)
-{
-
-	/*
-	 * Nothing to do here, the clock interrupt serves only as a way to wake
-	 * the CPU from halt state.
-	 */
-}
-
 /*
  * Return monotonic time since system boot in nanoseconds.
  */
