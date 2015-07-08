@@ -165,7 +165,10 @@ rtc_gettimeofday(void)
 
 	splhigh();
 
-	/* If time update in progress then spin until complete. */
+	/*
+	 * If RTC_UIP is down, we have at least 244us to obtain a
+	 * consistent reading before an update can occur.
+	 */
 	while (rtc_read(RTC_STATUS_A) & RTC_UIP)
 		continue;
 
