@@ -30,8 +30,10 @@
 #include <bmk-core/printf.h>
 
 #define NSEC_PER_SEC	1000000000ULL
-/* Minimum delta to sleep using PIT. Programming seems to have an overhead of
- * 3-4us, but play it safe here. */
+/*
+ * Minimum delta to sleep using PIT. Programming seems to have an overhead of
+ * 3-4us, but play it safe here.
+ */
 #define PIT_MIN_DELTA	16
 
 /* clock isr trampoline (in locore.S) */
@@ -48,7 +50,8 @@ static uint32_t tsc_mult;
  *     f = NSEC_PER_SEC / TIMER_HZ   (0.31) fixed point.
  *     pit_mult = 1 / f              (1.32) fixed point.
  */
-static const uint32_t pit_mult = (1ULL << 63) / ((NSEC_PER_SEC << 31) / TIMER_HZ);
+static const uint32_t pit_mult
+    = (1ULL << 63) / ((NSEC_PER_SEC << 31) / TIMER_HZ);
 
 /* Base time values at the last call to bmk_cpu_clock_now(). */
 static bmk_time_t time_base;
@@ -64,7 +67,8 @@ static bmk_time_t rtc_epochoffset;
  *
  * XXX Document what range of (a, b) is safe from overflow in this calculation.
  */
-static inline uint64_t mul64_32(uint64_t a, uint32_t b)
+static inline uint64_t
+mul64_32(uint64_t a, uint32_t b)
 {
 	uint64_t prod;
 #if defined(__x86_64__)
@@ -94,7 +98,7 @@ static inline uint64_t mul64_32(uint64_t a, uint32_t b)
 		: "a" (l), "1" (h), "2" (b)
 	);
 #else
-#error
+#error mul64_32 not supported for target architecture
 #endif
 
 	return prod;
@@ -142,7 +146,8 @@ i8254_delay(unsigned int n)
 /*
  * Read a RTC register. Due to PC platform braindead-ness also disables NMI.
  */
-static inline uint8_t rtc_read(uint8_t reg)
+static inline uint8_t
+rtc_read(uint8_t reg)
 {
 
 	outb(RTC_COMMAND, reg | RTC_NMI_DISABLE);
@@ -153,14 +158,15 @@ static inline uint8_t rtc_read(uint8_t reg)
  * Return current RTC time. Note that due to waiting for the update cycle to
  * complete, this call may take some time.
  */
-static bmk_time_t rtc_gettimeofday(void)
+static bmk_time_t
+rtc_gettimeofday(void)
 {
 	struct bmk_clock_ymdhms dt;
 
 	splhigh();
 
 	/* If time update in progress then spin until complete. */
-	while(rtc_read(RTC_STATUS_A) & RTC_UIP)
+	while (rtc_read(RTC_STATUS_A) & RTC_UIP)
 		continue;
 
 	dt.dt_sec = bcdtobin(rtc_read(RTC_SEC));
@@ -188,7 +194,8 @@ bmk_x86_initclocks(void)
 	/* And that it is invariant. TODO: Potentially halt here if not? */
 	bmk_x86_cpuid(0x80000007, &eax, &ebx, &ecx, &edx);
 	if (!(edx & (1 << 8)))
-		bmk_printf("WARNING: Processor claims to not support invariant TSC.\n");
+		bmk_printf("WARNING: Processor claims to not support "
+		    "invariant TSC.\n");
 
 	/* Initialise i8254 timer channel 0 to mode 2 at 100 Hz */
 	outb(TIMER_MODE, TIMER_SEL0 | TIMER_RATEGEN | TIMER_16BIT);
