@@ -78,7 +78,6 @@ ferment)
 	${CC} ${CFLAGS} -no-integrated-cpp \
 	    -specs=!APPTOOLS_DIR!/specs-compile_or_ferment \
 	    -Wl,-r -Wl,-u,main \
-	    -Wl,--defsym=__RuMpRuN_fermented__=0 \
 	    "$@" !APPTOOLS_DIR!/!GNUPLATFORM!-recipe.s ${EXTRALIBS} || die
 
 	if [ "${RUMPRUN_STUBLINK}" = succeed ]; then
