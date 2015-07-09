@@ -257,8 +257,6 @@ bmk_cpu_clock_now(void)
 {
 	uint64_t tsc_now, tsc_delta;
 
-	splhigh();
-
 	/*
 	 * Update time_base (monotonic time) and tsc_base (TSC time).
 	 */
@@ -266,8 +264,6 @@ bmk_cpu_clock_now(void)
 	tsc_delta = tsc_now - tsc_base;
 	time_base += mul64_32(tsc_delta, tsc_mult);
 	tsc_base = tsc_now;
-
-	spl0();
 
 	return time_base;
 }
