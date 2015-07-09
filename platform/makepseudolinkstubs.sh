@@ -19,6 +19,9 @@ OUTPUT=$4
 rm -f ${OUTPUT}
 printf '/* AUTOMATICALLY GENERATED */\n\n' >> ${OUTPUT}
 printf '#include <sys/cdefs.h>\n\n' >> ${OUTPUT}
+printf 'extern int main(int, char**);\n' >> ${OUTPUT}
+printf 'int _want_main(void); int _want_main(void) {return main(0, 0);}\n' \
+    >> ${OUTPUT}
 printf 'int _stubnosys(void); int _stubnosys(void) {return -1;}\n' \
     >> ${OUTPUT}
 
