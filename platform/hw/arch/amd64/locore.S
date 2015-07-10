@@ -169,7 +169,7 @@ ENTRY(_start64)
 	pushq $0x0
 	pushq $0x0
 
-	call bmk_cpu_boot
+	call bmk_x86_boot
 	hlt
 END(_start64)
 

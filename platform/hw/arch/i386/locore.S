@@ -55,7 +55,7 @@ ENTRY(_start)
 
 	/* store multiboot structure address, process contents later in C */
 	movl %ebx, bmk_cpu_multiboot_info
-	call bmk_cpu_boot
+	call bmk_x86_boot
 
 	jmp haltme
 

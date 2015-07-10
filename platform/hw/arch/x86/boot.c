@@ -35,7 +35,7 @@
 struct multiboot_info *bmk_cpu_multiboot_info;
 
 void
-bmk_cpu_boot(struct multiboot_info *mbi)
+bmk_x86_boot(void)
 {
 
 	bmk_printf_init(bmk_cons_putc, NULL);

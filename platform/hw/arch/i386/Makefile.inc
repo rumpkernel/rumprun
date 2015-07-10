@@ -1,5 +1,6 @@
-OBJS_BMK+=	arch/i386/locore.o arch/i386/machdep.o arch/i386/boot.o
+OBJS_BMK+=	arch/i386/locore.o arch/i386/machdep.o
 
+OBJS_BMK+=	arch/x86/boot.o
 OBJS_BMK+=	arch/x86/vgacons.o
 OBJS_BMK+=	arch/x86/cpu_subr.o
 OBJS_BMK+=	arch/x86/x86_subr.o
