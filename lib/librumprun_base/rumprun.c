@@ -226,6 +226,9 @@ rumprun_wait(void *cookie)
 	void *retval;
 
 	pthread_join(rr->rr_mainthread, &retval);
+	LIST_REMOVE(rr, rr_entries);
+	free(rr);
+
 	assert(rumprun_done > 0);
 	rumprun_done--;
 
@@ -246,7 +249,6 @@ rumprun_get_finished(void)
 	}
 	LIST_FOREACH(rr, &rumprunners, rr_entries) {
 		if (rr->rr_flags & RUMPRUNNER_DONE) {
-			LIST_REMOVE(rr, rr_entries);
 			break;
 		}
 	}
