@@ -34,14 +34,12 @@
 .long MYMULTIBOOT_FLAGS
 .long -(MULTIBOOT_HEADER_MAGIC+MYMULTIBOOT_FLAGS)
 
-.section bootstack
-.set stack_size, 4096
-.globl _bootstack
-.comm _bootstack, stack_size
+.space 4096
+bootstack:
 
 ENTRY(_start)
 	cld
-	movl $(_bootstack + stack_size), %esp
+	movl $bootstack, %esp
 
 	pushl %ebx
 	pushl %eax
