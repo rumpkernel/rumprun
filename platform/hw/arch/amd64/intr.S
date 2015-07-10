@@ -32,17 +32,17 @@
  */
 itsatrap:
 	.asciz "trap: "
-#define SYSTRAP(num, reason) \
-trapstr##num: ;\
-	.asciz reason ;\
-ENTRY(bmk_x86_trap_##num) \
-	movq $itsatrap, %rdi ;\
-	call bmk_cons_puts ;\
-	movq $trapstr##num, %rdi ;\
-	call bmk_cons_puts ;\
-	movq $'\n', %rdi ;\
-	call bmk_cons_putc ;\
-	iretq ;\
+#define SYSTRAP(num, reason)						 \
+trapstr##num:								;\
+	.asciz reason							;\
+ENTRY(bmk_x86_trap_##num)						 \
+	movq $itsatrap, %rdi						;\
+	call bmk_cons_puts						;\
+	movq $trapstr##num, %rdi					;\
+	call bmk_cons_puts						;\
+	movq $'\n', %rdi						;\
+	call bmk_cons_putc						;\
+	iretq								;\
 END(bmk_x86_trap_##num)
 
 SYSTRAP(2, "#NMI")
@@ -62,20 +62,20 @@ SYSTRAP(17, "#AC")
  * Fatal traps.  Well the previous ones might be fatal too, but let's
  * call these especially fatal.
  */
-#define FATTRAP(num, reason) \
-fattrapstr##num: ;\
-	.asciz reason ;\
-ENTRY(bmk_x86_trap_##num) \
-	movq $fattrapstr##num, %rdi ;\
-	movq %cr2, %rdx ;\
-	mov $##num, %rcx ;\
-	test $14, %rcx ;\
-	je 1f ;\
-	addq $8, %rsp ;\
-1: ;\
-	movq 0(%rsp), %rsi ;\
-	call bmk_cpu_fattrap ;\
-	hlt ;\
+#define FATTRAP(num, reason)						 \
+fattrapstr##num:							;\
+	.asciz reason							;\
+ENTRY(bmk_x86_trap_##num)						 \
+	movq $fattrapstr##num, %rdi					;\
+	movq %cr2, %rdx							;\
+	mov $##num, %rcx						;\
+	test $14, %rcx							;\
+	je 1f								;\
+	addq $8, %rsp							;\
+1:									;\
+	movq 0(%rsp), %rsi						;\
+	call bmk_cpu_fattrap						;\
+	hlt								;\
 END(bmk_x86_trap_##num)
 
 FATTRAP(0, "divide-by-zero")
