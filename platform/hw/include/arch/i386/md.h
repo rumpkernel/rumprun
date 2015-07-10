@@ -8,6 +8,7 @@
 #define BMK_THREAD_STACK_PAGE_ORDER 1
 #define BMK_THREAD_STACKSIZE ((1<<BMK_THREAD_STACK_PAGE_ORDER) * PAGE_SIZE)
 
+#include <arch/x86/reg.h>
 #include <arch/x86/var.h>
 
 #ifndef _LOCORE
@@ -17,7 +18,6 @@ void bmk_cpu_lgdt(struct region_descriptor *);
 
 #include <bmk-core/platform.h>
 
-#include <arch/x86/reg.h>
 #include <arch/x86/inline.h>
 
 struct multiboot_info;

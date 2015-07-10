@@ -8,6 +8,7 @@
 #define BMK_THREAD_STACK_PAGE_ORDER 3
 #define BMK_THREAD_STACKSIZE ((1<<BMK_THREAD_STACK_PAGE_ORDER) * PAGE_SIZE)
 
+#include <arch/x86/reg.h>
 #include <arch/x86/var.h>
 
 #ifndef _LOCORE
@@ -17,7 +18,6 @@ struct region_descriptor;
 void bmk_amd64_lidt(struct region_descriptor *);
 void bmk_amd64_ltr(unsigned long);
 
-#include <arch/x86/reg.h>
 #include <arch/x86/inline.h>
 
 void bmk_cpu_boot(void *);
