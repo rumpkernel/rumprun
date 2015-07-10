@@ -59,6 +59,14 @@ ENTRY(_start)
 	cld
 	movl $bootstack, %esp
 
+	/* clear console */
+	pushl %eax
+	movw $0x20, %ax
+	movl $0xb8000, %edi
+	movl $(80*25), %ecx
+	rep stosw
+	popl %eax
+
 	/* only multiboot is supported for now */
 	cmpl $MULTIBOOT_BOOTLOADER_MAGIC, %eax
 	jne nomultiboot

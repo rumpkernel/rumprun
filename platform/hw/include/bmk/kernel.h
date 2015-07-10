@@ -11,7 +11,6 @@ void bmk_multiboot(struct multiboot_info *);
 
 void bmk_run(char *);
 
-void bmk_cons_clear(void);
 void bmk_cons_putc(int);
 void bmk_cons_puts(const char *);
 
