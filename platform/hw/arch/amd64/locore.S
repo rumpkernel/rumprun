@@ -62,8 +62,8 @@ ENTRY(_start)
 	/* clear console */
 	pushl %eax
 	movw $0x20, %ax
-	movl $0xb8000, %edi
-	movl $(80*25), %ecx
+	movl $(CONS_ADDRESS), %edi
+	movl $(CONS_WIDTH*CONS_HEIGHT), %ecx
 	rep stosw
 	popl %eax
 

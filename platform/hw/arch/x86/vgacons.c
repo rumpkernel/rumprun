@@ -26,10 +26,8 @@
 #include <bmk/types.h>
 #include <bmk/kernel.h>
 
-#define CONS_WIDTH 80
-#define CONS_HEIGHT 25
 #define CONS_MAGENTA 0x500
-static volatile uint16_t *cons_buf = (volatile uint16_t *)0xb8000;
+static volatile uint16_t *cons_buf = (volatile uint16_t *)CONS_ADDRESS;
 
 static void
 cons_putat(int c, int x, int y)

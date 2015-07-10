@@ -27,3 +27,7 @@
 #define	RTC_YEAR	0x09
 #define	RTC_STATUS_A	0x0a
 #define	RTC_UIP		(1<<7)
+
+#define CONS_WIDTH	80
+#define CONS_HEIGHT	25
+#define CONS_ADDRESS	0xb8000
