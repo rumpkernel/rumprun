@@ -31,6 +31,9 @@
 #include <bmk-core/sched.h>
 #include <bmk-core/printf.h>
 
+/* initialized by locore */
+struct multiboot_info *bmk_cpu_multiboot_info;
+
 void
 bmk_cpu_boot(struct multiboot_info *mbi)
 {
@@ -40,7 +43,7 @@ bmk_cpu_boot(struct multiboot_info *mbi)
 
 	bmk_cpu_init();
 	bmk_sched_init();
-	bmk_multiboot(mbi);
+	bmk_multiboot(bmk_cpu_multiboot_info);
 
 	spl0();
 
