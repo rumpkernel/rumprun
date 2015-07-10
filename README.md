@@ -10,7 +10,7 @@ See the [wiki](http://wiki.rumpkernel.org/Repo:-rumprun) for more
 information and instructions.
 
 You will find software packages for rumprun from the
-[rumprun-packages repostory](http://repo.rumpkernel.org/rumprun-packages).
+[rumprun-packages repository](http://repo.rumpkernel.org/rumprun-packages).
 
 hw
 --
