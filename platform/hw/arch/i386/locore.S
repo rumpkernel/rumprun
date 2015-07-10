@@ -62,13 +62,15 @@ ENTRY(_start)
 nomultiboot:
 	/* we don't have printf available yet, just output manually */
 	mov $nomultimesg, %ebx
+	mov $(CONS_ADDRESS), %ecx
 1:
 	movsbl (%ebx), %eax
 	test %al, %al
 	je haltme
-	movl %eax, 0(%esp)
-	call bmk_cons_putc
+	orl $0x500, %eax
+	movl %eax, (%ecx)
 	inc %ebx
+	addl $2, %ecx
 	jmp 1b
 
 haltme:
