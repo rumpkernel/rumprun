@@ -148,8 +148,10 @@ END(bmk_cpu_insr)
  */
 ENTRY(bmk_cpu_isr_clock)
 	cli
+	pushl %eax
 	movb $0x20, %al
 	outb %al, $0x20
+	popl %eax
 	sti
 	iret
 END(bmk_cpu_isr_clock)
