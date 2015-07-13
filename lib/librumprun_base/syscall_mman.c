@@ -34,8 +34,11 @@
 #define mmap _mmap
 
 #include <sys/cdefs.h>
+
+#include <sys/param.h>
 #include <sys/mman.h>
 
+#include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -54,6 +57,7 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 	void *v;
 	ssize_t nn;
 	long pagesize = sysconf(_SC_PAGESIZE);
+	size_t roundedlen, nnu;
 	int error;
 
 	if (fd != -1 && prot != PROT_READ) {
@@ -62,7 +66,21 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 		return MAP_FAILED;
 	}
 
-	if ((error = posix_memalign(&v, pagesize, len)) != 0) {
+	/* we're not going to even try */
+	if (flags & MAP_FIXED) {
+		errno = ENOMEM;
+		return MAP_FAILED;
+	}
+
+	/* offset should be aligned to page size */
+	if ((off & (pagesize-1)) != 0) {
+		errno = EINVAL;
+		return MAP_FAILED;
+	}
+
+	/* allocate full whatever-we-lie-to-be-pages */
+	roundedlen = roundup2(len, pagesize);
+	if ((error = posix_memalign(&v, pagesize, roundedlen)) != 0) {
 		errno = error;
 		return MAP_FAILED;
 	}
@@ -70,13 +88,26 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 	if (flags & MAP_ANON)
 		return v;
 
-	if ((nn = pread(fd, v, len, off)) == -1) {
+	if ((nn = pread(fd, v, roundedlen, off)) == -1) {
 		MMAP_PRINTF(("mmap: failed to populate r/o file mapping!\n"));
 		error = errno;
 		free(v);
 		errno = error;
 		return MAP_FAILED;
 	}
+	nnu = (size_t)nn;
+
+	/*
+	 * Memory after the end of the object until the end of the page
+	 * should be 0-filled.  We don't really know when the object
+	 * stops (we could do a fstat(), but that's racy), so just assume
+	 * that the caller knows what her or she is doing.
+	 */
+	if (nnu != roundedlen) {
+		assert(nnu < roundedlen);
+		memset((uint8_t *)v+nnu, 0, roundedlen-nnu);
+	}
+
 	return v;
 }
 #undef mmap
