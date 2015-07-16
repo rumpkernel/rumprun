@@ -179,7 +179,23 @@ config_ipv6(const char *ifname, const char *method,
 			errx(1, "ipv6 autoconfig failed");
 		}
 	} else {
-		errx(1, "unsupported ipv6 config method \"%s\"", method);
+		if (strcmp(method, "static") != 0) {
+			errx(1, "method \"static\" or \"dhcp\" expected, "
+			    "got \"%s\"", method);
+		}
+
+		if (!addr || !mask) {
+			errx(1, "static net cfg missing addr or mask");
+		}
+
+		if ((rv = rump_pub_netconfig_ipv6_ifaddr(ifname,
+		    addr, atoi(mask))) != 0) {
+			errx(1, "ifconfig \"%s\" for \"%s/%s\" failed",
+			    ifname, addr, mask);
+		}
+		if (gw && (rv = rump_pub_netconfig_ipv6_gw(gw)) != 0) {
+			errx(1, "gw \"%s\" addition failed", gw);
+		}
 	}
 }
 
