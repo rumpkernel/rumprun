@@ -41,6 +41,9 @@ ENTRY(_start)
 	cld
 	movl $bootstack, %esp
 
+	/* save multiboot info pointer */
+	pushl %ebx
+
 	/* clear console */
 	pushl %eax
 	movw $0x20, %ax
@@ -53,8 +56,6 @@ ENTRY(_start)
 	cmpl $MULTIBOOT_BOOTLOADER_MAGIC, %eax
 	jne nomultiboot
 
-	/* store multiboot structure address, process contents later in C */
-	movl %ebx, bmk_cpu_multiboot_info
 	call bmk_x86_boot
 
 	jmp haltme

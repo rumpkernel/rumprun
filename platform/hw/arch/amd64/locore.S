@@ -59,6 +59,10 @@ ENTRY(_start)
 	cld
 	movl $bootstack, %esp
 
+	/* save multiboot info pointer at top of stack, we pop it in 64bit */
+	pushl $0
+	pushl %ebx
+
 	/* clear console */
 	pushl %eax
 	movw $0x20, %ax
@@ -70,9 +74,6 @@ ENTRY(_start)
 	/* only multiboot is supported for now */
 	cmpl $MULTIBOOT_BOOTLOADER_MAGIC, %eax
 	jne nomultiboot
-
-	/* store multiboot structure address, process contents later in C */
-	movl %ebx, bmk_cpu_multiboot_info
 
 	lgdt (gdt64_ptr)
 	pushl $0x0
@@ -177,6 +178,9 @@ gdt64_ptr:
 ENTRY(_start64)
 	movq $bootstack, %rsp
 	xorq %rbp, %rbp
+
+	/* read multiboot info pointer */
+	movq -8(%rsp), %rdi
 
 	pushq $0x0
 	pushq $0x0

@@ -2,7 +2,8 @@
 #define PAGE_SIZE (1<<PAGE_SHIFT)
 
 #ifndef _LOCORE
-void	bmk_x86_boot(void);
+struct multiboot_info;
+void	bmk_x86_boot(struct multiboot_info *);
 
 void	bmk_x86_initpic(void);
 void	bmk_x86_initidt(void);
