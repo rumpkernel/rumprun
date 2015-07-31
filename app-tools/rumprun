@@ -415,15 +415,15 @@ parse_blkspec ()
 {
 	spec=$1
 
-	image=${spec%,*}
-	image=$(readlink -f ${image})
-	mountpoint=$(echo ${spec} | sed -n 's/.*,\(.*\)/\1/p')
-	[ -n "$image" ] || usage
-	[ -f "$image" ] || die File $image does not exist
+	image_path=${spec%,*}
+	[ -n "$image_path" ] || usage
+	image=$(readlink -f "$image_path")
+	[ -f "$image" ] || die "File $image_path does not exist"
+	mountpoint=$(echo "$spec" | sed -n 's/.*,\(.*\)/\1/p')
 
 	if [ -n "$mountpoint" ]; then
-		fstype=$(detect_fstype $image)
-		[ $? -ne 0 ] && die File $image: unknown fstype
+		fstype=$(detect_fstype "$image")
+		[ $? -ne 0 ] && die "File $image: unknown fstype"
 	fi
 
 	${store_blkspec}
