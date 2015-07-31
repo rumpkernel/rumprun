@@ -57,6 +57,7 @@ DUMPCMD=
 CANSUDO=false
 PRESERVETMPDIR=false
 unset TMPDIR
+unset NETSTYLE
 
 usage ()
 {
@@ -466,6 +467,7 @@ run_xen ()
 		case "$opt" in
 		# -n: NETSPEC
 		n)
+			[ "${NETSTYLE:=o}" = "o" ] || die -n/-I are incompatible
 			netname=_net${nindex}
 			createif_xen ${netname},xenif || usage
 			parse_newnetspec "${netname},${OPTARG}" || usage
@@ -488,6 +490,7 @@ run_xen ()
 			;;
 		# -I: create interface
 		I)
+			[ "${NETSTYLE:=n}" = "n" ] || die -n/-I are incompatible
 			createif_xen "${OPTARG}" || usage
 			;;
 		# -d: Destroy domain on poweroff instead of preserving it.
@@ -618,6 +621,7 @@ run_qemu ()
 			opt_interactive=1
 			;;
 		I)
+			[ "${NETSTYLE:=n}" = "n" ] || die -n/-I are incompatible
 			createif_qemu "${OPTARG}" || usage
 			nindex=$(expr $nindex + 1)
 			;;
@@ -625,6 +629,7 @@ run_qemu ()
 			opt_mem=${OPTARG}
 			;;
 		n)
+			[ "${NETSTYLE:=o}" = "o" ] || die -n/-I are incompatible
 			netname=_net${nindex}
 			createif_qemu "${netname},vioif,-net user"
 			parse_netspec ${netname} "${OPTARG}" || usage
