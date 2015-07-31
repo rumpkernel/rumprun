@@ -529,12 +529,6 @@ run_xen ()
 	json_append_ln "\"cmdline\": \""$@"\""
 	json_finalize_block
 
-	# Clean up vif and disk, xl does not like trailing commas.
-	conf_vif=$(echo ${conf_vif} | sed -e s/,\$//)
-	[ -n ${conf_vif} ] && conf_vif="vif=[${conf_vif}]"
-	conf_disk=$(echo ${conf_disk} | sed -e s/,\$//)
-	[ -n ${conf_disk} ] && conf_disk="disk=[${conf_disk}]"
-
 	name=${opt_name:-rumprun-$(basename $1)}
 	app=$(readlink -f $1)
 	shift
@@ -547,8 +541,8 @@ vcpus=1
 memory=${opt_mem}
 on_crash="preserve"
 ${opt_destroy}
-${conf_vif}
-${conf_disk}
+${conf_vif:+vif=[${conf_vif%,}]}
+${conf_disk:+disk=[${conf_disk%,}]}
 EOM
 	if ${CANSUDO} && [ $(id -u) -ne 0 ]; then
 		sudo='sudo'
