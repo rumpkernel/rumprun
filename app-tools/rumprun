@@ -140,9 +140,9 @@ setuptmpdir ()
 
 check_app ()
 {
-	[ -f $1 ] || die "file not found: $1"
+	[ -f "$1" ] || die "file not found: $1"
 
-	if ! grep -q __RuMpRuN_baked__ $1; then
+	if ! grep -q __RuMpRuN_baked__ "$1"; then
 		die "$1: not a rumprun unikernel (did you forget rumpbake?)"
 	fi
 }
@@ -532,8 +532,9 @@ run_xen ()
 	json_append_ln "\"cmdline\": \""$@"\""
 	json_finalize_block
 
-	name=${opt_name:-rumprun-$(basename $1)}
-	app=$(readlink -f $1)
+	name=${opt_name:-rumprun-$(basename "$1")}
+	app=$(readlink -f "$1")
+	[ -f "$app" ] || die "rumprun unikernel $1 does not exist"
 	shift
 	check_app ${app}
 	# Generate xl configuration file.
