@@ -202,7 +202,7 @@ createif_xen ()
 
 	nindex=$(expr $nindex + 1)
 
-	# it's magic ;)
+	# append to backend config
 	conf_vif="${conf_vif}'${backendopts}',"
 }
 
