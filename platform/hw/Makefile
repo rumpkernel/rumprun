@@ -36,13 +36,15 @@ ifneq (${supported},true)
 $(error only supported target is x86, you have ${MACHINE})
 endif
 
+ARCHDIR?= ${MACHINE}
+
 LDFLAGS_BAKE+=	-L$(abspath rump/lib)
 
 OBJS_BMK-y+=		intr.o clock.o clock_subr.o kernel.o multiboot.o undefs.o
 
 OBJS_BMK+= ${OBJS_BMK-y}
 
-include arch/${MACHINE}/Makefile.inc
+include arch/${ARCHDIR}/Makefile.inc
 
 OBJS_BMK+=	init.o
 
@@ -58,7 +60,7 @@ APP_TOOLS_DIR:= $(abspath ../../app-tools)
 include ${APP_TOOLS_DIR}/Makefile.app-tools
 
 include/bmk/machine:
-	@ln -s ../arch/${MACHINE} include/bmk/machine
+	@ln -s ../arch/${ARCHDIR} include/bmk/machine
 
 links: include/bmk/machine
 
