@@ -20,8 +20,6 @@ OBJ_DIR ?= $(CURDIR)/obj
 
 include ../Makefile.inc
 
-OBJCOPY=objcopy
-
 CPPFLAGS = -isystem rump/include -isystem xen/include -I. -I../../include
 CPPFLAGS+= -nostdinc
 CPPFLAGS+= -no-integrated-cpp -nostdinc

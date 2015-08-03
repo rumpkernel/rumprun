@@ -28,8 +28,6 @@ flags-$(CONFIG_PCI) += -DCONFIG_PCI
 
 DEF_CFLAGS += $(flags-y)
 
-OBJCOPY=objcopy
-
 # Include common mini-os makerules.
 include minios.mk
 
