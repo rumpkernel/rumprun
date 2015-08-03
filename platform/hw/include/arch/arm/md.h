@@ -1,7 +1,7 @@
 #ifndef _BMK_ARCH_ARM_MD_H_
 #define _BMK_ARCH_ARM_MD_H_
 
-#include <bmk/kernel.h>
+#include <hw/kernel.h>
 
 #define ENTRY(x)        .text; .globl x; .type x,%function; x:
 #define END(x)          .size x, . - x

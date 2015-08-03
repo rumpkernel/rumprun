@@ -1,7 +1,7 @@
 #ifndef _BMK_ARCH_I386_MD_H_
 #define _BMK_ARCH_I386_MD_H_
 
-#include <bmk/kernel.h>
+#include <hw/kernel.h>
 
 #include <bmk-core/i386/asm.h>
 
