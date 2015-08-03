@@ -23,7 +23,7 @@
  * SUCH DAMAGE.
  */
 
-#include <bmk/kernel.h>
+#include <hw/kernel.h>
 
 void
 x86_initpic(void)

@@ -30,7 +30,7 @@
 #ifndef _BMK_CLOCK_SUBR_H_
 #define _BMK_CLOCK_SUBR_H_
 
-#include <bmk/kernel.h>
+#include <hw/kernel.h>
 
 /* Some handy constants. */
 #define SECS_PER_MINUTE		60

@@ -1,7 +1,7 @@
 #ifndef _BMK_ARCH_X86_64_MD_H_
 #define _BMK_ARCH_X86_64_MD_H_
 
-#include <bmk/kernel.h>
+#include <hw/kernel.h>
 
 #include <bmk-core/amd64/asm.h>
 

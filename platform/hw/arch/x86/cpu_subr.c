@@ -23,7 +23,7 @@
  * SUCH DAMAGE.
  */
 
-#include <bmk/kernel.h>
+#include <hw/kernel.h>
 
 void x86_isr_9(void);
 void x86_isr_10(void);

@@ -23,8 +23,8 @@
  * SUCH DAMAGE.
  */
 
-#include <bmk/multiboot.h>
-#include <bmk/kernel.h>
+#include <hw/multiboot.h>
+#include <hw/kernel.h>
 
 /*
  * Default trap handlers, which just print info on what type of trap

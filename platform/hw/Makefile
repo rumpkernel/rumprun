@@ -2,7 +2,7 @@ PLATFORM=hw
 PLATFORM_DEFAULT_TESTER=qemu
 OBJ_DIR=.
 
-all: app-tools include/bmk/machine rumprun.o commonlibs buildtest
+all: app-tools include/hw/machine rumprun.o commonlibs buildtest
 
 include ../../global.mk
 -include config.mk
@@ -59,10 +59,10 @@ APP_TOOLS_DIR:= $(abspath ../../app-tools)
 
 include ${APP_TOOLS_DIR}/Makefile.app-tools
 
-include/bmk/machine:
-	@ln -s ../arch/${ARCHDIR} include/bmk/machine
+include/hw/machine:
+	@ln -s ../arch/${ARCHDIR} include/hw/machine
 
-links: include/bmk/machine
+links: include/hw/machine
 
 rumprun.o: ${OBJS}
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@
@@ -70,7 +70,7 @@ rumprun.o: ${OBJS}
 	    -G rumprun_platform_rumpuser_init -G _start $@
 
 clean: app-tools_clean commonclean
-	rm -f ${OBJS} include/bmk/machine buildtest
+	rm -f ${OBJS} include/hw/machine buildtest
 
 cleandir: clean
 

@@ -23,7 +23,7 @@
  * SUCH DAMAGE.
  */
 
-#include <bmk/kernel.h>
+#include <hw/kernel.h>
 
 #include <bmk-core/core.h>
 #include <bmk-core/memalloc.h>

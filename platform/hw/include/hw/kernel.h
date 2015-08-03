@@ -1,8 +1,8 @@
-#include <bmk/machine/md.h>
+#include <hw/machine/md.h>
 
 #ifndef _LOCORE
 
-#include <bmk/types.h>
+#include <hw/types.h>
 
 struct multiboot_info;
 void multiboot(struct multiboot_info *);

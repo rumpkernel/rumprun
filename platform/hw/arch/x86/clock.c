@@ -24,8 +24,8 @@
  * SUCH DAMAGE.
  */
 
-#include <bmk/kernel.h>
-#include <bmk/clock_subr.h>
+#include <hw/kernel.h>
+#include <hw/clock_subr.h>
 
 #include <bmk-core/printf.h>
 

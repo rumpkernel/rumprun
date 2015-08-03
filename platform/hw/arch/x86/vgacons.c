@@ -23,8 +23,8 @@
  * SUCH DAMAGE.
  */
 
-#include <bmk/types.h>
-#include <bmk/kernel.h>
+#include <hw/types.h>
+#include <hw/kernel.h>
 
 #define CONS_MAGENTA 0x500
 static volatile uint16_t *cons_buf = (volatile uint16_t *)CONS_ADDRESS;

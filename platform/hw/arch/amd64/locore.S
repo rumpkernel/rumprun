@@ -23,8 +23,8 @@
  * SUCH DAMAGE.
  */
 
-#include <bmk/kernel.h>
-#include <bmk/multiboot.h>
+#include <hw/kernel.h>
+#include <hw/multiboot.h>
 
 #define MYMULTIBOOT_FLAGS \
     (MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO | MULTIBOOT_AOUT_KLUDGE)

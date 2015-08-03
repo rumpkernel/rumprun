@@ -23,7 +23,7 @@
  * SUCH DAMAGE.
  */
 
-#include <bmk/kernel.h>
+#include <hw/kernel.h>
 
 #include <rumprun-base/rumprun.h>
 #include <rumprun-base/config.h>

@@ -44,8 +44,8 @@
  * Derived from arch/hp300/hp300/clock.c
  */
 
-#include <bmk/kernel.h>
-#include <bmk/clock_subr.h>
+#include <hw/kernel.h>
+#include <hw/clock_subr.h>
 
 #define FEBRUARY	2
 

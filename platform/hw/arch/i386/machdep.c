@@ -23,8 +23,8 @@
  * SUCH DAMAGE.
  */
 
-#include <bmk/types.h>
-#include <bmk/kernel.h>
+#include <hw/types.h>
+#include <hw/kernel.h>
 
 #include <bmk-core/core.h>
 #include <bmk-core/sched.h>
