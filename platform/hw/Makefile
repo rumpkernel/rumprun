@@ -66,6 +66,8 @@ links: include/bmk/machine
 
 rumprun.o: ${OBJS}
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@
+	${OBJCOPY} -w -G bmk_* -G rumpuser_* \
+	    -G rumprun_platform_rumpuser_init -G _start $@
 
 clean: app-tools_clean commonclean
 	rm -f ${OBJS} include/bmk/machine buildtest
