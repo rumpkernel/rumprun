@@ -66,10 +66,10 @@ parsemem(uint32_t addr, uint32_t len)
 	return 0;
 }
 
-char bmk_multiboot_cmdline[BMK_MULTIBOOT_CMDLINE_SIZE];
+char multiboot_cmdline[BMK_MULTIBOOT_CMDLINE_SIZE];
 
 void
-bmk_multiboot(struct multiboot_info *mbi)
+multiboot(struct multiboot_info *mbi)
 {
 	unsigned long cmdlinelen;
 	char *cmdline;
@@ -83,10 +83,10 @@ bmk_multiboot(struct multiboot_info *mbi)
 		if (cmdlinelen >= BMK_MULTIBOOT_CMDLINE_SIZE)
 			bmk_platform_halt("command line too long, "
 			    "increase BMK_MULTIBOOT_CMDLINE_SIZE");
-		bmk_strcpy(bmk_multiboot_cmdline, cmdline);
+		bmk_strcpy(multiboot_cmdline, cmdline);
 	}
 	else
-		bmk_multiboot_cmdline[0] = 0;
+		multiboot_cmdline[0] = 0;
 
 	if ((mbi->flags & MULTIBOOT_INFO_MEMORY) == 0)
 		bmk_platform_halt("multiboot memory info not available\n");
@@ -94,5 +94,5 @@ bmk_multiboot(struct multiboot_info *mbi)
 	if (parsemem(mbi->mmap_addr, mbi->mmap_length) != 0)
 		bmk_platform_halt("multiboot memory parse failed");
 
-	bmk_intr_init();
+	intr_init();
 }

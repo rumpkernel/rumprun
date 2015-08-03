@@ -4,29 +4,27 @@
 
 #include <bmk/types.h>
 
-void bmk_halt(const char *) __attribute__((noreturn));
-
 struct multiboot_info;
-void bmk_multiboot(struct multiboot_info *);
+void multiboot(struct multiboot_info *);
 
-void bmk_run(char *);
+void run(char *);
 
-void bmk_cons_putc(int);
-void bmk_cons_puts(const char *);
+void cons_putc(int);
+void cons_puts(const char *);
 
-void bmk_cpu_init(void);
-void bmk_cpu_block(bmk_time_t);
-int bmk_cpu_intr_init(int);
-void bmk_cpu_intr_ack(void);
+void cpu_init(void);
+void cpu_block(bmk_time_t);
+int cpu_intr_init(int);
+void cpu_intr_ack(void);
 
-bmk_time_t bmk_cpu_clock_now(void);
-bmk_time_t bmk_cpu_clock_epochoffset(void);
+bmk_time_t cpu_clock_now(void);
+bmk_time_t cpu_clock_epochoffset(void);
 
-void bmk_isr(int);
-int bmk_intr_init(void);
+void isr(int);
+int intr_init(void);
 int bmk_isr_init(int (*)(void *), void *, int);
 
-void bmk_mainthread(void *);
+void mainthread(void *);
 
 #endif /* _LOCORE */
 

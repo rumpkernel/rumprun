@@ -15,12 +15,12 @@
 #include <bmk-core/platform.h>
 
 struct region_descriptor;
-void bmk_amd64_lidt(struct region_descriptor *);
-void bmk_amd64_ltr(unsigned long);
+void amd64_lidt(struct region_descriptor *);
+void amd64_ltr(unsigned long);
 
 #include <arch/x86/inline.h>
 
-void bmk_cpu_boot(void *);
+void cpu_boot(void *);
 #endif /* !_LOCORE */
 
 #endif /* _BMK..._H_ */

@@ -106,7 +106,7 @@ ENTRY(_start)
 	wrmsr
 
 	/* 3: load pml4 pointer */
-	movl $bmk_cpu_pml4, %eax
+	movl $cpu_pml4, %eax
 	movl %eax, %cr3
 
 	/* 4: enable paging */
@@ -157,8 +157,8 @@ nomultimesg:
 
 .data
 .align 64
-.globl bmk_cpu_gdt64
-bmk_cpu_gdt64:
+.globl cpu_gdt64
+cpu_gdt64:
 	.quad 0x0000000000000000
 	.quad 0x00af9b000000ffff	/* 64bit CS		*/
 	.quad 0x00cf9b000000ffff	/* 32bit CS		*/
@@ -170,8 +170,8 @@ gdt64_end:
 
 .type gdt64_ptr, @object
 gdt64_ptr:
-	.word gdt64_end-bmk_cpu_gdt64-1
-	.quad bmk_cpu_gdt64
+	.word gdt64_end-cpu_gdt64-1
+	.quad cpu_gdt64
 
 .code64
 
@@ -185,16 +185,16 @@ ENTRY(_start64)
 	pushq $0x0
 	pushq $0x0
 
-	call bmk_x86_boot
+	call x86_boot
 	hlt
 END(_start64)
 
-ENTRY(bmk_amd64_lidt)
+ENTRY(amd64_lidt)
 	lidt (%rdi)
 	ret
-END(bmk_amd64_lidt)
+END(amd64_lidt)
 
-ENTRY(bmk_amd64_ltr)
+ENTRY(amd64_ltr)
 	ltr %di
 	ret
-END(bmk_amd64_ltr)
+END(amd64_ltr)

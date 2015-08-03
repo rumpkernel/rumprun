@@ -35,15 +35,15 @@ itsatrap:
 #define SYSTRAP(num, reason)						 \
 trapstr##num:								;\
 	.asciz reason							;\
-ENTRY(bmk_x86_trap_##num)						 \
+ENTRY(x86_trap_##num)							 \
 	movq $itsatrap, %rdi						;\
-	call bmk_cons_puts						;\
+	call cons_puts							;\
 	movq $trapstr##num, %rdi					;\
-	call bmk_cons_puts						;\
+	call cons_puts							;\
 	movq $'\n', %rdi						;\
-	call bmk_cons_putc						;\
+	call cons_putc							;\
 	iretq								;\
-END(bmk_x86_trap_##num)
+END(x86_trap_##num)
 
 SYSTRAP(2, "#NMI")
 SYSTRAP(3, "#BP")
@@ -65,7 +65,7 @@ SYSTRAP(17, "#AC")
 #define FATTRAP(num, reason)						 \
 fattrapstr##num:							;\
 	.asciz reason							;\
-ENTRY(bmk_x86_trap_##num)						 \
+ENTRY(x86_trap_##num)							 \
 	movq $fattrapstr##num, %rdi					;\
 	movq %cr2, %rdx							;\
 	mov $##num, %rcx						;\
@@ -74,9 +74,9 @@ ENTRY(bmk_x86_trap_##num)						 \
 	addq $8, %rsp							;\
 1:									;\
 	movq 0(%rsp), %rsi						;\
-	call bmk_cpu_fattrap						;\
+	call cpu_fattrap						;\
 	hlt								;\
-END(bmk_x86_trap_##num)
+END(x86_trap_##num)
 
 FATTRAP(0, "divide-by-zero")
 FATTRAP(14, "page fault")
@@ -85,16 +85,16 @@ FATTRAP(14, "page fault")
  * we just ignore most interrupts and traps with this
  * convenient inservice routine
  */
-ENTRY(bmk_cpu_insr)
+ENTRY(cpu_insr)
 	iretq
-END(bmk_cpu_insr)
+END(cpu_insr)
 
 /*
  * The interrupt handlers don't do the normal accounting for cli-depth,
  * but it's hopefully a safe bet that since we're here, interrupts were
  * unmasked, so we can just unmask them before we return.
  */
-ENTRY(bmk_cpu_isr_clock)
+ENTRY(cpu_isr_clock)
 	cli
 	pushq %rax
 	movb $0x20, %al
@@ -102,14 +102,14 @@ ENTRY(bmk_cpu_isr_clock)
 	popq %rax
 	sti
 	iretq
-END(bmk_cpu_isr_clock)
+END(cpu_isr_clock)
 
 /*
  * Macro to define interrupt stub to call C handler.
- * note: interrupt is acked on the PIC as part of bmk_isr
+ * note: interrupt is acked on the PIC as part of isr
  */
 #define INTRSTUB(intnum)						\
-ENTRY(bmk_x86_isr_##intnum)						\
+ENTRY(x86_isr_##intnum)							\
 	cli								;\
 	pushq %rax							;\
 	pushq %rbx							;\
@@ -118,7 +118,7 @@ ENTRY(bmk_x86_isr_##intnum)						\
 	pushq %rdi							;\
 	pushq %rsi							;\
 	movq $intnum, %rsi						;\
-	call bmk_isr							;\
+	call isr							;\
 	popq %rsi							;\
 	popq %rdi							;\
 	popq %rdx							;\
@@ -127,7 +127,7 @@ ENTRY(bmk_x86_isr_##intnum)						\
 	popq %rax							;\
 	sti								;\
 	iretq								;\
-END(bmk_x86_isr_##intnum)
+END(x86_isr_##intnum)
 
 INTRSTUB(9)
 INTRSTUB(10)

@@ -13,15 +13,15 @@
 
 #ifndef _LOCORE
 struct region_descriptor;
-void bmk_cpu_lidt(struct region_descriptor *);
-void bmk_cpu_lgdt(struct region_descriptor *);
+void cpu_lidt(struct region_descriptor *);
+void cpu_lgdt(struct region_descriptor *);
 
 #include <bmk-core/platform.h>
 
 #include <arch/x86/inline.h>
 
 struct multiboot_info;
-void bmk_cpu_boot(struct multiboot_info *);
+void cpu_boot(struct multiboot_info *);
 #endif /* !_LOCORE */
 
 #endif /* _BMK..._H_ */

@@ -28,7 +28,7 @@
 #include <bmk-core/printf.h>
 #include <bmk-core/sched.h>
 
-int bmk_spldepth = 1;
+int spldepth = 1;
 
 /*
  * amd64 MD descriptors, assimilated from NetBSD
@@ -83,16 +83,16 @@ struct tss {
 static struct gate_descriptor idt[256];
 
 /* actual interrupt service routines */
-void bmk_cpu_isr_9(void);
-void bmk_cpu_isr_10(void);
-void bmk_cpu_isr_11(void);
-void bmk_cpu_isr_14(void);
-void bmk_cpu_isr_15(void);
+void cpu_isr_9(void);
+void cpu_isr_10(void);
+void cpu_isr_11(void);
+void cpu_isr_14(void);
+void cpu_isr_15(void);
 
-extern unsigned long bmk_cpu_gdt64[];
+extern unsigned long cpu_gdt64[];
 
 void
-bmk_x86_fillgate(int num, void *fun, int ist)
+x86_fillgate(int num, void *fun, int ist)
 {
 	struct gate_descriptor *gd = &idt[num];
 
@@ -120,16 +120,16 @@ static char dfstack[4096];
  * we can handle interrupts without involving a jump to hyperspace.
  */
 void
-bmk_cpu_init(void)
+cpu_init(void)
 {
 	struct region_descriptor region;
 
-	bmk_x86_initidt();
+	x86_initidt();
 	region.rd_limit = sizeof(idt)-1;
 	region.rd_base = (uintptr_t)(void *)idt;
-	bmk_amd64_lidt(&region);
+	amd64_lidt(&region);
 
-	bmk_x86_initpic();
+	x86_initpic();
 
 	/*
 	 * fill TSS
@@ -138,7 +138,7 @@ bmk_cpu_init(void)
 	mytss.tss_ist[1] = (unsigned long)nmistack + sizeof(nmistack)-16;
 	mytss.tss_ist[2] = (unsigned long)dfstack + sizeof(dfstack)-16;
 
-	struct taskgate_descriptor *td = (void *)&bmk_cpu_gdt64[4];
+	struct taskgate_descriptor *td = (void *)&cpu_gdt64[4];
 	td->td_lolimit = 0;
 	td->td_lobase = 0;
 	td->td_type = 0x9;
@@ -148,14 +148,14 @@ bmk_cpu_init(void)
 	td->td_gran = 0;
 	td->td_hibase = 0xffffffffffUL;
 	td->td_zero = 0;
-	bmk_amd64_ltr(4*8);
+	amd64_ltr(4*8);
 
-	bmk_x86_initclocks();
+	x86_initclocks();
 }
 
-void bmk_cpu_fattrap(const char *, void *, unsigned long);
+void cpu_fattrap(const char *, void *, unsigned long);
 void
-bmk_cpu_fattrap(const char *name, void *rip, unsigned long cr2)
+cpu_fattrap(const char *name, void *rip, unsigned long cr2)
 {
 
 	bmk_printf("FATAL TRAP: %s at %p (0x%lx)\n", name, rip, cr2);

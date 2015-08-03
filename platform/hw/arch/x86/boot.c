@@ -32,17 +32,17 @@
 #include <bmk-core/printf.h>
 
 void
-bmk_x86_boot(struct multiboot_info *mbi)
+x86_boot(struct multiboot_info *mbi)
 {
 
-	bmk_printf_init(bmk_cons_putc, NULL);
+	bmk_printf_init(cons_putc, NULL);
 	bmk_printf("rump kernel bare metal bootstrap\n\n");
 
-	bmk_cpu_init();
+	cpu_init();
 	bmk_sched_init();
-	bmk_multiboot(mbi);
+	multiboot(mbi);
 
 	spl0();
 
-	bmk_run(bmk_multiboot_cmdline);
+	run(multiboot_cmdline);
 }

@@ -29,7 +29,7 @@
 #include <rumprun-base/config.h>
 
 void
-bmk_mainthread(void *cmdline)
+mainthread(void *cmdline)
 {
 	void *cookie;
 

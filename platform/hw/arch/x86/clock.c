@@ -37,7 +37,7 @@
 #define PIT_MIN_DELTA	16
 
 /* clock isr trampoline (in locore.S) */
-void bmk_cpu_isr_clock(void);
+void cpu_isr_clock(void);
 
 /* Multiplier for converting TSC ticks to nsecs. (0.32) fixed point. */
 static uint32_t tsc_mult;
@@ -53,7 +53,7 @@ static uint32_t tsc_mult;
 static const uint32_t pit_mult
     = (1ULL << 63) / ((NSEC_PER_SEC << 31) / TIMER_HZ);
 
-/* Base time values at the last call to bmk_cpu_clock_now(). */
+/* Base time values at the last call to cpu_clock_now(). */
 static bmk_time_t time_base;
 static uint64_t tsc_base;
 
@@ -185,17 +185,17 @@ rtc_gettimeofday(void)
 }
 
 void
-bmk_x86_initclocks(void)
+x86_initclocks(void)
 {
 	uint64_t tsc_freq;
 	uint32_t eax, ebx, ecx, edx;
 
 	/* Verify that TSC is supported. */
-	bmk_x86_cpuid(0x1, &eax, &ebx, &ecx, &edx);
+	x86_cpuid(0x1, &eax, &ebx, &ecx, &edx);
 	if (!(edx & (1 << 4)))
 		bmk_platform_halt("Processor does not support RDTSC");
 	/* And that it is invariant. TODO: Potentially halt here if not? */
-	bmk_x86_cpuid(0x80000007, &eax, &ebx, &ecx, &edx);
+	x86_cpuid(0x80000007, &eax, &ebx, &ecx, &edx);
 	if (!(edx & (1 << 8)))
 		bmk_printf("WARNING: Processor claims to not support "
 		    "invariant TSC.\n");
@@ -220,7 +220,7 @@ bmk_x86_initclocks(void)
 	i8254_delay(100000);
 	tsc_freq = (rdtsc() - tsc_base) * 10;
 	splhigh();
-	bmk_printf("bmk_x86_initclocks(): TSC frequency estimate is %llu Hz\n",
+	bmk_printf("x86_initclocks(): TSC frequency estimate is %llu Hz\n",
 		(unsigned long long)tsc_freq);
 
 	/*
@@ -245,7 +245,7 @@ bmk_x86_initclocks(void)
 	 * Map i8254 interrupt vector and enable it in the PIC.
 	 * XXX: We don't really want to enable IRQ2 here, but ...
 	 */
-	bmk_x86_fillgate(32, bmk_cpu_isr_clock, 0);
+	x86_fillgate(32, cpu_isr_clock, 0);
 	outb(PIC1_DATA, 0xff & ~(1<<2|1<<0));
 }
 
@@ -253,7 +253,7 @@ bmk_x86_initclocks(void)
  * Return monotonic time since system boot in nanoseconds.
  */
 bmk_time_t
-bmk_cpu_clock_now(void)
+cpu_clock_now(void)
 {
 	uint64_t tsc_now, tsc_delta;
 
@@ -272,7 +272,7 @@ bmk_cpu_clock_now(void)
  * Return epoch offset (wall time offset to monotonic clock start).
  */
 bmk_time_t
-bmk_cpu_clock_epochoffset(void)
+cpu_clock_epochoffset(void)
 {
 
 	return rtc_epochoffset;
@@ -284,7 +284,7 @@ bmk_cpu_clock_epochoffset(void)
  * too short.
  */
 void
-bmk_cpu_block(bmk_time_t until)
+cpu_block(bmk_time_t until)
 {
 	bmk_time_t now, delta_ns;
 	int64_t delta_ticks;
@@ -293,7 +293,7 @@ bmk_cpu_block(bmk_time_t until)
 	/*
 	 * Return if called too late.
 	 */
-	now = bmk_cpu_clock_now();
+	now = cpu_clock_now();
 	if (until < now)
 		return;
 

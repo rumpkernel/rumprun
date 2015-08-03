@@ -39,17 +39,17 @@
 void
 bmk_platform_block(bmk_time_t until)
 {
-	int s = bmk_spldepth;
+	int s = spldepth;
 
 	/* enable interrupts around the sleep */
-	if (bmk_spldepth) {
-		bmk_spldepth = 1;
+	if (spldepth) {
+		spldepth = 1;
 		spl0();
 	}
-	bmk_cpu_block(until);
+	cpu_block(until);
 	if (s) {
 		splhigh();
-		bmk_spldepth = s;
+		spldepth = s;
 	}
 }
 
@@ -72,10 +72,10 @@ bmk_platform_splx(unsigned long x)
 }
  
 void
-bmk_run(char *cmdline)
+run(char *cmdline)
 {
 
-	bmk_sched_startmain(bmk_mainthread, cmdline);
+	bmk_sched_startmain(mainthread, cmdline);
 }
 
 void __attribute__((noreturn))

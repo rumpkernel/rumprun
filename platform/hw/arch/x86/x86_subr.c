@@ -26,7 +26,7 @@
 #include <bmk/kernel.h>
 
 void
-bmk_x86_initpic(void)
+x86_initpic(void)
 {
 
 	/*
@@ -47,18 +47,18 @@ bmk_x86_initpic(void)
 }
 
 /* interrupt-not-service-routine */
-void bmk_cpu_insr(void);
+void cpu_insr(void);
 
 void
-bmk_x86_initidt(void)
+x86_initidt(void)
 {
 	int i;
 
 	for (i = 0; i < 48; i++) {
-		bmk_x86_fillgate(i, bmk_cpu_insr, 0);
+		x86_fillgate(i, cpu_insr, 0);
 	}
 
-#define FILLGATE(n) bmk_x86_fillgate(n, bmk_x86_trap_##n, 0)
+#define FILLGATE(n) x86_fillgate(n, x86_trap_##n, 0)
 	FILLGATE(0);
 	FILLGATE(2);
 	FILLGATE(3);
@@ -74,12 +74,12 @@ bmk_x86_initidt(void)
 	FILLGATE(14);
 	FILLGATE(17);
 #undef FILLGATE
-	bmk_x86_fillgate(2, bmk_x86_trap_2, 2);
-	bmk_x86_fillgate(8, bmk_x86_trap_8, 3);
+	x86_fillgate(2, x86_trap_2, 2);
+	x86_fillgate(8, x86_trap_8, 3);
 }
 
 void
-bmk_x86_cpuid(uint32_t level, uint32_t *eax_out, uint32_t *ebx_out,
+x86_cpuid(uint32_t level, uint32_t *eax_out, uint32_t *ebx_out,
 		uint32_t *ecx_out, uint32_t *edx_out)
 {
 	uint32_t eax_, ebx_, ecx_, edx_;

@@ -55,7 +55,7 @@ static struct bmk_thread *isr_thread;
 
 /* thread context we use to deliver interrupts to the rump kernel */
 static void
-isr(void *arg)
+doisr(void *arg)
 {
 	int i, didwork;
 
@@ -95,7 +95,7 @@ isr(void *arg)
 				}
 			}
 			rumpkern_unsched(&nlocks, NULL);
-			bmk_cpu_intr_ack();
+			cpu_intr_ack();
 
 			if (!didwork) {
 				bmk_printf("stray interrupt\n");
@@ -123,7 +123,7 @@ bmk_isr_init(int (*func)(void *), void *arg, int intr)
 	if (!ih)
 		return BMK_ENOMEM;
 
-	if ((error = bmk_cpu_intr_init(intr)) != 0) {
+	if ((error = cpu_intr_init(intr)) != 0) {
 		bmk_memfree(ih, BMK_MEMWHO_WIREDBMK);
 		return error;
 	}
@@ -137,7 +137,7 @@ bmk_isr_init(int (*func)(void *), void *arg, int intr)
 }
 
 void
-bmk_isr(int which)
+isr(int which)
 {
 
 	/* schedule the interrupt handler */
@@ -146,7 +146,7 @@ bmk_isr(int which)
 }
 
 int
-bmk_intr_init(void)
+intr_init(void)
 {
 	int i;
 
@@ -154,7 +154,7 @@ bmk_intr_init(void)
 		SLIST_INIT(&isr_ih[i]);
 	}
 
-	isr_thread = bmk_sched_create("isrthr", NULL, 0, isr, NULL, NULL, 0);
+	isr_thread = bmk_sched_create("isrthr", NULL, 0, doisr, NULL, NULL, 0);
 	if (!isr_thread)
 		return BMK_EGENERIC;
 	return 0;

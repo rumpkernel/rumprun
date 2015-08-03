@@ -25,23 +25,23 @@
 
 #include <bmk/kernel.h>
 
-void bmk_x86_isr_9(void);
-void bmk_x86_isr_10(void);
-void bmk_x86_isr_11(void);
-void bmk_x86_isr_14(void);
-void bmk_x86_isr_15(void);
+void x86_isr_9(void);
+void x86_isr_10(void);
+void x86_isr_11(void);
+void x86_isr_14(void);
+void x86_isr_15(void);
 
 int pic2mask = 0xff;
 
 int
-bmk_cpu_intr_init(int intr)
+cpu_intr_init(int intr)
 {
 
 	/* XXX: too lazy to keep PIC1 state */
 	if (intr < 8)
 		return BMK_EGENERIC;
 
-#define FILLGATE(n) case n: bmk_x86_fillgate(32+n, bmk_x86_isr_##n, 0); break
+#define FILLGATE(n) case n: x86_fillgate(32+n, x86_isr_##n, 0); break
 	switch (intr) {
 		FILLGATE(9);
 		FILLGATE(10);
@@ -61,7 +61,7 @@ bmk_cpu_intr_init(int intr)
 }
 
 void
-bmk_cpu_intr_ack(void)
+cpu_intr_ack(void)
 {
 
 	/*

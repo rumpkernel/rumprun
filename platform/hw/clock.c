@@ -31,12 +31,12 @@ bmk_time_t
 bmk_platform_clock_monotonic(void)
 {
 
-	return bmk_cpu_clock_now();
+	return cpu_clock_now();
 }
 
 bmk_time_t
 bmk_platform_clock_epochoffset(void)
 {
 
-	return bmk_cpu_clock_epochoffset();
+	return cpu_clock_epochoffset();
 }

@@ -38,7 +38,7 @@ cons_putat(int c, int x, int y)
 
 /* display a character in the next available slot */
 void
-bmk_cons_putc(int c)
+cons_putc(int c)
 {
 	static int cons_x;
 	static int cons_y;
@@ -74,10 +74,10 @@ bmk_cons_putc(int c)
 }
 
 void
-bmk_cons_puts(const char *s)
+cons_puts(const char *s)
 {
 	int c;
 
 	while ((c = *s++) != 0)
-		bmk_cons_putc(c);
+		cons_putc(c);
 }

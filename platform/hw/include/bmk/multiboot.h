@@ -3,7 +3,7 @@
 
 #define BMK_MULTIBOOT_CMDLINE_SIZE 4096
 #ifndef _LOCORE
-extern char bmk_multiboot_cmdline[];
+extern char multiboot_cmdline[];
 #endif
 
 /*

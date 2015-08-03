@@ -56,7 +56,7 @@ ENTRY(_start)
 	cmpl $MULTIBOOT_BOOTLOADER_MAGIC, %eax
 	jne nomultiboot
 
-	call bmk_x86_boot
+	call x86_boot
 
 	jmp haltme
 
@@ -83,7 +83,7 @@ END(_start)
 nomultimesg:
 	.asciz "not multibooted, halting!"
 
-ENTRY(bmk_cpu_lgdt)
+ENTRY(cpu_lgdt)
 	movl 4(%esp), %eax
 	lgdt (%eax)
 	movl $0x10, %eax
@@ -97,13 +97,13 @@ ENTRY(bmk_cpu_lgdt)
 	pushl $0x8
 	pushl %eax
 	lret
-END(bmk_cpu_lgdt)
+END(cpu_lgdt)
 
-ENTRY(bmk_cpu_lidt)
+ENTRY(cpu_lidt)
 	movl 4(%esp), %eax
 	lidt (%eax)
 	ret
-END(bmk_cpu_lidt)
+END(cpu_lidt)
 
 /*
  * Default trap handlers, which just print info on what type of trap
@@ -114,16 +114,16 @@ itsatrap:
 #define SYSTRAP(num, reason)						 \
 trapstr##num:								;\
 	.asciz reason							;\
-ENTRY(bmk_x86_trap_##num)						 \
+ENTRY(x86_trap_##num)							 \
 	pushl $itsatrap							;\
-	call bmk_cons_puts						;\
+	call cons_puts							;\
 	pushl $trapstr##num						;\
-	call bmk_cons_puts						;\
+	call cons_puts							;\
 	pushl $'\n'							;\
-	call bmk_cons_putc						;\
+	call cons_putc							;\
 	addl $12, %esp							;\
 	iret								;\
-END(bmk_x86_trap_##num)
+END(x86_trap_##num)
 
 SYSTRAP(0, "#DE")
 SYSTRAP(2, "#NMI")
@@ -144,16 +144,16 @@ SYSTRAP(17, "#AC")
  * we just ignore most interrupts and traps with this
  * convenient inservice routine
  */
-ENTRY(bmk_cpu_insr)
+ENTRY(cpu_insr)
 	iret
-END(bmk_cpu_insr)
+END(cpu_insr)
 
 /*
  * The interrupt handlers don't do the normal accounting for cli-depth,
  * but it's hopefully a safe bet that since we're here, interrupts were
  * unmasked, so we can just unmask them before we return.
  */
-ENTRY(bmk_cpu_isr_clock)
+ENTRY(cpu_isr_clock)
 	cli
 	pushl %eax
 	movb $0x20, %al
@@ -161,21 +161,21 @@ ENTRY(bmk_cpu_isr_clock)
 	popl %eax
 	sti
 	iret
-END(bmk_cpu_isr_clock)
+END(cpu_isr_clock)
 
 /*
  * Macro to define interrupt stub to call C handler.
- * note: interrupt is acked on the PIC as part of bmk_isr
+ * note: interrupt is acked on the PIC as part of isr
  */
 #define INTRSTUB(intnum)						\
-ENTRY(bmk_x86_isr_##intnum)						\
+ENTRY(x86_isr_##intnum)							\
 	cli								;\
 	pushl %eax							;\
 	pushl %ebx							;\
 	pushl %ecx							;\
 	pushl %edx							;\
 	pushl $intnum							;\
-	call bmk_isr							;\
+	call isr							;\
 	addl $4, %esp							;\
 	popl %edx							;\
 	popl %ecx							;\
@@ -183,7 +183,7 @@ ENTRY(bmk_x86_isr_##intnum)						\
 	popl %eax							;\
 	sti								;\
 	iret								;\
-END(bmk_x86_isr_##intnum)
+END(x86_isr_##intnum)
 
 INTRSTUB(9)
 INTRSTUB(10)
