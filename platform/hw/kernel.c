@@ -36,6 +36,8 @@
 #include <bmk-core/queue.h>
 #include <bmk-core/sched.h>
 
+int spldepth = 1;
+
 void
 bmk_platform_block(bmk_time_t until)
 {

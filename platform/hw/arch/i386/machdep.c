@@ -29,9 +29,6 @@
 #include <bmk-core/core.h>
 #include <bmk-core/sched.h>
 
-/* enter the kernel with interrupts disabled */
-int spldepth = 1;
-
 /*
  * i386 MD descriptors, assimilated from NetBSD sys/arch/i386/include/segments.h
  */

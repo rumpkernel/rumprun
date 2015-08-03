@@ -28,8 +28,6 @@
 #include <bmk-core/printf.h>
 #include <bmk-core/sched.h>
 
-int spldepth = 1;
-
 /*
  * amd64 MD descriptors, assimilated from NetBSD
  */
