@@ -26,6 +26,9 @@ int bmk_isr_init(int (*)(void *), void *, int);
 
 void mainthread(void *);
 
+#define BMK_MULTIBOOT_CMDLINE_SIZE 4096
+extern char multiboot_cmdline[];
+
 #endif /* _LOCORE */
 
 #include <bmk-core/errno.h>

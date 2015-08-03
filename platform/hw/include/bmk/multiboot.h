@@ -1,11 +1,6 @@
 #ifndef MULTIBOOT_HEADER
 #define MULTIBOOT_HEADER 1
 
-#define BMK_MULTIBOOT_CMDLINE_SIZE 4096
-#ifndef _LOCORE
-extern char multiboot_cmdline[];
-#endif
-
 /*
  * from multiboot.h, source:
  * https://www.gnu.org/software/grub/manual/multiboot/multiboot.html
