@@ -87,3 +87,14 @@ sigpending(sigset_t *set)
 	return 0;
 }
 __strong_alias(sigpending,__sigpending14);
+
+int
+sigqueueinfo(pid_t pid, const siginfo_t *info)
+{
+	static int warned = 0;
+
+	STUBWARN();
+
+	errno = EPERM;
+	return -1;
+}

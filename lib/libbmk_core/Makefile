@@ -9,6 +9,6 @@ CFLAGS+=	-fno-stack-protector
 
 CPPFLAGS+=	-I${.CURDIR}/../../include
 
-.include "${.CURDIR}/arch/${MACHINE}/Makefile.inc"
+.include "${.CURDIR}/arch/${MACHINE_ARCH}/Makefile.inc"
 
 .include <bsd.lib.mk>

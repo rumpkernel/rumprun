@@ -192,6 +192,9 @@ buildrump ()
 	MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
 	[ -n "${MACHINE}" ] || die could not figure out target machine
 
+	MACHINE_ARCH=$(${RUMPMAKE} -f /dev/null -V '${MACHINE_ARCH}')
+	[ -n "${MACHINE_ARCH}" ] || die could not figure out target machine arch
+
 	checkprevbuilds
 
 	makeconfigmk ${PLATFORMDIR}/config.mk
@@ -276,6 +279,7 @@ makeconfigmk ()
 	echo "RUMPMAKE=${RUMPMAKE}" >> ${1}
 	echo "BUILDRUMP_TOOLFLAGS=$(pwd)/${RUMPTOOLS}/toolchain-conf.mk" >> ${1}
 	echo "MACHINE=${MACHINE}" >> ${1}
+	echo "MACHINE_ARCH=${MACHINE_ARCH}" >> ${1}
 
 	# wrap mandatory toolchain bits
 	for t in AR AS CC CPP LD NM OBJCOPY OBJDUMP RANLIB READELF \

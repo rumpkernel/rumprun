@@ -26,11 +26,10 @@ endif
 ifeq (${MACHINE},amd64)
 supported:= true
 endif
-ifeq (${MACHINE},arm)
-ifdef IWANTARM
+ifeq (${MACHINE},evbarm)
 supported:= true
 HASPCI:= n
-endif
+ARCHDIR= arm/integrator
 endif
 ifneq (${supported},true)
 $(error only supported target is x86, you have ${MACHINE})
@@ -60,7 +59,7 @@ APP_TOOLS_DIR:= $(abspath ../../app-tools)
 include ${APP_TOOLS_DIR}/Makefile.app-tools
 
 include/hw/machine:
-	@ln -s ../arch/${ARCHDIR} include/hw/machine
+	@ln -s ../arch/${MACHINE_ARCH} include/hw/machine
 
 links: include/hw/machine
 
