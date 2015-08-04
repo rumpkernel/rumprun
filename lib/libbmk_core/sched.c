@@ -65,13 +65,24 @@ unsigned long bmk_mainstacksize;
 #define THR_DEAD	0x0200
 #define THR_BLOCKPREP	0x0400
 
+#if !(defined(__i386__) || defined(__x86_64__))
+#define _TLS_I
+#else
+#define _TLS_II
+#endif
+
 extern const char _tdata_start[], _tdata_end[];
 extern const char _tbss_start[], _tbss_end[];
 #define TDATASIZE (_tdata_end - _tdata_start)
 #define TBSSSIZE (_tbss_end - _tbss_start)
-#define TCBOFFSET \
+#define TMEMSIZE \
     (((TDATASIZE + TBSSSIZE + sizeof(void *)-1)/sizeof(void *))*sizeof(void *))
-#define TLSAREASIZE (TCBOFFSET + BMK_TLS_EXTRA)
+#ifdef _TLS_I
+#define TCBOFFSET 0
+#else
+#define TCBOFFSET TMEMSIZE
+#endif
+#define TLSAREASIZE (TMEMSIZE + BMK_TLS_EXTRA)
 
 struct bmk_thread {
 	char bt_name[NAME_MAXLEN];
@@ -372,11 +383,15 @@ schedule(void)
 void *
 bmk_sched_tls_alloc(void)
 {
-	char *tlsmem;
+	char *tlsmem, *p;
 
-	tlsmem = bmk_memalloc(TLSAREASIZE, 0, BMK_MEMWHO_WIREDBMK);
-	bmk_memcpy(tlsmem, _tdata_start, TDATASIZE);
-	bmk_memset(tlsmem + TDATASIZE, 0, TBSSSIZE);
+	tlsmem = p = bmk_memalloc(TLSAREASIZE, 0, BMK_MEMWHO_WIREDBMK);
+#ifdef _TLS_I
+	bmk_memset(p, 0, 2*sizeof(void *));
+	p += 2 * sizeof(void *);
+#endif
+	bmk_memcpy(p, _tdata_start, TDATASIZE);
+	bmk_memset(p + TDATASIZE, 0, TBSSSIZE);
 
 	return tlsmem + TCBOFFSET;
 }
@@ -403,15 +418,11 @@ static void
 inittcb(struct bmk_tcb *tcb, void *tlsarea, unsigned long tlssize)
 {
 
-#if 0
-	/* TCB initialization for Variant I */
-	/* TODO */
-#else
-	/* TCB initialization for Variant II */
+#ifdef _TLS_II
 	*(void **)tlsarea = tlsarea;
+#endif
 	tcb->btcb_tp = (unsigned long)tlsarea;
 	tcb->btcb_tpsize = tlssize;
-#endif
 }
 
 static long bmk_curoff;
