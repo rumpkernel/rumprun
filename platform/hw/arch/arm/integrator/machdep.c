@@ -56,6 +56,15 @@ loadmem(void)
 	bmk_memsize = memend - osend;
 }
 
+static void
+clockinit(void)
+{
+
+	/* XXX: timer will wrap in ~10 days, FIXXME */
+	outl(TMR1_CTRL, TMR1_CTRL_EN | TMR1_CTRL_D256 | TMR1_CTRL_32);
+	outl(TMR1_CLRINT, 0);
+}
+
 static char cmdline[] = "\n"
 "{\n"
 "	cmdline: \"HELLO just dropping by\n\",\n"
@@ -75,6 +84,8 @@ arm_boot(void)
 
 	bmk_core_init(BMK_THREAD_STACK_PAGE_ORDER, PAGE_SHIFT);
 	loadmem();
+
+	clockinit();
 
 	run(cmdline);
 }
@@ -105,13 +116,14 @@ bmk_platform_cpu_sched_settls(struct bmk_tcb *next)
 #endif
 }
 
+/* timer is 1MHz, we use divisor 256 */
+#define NSEC_PER_TICK ((1000*1000*1000ULL)/(1000*1000/256))
+
 bmk_time_t
 cpu_clock_now(void)
 {
-	static bmk_time_t i;
 
-	i = i+100;
-	return i;
+	return ~inl(TMR1_VALUE) * NSEC_PER_TICK;
 }
 
 bmk_time_t
