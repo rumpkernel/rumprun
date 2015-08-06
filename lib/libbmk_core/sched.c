@@ -215,7 +215,7 @@ timeq_sorted_insert(struct bmk_thread *thread)
 
 	/* case3: last in queue with greatest current timeout */
 	bmk_assert(TAILQ_LAST(&timeq, threadqueue)->bt_wakeup_time
-	    < thread->bt_wakeup_time);
+	    <= thread->bt_wakeup_time);
 	TAILQ_INSERT_TAIL(&timeq, thread, bt_schedq);
 }
 
