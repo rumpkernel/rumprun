@@ -13,6 +13,8 @@
 #define PAGE_SIZE (1<<PAGE_SHIFT)
 
 #ifndef _LOCORE
+#include <hw/machine/inline.h>
+
 static inline void
 splhigh(void)
 {
