@@ -30,7 +30,7 @@
 #include <sys/module.h>
 #include <sys/timetc.h>
 
-#include <mini-os/time.h>
+#include <bmk-core/platform.h>
 
 MODULE(MODULE_CLASS_MISC, rumpxen_tc, NULL);
 
@@ -38,7 +38,7 @@ static u_int
 rumpxen_tc_get(struct timecounter *tc)
 {
 
-	return (u_int)minios_clock_monotonic();
+	return (u_int)bmk_platform_cpu_clock_monotonic();
 }
 
 static struct timecounter rumpxen_tc = {

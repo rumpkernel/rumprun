@@ -235,9 +235,9 @@ _lwp_park(clockid_t clock_id, int flags, const struct timespec *ts,
 		bmk_time_t nsecs = ts->tv_sec*1000*1000*1000 + ts->tv_nsec;
 
 		if (flags & TIMER_ABSTIME) {
-			nsecs -= bmk_platform_clock_epochoffset();
+			nsecs -= bmk_platform_cpu_clock_epochoffset();
 		} else {
-			nsecs += bmk_platform_clock_monotonic();
+			nsecs += bmk_platform_cpu_clock_monotonic();
 		}
 		bmk_sched_blockprepare_timeout(nsecs);
 	} else {

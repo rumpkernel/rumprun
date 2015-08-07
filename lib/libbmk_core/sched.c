@@ -314,7 +314,7 @@ schedule(void)
 	for (;;) {
 		bmk_time_t curtime, waketime;
 
-		curtime = bmk_platform_clock_monotonic();
+		curtime = bmk_platform_cpu_clock_monotonic();
 		waketime = curtime + BLOCKTIME_MAX;
 
 		/*

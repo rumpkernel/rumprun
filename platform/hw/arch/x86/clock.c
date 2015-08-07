@@ -27,6 +27,7 @@
 #include <hw/kernel.h>
 #include <hw/clock_subr.h>
 
+#include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
 
 #define NSEC_PER_SEC	1000000000ULL
@@ -53,7 +54,7 @@ static uint32_t tsc_mult;
 static const uint32_t pit_mult
     = (1ULL << 63) / ((NSEC_PER_SEC << 31) / TIMER_HZ);
 
-/* Base time values at the last call to cpu_clock_now(). */
+/* Base time values at the last call to bmk_platform_cpu_clock_monotonic(). */
 static bmk_time_t time_base;
 static uint64_t tsc_base;
 
@@ -253,7 +254,7 @@ x86_initclocks(void)
  * Return monotonic time since system boot in nanoseconds.
  */
 bmk_time_t
-cpu_clock_now(void)
+bmk_platform_cpu_clock_monotonic(void)
 {
 	uint64_t tsc_now, tsc_delta;
 
@@ -272,7 +273,7 @@ cpu_clock_now(void)
  * Return epoch offset (wall time offset to monotonic clock start).
  */
 bmk_time_t
-cpu_clock_epochoffset(void)
+bmk_platform_cpu_clock_epochoffset(void)
 {
 
 	return rtc_epochoffset;
@@ -293,7 +294,7 @@ cpu_block(bmk_time_t until)
 	/*
 	 * Return if called too late.
 	 */
-	now = cpu_clock_now();
+	now = bmk_platform_cpu_clock_monotonic();
 	if (until < now)
 		return;
 

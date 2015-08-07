@@ -53,7 +53,7 @@ wait(struct waithead *wh, bmk_time_t wakeup)
 	struct waiter w;
 
 	if (wakeup != BMK_SCHED_BLOCK_INFTIME)
-		wakeup += bmk_platform_clock_monotonic();
+		wakeup += bmk_platform_cpu_clock_monotonic();
 
 	w.who = bmk_current;
 	w.onlist = 1;

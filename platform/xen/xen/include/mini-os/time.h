@@ -25,12 +25,10 @@
  * System Time
  * 64 bit value containing the nanoseconds elapsed since boot time.
  * This value is adjusted by frequency drift.
- * NOW() returns the current time.
  * The other macros are for convenience to approximate short intervals
  * of real time into system time 
  */
 typedef int64_t s_time_t;
-#define NOW()                   ((s_time_t)minios_clock_monotonic())
 #define SECONDS(_s)             (((s_time_t)(_s))  * 1000000000UL )
 #define TENTHS(_ts)             (((s_time_t)(_ts)) * 100000000UL )
 #define HUNDREDTHS(_hs)         (((s_time_t)(_hs)) * 10000000UL )
@@ -49,7 +47,6 @@ void     init_time(void);
 void     fini_time(void);
 s_time_t get_s_time(void);
 s_time_t get_v_time(void);
-uint64_t minios_clock_monotonic(void);
 void     block_domain(s_time_t until);
 
 #endif /* _MINIOS_TIME_H_ */

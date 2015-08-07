@@ -39,6 +39,7 @@
 #include <mini-os/time.h>
 #include <mini-os/lib.h>
 
+#include <bmk-core/platform.h>
 #include <bmk-core/sched.h>
 
 /************************************************************************
@@ -149,12 +150,12 @@ static void get_time_values_from_xen(void)
 
 
 
-/* minios_clock_monotonic():
+/* bmk_platform_cpu_clock_monotonic():
  *              returns # of nanoseconds passed since time_init()
  *		Note: This function is required to return accurate
  *		time even in the absence of multiple timer ticks.
  */
-uint64_t minios_clock_monotonic(void)
+bmk_time_t bmk_platform_cpu_clock_monotonic(void)
 {
 	uint64_t time;
 	uint32_t local_time_version;
@@ -187,7 +188,7 @@ static void update_wallclock(void)
 
 /* return monotonic clock offset to wall epoch */
 bmk_time_t
-bmk_platform_clock_epochoffset(void)
+bmk_platform_cpu_clock_epochoffset(void)
 {
 	unsigned long flags;
 	bmk_time_t rv;
@@ -202,7 +203,7 @@ bmk_platform_clock_epochoffset(void)
 void block_domain(s_time_t until)
 {
     ASSERT(irqs_disabled());
-    if(minios_clock_monotonic() < until)
+    if(bmk_platform_cpu_clock_monotonic() < until)
     {
         HYPERVISOR_set_timer_op(until);
         HYPERVISOR_sched_op(SCHEDOP_block, 0);
