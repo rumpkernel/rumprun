@@ -61,7 +61,7 @@ clockinit(void)
 {
 
 	/* XXX: timer will wrap in ~10 days, FIXXME */
-	outl(TMR1_CTRL, TMR1_CTRL_EN | TMR1_CTRL_D256 | TMR1_CTRL_32);
+	outl(TMR1_CTRL, TMR_CTRL_EN | TMR_CTRL_D256 | TMR_CTRL_32);
 	outl(TMR1_CLRINT, 0);
 }
 
@@ -87,6 +87,8 @@ arm_boot(void)
 
 	clockinit();
 
+	spl0();
+
 	run(cmdline);
 }
 
@@ -104,6 +106,14 @@ arm_undefined(unsigned long *trapregs)
 	} else {
 		bmk_platform_halt("undefined instruction");
 	}
+}
+
+void
+arm_interrupt(unsigned long *trapregs)
+{
+	uint32_t intstat = inl(INTR_STATUS);
+
+	outl(INTR_CLEAR, intstat);
 }
 
 void
@@ -137,4 +147,12 @@ void
 cpu_block(bmk_time_t until)
 {
 
+	outl(TMR2_CTRL, TMR_CTRL_EN | TMR_CTRL_IE);
+	outl(TMR2_CLRINT, 0);
+
+	outl(INTR_ENABLE, 0x80);
+	asm volatile(
+	    "mov r0, #0x0\n"
+	    "mcr p15, 0, r0, c7, c0, 4\n" ::: "r0");
+	outl(INTR_CLEAR, 0x80);
 }

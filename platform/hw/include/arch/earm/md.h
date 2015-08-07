@@ -15,28 +15,18 @@
 #ifndef _LOCORE
 #include <hw/machine/inline.h>
 
-static inline void
-splhigh(void)
-{
-
-	/* XXX TODO */
-}
-
-static inline void
-spl0(void)
-{
-
-	/* XXX TODO */
-}
+void splhigh(void);
+void spl0(void);
 
 static inline void
 hlt(void)
 {
 
-	/* XXX TODO */
+	/* dumdidumdum */
 }
 
 void	arm_boot(void);
+void	arm_interrupt(unsigned long *);
 void	arm_undefined(unsigned long *);
 #endif
 

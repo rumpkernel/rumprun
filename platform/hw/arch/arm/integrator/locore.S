@@ -27,9 +27,10 @@
 
 .space 4096
 bootstack:
-
 .space 4096
 undefstack:
+.space 4096
+irqstack:
 
 .section .start,"ax",%progbits
 
@@ -42,7 +43,11 @@ _start:
 	msr cpsr, r0
 	ldr sp, =undefstack
 
-	mrs r0, cpsr
+	bic r0, r0, #0x1f
+	orr r0, r0, #0x12
+	msr cpsr, r0
+	ldr sp, =irqstack
+
 	bic r0, r0, #0x1f
 	orr r0, r0, #0x13
 	msr cpsr, r0
@@ -102,7 +107,26 @@ vector_data_abort:
 	b vector_data_abort
 
 vector_irq:
-	b vector_irq
+	push {r0-r14}
+	adds r0, sp, #(14*4)
+	bl arm_interrupt
+	pop {r0-r14}
+	subs pc, r14, #4
 
 vector_fiq:
 	b vector_fiq
+
+
+ENTRY(splhigh)
+	mrs	r0, cpsr
+        orr	r0, r0, #(1<<7)
+        msr	cpsr_c, r0
+	bx lr
+END(splhigh)
+
+ENTRY(spl0)
+	mrs	r0, cpsr
+        bic	r0, r0, #(1<<7)
+        msr	cpsr_c, r0
+	bx lr
+END(spl0)
