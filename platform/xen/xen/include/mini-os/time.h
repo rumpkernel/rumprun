@@ -50,7 +50,6 @@ void     fini_time(void);
 s_time_t get_s_time(void);
 s_time_t get_v_time(void);
 uint64_t minios_clock_monotonic(void);
-void     minios_clock_wall(uint32_t *sec, uint64_t *nsec);
 void     block_domain(s_time_t until);
 
 #endif /* _MINIOS_TIME_H_ */

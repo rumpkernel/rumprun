@@ -185,21 +185,6 @@ static void update_wallclock(void)
 	while ((s->wc_version & 1) | (shadow_ts_version ^ s->wc_version));
 }
 
-/* minios_clock_wall():
- *                    returns seconds and nanoseconds passed since the epoch.
- */
-void minios_clock_wall(uint32_t *sec, uint64_t *nsec)
-{
-	uint64_t now;
-	unsigned long flags;
-
-	local_irq_save(flags);
-	now  = minios_clock_monotonic();
-	*sec = shadow_sec + NSEC_TO_SEC(now);
-	*nsec = shadow_nsec + (now / 1000000000UL);
-	local_irq_restore(flags);
-}
-
 /* return monotonic clock offset to wall epoch */
 bmk_time_t
 bmk_platform_clock_epochoffset(void)
