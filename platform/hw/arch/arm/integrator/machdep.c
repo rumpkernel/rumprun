@@ -130,14 +130,14 @@ bmk_platform_cpu_sched_settls(struct bmk_tcb *next)
 #define NSEC_PER_TICK ((1000*1000*1000ULL)/(1000*1000/256))
 
 bmk_time_t
-cpu_clock_now(void)
+bmk_platform_cpu_clock_monotonic(void)
 {
 
 	return ~inl(TMR1_VALUE) * NSEC_PER_TICK;
 }
 
 bmk_time_t
-cpu_clock_epochoffset(void)
+bmk_platform_cpu_clock_epochoffset(void)
 {
 
 	return 0;
