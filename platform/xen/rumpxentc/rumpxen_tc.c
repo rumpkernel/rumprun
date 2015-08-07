@@ -30,9 +30,10 @@
 #include <sys/module.h>
 #include <sys/timetc.h>
 
-#include <bmk-core/platform.h>
-
 MODULE(MODULE_CLASS_MISC, rumpxen_tc, NULL);
+
+/* XXXX */
+uint64_t bmk_platform_cpu_clock_monotonic(void);
 
 static u_int
 rumpxen_tc_get(struct timecounter *tc)
