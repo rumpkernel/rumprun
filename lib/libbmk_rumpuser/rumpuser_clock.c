@@ -26,6 +26,7 @@
 #include <bmk-core/errno.h>
 #include <bmk-core/memalloc.h>
 #include <bmk-core/null.h>
+#include <bmk-core/platform.h>
 #include <bmk-core/sched.h>
 #include <bmk-core/string.h>
 
