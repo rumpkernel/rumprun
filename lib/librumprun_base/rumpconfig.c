@@ -137,6 +137,18 @@ handle_env(jsmntok_t *t, int left, char *data)
 	return 1;
 }
 
+static int
+handle_hostname(jsmntok_t *t, int left, char *data)
+{
+
+	T_CHECKTYPE(t, data, JSMN_STRING, __func__);
+
+	if (sethostname(token2cstr(t, data), T_SIZE(t)) == -1)
+		err(1, "sethostname");
+
+	return 1;
+}
+
 static void
 config_ipv4(const char *ifname, const char *method,
 	const char *addr, const char *mask, const char *gw)
@@ -469,6 +481,7 @@ struct {
 } parsers[] = {
 	{ "cmdline", handle_cmdline },
 	{ "env", handle_env },
+	{ "hostname", handle_hostname },
 	{ "blk", handle_blk },
 	{ "net", handle_net },
 };

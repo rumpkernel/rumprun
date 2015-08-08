@@ -497,7 +497,7 @@ run_xen ()
 		d)
 			opt_destroy='on_poweroff="destroy"'
 			;;
-		# -N: Override domain name.
+		# -N: Set guest name.
 		N)
 			opt_name=${OPTARG}
 			;;
@@ -530,6 +530,7 @@ run_xen ()
 	json_store_kernfs
 
 	json_append_ln "\"cmdline\": \""$@"\""
+	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
 	json_finalize_block
 
 	name=${opt_name:-rumprun-$(basename "$1")}
@@ -636,7 +637,6 @@ run_qemu ()
 			parse_netspec ${netname} "${OPTARG}" || usage
 			;;
 		N)
-			# ignored
 			opt_name=${OPTARG}
 			;;
 		p)
@@ -659,6 +659,7 @@ run_qemu ()
 	fi
 
 	json_append_ln "\"cmdline\": \""$@"\""
+	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
 	json_finalize_block
 
 	# internal check
@@ -762,6 +763,7 @@ bake_iso ()
 	[ ! -f ${opt_name} ] || die target ${opt_name} already exists
 
 	json_append_ln "\"cmdline\": \""$@"\""
+	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
 	json_finalize_block
 	[ ${json_depth} -eq 0 ] || die internal error, final depth ${json_depth}
 
