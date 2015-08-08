@@ -166,7 +166,7 @@ static void do_stack_walk(unsigned long frame_base)
     unsigned long *frame = (void*) frame_base;
     minios_printk("base is %#lx ", frame_base);
     minios_printk("caller is %#lx\n", frame[1]);
-    if (frame[0] && ++walkdepth < MAXWALKDEPTH)
+    if (frame[0] && ++walkdepth < MAXWALKDEPTH && frame[1] < (unsigned long)&_etext)
 	do_stack_walk(frame[0]);
 }
 
