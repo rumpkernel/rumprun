@@ -456,6 +456,7 @@ run_xen ()
 	opt_pause=
 	opt_interactive=
 	opt_destroy='on_poweroff="preserve"'
+	opt_destroy_crash='on_crash="preserve"'
 	opt_mem=${MEM_DEFAULT}
 	opt_name=
 	opt_debug=
@@ -493,9 +494,10 @@ run_xen ()
 			[ "${NETSTYLE:=n}" = "n" ] || die -n/-I are incompatible
 			createif_xen "${OPTARG}" || usage
 			;;
-		# -d: Destroy domain on poweroff instead of preserving it.
+		# -d: Destroy domain on poweroff/crash instead of preserving it.
 		d)
 			opt_destroy='on_poweroff="destroy"'
+			opt_destroy_crash='on_crash="destroy"'
 			;;
 		# -N: Set guest name.
 		N)
@@ -544,8 +546,8 @@ kernel="${app}"
 name="${name}"
 vcpus=1
 memory=${opt_mem}
-on_crash="preserve"
 ${opt_destroy}
+${opt_destroy_crash}
 ${conf_vif:+vif=[${conf_vif%,}]}
 ${conf_disk:+disk=[${conf_disk%,}]}
 EOM
