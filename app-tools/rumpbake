@@ -164,7 +164,7 @@ eval TOOLCHAIN="\${TOOLCHAIN_${config}}"
 
 # Parse CONFIG, mapping each component to $LIBS_component and each resulting
 # lib to -l$lib
-LIBS=-lrumpvfs
+LIBS="-lrumpkern_bmktc -lrumpvfs"
 for component in ${CONFIG}; do
 	for lib in $(eval echo \${LIBS_${component}}); do
 		LIBS="${LIBS} -l${lib}"

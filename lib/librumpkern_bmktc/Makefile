@@ -1,12 +1,10 @@
-LIB=	rumpxen_tc
+LIB=	rumpkern_bmktc
 
-SRCS+=	rumpxen_tc.c
+SRCS+=	rump_bmktc.c
 
 RUMPTOP= ${TOPRUMP}
 
 CPPFLAGS+=	-I${RUMPTOP}/librump/rumpkern -I${RUMPTOP}/librump
-CPPFLAGS+=	-I${.CURDIR} -I${.CURDIR}/../rump/include
-CPPFLAGS+=	-D__RUMP_KERNEL__ -I${.CURDIR}/..
 
 RUMP_SYM_NORENAME=bmk_platform
 
