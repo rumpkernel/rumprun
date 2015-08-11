@@ -51,7 +51,7 @@ OBJS= ${OBJS_BMK} ${OBJS_APP}
 
 .PHONY:	clean cleandir test
 
-APP_TOOLS_PLATFORM= bmk
+APP_TOOLS_PLATFORM= hw
 APP_TOOLS_OBJS_BAKE=	$(abspath rumprun.o)
 APP_TOOLS_LDSCRIPT_BAKE:= $(abspath ${LDSCRIPT})
 APP_TOOLS_DIR:= $(abspath ../../app-tools)
