@@ -258,6 +258,16 @@ buildpci ()
 	fi
 }
 
+buildkernlibs ()
+{
+
+	( cd lib/librumpkern_bmktc
+		${RUMPMAKE} ${STDJ} obj
+		${RUMPMAKE} ${STDJ} dependall
+		${RUMPMAKE} ${STDJ} install
+	)
+}
+
 wraponetool ()
 {
 
@@ -314,6 +324,8 @@ builduserspace
 
 # depends on config.mk
 buildpci
+
+buildkernlibs
 
 # run routine specified in platform.conf
 doextras || die 'platforms extras failed.  tillerman needs tea?'
