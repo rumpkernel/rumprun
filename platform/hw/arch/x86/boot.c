@@ -44,5 +44,5 @@ x86_boot(struct multiboot_info *mbi)
 
 	spl0();
 
-	run(multiboot_cmdline);
+	bmk_sched_startmain(mainthread, multiboot_cmdline);
 }

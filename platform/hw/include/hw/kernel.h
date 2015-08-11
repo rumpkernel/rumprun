@@ -7,8 +7,6 @@
 struct multiboot_info;
 void multiboot(struct multiboot_info *);
 
-void run(char *);
-
 void cons_putc(int);
 void cons_puts(const char *);
 

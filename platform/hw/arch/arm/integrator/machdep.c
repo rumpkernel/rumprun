@@ -89,7 +89,7 @@ arm_boot(void)
 
 	spl0();
 
-	run(cmdline);
+	bmk_sched_startmain(mainthread, cmdline);
 }
 
 unsigned long bmk_cpu_arm_curtcb;

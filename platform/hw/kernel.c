@@ -73,13 +73,6 @@ bmk_platform_splx(unsigned long x)
 	spl0();
 }
  
-void
-run(char *cmdline)
-{
-
-	bmk_sched_startmain(mainthread, cmdline);
-}
-
 void __attribute__((noreturn))
 bmk_platform_halt(const char *panicstring)
 {
