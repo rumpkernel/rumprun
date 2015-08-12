@@ -30,38 +30,38 @@
 #include <sys/module.h>
 #include <sys/timetc.h>
 
-MODULE(MODULE_CLASS_MISC, rumpxen_tc, NULL);
+MODULE(MODULE_CLASS_MISC, bmktc, NULL);
 
 /* XXXX */
 uint64_t bmk_platform_cpu_clock_monotonic(void);
 
 static u_int
-rumpxen_tc_get(struct timecounter *tc)
+bmktc_get(struct timecounter *tc)
 {
 
 	return (u_int)bmk_platform_cpu_clock_monotonic();
 }
 
-static struct timecounter rumpxen_tc = {
-	.tc_get_timecount	= rumpxen_tc_get,
+static struct timecounter bmktc = {
+	.tc_get_timecount	= bmktc_get,
 	.tc_poll_pps 		= NULL,
 	.tc_counter_mask	= ~0,
 	.tc_frequency		= 1000000000ULL,
-	.tc_name		= "rumpxen",
+	.tc_name		= "bmktc",
 	.tc_quality		= 100,
 };
 
 static int
-rumpxen_tc_modcmd(modcmd_t cmd, void *arg)
+bmktc_modcmd(modcmd_t cmd, void *arg)
 {
 
 	switch (cmd) {
 	case MODULE_CMD_INIT:
-		tc_init(&rumpxen_tc);
+		tc_init(&bmktc);
 		break;
 
 	case MODULE_CMD_FINI:
-		tc_detach(&rumpxen_tc);
+		tc_detach(&bmktc);
 		break;
 
 	default:
