@@ -104,7 +104,7 @@ main(int argc, char *argv[])
 	 */
 	printf("=== FOE RUMPRUN 12345 TES-TER 54321 ===\n");
 	atexit(logexit);
-	logrv = rumprun_test(argc+1, argv-1);
+	logrv = rumprun_test(argc-1, argv+1);
 	printf("=== RUMPRUN 12345 TES-TER 54321 EOF ===\n");
 
 	exit(logrv);
