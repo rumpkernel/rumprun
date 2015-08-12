@@ -141,7 +141,7 @@ isr(int which)
 {
 
 	/* schedule the interrupt handler */
-	isr_todo |= 1<<which;
+	isr_todo |= which;
 	bmk_sched_wake(isr_thread);
 }
 

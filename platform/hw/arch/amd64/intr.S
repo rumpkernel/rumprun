@@ -117,7 +117,7 @@ ENTRY(x86_isr_##intnum)							\
 	pushq %rdx							;\
 	pushq %rdi							;\
 	pushq %rsi							;\
-	movq $intnum, %rsi						;\
+	movq $(1<<intnum), %rsi						;\
 	call isr							;\
 	popq %rsi							;\
 	popq %rdi							;\

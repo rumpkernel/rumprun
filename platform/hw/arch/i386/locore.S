@@ -174,7 +174,7 @@ ENTRY(x86_isr_##intnum)							\
 	pushl %ebx							;\
 	pushl %ecx							;\
 	pushl %edx							;\
-	pushl $intnum							;\
+	pushl $(1<<intnum)						;\
 	call isr							;\
 	addl $4, %esp							;\
 	popl %edx							;\
