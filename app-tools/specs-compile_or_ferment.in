@@ -6,7 +6,7 @@
 %rename cc1_options old_cc1_options
 
 *cc1_options:
-%(old_cc1_options) -fno-stack-protector -fno-builtin-sin -fno-builtin-sinf -fno-builtin-cos -fno-builtin-cosf
+%(old_cc1_options) !CFLAGS! -fno-stack-protector -fno-builtin-sin -fno-builtin-sinf -fno-builtin-cos -fno-builtin-cosf
 
 *startfile:
 
