@@ -92,6 +92,13 @@ vector_undefined:
 	pop {r0-r14}
 	movs pc, lr
 
+vector_irq:
+	push {r0-r14}
+	adds r0, sp, #(14*4)
+	bl arm_interrupt
+	pop {r0-r14}
+	subs pc, r14, #4
+
 /*
  * The rest of the exceptions just loop.  Attach a debugger
  * to find out where you are currently.
@@ -105,13 +112,6 @@ vector_prefetch_abort:
 
 vector_data_abort:
 	b vector_data_abort
-
-vector_irq:
-	push {r0-r14}
-	adds r0, sp, #(14*4)
-	bl arm_interrupt
-	pop {r0-r14}
-	subs pc, r14, #4
 
 vector_fiq:
 	b vector_fiq
