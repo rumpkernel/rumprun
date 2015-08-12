@@ -68,6 +68,13 @@ clockinit(void)
 static char cmdline[] = "\n"
 "{\n"
 "	cmdline: \"HELLO just dropping by\n\",\n"
+"	net :  {\n"
+"		\"if\":		\"sm0\",\n"
+"		\"type\":	\"inet\",\n"
+"		\"method\":	\"static\",\n"
+"		\"addr\":	\"10.0.0.2\",\n"
+"		\"mask\":	\"24\",\n"
+"	}\n"
 "}\n";
 
 void
