@@ -57,14 +57,14 @@ static struct bmk_thread *isr_thread;
 static void
 doisr(void *arg)
 {
-	unsigned int didwork;
+	unsigned int didwork, totwork;
 	int i;
 
         rumpuser__hyp.hyp_schedule();
         rumpuser__hyp.hyp_lwproc_newlwp(0);
         rumpuser__hyp.hyp_unschedule();
 
-	didwork = 0;
+	didwork = totwork = 0;
 	splhigh();
 	for (;;) {
 		unsigned int isrcopy;
@@ -73,6 +73,8 @@ doisr(void *arg)
 		isrcopy = isr_todo;
 		isr_todo = 0;
 		spl0();
+
+		totwork |= isrcopy;
 
 		rumpkern_sched(nlocks, NULL);
 		for (i = isr_lowest; isrcopy; i++) {
@@ -100,17 +102,18 @@ doisr(void *arg)
 		if (isr_todo)
 			continue;
 
-		cpu_intr_ack(didwork);
+		cpu_intr_ack(totwork);
 
 		/* no interrupts left. block until the next one. */
 		bmk_sched_blockprepare();
 
 		spl0();
-		if (!didwork) {
-			bmk_printf("stray interrupt\n");
+		if (didwork != totwork) {
+			bmk_printf("stray interrupt(s): 0x%x\n",
+			    totwork & ~didwork);
 		}
 		bmk_sched_block();
-		didwork = 0;
+		didwork = totwork = 0;
 		splhigh();
 	}
 }
