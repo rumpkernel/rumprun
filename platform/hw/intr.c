@@ -57,56 +57,61 @@ static struct bmk_thread *isr_thread;
 static void
 doisr(void *arg)
 {
-	int i, didwork;
+	unsigned int didwork;
+	int i;
 
         rumpuser__hyp.hyp_schedule();
         rumpuser__hyp.hyp_lwproc_newlwp(0);
         rumpuser__hyp.hyp_unschedule();
 
 	didwork = 0;
+	splhigh();
 	for (;;) {
-		splhigh();
-		if (isr_todo) {
-			unsigned int isrcopy;
-			int nlocks = 1;
+		unsigned int isrcopy;
+		int nlocks = 1;
 
-			isrcopy = isr_todo;
-			isr_todo = 0;
-			spl0();
+		isrcopy = isr_todo;
+		isr_todo = 0;
+		spl0();
 
-			rumpkern_sched(nlocks, NULL);
-			for (i = isr_lowest; isrcopy; i++) {
-				struct intrhand *ih;
+		rumpkern_sched(nlocks, NULL);
+		for (i = isr_lowest; isrcopy; i++) {
+			struct intrhand *ih;
 
 #if BMK_INTRLEVS == 1
-				isrcopy = 0;
-				i = 0;
+			isrcopy = 0;
+			i = 0;
 #else
-				bmk_assert(i < sizeof(isrcopy)*8);
-				if ((isrcopy & (1<<i)) == 0)
-					continue;
-				isrcopy &= ~(1<<i);
+			bmk_assert(i < sizeof(isrcopy)*8);
+			if ((isrcopy & (1<<i)) == 0)
+				continue;
+			isrcopy &= ~(1<<i);
 #endif
 
-				SLIST_FOREACH(ih, &isr_ih[i], ih_entries) {
-					if (ih->ih_fun(ih->ih_arg) != 0) {
-						didwork = 1;
-					}
+			SLIST_FOREACH(ih, &isr_ih[i], ih_entries) {
+				if (ih->ih_fun(ih->ih_arg) != 0) {
+					didwork |= 1<<i;
 				}
 			}
-			rumpkern_unsched(&nlocks, NULL);
-			cpu_intr_ack();
-
-			if (!didwork) {
-				bmk_printf("stray interrupt\n");
-			}
-		} else {
-			/* no interrupts left. block until the next one. */
-			bmk_sched_blockprepare();
-			spl0();
-			bmk_sched_block();
-			didwork = 0;
 		}
+		rumpkern_unsched(&nlocks, NULL);
+
+		splhigh();
+		if (isr_todo)
+			continue;
+
+		cpu_intr_ack(didwork);
+
+		/* no interrupts left. block until the next one. */
+		bmk_sched_blockprepare();
+
+		spl0();
+		if (!didwork) {
+			bmk_printf("stray interrupt\n");
+		}
+		bmk_sched_block();
+		didwork = 0;
+		splhigh();
 	}
 }
 

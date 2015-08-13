@@ -61,7 +61,7 @@ cpu_intr_init(int intr)
 }
 
 void
-cpu_intr_ack(void)
+cpu_intr_ack(unsigned int intrs)
 {
 
 	/*

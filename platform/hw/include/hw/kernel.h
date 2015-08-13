@@ -13,7 +13,7 @@ void cons_puts(const char *);
 void cpu_init(void);
 void cpu_block(bmk_time_t);
 int cpu_intr_init(int);
-void cpu_intr_ack(void);
+void cpu_intr_ack(unsigned);
 
 bmk_time_t cpu_clock_now(void);
 bmk_time_t cpu_clock_epochoffset(void);
