@@ -93,6 +93,7 @@ arm_boot(void)
 	loadmem();
 
 	clockinit();
+	intr_init();
 
 	spl0();
 
@@ -115,12 +116,31 @@ arm_undefined(unsigned long *trapregs)
 	}
 }
 
+/* no interrupt handler for the timer, so we just clear it */
+static unsigned int clearmask = 0x80;
+
+/* dynamically registered interrupts */
+static unsigned int intmask;
+
 void
 arm_interrupt(unsigned long *trapregs)
 {
 	uint32_t intstat = inl(INTR_STATUS);
+	uint32_t clearint = intstat & clearmask;
 
-	outl(INTR_CLEAR, intstat);
+	splhigh();
+
+	if (clearint) {
+		outl(INTR_CLEAR, clearint);
+		intstat &= ~clearint;
+	}
+
+	if (intstat) {
+		outl(INTR_CLEAR, intstat);
+		isr(intstat);
+	}
+
+	spl0();
 }
 
 void
@@ -162,4 +182,20 @@ cpu_block(bmk_time_t until)
 	    "mov r0, #0x0\n"
 	    "mcr p15, 0, r0, c7, c0, 4\n" ::: "r0");
 	outl(INTR_CLEAR, 0x80);
+}
+
+int
+cpu_intr_init(int intr)
+{
+
+	intmask |= 1<<intr;
+	outl(INTR_ENABLE, intmask);
+	return 0;
+}
+
+void
+cpu_intr_ack(unsigned mask)
+{
+
+	outl(INTR_ENABLE, mask);
 }
