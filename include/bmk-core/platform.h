@@ -30,8 +30,9 @@
 
 extern unsigned long bmk_memsize;
 
-void bmk_platform_block(bmk_time_t);
 void bmk_platform_halt(const char *) __attribute__((noreturn));
+
+void		bmk_platform_cpu_block(bmk_time_t);
 
 bmk_time_t	bmk_platform_cpu_clock_monotonic(void);
 bmk_time_t	bmk_platform_cpu_clock_epochoffset(void);

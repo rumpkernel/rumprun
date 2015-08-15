@@ -88,7 +88,7 @@ bmk_platform_halt(const char *panicstring)
 }
 
 void
-bmk_platform_block(bmk_time_t until)
+bmk_platform_cpu_block(bmk_time_t until)
 {
 
 	block_domain(until);

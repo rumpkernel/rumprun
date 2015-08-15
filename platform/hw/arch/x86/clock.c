@@ -285,7 +285,7 @@ bmk_platform_cpu_clock_epochoffset(void)
  * too short.
  */
 void
-cpu_block(bmk_time_t until)
+bmk_platform_cpu_block(bmk_time_t until)
 {
 	bmk_time_t now, delta_ns;
 	int64_t delta_ticks;
@@ -332,5 +332,7 @@ cpu_block(bmk_time_t until)
 	 * able to distinguish if the interrupt was the PIT interrupt
 	 * and no other, but this will do for now.
 	 */
+	spl0();
 	hlt();
+	splhigh();
 }

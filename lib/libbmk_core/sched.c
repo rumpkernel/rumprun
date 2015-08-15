@@ -346,7 +346,7 @@ schedule(void)
 		}
 
 		/* nothing to run.  enable interrupts and sleep. */
-		bmk_platform_block(waketime);
+		bmk_platform_cpu_block(waketime);
 	}
 	/* now we're committed to letting "next" run next */
 	setflags(prev, 0, THR_RUNNING);

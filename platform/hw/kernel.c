@@ -38,23 +38,6 @@
 
 int spldepth = 1;
 
-void
-bmk_platform_block(bmk_time_t until)
-{
-	int s = spldepth;
-
-	/* enable interrupts around the sleep */
-	if (spldepth) {
-		spldepth = 1;
-		spl0();
-	}
-	cpu_block(until);
-	if (s) {
-		splhigh();
-		spldepth = s;
-	}
-}
-
 /*
  * splhigh()/spl0() internally track depth
  */

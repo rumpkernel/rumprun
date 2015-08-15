@@ -35,6 +35,7 @@
 
 #include <bmk-core/core.h>
 #include <bmk-core/pgalloc.h>
+#include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
 #include <bmk-core/sched.h>
 #include <bmk-core/string.h>
@@ -171,16 +172,18 @@ bmk_platform_cpu_clock_epochoffset(void)
 }
 
 void
-cpu_block(bmk_time_t until)
+bmk_platform_cpu_block(bmk_time_t until)
 {
 
 	outl(TMR2_CTRL, TMR_CTRL_EN | TMR_CTRL_IE);
 	outl(TMR2_CLRINT, 0);
 
 	outl(INTR_ENABLE, 0x80);
+	spl0();
 	asm volatile(
 	    "mov r0, #0x0\n"
 	    "mcr p15, 0, r0, c7, c0, 4\n" ::: "r0");
+	splhigh();
 	outl(INTR_CLEAR, 0x80);
 }
 
