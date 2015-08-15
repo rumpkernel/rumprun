@@ -290,6 +290,7 @@ bmk_platform_cpu_block(bmk_time_t until)
 	bmk_time_t now, delta_ns;
 	int64_t delta_ticks;
 	unsigned int ticks;
+	int s;
 
 	/*
 	 * Return if called too late.
@@ -332,7 +333,11 @@ bmk_platform_cpu_block(bmk_time_t until)
 	 * able to distinguish if the interrupt was the PIT interrupt
 	 * and no other, but this will do for now.
 	 */
-	spl0();
-	hlt();
-	splhigh();
+	s = spldepth;
+	spldepth = 0;
+	__asm__ __volatile__(
+		"sti;\n"
+		"hlt;\n"
+		"cli;\n");
+	spldepth = s;
 }
