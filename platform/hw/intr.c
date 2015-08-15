@@ -98,6 +98,11 @@ doisr(void *arg)
 		}
 		rumpkern_unsched(&nlocks, NULL);
 
+#if BMK_INTRLEVS == 1
+		if (didwork)
+			didwork = totwork;
+#endif
+
 		splhigh();
 		if (isr_todo)
 			continue;
