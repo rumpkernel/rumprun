@@ -48,7 +48,7 @@ struct intrhand {
 
 SLIST_HEAD(isr_ihead, intrhand);
 static struct isr_ihead isr_ih[BMK_INTRLEVS];
-static unsigned int isr_todo;
+static volatile unsigned int isr_todo;
 static unsigned int isr_lowest = sizeof(isr_todo)*8;
 
 static struct bmk_thread *isr_thread;
