@@ -345,7 +345,11 @@ schedule(void)
 			break;
 		}
 
-		/* nothing to run.  enable interrupts and sleep. */
+		/*
+		 * Nothing to run, block until waketime or until an interrupt
+		 * occurs, whichever happens first.  The call will enable
+		 * interrupts "atomically" before actually blocking.
+		 */
 		bmk_platform_cpu_block(waketime);
 	}
 	/* now we're committed to letting "next" run next */
