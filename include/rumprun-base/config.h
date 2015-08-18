@@ -34,7 +34,7 @@ extern char **rumprun_cmdline_argv;
 
 int	rumprun_config_isonrootfs_p(char *);
 
-void _rumprun_config(char *);
-void _rumprun_deconfig(void);
+void	rumprun_config(char *);
+void	rumprun_deconfig(void);
 
 #endif /* _BMKCOMMON_RUMPRUN_CONFIG_H_ */

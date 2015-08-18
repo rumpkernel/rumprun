@@ -112,7 +112,7 @@ rumprun_boot(char *cmdline)
 
 	rump_init_server("tcp://0:12345");
 
-	_rumprun_config(cmdline);
+	rumprun_config(cmdline);
 
 	/*
 	 * give all threads a chance to run, and ensure that the main
@@ -285,7 +285,7 @@ void __dead
 rumprun_reboot(void)
 {
 
-	_rumprun_deconfig();
+	rumprun_deconfig();
 	_netbsd_userlevel_fini();
 	rump_sys_reboot(0, 0);
 

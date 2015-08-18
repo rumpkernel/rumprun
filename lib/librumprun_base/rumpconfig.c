@@ -554,7 +554,7 @@ rumprun_config_isonrootfs_p(char *config)
 #undef ROOTCFG
 
 void
-_rumprun_config(char *cmdline)
+rumprun_config(char *cmdline)
 {
 	jsmn_parser p;
 	jsmntok_t *tokens = NULL;
@@ -619,7 +619,7 @@ _rumprun_config(char *cmdline)
 }
 
 void
-_rumprun_deconfig(void)
+rumprun_deconfig(void)
 {
 
 	return; /* TODO */
