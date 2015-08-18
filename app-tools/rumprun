@@ -66,6 +66,7 @@ usage ()
 usage: rumprun [script args] PLATFORM [guest args] APP [ -- ] [app args]
 
 PLATFORM is the rumprun runtime platform to use
+    ec2  : create directory with contents necessary for a Amazon EC2 AMI
     iso  : bake app and config into a bootable iso image
     kvm  : hw guest via qemu -enable-kvm
     qemu : hw guest via qemu -no-kvm
@@ -180,6 +181,22 @@ createif_iso ()
 
 	eval ${iftag}2ifname=${ifbasename}${nindex}
 	eval ${iftag}2cloner=false
+
+	nindex=$(expr $nindex + 1)
+}
+
+createif_ec2 ()
+{
+	local iftag
+	local ifbasename
+
+	iftag="${1%%,*}"
+	ifbasename="${1#*,}"
+
+	[ "${iftag}" != "${ifbasename}" ] || usage
+
+	eval ${iftag}2ifname=${ifbasename}${nindex}
+	eval ${iftag}2cloner=true
 
 	nindex=$(expr $nindex + 1)
 }
@@ -377,13 +394,15 @@ json_store_qemu_blkspec ()
 json_store_iso_blkspec ()
 {
 
-	mkdir -p "${ISODIR}/images"
+	[ -n "${IMGSDIR}" ] || die 'internal error: $IMGSDIR not set'
+
+	mkdir -p "${IMGSDIR}"
 
 	# XXX: might have accidental clashes due to images from
 	# many source subdirectories
-	[ ! -f "${ISODIR}/images/$(basename ${image})" ] \
+	[ ! -f "${IMGSDIR}/$(basename ${image})" ] \
 	    || die image \"${image}\" already exists in destdir
-	cp ${image} "${ISODIR}/images/"
+	cp ${image} "${IMGSDIR}/"
 
 	# well, this is a bit questionable, but ...
 	[ -n "${mountpoint}" ] || return
@@ -712,6 +731,7 @@ bake_iso ()
 	blk_specified=false
 
 	ISODIR="${TMPDIR}/iso"
+	IMGSDIR="${ISODIR}/images"
 	mkdir -p "${ISODIR}"
 
 	json_open_block
@@ -780,6 +800,99 @@ bake_iso ()
 	grub-mkrescue "${ISODIR}" -o ${opt_name}
 }
 
+make_ec2 ()
+{
+
+	store_blkspec=json_store_iso_blkspec
+	store_netspec=json_store_netspec
+
+	opt_interactive=
+	opt_drivespec=
+	opt_debug=
+	opt_pause=
+	opt_netif=
+	opt_mem=${MEM_DEFAULT}
+
+	blk_specified=false
+
+	EC2DIR="${TMPDIR}/ec2"
+	mkdir -p "${EC2DIR}" || die cannot create ${EC2DIR}
+	IMGSDIR="${EC2DIR}/images"
+
+	json_open_block
+
+	while getopts "${guestopts}" opt; do
+		case "$opt" in
+		b)
+			${blk_specified} \
+			    && die only one -b parameter supported.  will fix.
+			blk_specified=true
+			parse_blkspec "${OPTARG}" || usage
+			;;
+		d)
+			die -d not supported on iso
+			;;
+		D)
+			die -D not supported on iso
+			;;
+		e)
+			json_append_ln "\"env\": \"${OPTARG}\""
+			;;
+		i)
+			die -i not supported on iso
+			;;
+		I)
+			createif_ec2 "${OPTARG}" || usage
+			nindex=$(expr $nindex + 1)
+			;;
+		M)
+			die -M not supported on iso
+			;;
+		N)
+			opt_name=${OPTARG}
+			;;
+		p)
+			die -p not supported on iso
+			;;
+		W)
+			parse_newnetspec "${OPTARG}" || usage
+			;;
+		*)
+			usage
+			;;
+		esac
+	done
+	shift $((${OPTIND}-1))
+	bootimage=$1
+	check_app ${bootimage}
+	: ${opt_name:=rumprun-$(echo ${bootimage} | tr / _).ec2dir}
+	finaldir="${opt_name}"
+
+	[ ! -f ${finaldir} ] || die target ${finaldir} already exists
+
+	json_append_ln "\"cmdline\": \""$@"\""
+	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
+	json_finalize_block
+	[ ${json_depth} -eq 0 ] || die internal error, final depth ${json_depth}
+
+	# create the directory structure
+	mkdir -p "${EC2DIR}/boot/grub"
+	printf 'default 0\ntimeout 1\n' > "${EC2DIR}/boot/grub/menu.lst"
+	printf 'title %s\n' "${opt_name}" >> "${EC2DIR}/boot/grub/menu.lst"
+	printf '  root (hd0)\n' >> "${EC2DIR}/boot/grub/menu.lst"
+	printf '  kernel /boot/%s ROOTFSCFG=/json.cfg\n' \
+	    $(basename ${bootimage}) >> "${EC2DIR}/boot/grub/menu.lst"
+	cp ${bootimage} "${EC2DIR}/boot"
+	cp "${TMPDIR}/json.cfg" "${EC2DIR}"
+
+	# finally, copy temporary ec2dir to final location
+	# (we can't use the right dir right off the bat because
+	# we don't know the name during option processing ... FIXME)
+	cp -Rp "${EC2DIR}" "${finaldir}"
+
+	echo "Done.  Place contents of \"${finaldir}\" to EC2 volume and boot."
+}
+
 if [ $# -lt 2 ]; then
 	usage
 fi
@@ -815,6 +928,9 @@ setuptmpdir
 case ${platform} in
 xen)
 	run_xen "$@"
+	;;
+ec2)
+	make_ec2 "$@"
 	;;
 iso)
 	bake_iso "$@"
