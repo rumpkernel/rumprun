@@ -49,11 +49,14 @@ jsonordie(void)
 }
 
 static char *
-get_config(void)
+get_config(char *cmdline)
 {
 	xenbus_transaction_t txn;
 	char *cfg;
 	int retry;
+
+	if (rumprun_config_isonrootfs_p(cmdline))
+		return cmdline;
 
 	if (xenbus_transaction_start(&txn))
 		return jsonordie();
@@ -69,7 +72,7 @@ app_main(start_info_t *si)
 {
 	void *cookie;
 
-	rumprun_boot(get_config());
+	rumprun_boot(get_config((char *)si->cmd_line));
 
 	RUNMAINS();
 
