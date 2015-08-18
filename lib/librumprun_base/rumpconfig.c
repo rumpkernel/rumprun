@@ -316,7 +316,7 @@ configvnd(const char *path)
 }
 
 static char *
-configetfs(const char *path)
+configetfs(const char *path, int hard)
 {
 	char buf[32];
 	char epath[32];
@@ -326,8 +326,11 @@ configetfs(const char *path)
 	snprintf(epath, sizeof(epath), "XENBLK_%s", path);
 	snprintf(buf, sizeof(buf), "/dev/%s", path);
 	rv = rump_pub_etfs_register(buf, epath, RUMP_ETFS_BLK);
-	if (rv != 0)
+	if (rv != 0) {
+		if (!hard)
+			return NULL;
 		errx(1, "etfs register for \"%s\" failed: %d", path, rv);
+	}
 
 	if ((p = strdup(buf)) == NULL)
 		err(1, "failed to allocate pathbuf");
@@ -426,7 +429,7 @@ handle_blk(jsmntok_t *t, int left, char *data)
 		configvnd(path);
 		path = "/dev/vnd0d"; /* XXX */
 	} else if (strcmp(source, "etfs") == 0) {
-		path = configetfs(path);
+		path = configetfs(path, 1);
 	} else {
 		errx(1, "unsupported blk source \"%s\"", source);
 	}
@@ -516,8 +519,22 @@ getcmdlinefromroot(const char *cfgname)
 			break;
 		}
 	}
-	if (i == __arraycount(tryroot))
-		errx(1, "failed to mount rootfs from image");
+
+	/* didn't find it that way.  one more try: etfs for sda1 (EC2) */
+	if (i == __arraycount(tryroot)) {
+		char *devpath;
+
+		devpath = configetfs("sda1", 0);
+		if (!devpath)
+			errx(1, "failed to mount rootfs from image");
+
+		/* mount call will either succeed or panic */
+		mount_ufs("ext2fs", devpath, "/rootfs");
+	}
+
+	/*
+	 * Ok, we've successfully mounted /rootfs.  Now get the config.
+	 */
 
 	while (*cfgname == '/')
 		cfgname++;
