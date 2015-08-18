@@ -542,7 +542,17 @@ getcmdlinefromroot(const char *cfgname)
 	return p;
 }
 
+
 #define ROOTCFG "ROOTFSCFG="
+static const size_t rootcfglen = sizeof(ROOTCFG)-1;
+int
+rumprun_config_isonrootfs_p(char *config)
+{
+
+	return strncmp(config, ROOTCFG, rootcfglen) == 0;
+}
+#undef ROOTCFG
+
 void
 _rumprun_config(char *cmdline)
 {
@@ -550,12 +560,11 @@ _rumprun_config(char *cmdline)
 	jsmntok_t *tokens = NULL;
 	jsmntok_t *t;
 	size_t cmdline_len;
-	const size_t rootcfglen = sizeof(ROOTCFG)-1;
 	unsigned int i;
 	int ntok;
 
 	/* is the config file on rootfs?  if so, mount & dig it out */
-	if (strncmp(cmdline, ROOTCFG, rootcfglen) == 0) {
+	if (rumprun_config_isonrootfs_p(cmdline)) {
 		cmdline = getcmdlinefromroot(cmdline + rootcfglen);
 		if (cmdline == NULL)
 			errx(1, "could not get cfg from rootfs");
