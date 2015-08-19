@@ -297,7 +297,7 @@ handle_net(jsmntok_t *t, int left, char *data)
 	return 2*objsize + 1;
 }
 
-static void
+static char *
 configvnd(const char *path)
 {
 	struct vnd_ioctl vndio;
@@ -313,6 +313,8 @@ configvnd(const char *path)
 
 	if (ioctl(fd, VNDIOCSET, &vndio) == -1)
 		err(1, "vndset failed");
+
+	return strdup("/dev/vnd0d"); /* XXX */
 }
 
 static char *
@@ -377,8 +379,8 @@ struct {
 static int
 handle_blk(jsmntok_t *t, int left, char *data)
 {
-	const char *source, *path, *fstype;
-	char *mp;
+	const char *source, *origpath, *fstype;
+	char *mp, *path;
 	jsmntok_t *key, *value;
 	int i, objsize;
 
@@ -391,7 +393,7 @@ handle_blk(jsmntok_t *t, int left, char *data)
 	}
 	t++;
 
-	fstype = source = path = mp = NULL;
+	fstype = source = origpath = mp = path = NULL;
 
 	for (i = 0; i < objsize; i++, t+=2) {
 		char *valuestr;
@@ -408,7 +410,7 @@ handle_blk(jsmntok_t *t, int left, char *data)
 		if (T_STREQ(key, data, "source")) {
 			source = valuestr;
 		} else if (T_STREQ(key, data, "path")) {
-			path = valuestr;
+			origpath = path = valuestr;
 		} else if (T_STREQ(key, data, "fstype")) {
 			fstype = valuestr;
 		} else if (T_STREQ(key, data, "mountpoint")) {
@@ -426,8 +428,7 @@ handle_blk(jsmntok_t *t, int left, char *data)
 	if (strcmp(source, "dev") == 0) {
 		/* nothing to do here */
 	} else if (strcmp(source, "vnd") == 0) {
-		configvnd(path);
-		path = "/dev/vnd0d"; /* XXX */
+		path = configvnd(path);
 	} else if (strcmp(source, "etfs") == 0) {
 		path = configetfs(path, 1);
 	} else {
@@ -474,6 +475,9 @@ handle_blk(jsmntok_t *t, int left, char *data)
 		if (mi == __arraycount(mounters))
 			errx(1, "unknown fstype \"%s\"", fstype);
 	}
+
+	if (path != origpath)
+		free(path);
 
 	return 2*objsize + 1;
 }
