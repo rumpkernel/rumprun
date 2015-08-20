@@ -39,7 +39,7 @@ LDFLAGS_BAKE+=	-L$(abspath rump/lib)
 
 rump-src-y += rumphyper_bio.c
 
-rump-src-y += callmain.c
+rump-src-y += init.c
 
 # Rump kernel middleware objects to build.
 RUMP_OBJS := $(patsubst %.c,$(OBJ_DIR)/%.o,$(rump-src-y))
