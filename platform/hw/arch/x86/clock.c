@@ -293,10 +293,11 @@ bmk_platform_cpu_block(bmk_time_t until)
 	int s;
 
 	/*
-	 * Return if called too late.
+	 * Return if called too late.  Doing do ensures that the time
+	 * delta is positive.
 	 */
 	now = bmk_platform_cpu_clock_monotonic();
-	if (until < now)
+	if (until <= now)
 		return;
 
 	/*
