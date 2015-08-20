@@ -289,7 +289,7 @@ void
 bmk_platform_cpu_block(bmk_time_t until)
 {
 	bmk_time_t now, delta_ns;
-	int64_t delta_ticks;
+	uint64_t delta_ticks;
 	unsigned int ticks;
 	int s;
 
