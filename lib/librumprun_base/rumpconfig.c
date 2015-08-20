@@ -30,6 +30,7 @@
  */
 
 #include <sys/param.h>
+#include <sys/disklabel.h>
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 
@@ -297,24 +298,70 @@ handle_net(jsmntok_t *t, int left, char *data)
 	return 2*objsize + 1;
 }
 
+static void
+makevnddev(int israw, int unit, int part, char *storage, size_t storagesize)
+{
+
+	snprintf(storage, storagesize, "/dev/%svnd%d%c",
+	    israw ? "r" : "", unit, 'a' + part);
+}
+
+static devmajor_t
+getvndmajor(int israw)
+{
+	struct stat sb;
+	char path[32];
+
+	makevnddev(israw, 0, RAW_PART, path, sizeof(path));
+	if (stat(path, &sb) == -1)
+		err(1, "failed to stat %s", path);
+	return major(sb.st_rdev);
+}
+
 static char *
 configvnd(const char *path)
 {
+	static int nextvnd;
 	struct vnd_ioctl vndio;
+	char bbuf[32], rbuf[32];
 	int fd;
+
+	makevnddev(0, nextvnd, RAW_PART, bbuf, sizeof(bbuf));
+	makevnddev(1, nextvnd, RAW_PART, rbuf, sizeof(rbuf));
 
 	memset(&vndio, 0, sizeof(vndio));
 	vndio.vnd_file = __UNCONST(path);
 	vndio.vnd_flags = VNDIOF_READONLY;
 
-	fd = open("/dev/rvnd0d", O_RDWR);
-	if (fd == -1)
-		err(1, "cannot open /dev/vnd");
+	fd = open(rbuf, O_RDWR);
+	if (fd == -1) {
+		/*
+		 * node doesn't exist?  try creating it.  use majors from
+		 * vnd0, which we (obviously) assume/hope exists
+		 */
+		if (errno == ENOENT) {
+			const devmajor_t bmaj = getvndmajor(0);
+			const devmajor_t rmaj = getvndmajor(1);
+
+			if (mknod(bbuf, 0666 | S_IFBLK,
+			    MAKEDISKDEV(bmaj, nextvnd, RAW_PART)) == -1)
+				err(1, "mknod %s", bbuf);
+			if (mknod(rbuf, 0666 | S_IFBLK,
+			    MAKEDISKDEV(rmaj, nextvnd, RAW_PART)) == -1)
+				err(1, "mknod %s", rbuf);
+
+			fd = open(rbuf, O_RDWR);
+		}
+		if (fd == -1)
+			err(1, "cannot open %s", rbuf);
+	}
 
 	if (ioctl(fd, VNDIOCSET, &vndio) == -1)
 		err(1, "vndset failed");
+	close(fd);
 
-	return strdup("/dev/vnd0d"); /* XXX */
+	nextvnd++;
+	return strdup(bbuf);
 }
 
 static char *

@@ -401,7 +401,7 @@ json_store_iso_blkspec ()
 	# XXX: might have accidental clashes due to images from
 	# many source subdirectories
 	[ ! -f "${IMGSDIR}/$(basename ${image})" ] \
-	    || die image \"${image}\" already exists in destdir
+	    || die image \"${image}\" already exists in images
 	cp ${image} "${IMGSDIR}/"
 
 	# well, this is a bit questionable, but ...
@@ -728,8 +728,6 @@ bake_iso ()
 	opt_netif=
 	opt_mem=${MEM_DEFAULT}
 
-	blk_specified=false
-
 	ISODIR="${TMPDIR}/iso"
 	IMGSDIR="${ISODIR}/images"
 	mkdir -p "${ISODIR}"
@@ -739,9 +737,6 @@ bake_iso ()
 	while getopts "${guestopts}" opt; do
 		case "$opt" in
 		b)
-			${blk_specified} \
-			    && die only one -b parameter supported.  will fix.
-			blk_specified=true
 			parse_blkspec "${OPTARG}" || usage
 			;;
 		d)
@@ -813,8 +808,6 @@ make_ec2 ()
 	opt_netif=
 	opt_mem=${MEM_DEFAULT}
 
-	blk_specified=false
-
 	EC2DIR="${TMPDIR}/ec2"
 	mkdir -p "${EC2DIR}" || die cannot create ${EC2DIR}
 	IMGSDIR="${EC2DIR}/images"
@@ -824,9 +817,6 @@ make_ec2 ()
 	while getopts "${guestopts}" opt; do
 		case "$opt" in
 		b)
-			${blk_specified} \
-			    && die only one -b parameter supported.  will fix.
-			blk_specified=true
 			parse_blkspec "${OPTARG}" || usage
 			;;
 		d)
