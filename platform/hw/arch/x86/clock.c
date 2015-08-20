@@ -27,6 +27,7 @@
 #include <hw/kernel.h>
 #include <hw/clock_subr.h>
 
+#include <bmk-core/core.h>
 #include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
 
@@ -292,6 +293,8 @@ bmk_platform_cpu_block(bmk_time_t until)
 	unsigned int ticks;
 	int s;
 
+	bmk_assert(spldepth > 0);
+
 	/*
 	 * Return if called too late.  Doing do ensures that the time
 	 * delta is positive.
@@ -302,12 +305,23 @@ bmk_platform_cpu_block(bmk_time_t until)
 
 	/*
 	 * Compute delta in PIT ticks. Return if it is less than minimum safe
-	 * amount of ticks.
+	 * amount of ticks.  Essentially this will cause us to spin until
+	 * the timeout.
 	 */
 	delta_ns = until - now;
 	delta_ticks = mul64_32(delta_ns, pit_mult);
-	if (delta_ticks < PIT_MIN_DELTA)
+	if (delta_ticks < PIT_MIN_DELTA) {
+		/*
+		 * Since we are "spinning", quickly enable interrupts in
+		 * the hopes that we might get new work and can do something
+		 * else than spin.
+		 */
+		__asm__ __volatile__(
+			"sti;\n"
+			"nop;\n"	/* ints are enabled 1 instr after sti */
+			"cli;\n");
 		return;
+	}
 
 	/*
 	 * Program the timer to interrupt the CPU after the delay has expired.
