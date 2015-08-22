@@ -98,7 +98,7 @@ static const char HEXDIGITS[] = "0123456789ABCDEF";
 #ifndef BMK_DMESG_SIZE
 #define BMK_DMESG_SIZE (16*1024)
 #endif
-static char bmk_dmesg[BMK_DMESG_SIZE];
+char bmk_dmesg[BMK_DMESG_SIZE];
 static int bmk_dmesgoff;
 
 /*
