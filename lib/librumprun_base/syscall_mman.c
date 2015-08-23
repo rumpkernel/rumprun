@@ -53,7 +53,7 @@
 #endif
 
 /* XXX: need actual const macro */
-static inline long
+static inline long __constfunc
 pagesize(void)
 {
 
