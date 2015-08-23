@@ -41,9 +41,10 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#include <bmk-core/pgalloc.h>
 
 #ifdef RUMPRUN_MMAP_DEBUG
 #define MMAP_PRINTF(x) printf x
@@ -51,13 +52,37 @@
 #define MMAP_PRINTF(x)
 #endif
 
+/* XXX: need actual const macro */
+static inline long
+pagesize(void)
+{
+
+	return sysconf(_SC_PAGESIZE);
+}
+
+/*
+ * calculate the order we need for pgalloc()
+ */
+static int
+size2order(size_t wantedsize)
+{
+	int npgs = wantedsize / pagesize();
+	int powtwo;
+
+	powtwo = 8*sizeof(npgs) - __builtin_clz(npgs);
+	if ((npgs & (npgs-1)) == 0)
+		powtwo--;
+
+	return powtwo;
+}
+
 void *
 mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 {
 	void *v;
 	ssize_t nn;
-	long pagesize = sysconf(_SC_PAGESIZE);
 	size_t roundedlen, nnu;
+	int order;
 	int error;
 
 	if (fd != -1 && prot != PROT_READ) {
@@ -73,15 +98,16 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 	}
 
 	/* offset should be aligned to page size */
-	if ((off & (pagesize-1)) != 0) {
+	if ((off & (pagesize()-1)) != 0) {
 		errno = EINVAL;
 		return MAP_FAILED;
 	}
 
 	/* allocate full whatever-we-lie-to-be-pages */
-	roundedlen = roundup2(len, pagesize);
-	if ((error = posix_memalign(&v, pagesize, roundedlen)) != 0) {
-		errno = error;
+	roundedlen = roundup2(len, pagesize());
+	order = size2order(roundedlen);
+	if ((v = (void *)bmk_pgalloc(order)) == NULL) {
+		errno = ENOMEM;
 		return MAP_FAILED;
 	}
 
@@ -91,7 +117,7 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 	if ((nn = pread(fd, v, roundedlen, off)) == -1) {
 		MMAP_PRINTF(("mmap: failed to populate r/o file mapping!\n"));
 		error = errno;
-		free(v);
+		bmk_pgfree(v, order);
 		errno = error;
 		return MAP_FAILED;
 	}
@@ -117,10 +143,9 @@ int _sys___msync13(void *, size_t, int);
 int
 _sys___msync13(void *addr, size_t len, int flags)
 {
-	long pagesize = sysconf(_SC_PAGESIZE);
 
 	/* catch a few easy errors */
-	if (((uintptr_t)addr & (pagesize-1)) != 0)
+	if (((uintptr_t)addr & (pagesize()-1)) != 0)
 		return EINVAL;
 	if ((flags & (MS_SYNC|MS_ASYNC)) == (MS_SYNC|MS_ASYNC))
 		return EINVAL;
@@ -132,8 +157,15 @@ _sys___msync13(void *addr, size_t len, int flags)
 int
 munmap(void *addr, size_t len)
 {
+	int order;
 
-	free(addr);
+	/* addr must be page-aligned */
+	if (((uintptr_t)addr & (pagesize()-1)) != 0)
+		return EINVAL;
+
+	order = size2order(roundup2(len, pagesize()));
+	bmk_pgfree(addr, order);
+
 	return 0;
 }
 
