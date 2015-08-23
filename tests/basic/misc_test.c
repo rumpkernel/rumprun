@@ -1,7 +1,10 @@
 #include <sys/times.h>
+#include <sys/mman.h>
 
+#include <errno.h>
 #include <pthread.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <rumprun/tester.h>
 
@@ -53,6 +56,35 @@ test_pthread_in_ctor(void)
 	return rv;
 }
 
+static int
+dommap(size_t len)
+{
+	void *v;
+
+	v = mmap(NULL, len, PROT_READ|PROT_WRITE, MAP_ANON, -1, 0);
+	if (v == MAP_FAILED)
+		return errno;
+	memset(v, 'a', len);
+	return munmap(v, len);
+}
+
+static int
+test_mmap_anon(void)
+{
+	size_t lens[] = {4096, 6000, 8192, 12000, 12288, 65000};
+	int rv;
+	int i;
+
+	printf("testing mmap(MAP_ANON) ...");
+	for (i = 0; i < __arraycount(lens); i++) {
+		if ((rv = dommap(lens[i])) != 0)
+			break;
+	}
+	prfres(rv);
+
+	return rv;
+}
+
 int
 rumprun_test(int argc, char *argv[])
 {
@@ -60,6 +92,7 @@ rumprun_test(int argc, char *argv[])
 
 	rv += test_times();
 	rv += test_pthread_in_ctor();
+	rv += test_mmap_anon();
 
 	return rv;
 }
