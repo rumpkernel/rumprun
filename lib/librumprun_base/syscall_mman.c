@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2013 Antti Kantee.  All Rights Reserved.
+ * Copyright (c) 2013, 2015 Antti Kantee.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,10 +37,13 @@
 
 #include <sys/param.h>
 #include <sys/mman.h>
+#include <sys/queue.h>
 
 #include <assert.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -51,6 +54,19 @@
 #else
 #define MMAP_PRINTF(x)
 #endif
+
+struct mmapchunk {
+	void *mm_start;
+	size_t mm_size;
+	size_t mm_pgsleft;
+
+	LIST_ENTRY(mmapchunk) mm_chunks;
+};
+/*
+ * XXX: use a tree?  we don't know how many entries we get,
+ * someone might mmap page individually ...
+ */
+static LIST_HEAD(, mmapchunk) mmc_list = LIST_HEAD_INITIALIZER(&mmc_list);
 
 /* XXX: need actual const macro */
 static inline long __constfunc
@@ -76,13 +92,71 @@ size2order(size_t wantedsize)
 	return powtwo;
 }
 
+static void *
+mmapmem_alloc(size_t roundedlen)
+{
+	struct mmapchunk *mc;
+	void *v;
+	int order;
+
+	mc = malloc(sizeof(*mc));
+	if (mc == NULL)
+		return NULL;
+
+	order = size2order(roundedlen);
+	v = bmk_pgalloc(order);
+	if (v == NULL) {
+		free(mc);
+		return NULL;
+	}
+
+	mc->mm_start = v;
+	mc->mm_size = roundedlen;
+	mc->mm_pgsleft = roundedlen / pagesize();
+
+	LIST_INSERT_HEAD(&mmc_list, mc, mm_chunks);
+
+	return v;
+}
+
+static int
+mmapmem_free(void *addr, size_t roundedlen)
+{
+	struct mmapchunk *mc;
+	size_t npgs;
+	int order;
+
+	LIST_FOREACH(mc, &mmc_list, mm_chunks) {
+		if (mc->mm_start <= addr &&
+		    ((uint8_t *)mc->mm_start + mc->mm_size
+		      >= (uint8_t *)addr + roundedlen))
+			break;
+	}
+	if (!mc) {
+		return EINVAL;
+	}
+
+	npgs = roundedlen / pagesize();
+	assert(npgs <= mc->mm_pgsleft);
+	mc->mm_pgsleft -= npgs;
+	if (mc->mm_pgsleft)
+		return 0;
+
+	/* no pages left => free bookkeeping chunk */
+	LIST_REMOVE(mc, mm_chunks);
+	order = size2order(mc->mm_size);
+	bmk_pgfree(mc->mm_start, order);
+	free(mc);
+
+	return 0;
+}
+
 void *
 mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 {
 	void *v;
 	ssize_t nn;
 	size_t roundedlen, nnu;
-	int order;
 	int error;
 
 	if (fd != -1 && prot != PROT_READ) {
@@ -105,8 +179,7 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 
 	/* allocate full whatever-we-lie-to-be-pages */
 	roundedlen = roundup2(len, pagesize());
-	order = size2order(roundedlen);
-	if ((v = (void *)bmk_pgalloc(order)) == NULL) {
+	if ((v = mmapmem_alloc(roundedlen)) == NULL) {
 		errno = ENOMEM;
 		return MAP_FAILED;
 	}
@@ -117,7 +190,7 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 	if ((nn = pread(fd, v, roundedlen, off)) == -1) {
 		MMAP_PRINTF(("mmap: failed to populate r/o file mapping!\n"));
 		error = errno;
-		bmk_pgfree(v, order);
+		mmapmem_free(v, roundedlen);
 		errno = error;
 		return MAP_FAILED;
 	}
@@ -157,16 +230,12 @@ _sys___msync13(void *addr, size_t len, int flags)
 int
 munmap(void *addr, size_t len)
 {
-	int order;
 
 	/* addr must be page-aligned */
 	if (((uintptr_t)addr & (pagesize()-1)) != 0)
 		return EINVAL;
 
-	order = size2order(roundup2(len, pagesize()));
-	bmk_pgfree(addr, order);
-
-	return 0;
+	return mmapmem_free(addr, roundup2(len, pagesize()));
 }
 
 int
