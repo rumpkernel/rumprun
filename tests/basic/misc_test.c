@@ -1,3 +1,4 @@
+#include <sys/param.h>
 #include <sys/times.h>
 #include <sys/mman.h>
 
@@ -5,6 +6,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <rumprun/tester.h>
 
@@ -57,7 +59,7 @@ test_pthread_in_ctor(void)
 }
 
 static int
-dommap(size_t len)
+dommap(size_t len, int munmapperpage)
 {
 	void *v;
 
@@ -65,21 +67,48 @@ dommap(size_t len)
 	if (v == MAP_FAILED)
 		return errno;
 	memset(v, 'a', len);
-	return munmap(v, len);
+	if (!munmapperpage) {
+		return munmap(v, len);
+	} else {
+		long pagesize = sysconf(_SC_PAGESIZE);
+		const size_t roundedlen = roundup2(len, pagesize);
+		uint8_t *p;
+		int rv;
+
+		for (p = v; p < (uint8_t *)v + roundedlen; p += pagesize) {
+			if ((rv = munmap(p, pagesize)) != 0) {
+				return rv;
+			}
+		}
+	}
+
+	return 0;
 }
 
 static int
 test_mmap_anon(void)
 {
 	size_t lens[] = {4096, 6000, 8192, 12000, 12288, 65000};
+	const long pagesize = sysconf(_SC_PAGESIZE);
 	int rv;
 	int i;
 
 	printf("testing mmap(MAP_ANON) ...");
 	for (i = 0; i < __arraycount(lens); i++) {
-		if ((rv = dommap(lens[i])) != 0)
+		if ((rv = dommap(lens[i], 0)) != 0)
+			break;
+		if ((rv = dommap(lens[i], 1)) != 0)
 			break;
 	}
+	if (munmap((void *)0x1, pagesize) == 0) {
+		rv = EINVAL;
+		goto out;
+	}
+	if (munmap((void *)0x0, pagesize) == 0) {
+		rv = EINVAL;
+		goto out;
+	}
+ out:
 	prfres(rv);
 
 	return rv;
