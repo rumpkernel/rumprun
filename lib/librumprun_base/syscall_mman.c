@@ -109,6 +109,7 @@ mmapmem_alloc(size_t roundedlen)
 		free(mc);
 		return NULL;
 	}
+	memset(v, 0, (1UL<<order) * pagesize());
 
 	mc->mm_start = v;
 	mc->mm_size = roundedlen;
