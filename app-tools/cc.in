@@ -42,7 +42,7 @@ case $0 in
 	;;
 *-g++|*-clang++)
 	CC="!CXX!"
-	CFLAGS="!CXXFLAGS!"
+	CFLAGS="-std=c++11 !CXXFLAGS!"
 	EXTRALIBS=-lrumprun_unwind
 	;;
 *)
