@@ -191,7 +191,7 @@ done
 # Final link using cc to produce the unikernel image.
 ${RUMPBAKE_CC} ${RUMPBAKE_CFLAGS}					\
     -specs=${RUMPBAKE_APPTOOLDIR}/${TOOLCHAIN}-specs-bake		\
-    -Wl,--defsym=__RuMpRuN_baked__=0 -o ${OUTPUT} ${allobjs}		\
+    -o ${OUTPUT} ${allobjs}		\
     -Wl,--whole-archive ${LIBS} || exit 1
 
 exit 0
