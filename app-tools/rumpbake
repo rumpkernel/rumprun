@@ -77,7 +77,7 @@ addconfig ()
 	[ $# -ge 2 ] || { echo rumpbake.conf error; exit 1; }
 
 	confname=$1
-	shift 2
+	shift
 
 	ALLCONFIGS="${ALLCONFIGS} ${confname}"
 	eval CONFIG_${confname}=\"$@\"
