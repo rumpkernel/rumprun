@@ -97,7 +97,7 @@ getoneinfo ()
 	    || die "Could not extract \"${var}\" from ${bin}.  Not rumprun bin?"
 	cvar=$(echo ${var} | tr '[a-z]' '[A-Z]')
 
-	eval [ \${RUMPBAKE_${cvar}:=${tmp}} = "${tmp}" ] || \
+	eval [ \"\${RUMPBAKE_${cvar}:=${tmp}}\" = "${tmp}" ] || \
 	    die ${var} mismatch in binaries
 }
 
