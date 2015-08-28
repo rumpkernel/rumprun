@@ -188,9 +188,14 @@ eval CONFIG="\${CONFIG_${config}}"
 # lib to -l$lib
 LIBS="-lrumpkern_bmktc -lrumpvfs"
 for component in ${CONFIG}; do
-	for lib in $(eval echo \${LIBS_${component}}); do
-		LIBS="${LIBS} -l${lib}"
-	done
+	eval libs="\${LIBS_${component}}"
+	if [ -z "${libs}" ]; then
+		LIBS="${LIBS} -l${component}"
+	else
+		for lib in ${libs}; do
+			LIBS="${LIBS} -l${lib}"
+		done
+	fi
 done
 
 TMPDIR=$(mktemp -d /tmp/rumpbake.XXXXXX)
