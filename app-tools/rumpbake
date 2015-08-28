@@ -137,12 +137,6 @@ APP_TOOLS_DIR=$(dirname $0)
 
 readconfig "${APP_TOOLS_DIR}/rumpbake.conf"
 
-TARGET="${1}"
-if [ "${TARGET}" = "list" ]; then
-	echo ${ALLCONFIGS} | xargs -n 1 echo
-	exit 0
-fi
-
 while getopts "c:" opt; do
 	case "${opt}" in
 	c)
@@ -153,6 +147,13 @@ while getopts "c:" opt; do
 		;;
 	esac
 done
+shift $((${OPTIND}-1))
+
+TARGET="${1}"
+if [ "${TARGET}" = "list" ]; then
+	echo ${ALLCONFIGS} | xargs -n 1 echo
+	exit 0
+fi
 
 OUTPUT="${2}"
 [ $# -gt 2 ] || usage
