@@ -77,11 +77,9 @@ addconfig ()
 	[ $# -ge 2 ] || { echo rumpbake.conf error; exit 1; }
 
 	confname=$1
-	toolchain=$2
 	shift 2
 
 	ALLCONFIGS="${ALLCONFIGS} ${confname}"
-	eval TOOLCHAIN_${confname}=${toolchain}
 	eval CONFIG_${confname}=\"$@\"
 }
 
@@ -152,9 +150,8 @@ if [ "$c" != "$config" ]; then
 	exit 1
 fi
 
-# Sets CONFIG to $(CONFIG_<name>) and CC to $(CC_<name>)
+PLATFORM=${config%%_*}
 eval CONFIG="\${CONFIG_${config}}"
-eval TOOLCHAIN="\${TOOLCHAIN_${config}}"
 
 # Parse CONFIG, mapping each component to $LIBS_component and each resulting
 # lib to -l$lib
@@ -184,7 +181,7 @@ done
 
 # Final link using cc to produce the unikernel image.
 ${RUMPBAKE_BACKINGCC} ${RUMPBAKE_CFLAGS}				\
-    -specs=${RUMPBAKE_TOOLDIR}/${TOOLCHAIN}-specs-bake			\
+    -specs=${RUMPBAKE_TOOLDIR}/rumprun-${PLATFORM}-specs-bake		\
     -o ${OUTPUT} ${allobjs}						\
     -Wl,--whole-archive ${LIBS} || exit 1
 
