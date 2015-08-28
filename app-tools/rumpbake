@@ -50,7 +50,7 @@ die()
 usage ()
 {
 	cat <<EOM
-usage: rumpbake config output input [input ...]
+usage: rumpbake [-c conffile] config output input [input ...]
        rumpbake list
 
 When invoked the single argument "list", lists supported target boards.
@@ -79,8 +79,23 @@ addconfig ()
 	confname=$1
 	shift
 
+	eval [ \"\${CONFIG_PRESENT_${confname}}\" != 'yes' ] \
+	    || die config ${confname} already specified "(from ${CURCONF})"
+	eval CONFIG_PRESENT_${confname}=yes
+
 	ALLCONFIGS="${ALLCONFIGS} ${confname}"
 	eval CONFIG_${confname}=\"$@\"
+}
+
+readconfig ()
+{
+	CURCONF="${1}"
+
+	if [ ! -f "${CURCONF}" ]; then
+		echo "rumpbake: error: Configuration file ${CURCONF} not found"
+		exit 1
+	fi
+	. "${CURCONF}"
 }
 
 getoneinfo ()
@@ -111,18 +126,25 @@ getbininfo ()
 }
 
 APP_TOOLS_DIR=$(dirname $0)
-CONF=${APP_TOOLS_DIR}/rumpbake.conf
-if [ ! -f ${CONF} ]; then
-	echo "rumpbake: error: Configuration file ${CONF} not found"
-	exit 1
-fi
-. ${CONF}
+
+readconfig "${APP_TOOLS_DIR}/rumpbake.conf"
 
 TARGET="${1}"
 if [ "${TARGET}" = "list" ]; then
 	echo ${ALLCONFIGS} | xargs -n 1 echo
 	exit 0
 fi
+
+while getopts "c:" opt; do
+	case "${opt}" in
+	c)
+		readconfig "${OPTARG}"
+		;;
+	*)
+		usage
+		;;
+	esac
+done
 
 OUTPUT="${2}"
 [ $# -gt 2 ] || usage
