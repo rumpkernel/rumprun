@@ -90,19 +90,19 @@ getbininfo ()
 
 	# extract bake recipe
 	notesect=.note.rumprun.bakerecipe
-	tuple="$(readelf -p ${notesect} $1 2>/dev/null \
+	tuple="$(${READELF} -p ${notesect} $1 2>/dev/null \
 	    | sed -n 's/.*rumprun_tuple: //p')"
 	[ -n "${tuple}" ] \
 	    || die "Could not extract tuple from $1.  Not a rumprun binary?"
-	tooldir="$(readelf -p ${notesect} $1 2>/dev/null \
+	tooldir="$(${READELF} -p ${notesect} $1 2>/dev/null \
 	    | sed -n 's/.*rumprun_tooldir: //p')"
 	[ -n "${tooldir}" ] \
 	    || die "Could not extract tooldir from $1.  Not a rumprun binary?"
-	mycc="$(readelf -p ${notesect} $1 2>/dev/null \
+	mycc="$(${READELF} -p ${notesect} $1 2>/dev/null \
 	    | sed -n 's/.*rumprun_backingcc: //p')"
 	[ -n "${mycc}" ] \
 	    || die "Could not extract cc from $1.  Not a rumprun binary?"
-	mycflags="$(readelf -p ${notesect} $1 2>/dev/null \
+	mycflags="$(${READELF} -p ${notesect} $1 2>/dev/null \
 	    | sed -n 's/.*rumprun_cflags: //p')"
 	[ -n "${mycc}" ] \
 	    || die "Could not extract cflags from $1.  Not a rumprun binary?"
