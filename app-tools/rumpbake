@@ -24,6 +24,8 @@
 # SUCH DAMAGE.
 #
 
+_RUMPBAKE_VERSION=20150828
+
 #
 # rumpbake: script for final stage linking ("baking") of a unikernel image
 #
@@ -50,6 +52,8 @@ die()
 usage ()
 {
 	cat <<EOM
+rumpbake version: ${_RUMPBAKE_VERSION}
+
 usage: rumpbake [-c conffile] config output input [input ...]
        rumpbake list
 
@@ -95,7 +99,11 @@ readconfig ()
 		echo "rumpbake: error: Configuration file ${CURCONF} not found"
 		exit 1
 	fi
+
+	unset RUMPBAKE_CONFVERS
 	. "${CURCONF}"
+	[ "${RUMPBAKE_CONFVERS}" = "${_RUMPBAKE_VERSION}" ] \
+	    || die ${CURCONF} version mismatch: expecting ${_RUMPBAKE_VERSION}
 }
 
 getoneinfo ()
