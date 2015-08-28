@@ -85,37 +85,31 @@ addconfig ()
 	eval CONFIG_${confname}=\"$@\"
 }
 
+getoneinfo ()
+{
+
+	bin="$1"
+	var="$2"
+	unset tmp
+
+	notesect=.note.rumprun.bakerecipe
+	tmp="$(${READELF} -p ${notesect} ${bin} 2>/dev/null \
+	    | sed -n 's/.*rumprun_'"${var}"': //p')"
+	[ -n "${tmp}" ] \
+	    || die "Could not extract \"${var}\" from ${bin}.  Not rumprun bin?"
+	cvar=$(echo ${var} | tr '[a-z]' '[A-Z]')
+
+	eval [ \${RUMPBAKE_${cvar}:=${tmp}} = "${tmp}" ] || \
+	    die ${var} mismatch in binaries
+}
+
 getbininfo ()
 {
 
 	# extract bake recipe
-	notesect=.note.rumprun.bakerecipe
-	tuple="$(${READELF} -p ${notesect} $1 2>/dev/null \
-	    | sed -n 's/.*rumprun_tuple: //p')"
-	[ -n "${tuple}" ] \
-	    || die "Could not extract tuple from $1.  Not a rumprun binary?"
-	tooldir="$(${READELF} -p ${notesect} $1 2>/dev/null \
-	    | sed -n 's/.*rumprun_tooldir: //p')"
-	[ -n "${tooldir}" ] \
-	    || die "Could not extract tooldir from $1.  Not a rumprun binary?"
-	mycc="$(${READELF} -p ${notesect} $1 2>/dev/null \
-	    | sed -n 's/.*rumprun_backingcc: //p')"
-	[ -n "${mycc}" ] \
-	    || die "Could not extract cc from $1.  Not a rumprun binary?"
-	mycflags="$(${READELF} -p ${notesect} $1 2>/dev/null \
-	    | sed -n 's/.*rumprun_cflags: //p')"
-	[ -n "${mycc}" ] \
-	    || die "Could not extract cflags from $1.  Not a rumprun binary?"
-
-	# check that all binaries are consistent
-	[ "${RUMPBAKE_TUPLE:=${tuple}}" = "${tuple}" ] \
-	    || die tuple mismatch in binary ingredients
-	[ "${RUMPBAKE_APPTOOLDIR:=${tooldir}}" = "${tooldir}" ] \
-	    || die tooldir mismatch in binary ingredients
-	[ "${RUMPBAKE_CC:=${mycc}}" = "${mycc}" ] \
-	    || die cc mismatch in binary ingredients
-	[ "${RUMPBAKE_CFLAGS:=${mycflags}}" = "${mycflags}" ] \
-	    || die cflgas mismatch in binary ingredients
+	for x in tuple tooldir backingcc cflags; do
+		getoneinfo "${1}" ${x}
+	done
 }
 
 APP_TOOLS_DIR=$(dirname $0)
@@ -140,10 +134,10 @@ shift 2
 # Just any readelf will do, but we need one.
 type ${READELF} >/dev/null 2>&1 \
     || die 'Cannot find ${READELF}. Set $READELF env variable'
-unset RUMPBAKE_CC
+unset RUMPBAKE_BACKINGCC
 unset RUMPBAKE_TUPLE
 unset RUMPBAKE_CFLAGS
-unset RUMPBAKE_APPTOOLDIR
+unset RUMPBAKE_TOOLDIR
 
 [ $# -le 8 ] || { echo '>> max 8 binaries supported currently' ; exit 1; }
 
@@ -181,7 +175,7 @@ allobjs=
 for f in "$@"; do
 	getbininfo ${f}
 
-	${RUMPBAKE_APPTOOLDIR}/${RUMPBAKE_TUPLE}-objcopy		\
+	${RUMPBAKE_TOOLDIR}/${RUMPBAKE_TUPLE}-objcopy			\
 	    --redefine-sym main=rumpbake_main${objnum}			\
 	    ${f} ${TMPDIR}/tmp${objnum}.obj
 	allobjs="${allobjs} ${TMPDIR}/tmp${objnum}.obj"
@@ -189,9 +183,9 @@ for f in "$@"; do
 done
 
 # Final link using cc to produce the unikernel image.
-${RUMPBAKE_CC} ${RUMPBAKE_CFLAGS}					\
-    -specs=${RUMPBAKE_APPTOOLDIR}/${TOOLCHAIN}-specs-bake		\
-    -o ${OUTPUT} ${allobjs}		\
+${RUMPBAKE_BACKINGCC} ${RUMPBAKE_CFLAGS}				\
+    -specs=${RUMPBAKE_TOOLDIR}/${TOOLCHAIN}-specs-bake			\
+    -o ${OUTPUT} ${allobjs}						\
     -Wl,--whole-archive ${LIBS} || exit 1
 
 exit 0
