@@ -50,15 +50,15 @@ die()
 usage ()
 {
 	cat <<EOM
-usage: rumpbake TARGET OUTPUT FILE [FILE ...]
+usage: rumpbake CONFIG OUTPUT INPUT [INPUT ...]
        rumpbake list
 
 When invoked the single argument "list", lists supported target boards.
 
 Else, creates a rumprunnable unikernel:
-	TARGET: rumprun board configuration to use.
-	OUTPUT: output file name for the unikernel image.
-	FILE: 	executable to bake.
+	CONFIG	: rumprun board configuration to use.
+	OUTPUT	: output file name for the unikernel image.
+	INPUT	: executable(s) to bake.
 EOM
 	exit 1
 }
