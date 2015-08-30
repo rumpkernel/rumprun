@@ -1,12 +1,15 @@
 %rename cpp_options old_cpp_options
  
 *cpp_options:
--nostdinc -isystem !BASE_DIR!/rumprun/include -isystem !BASE_DIR!/rumprun/include/c++ %(old_cpp_options) !CPPFLAGS! -D__RUMPRUN__
+-nostdinc -isystem !BASE_DIR!/rumprun/include %{,c++:-std=c++11 -isystem !BASE_DIR!/rumprun/include/c++} %(old_cpp_options) !CPPFLAGS! -D__RUMPRUN__
 
 %rename cc1_options old_cc1_options
 
 *cc1_options:
 %(old_cc1_options) !CFLAGS! -fno-stack-protector -fno-builtin-sin -fno-builtin-sinf -fno-builtin-cos -fno-builtin-cosf
+
+*cc1plus:
+-std=c++11
 
 *startfile:
 
