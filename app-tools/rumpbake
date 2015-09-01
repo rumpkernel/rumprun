@@ -115,9 +115,14 @@ getoneinfo ()
 
 	notesect=.note.rumprun.bakerecipe
 	tmp="$(${READELF} -p ${notesect} ${bin} 2>/dev/null \
-	    | sed -n 's/.*rumprun_'"${var}"': //p')"
+	    | sed -n '/.*rumprun_'"${var}"': /p')"
 	[ -n "${tmp}" ] \
 	    || die "Could not extract \"${var}\" from ${bin}.  Not rumprun bin?"
+
+	# now that we've verified the entry is present, reduce to
+	# contents (which may be empty)
+	tmp="${tmp#*rumprun_${var}: }"
+
 	cvar=$(echo ${var} | tr '[a-z]' '[A-Z]')
 
 	eval [ \"\${RUMPBAKE_${cvar}:=${tmp}}\" = \"${tmp}\" ] || \
