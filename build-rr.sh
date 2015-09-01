@@ -217,6 +217,7 @@ EOF
 	# -mno-red-zone.
 	if [ "${PLATFORM}" = "xen" -a "${MACHINE_ARCH}" = "x86_64" ]; then
 		echo "CFLAGS+=-mno-red-zone" >> ${RUMPTOOLS}/mk.conf
+		echo "CXXFLAGS+=-mno-red-zone" >> ${RUMPTOOLS}/mk.conf
 	fi
 
 	# build rump kernel
@@ -315,6 +316,8 @@ makeconfigmk ()
 	# -mno-red-zone.
 	if [ "${PLATFORM}" = "xen" -a "${MACHINE_ARCH}" = "x86_64" ]; then
 		echo "BUILDRUMP_TOOL_CFLAGS+=-mno-red-zone" \
+			>> $(pwd)/${RUMPTOOLS}/toolchain-conf.mk
+		echo "BUILDRUMP_TOOL_CXXFLAGS+=-mno-red-zone" \
 			>> $(pwd)/${RUMPTOOLS}/toolchain-conf.mk
 	fi
 }
