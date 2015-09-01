@@ -213,9 +213,9 @@ EOF
 	    -V '${MACHINE_GNU_PLATFORM:S/--netbsd/-rumprun-netbsd/}')
 	echo "RUMPRUN_TUPLE=${TOOLTUPLE}" >> ${RUMPTOOLS}/mk.conf
 
-	# XXX: For 64-bit Xen builds, all modules must be built with
+	# For 64-bit x86, all modules must be built with
 	# -mno-red-zone.
-	if [ "${PLATFORM}" = "xen" -a "${MACHINE_ARCH}" = "x86_64" ]; then
+	if [ "${MACHINE_ARCH}" = "x86_64" ]; then
 		echo "CFLAGS+=-mno-red-zone" >> ${RUMPTOOLS}/mk.conf
 		echo "CXXFLAGS+=-mno-red-zone" >> ${RUMPTOOLS}/mk.conf
 	fi
@@ -312,9 +312,9 @@ makeconfigmk ()
 		echo "CONFIG_CXX=no" >> ${1}
 	fi
 
-	# XXX: For 64-bit Xen builds, all modules must be built with
+	# For 64-bit x86, all modules must be built with
 	# -mno-red-zone.
-	if [ "${PLATFORM}" = "xen" -a "${MACHINE_ARCH}" = "x86_64" ]; then
+	if [ "${MACHINE_ARCH}" = "x86_64" ]; then
 		echo "BUILDRUMP_TOOL_CFLAGS+=-mno-red-zone" \
 			>> $(pwd)/${RUMPTOOLS}/toolchain-conf.mk
 		echo "BUILDRUMP_TOOL_CXXFLAGS+=-mno-red-zone" \
