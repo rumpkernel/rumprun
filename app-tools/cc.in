@@ -51,6 +51,8 @@ case $0 in
 	;;
 esac
 
+PRMETA=$(dirname ${CC})/brprintmetainfo
+
 # Figure out what we're supposed to be doing. Assume we're fermenting
 # and switch to compilation if -c / -S / -E was passed.
 MODE=ferment
@@ -72,6 +74,8 @@ compile)
 	    "$@" ${EXTRALIBS}
 	;;
 ferment)
+	meta1="$(${PRMETA} "${OUTFILE}" 2>/dev/null)"
+
 	# Link the real (from user's PoV) output file as a relocatable object,
 	# with no rump components. '-u main' is necessary to pull in main if the
 	# user is linking it in from a library.
@@ -79,6 +83,12 @@ ferment)
 	    -specs=!APPTOOLS_DIR!/specs-compile_or_ferment \
 	    -Wl,-r -Wl,-u,main \
 	    "$@" !APPTOOLS_DIR!/!GNUPLATFORM!-recipe.s ${EXTRALIBS} || die
+
+	# If the presumed output file did not change, and the compiler
+	# did not flag an error, assume this is a command which does not
+	# generate output (e.g. cc -dumpspecs) and exit gracefully
+	meta2="$(${PRMETA} "${OUTFILE}" 2>/dev/null)"
+	[ "${meta1}" != "${meta2}" ] || exit 0
 
 	if [ "${RUMPRUN_STUBLINK}" = succeed ]; then
 		exec 3>&1 2>&1
