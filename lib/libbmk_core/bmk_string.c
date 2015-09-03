@@ -88,8 +88,8 @@ bmk_strncpy(char *d, const char *s, unsigned long n)
 {
 	char *orig = d;
 
-	while ((*d++ = *s++) && n--)
-		continue;
+	while (n && (*d++ = *s++))
+		n--;
 	while (n--)
 		*d++ = '\0';
 	return orig;
