@@ -15,13 +15,14 @@ env:
   - PLATFORM=xen MACHINE=i486 ELF=elf TESTS=none EXTRAFLAGS='-- -F ACLFLAGS=-m32'
   - PLATFORM=hw MACHINE=x86_64 TESTS=qemu EXTRAFLAGS=
   - PLATFORM=hw MACHINE=i486 ELF=elf TESTS=qemu EXTRAFLAGS='-- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686'
+  - PLATFORM=hw MACHINE=x86_64 TESTS=none KERNONLY=-k EXTRAFLAGS=
 
 script:
   - export CC=gcc-4.8
   - export CXX=g++-4.8
   - git submodule update --init
-  - ./build-rr.sh -qq ${PLATFORM} ${EXTRAFLAGS}
-  - ./tests/buildtests.sh ${MACHINE} ${PLATFORM} ${ELF}
+  - ./build-rr.sh -qq ${KERNONLY} ${PLATFORM} ${EXTRAFLAGS}
+  - ./tests/buildtests.sh ${KERNONLY} ${MACHINE} ${PLATFORM} ${ELF}
   - ./tests/runtests.sh ${TESTS}
 
 notifications:

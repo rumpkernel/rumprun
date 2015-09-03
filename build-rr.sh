@@ -34,7 +34,8 @@ die ()
 helpme ()
 {
 
-	echo "Usage: $0 [-s srcdir] [-q] hw|xen [-- buildrump.sh options]"
+	echo "Usage: $0 [-k] [-s srcdir] [-q] hw|xen [-- buildrump.sh options]"
+	printf "\t-k: build kernel only, without libc or tools (expert-only)\n"
 	printf "\t-s: specify alternative src-netbsd location (expert-only)\n"
 	printf "\t-q: quiet(er) build.  option maybe be specified twice.\n\n"
 	printf "buildrump.sh options are passed to buildrump.sh (expert-only)\n"
@@ -50,6 +51,7 @@ set -e
 STDJ='-j4'
 RUMPSRC=src-netbsd
 BUILDRUMP=$(pwd)/buildrump.sh
+KERNONLY=false
 
 # figure out where gmake lies
 if [ -z "${MAKE}" ]; then
@@ -67,8 +69,11 @@ parseargs ()
 {
 
 	orignargs=$#
-	while getopts '?qs:' opt; do
+	while getopts '?kqs:' opt; do
 		case "$opt" in
+		'k')
+			KERNONLY=true
+			;;
 		's')
 			RUMPSRC=${OPTARG}
 			;;
@@ -88,6 +93,10 @@ parseargs ()
 	export PLATFORMDIR=platform/${PLATFORM}
 	[ -d ${PLATFORMDIR} ] || die Platform \"$PLATFORM\" not supported!
 	shift
+
+	if ${KERNONLY} && [ "${PLATFORM}" != "hw" ]; then
+		die '-k currently only supports "hw" platform'
+	fi
 
 	if [ $# -gt 0 ]; then
 		if [ $1 = '--' ]; then
@@ -297,6 +306,7 @@ makeconfigmk ()
 	echo "BUILDRUMP_TOOLFLAGS=$(pwd)/${RUMPTOOLS}/toolchain-conf.mk" >> ${1}
 	echo "MACHINE=${MACHINE}" >> ${1}
 	echo "MACHINE_ARCH=${MACHINE_ARCH}" >> ${1}
+	echo "KERNONLY=${KERNONLY}" >> ${1}
 
 	# wrap mandatory toolchain bits
 	for t in AR AS CC CPP LD NM OBJCOPY OBJDUMP RANLIB READELF \
@@ -336,7 +346,7 @@ checksubmodules
 . ${PLATFORMDIR}/platform.conf
 
 buildrump "$@"
-builduserspace
+${KERNONLY} || builduserspace
 
 # depends on config.mk
 buildpci
