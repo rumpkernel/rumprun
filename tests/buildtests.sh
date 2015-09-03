@@ -9,39 +9,72 @@ export RUMPRUN_WARNING_STFU=please
 
 set -e
 
+TESTMODE=apptools
+TESTCONFIGURE=true
+
+while getopts 'kqh' opt; do
+	case "$opt" in
+	'k')
+		TESTMODE=kernonly
+		;;
+	'q')
+		TESTCONFIGURE=false
+		;;
+	'h'|'?')
+		echo "$0 [-k|-q] MACHINE PLATFORM [ELF]"
+		exit 1
+	esac
+done
+shift $((${OPTIND} - 1))
+
 [ -n "${1}" ] || { echo '>> need machine' ; exit 1; }
 [ -n "${2}" ] || { echo '>> need platform' ; exit 1; }
 
 cd "$(dirname $0)"
-APPTOOLSDIR=$(pwd)/../app-tools
 MACHINE=$1
 PLATFORM=$2
 ELF=$3
 
-case ${PLATFORM} in
-hw)
-        RUMPBAKE="rumpbake hw_generic"
-	;;
-xen)
-        RUMPBAKE="rumpbake xen_pv"
-	;;
-*)
-	echo ">> unknown platform \"$PLATFORM\""
-	exit 1
-esac
-shift
+test_apptools()
+{
+	APPTOOLSDIR=$(pwd)/../app-tools
 
-# XXX
-export DOCXX=$(grep ^CONFIG_CXX ../platform/${PLATFORM}/config.mk)
+	case ${PLATFORM} in
+	hw)
+		RUMPBAKE="rumpbake hw_generic"
+		;;
+	xen)
+		RUMPBAKE="rumpbake xen_pv"
+		;;
+	*)
+		echo ">> unknown platform \"$PLATFORM\""
+		exit 1
+	esac
 
-export MAKE=${APPTOOLSDIR}/${MACHINE}-rumprun-netbsd${ELF}-${MAKE-make}
+	# XXX
+	export DOCXX=$(grep ^CONFIG_CXX ../platform/${PLATFORM}/config.mk)
 
-${MAKE} ${DOCXX} RUMPBAKE="${APPTOOLSDIR}/${RUMPBAKE}"
+	export MAKE=${APPTOOLSDIR}/${MACHINE}-rumprun-netbsd${ELF}-${MAKE-make}
 
-if [ "$1" != '-q' ]; then
-	cd configure
-	${APPTOOLSDIR}/${MACHINE}-rumprun-netbsd${ELF}-configure ./configure
-	${MAKE}
-fi
+	${MAKE} ${DOCXX} RUMPBAKE="${APPTOOLSDIR}/${RUMPBAKE}"
+
+	if ${TESTCONFIGURE}; then
+		cd configure
+		${APPTOOLSDIR}/${MACHINE}-rumprun-netbsd${ELF}-configure ./configure
+		${MAKE}
+	fi
+}
+
+test_kernonly()
+{
+	if [ -z "${MAKE}" ]; then
+		MAKE=make
+		! type gmake >/dev/null 2>&1 || MAKE=gmake
+	fi
+
+	${MAKE} kernonly-tests
+}
+
+test_${TESTMODE}
 
 exit 0

@@ -4,9 +4,14 @@ all-tests:
 	$(MAKE) -C basic
 	$(MAKE) -C crypto
 
+.PHONY: kernonly-tests
+kernonly-tests:
+	$(MAKE) -C nolibc
+
 .PHONY: clean
 clean:
 	$(MAKE) -C hello clean
 	$(MAKE) -C basic clean
 	$(MAKE) -C crypto clean
+	$(MAKE) -C nolibc clean
 	[ ! -f configure/Makefile ] || $(MAKE) -C configure distclean
