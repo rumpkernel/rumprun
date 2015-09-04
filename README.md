@@ -1,10 +1,13 @@
-rumprun [![Build Status](https://travis-ci.org/rumpkernel/rumprun.svg?branch=master)](https://travis-ci.org/rumpkernel/rumprun)
+Rumprun [![Build Status](https://travis-ci.org/rumpkernel/rumprun.svg?branch=master)](https://travis-ci.org/rumpkernel/rumprun)
 =======
 
-This repository provides the rumprun unikernel.  Rumprun enables running
-existing POSIX-y software without an operating system on various
-platforms, including bare metal, KVM and Xen.  Both 32bit and 64bit
-unikernels are supported on all platforms.
+This repository provides the Rumprun
+[unikernel](https://en.wikipedia.org/wiki/Unikernel).  Rumprun runs on
+not only on hypervisors such as KVM and Xen, but also on bare metal.
+Rumprun can be used with or without a POSIX'y interface.  The former
+allows existing, unmodified POSIX applications to run out-of-the-box,
+while the latter allows building highly customized solutions with
+minimal footprints.
 
 See the [wiki](http://wiki.rumpkernel.org/Repo:-rumprun) for more
 information and instructions.
@@ -20,7 +23,7 @@ and the cloud.  It works on raw hardware, but also supports
 _virtio_ drivers and KVM.  For a demostration, see this [youtube
 video](https://www.youtube.com/watch?v=EyeRplLMx4c) where the hw platform
 is booted on a laptop and plays audio using the PCI hdaudio drivers.
-The supported CPU architectures are x86 and ARM.
+The supported CPU architectures are x86_32, x86_64 and ARM.
 
 Xen
 ---
@@ -29,3 +32,4 @@ The Xen platform is optimized for running on top of the Xen hypervisor
 as a paravirtualized guest, and provides support for virtualization
 functions not available on the _hw_ platform.  The Xen platform will
 work both against the `xl` tools and the Amazon EC2 cloud.
+The supported CPU architectures are x86_32 and x86_64.
