@@ -156,21 +156,25 @@ checkprevbuilds ()
 
 	if [ -f .prevbuild ]; then
 		. ./.prevbuild
+		: ${PB_KERNONLY:=false} # "bootstrap", remove in a few months
 		if [ "${PB_MACHINE}" != "${MACHINE}" \
-		    -o "${PB_PLATFORM}" != "${PLATFORM}" ]; then
+		    -o "${PB_PLATFORM}" != "${PLATFORM}" \
+		    -o "${PB_KERNONLY}" != "${KERNONLY}" \
+		]; then
 			echo '>> ERROR:'
 			echo '>> Building for multiple machine/platform combos'
 			echo '>> from the same rumprun source tree is currently'
 			echo '>> not supported.  See rumprun issue #35.'
-			printf '>> %20s: %s/%s\n' 'Previously built' \
-			    ${PB_PLATFORM} ${PB_MACHINE}
-			printf '>> %20s: %s/%s\n' 'Now building' \
-			    ${PLATFORM} ${MACHINE}
+			printf '>> %20s: %s/%s nolibc=%s\n' 'Previously built' \
+			    ${PB_PLATFORM} ${PB_MACHINE} ${PB_KERNONLY}
+			printf '>> %20s: %s/%s nolibc=%s\n' 'Now building' \
+			    ${PLATFORM} ${MACHINE} ${KERNONLY}
 			exit 1
 		fi
 	else
 		echo PB_MACHINE=${MACHINE} > ./.prevbuild
 		echo PB_PLATFORM=${PLATFORM} >> ./.prevbuild
+		echo PB_KERNONLY=${KERNONLY} >> ./.prevbuild
 	fi
 }
 
