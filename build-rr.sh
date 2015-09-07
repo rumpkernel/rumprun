@@ -192,12 +192,15 @@ buildrump ()
 
 	checkprevbuilds
 
+	unset extracflags
+	[ "${MACHINE}" = "amd64" ] && extracflags='-F CFLAGS=-mno-red-zone'
+
 	# build tools
 	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
 	    -s ${RUMPSRC} -T ${RUMPTOOLS} -o ${RUMPOBJ} -d ${RUMPDEST}	\
 	    -V MKPIC=no -V RUMP_CURLWP=__thread				\
 	    -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes		\
-	    "$@" tools
+	    ${extracflags} "$@" tools
 
 	echo '>>'
 	echo '>> Now that we have the appropriate tools, perfoming'
@@ -224,13 +227,6 @@ EOF
 	TOOLTUPLE=$(${RUMPMAKE} -f bsd.own.mk \
 	    -V '${MACHINE_GNU_PLATFORM:S/--netbsd/-rumprun-netbsd/}')
 	echo "RUMPRUN_TUPLE=${TOOLTUPLE}" >> ${RUMPTOOLS}/mk.conf
-
-	# For 64-bit x86, all modules must be built with
-	# -mno-red-zone.
-	if [ "${MACHINE_ARCH}" = "x86_64" ]; then
-		echo "CFLAGS+=-mno-red-zone" >> ${RUMPTOOLS}/mk.conf
-		echo "CXXFLAGS+=-mno-red-zone" >> ${RUMPTOOLS}/mk.conf
-	fi
 
 	# build rump kernel
 	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
@@ -323,15 +319,6 @@ makeconfigmk ()
 		wraponetool ${1} CXX
 	else
 		echo "CONFIG_CXX=no" >> ${1}
-	fi
-
-	# For 64-bit x86, all modules must be built with
-	# -mno-red-zone.
-	if [ "${MACHINE_ARCH}" = "x86_64" ]; then
-		echo "BUILDRUMP_TOOL_CFLAGS+=-mno-red-zone" \
-			>> $(pwd)/${RUMPTOOLS}/toolchain-conf.mk
-		echo "BUILDRUMP_TOOL_CXXFLAGS+=-mno-red-zone" \
-			>> $(pwd)/${RUMPTOOLS}/toolchain-conf.mk
 	fi
 }
 
