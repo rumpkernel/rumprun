@@ -181,6 +181,17 @@ checkprevbuilds ()
 buildrump ()
 {
 
+	# probe
+	${BUILDRUMP}/buildrump.sh -k -s ${RUMPSRC} -T ${RUMPTOOLS} "$@" probe
+	. ${RUMPTOOLS}/proberes.sh
+	MACHINE="${BUILDRUMP_MACHINE}"
+
+	# Check that a clang build is not attempted.
+	[ -z "${BUILDRUMP_HAVE_LLVM}" ] \
+	    || die rumprun does not yet support clang ${CC:+(\$CC: $CC)}
+
+	checkprevbuilds
+
 	# build tools
 	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
 	    -s ${RUMPSRC} -T ${RUMPTOOLS} -o ${RUMPOBJ} -d ${RUMPDEST}	\
@@ -195,20 +206,8 @@ buildrump ()
 
 	RUMPMAKE=$(pwd)/${RUMPTOOLS}/rumpmake
 
-	# Check that a clang build is not attempted.  This is the first
-	# place we can do it without replicating buildrump.sh compiler
-	# detection code
-	HAVE_LLVM=$(${RUMPMAKE} -f /dev/null -V '${HAVE_LLVM}')
-	[ ! "${HAVE_LLVM}" = "1" ] \
-	    || die rumprun does not yet support clang ${CC:+(\$CC: $CC)}
-
-	MACHINE=$(${RUMPMAKE} -f /dev/null -V '${MACHINE}')
-	[ -n "${MACHINE}" ] || die could not figure out target machine
-
 	MACHINE_ARCH=$(${RUMPMAKE} -f /dev/null -V '${MACHINE_ARCH}')
 	[ -n "${MACHINE_ARCH}" ] || die could not figure out target machine arch
-
-	checkprevbuilds
 
 	makeconfigmk ${PLATFORMDIR}/config.mk
 
