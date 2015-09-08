@@ -82,6 +82,8 @@ rumprun_boot(char *cmdline)
 		.ta_root_mode = 01777,
 	};
 	int tmpfserrno;
+	char *sysproxy;
+	int rv;
 
 	rump_boot_setsigmodel(RUMP_SIGMODEL_IGNORE);
 	rump_init();
@@ -110,9 +112,13 @@ rumprun_boot(char *cmdline)
 		warnx("FAILED: mount tmpfs on /tmp: %s", strerror(tmpfserrno));
 	}
 
-	rump_init_server("tcp://0:12345");
-
 	rumprun_config(cmdline);
+
+	sysproxy = getenv("RUMPRUN_SYSPROXY");
+	if (sysproxy) {
+		if ((rv = rump_init_server(sysproxy)) != 0)
+			err(1, "failed to init sysproxy at %s", sysproxy);
+	}
 
 	/*
 	 * give all threads a chance to run, and ensure that the main
