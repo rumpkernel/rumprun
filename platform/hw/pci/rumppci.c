@@ -28,6 +28,8 @@
 
 #include <bmk-core/pgalloc.h>
 
+#include <bmk-pcpu/pcpu.h>
+
 #include "pci_user.h"
 
 #define PCI_CONF_ADDR 0xcf8
@@ -118,7 +120,7 @@ rumpcomp_pci_dmalloc(size_t size, size_t align,
 	void *mem;
 	int i;
 
-        for (i = 0; size >> (i + PAGE_SHIFT); i++)
+        for (i = 0; size >> (i + BMK_PCPU_PAGE_SHIFT); i++)
                 continue;
 
 	mem = bmk_pgalloc(i);
@@ -148,7 +150,7 @@ rumpcomp_pci_dmafree(unsigned long mem, size_t size)
 {
 	int i;
 
-        for (i = 0; size >> (i + PAGE_SHIFT); i++)
+        for (i = 0; size >> (i + BMK_PCPU_PAGE_SHIFT); i++)
                 continue;
 	bmk_pgfree((void *)mem, i);
 }
