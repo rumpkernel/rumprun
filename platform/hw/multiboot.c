@@ -32,6 +32,8 @@
 #include <bmk-core/printf.h>
 #include <bmk-core/string.h>
 
+#include <bmk-pcpu/pcpu.h>
+
 #define MEMSTART 0x100000
 
 static int
@@ -74,7 +76,7 @@ multiboot(struct multiboot_info *mbi)
 	unsigned long cmdlinelen;
 	char *cmdline;
 
-	bmk_core_init(BMK_THREAD_STACK_PAGE_ORDER, PAGE_SHIFT);
+	bmk_core_init(BMK_THREAD_STACK_PAGE_ORDER, BMK_PCPU_PAGE_SHIFT);
 
 	/* save the command line before something overwrites it */
 	if (mbi->flags & MULTIBOOT_INFO_CMDLINE) {

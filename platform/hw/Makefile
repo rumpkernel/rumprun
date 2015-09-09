@@ -65,7 +65,10 @@ include ${APP_TOOLS_DIR}/Makefile.app-tools
 include/hw/machine:
 	@ln -s ../arch/${MACHINE_ARCH} include/hw/machine
 
-links: include/hw/machine
+../../include/bmk-pcpu:
+	@ln -sf ../platform/hw/include/hw/machine $@
+
+links: include/hw/machine ../../include/bmk-pcpu
 
 rumprun.o: ${OBJS_BMK}
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@

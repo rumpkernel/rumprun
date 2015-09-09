@@ -6,7 +6,8 @@
 #include <bmk-core/amd64/asm.h>
 
 #define BMK_THREAD_STACK_PAGE_ORDER 3
-#define BMK_THREAD_STACKSIZE ((1<<BMK_THREAD_STACK_PAGE_ORDER) * PAGE_SIZE)
+#define BMK_THREAD_STACKSIZE ((1<<BMK_THREAD_STACK_PAGE_ORDER) \
+    * BMK_PCPU_PAGE_SIZE)
 
 #include <arch/x86/reg.h>
 #include <arch/x86/var.h>

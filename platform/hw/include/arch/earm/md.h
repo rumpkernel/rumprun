@@ -9,9 +9,6 @@
 #define BMK_THREAD_STACK_PAGE_ORDER 1
 #define BMK_THREAD_STACKSIZE ((1<<BMK_THREAD_STACK_PAGE_ORDER) * PAGE_SIZE)
 
-#define PAGE_SHIFT 12
-#define PAGE_SIZE (1<<PAGE_SHIFT)
-
 #ifndef _LOCORE
 #include <hw/machine/inline.h>
 

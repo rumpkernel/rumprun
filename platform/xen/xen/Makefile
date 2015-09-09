@@ -87,6 +87,7 @@ endif
 links: $(ARCH_LINKS)
 	[ -e include/xen ] || ln -sf $(XEN_HEADERS) include/xen
 	[ -e include/mini-os/machine ] || ln -sf $(TARGET_ARCH_FAM) include/mini-os/machine
+	[ -e ../../../include/bmk-pcpu ] || ln -sf ../platform/xen/xen/include/mini-os/machine ../../../include/bmk-pcpu
 
 .PHONY: arch_lib
 arch_lib:
