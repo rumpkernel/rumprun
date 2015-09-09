@@ -45,17 +45,13 @@ ARCHDIR?= ${MACHINE}
 
 LDFLAGS_BAKE+=	-L$(abspath rump/lib)
 
-OBJS_BMK-y+=		intr.o clock_subr.o kernel.o multiboot.o undefs.o
-
-OBJS_BMK+= ${OBJS_BMK-y}
+OBJS_BMK+=	intr.o clock_subr.o kernel.o multiboot.o undefs.o
 
 include arch/${ARCHDIR}/Makefile.inc
 
 ifneq (${KERNONLY},true)
 OBJS_BMK+=	init.o
 endif
-
-OBJS= ${OBJS_BMK} ${OBJS_APP}
 
 .PHONY:	clean cleandir test
 
@@ -71,13 +67,13 @@ include/hw/machine:
 
 links: include/hw/machine
 
-rumprun.o: ${OBJS}
+rumprun.o: ${OBJS_BMK}
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@
 	${OBJCOPY} -w -G bmk_* -G rumpuser_* \
 	    -G rumprun_platform_rumpuser_init -G _start $@
 
 clean: app-tools_clean commonclean
-	rm -f ${OBJS} include/hw/machine buildtest
+	rm -f ${OBJS_BMK} include/hw/machine buildtest
 
 cleandir: clean
 
