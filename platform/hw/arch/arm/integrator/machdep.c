@@ -90,7 +90,7 @@ arm_boot(void)
 
 	bmk_sched_init();
 
-	bmk_core_init(BMK_THREAD_STACK_PAGE_ORDER, PAGE_SHIFT);
+	bmk_core_init(BMK_THREAD_STACK_PAGE_ORDER);
 	loadmem();
 
 	clockinit();

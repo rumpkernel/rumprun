@@ -29,6 +29,8 @@
 #include <bmk-core/pgalloc.h>
 #include <bmk-core/null.h>
 
+#include <bmk-pcpu/pcpu.h>
+
 #include <bmk-rumpuser/core_types.h>
 #include <bmk-rumpuser/rumpuser.h>
 
@@ -53,8 +55,8 @@ rumpuser_malloc(size_t len, int alignment, void **retval)
 	 * Note that the code will continue to work, but the optimization
 	 * will not trigger for the common case.
 	 */
-	if (len == bmk_pagesize) {
-		bmk_assert((unsigned long)alignment <= bmk_pagesize);
+	if (len == BMK_PCPU_PAGE_SIZE) {
+		bmk_assert((unsigned long)alignment <= BMK_PCPU_PAGE_SIZE);
 		*retval = bmk_pgalloc_one();
 	} else {
 		*retval = bmk_memalloc(len, alignment, BMK_MEMWHO_RUMPKERN);
@@ -69,7 +71,7 @@ void
 rumpuser_free(void *buf, size_t buflen)
 {
 
-	if (buflen == bmk_pagesize)
+	if (buflen == BMK_PCPU_PAGE_SIZE)
 		bmk_pgfree_one(buf);
 	else
 		bmk_memfree(buf, BMK_MEMWHO_RUMPKERN);

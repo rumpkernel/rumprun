@@ -41,8 +41,7 @@
 #include <bmk-core/printf.h>
 #include <bmk-core/string.h>
 
-/* XXX */
-#define PAGE_SHIFT bmk_pageshift
+#include <bmk-pcpu/pcpu.h>
 
 /*
  * The allocation bitmap is offset to the first page loaded, which is
@@ -52,7 +51,7 @@
  * table for coalescing entries when pages are freed.
  */
 static unsigned long minpage_addr;
-#define va_to_pg(x) (((unsigned long)x - minpage_addr)>>PAGE_SHIFT)
+#define va_to_pg(x) (((unsigned long)x - minpage_addr)>>BMK_PCPU_PAGE_SHIFT)
 
 /*
  * ALLOCATION BITMAP
@@ -130,7 +129,7 @@ struct chunk_tail_st {
 };
 
 /* Linked lists of free chunks of different powers-of-two in size. */
-#define FREELIST_SIZE ((sizeof(void*)<<3)-PAGE_SHIFT)
+#define FREELIST_SIZE ((sizeof(void*)<<3)-BMK_PCPU_PAGE_SHIFT)
 static chunk_head_t **free_head;
 static chunk_head_t  *free_tail;
 #define FREELIST_EMPTY(_l) ((_l)->next == NULL)
@@ -235,7 +234,7 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	}
 
 	/* Allocate space for the allocation bitmap. */
-	bitmap_size  = (max+1) >> (PAGE_SHIFT+3);
+	bitmap_size  = (max+1) >> (BMK_PCPU_PAGE_SHIFT+3);
 	bitmap_size  = bmk_round_page(bitmap_size);
 	alloc_bitmap = (unsigned long *)min;
 	min         += bitmap_size;
@@ -245,14 +244,14 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	/* All allocated by default. */
 	bmk_memset(alloc_bitmap, ~0, bitmap_size);
 	/* Free up the memory we've been given to play with. */
-	map_free((void *)min, range>>PAGE_SHIFT);
+	map_free((void *)min, range>>BMK_PCPU_PAGE_SHIFT);
 
 	while (range != 0) {
 		/*
 		 * Next chunk is limited by alignment of min, but also
 		 * must not be bigger than remaining range.
 		 */
-		for ( i = PAGE_SHIFT; (1UL<<(i+1)) <= range; i++ )
+		for ( i = BMK_PCPU_PAGE_SHIFT; (1UL<<(i+1)) <= range; i++ )
 			if (min & (1UL<<i))
 				break;
 
@@ -262,7 +261,7 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 		range -= (1UL<<i);
 
 		ct = (chunk_tail_t *)min-1;
-		i -= PAGE_SHIFT;
+		i -= BMK_PCPU_PAGE_SHIFT;
 		ch->level       = i;
 		ch->next        = free_head[i];
 		ch->pprev       = &free_head[i];
@@ -300,9 +299,9 @@ bmk_pgalloc(int order)
 		/* Split into two equal parts. */
 		i--;
 		spare_ch = (chunk_head_t *)((char *)alloc_ch
-		    + (1UL<<(i+PAGE_SHIFT)));
+		    + (1UL<<(i+BMK_PCPU_PAGE_SHIFT)));
 		spare_ct = (chunk_tail_t *)((char *)spare_ch
-		    + (1UL<<(i+PAGE_SHIFT)))-1;
+		    + (1UL<<(i+BMK_PCPU_PAGE_SHIFT)))-1;
 
 		/* Create new header for spare chunk. */
 		spare_ch->level = i;
@@ -332,11 +331,11 @@ bmk_pgfree(void *pointer, int order)
 	/* Create free chunk */
 	freed_ch = (chunk_head_t *)pointer;
 	freed_ct = (chunk_tail_t *)((char *)pointer
-	    + (1UL<<(order + PAGE_SHIFT)))-1;
+	    + (1UL<<(order + BMK_PCPU_PAGE_SHIFT)))-1;
 
 	/* Now, possibly we can conseal chunks together */
 	while ((unsigned)order < FREELIST_SIZE) {
-		mask = 1UL << (order + PAGE_SHIFT);
+		mask = 1UL << (order + BMK_PCPU_PAGE_SHIFT);
 		if ((unsigned long)freed_ch & mask) {
 			to_merge_ch = (chunk_head_t *)((char *)freed_ch - mask);
 			if (allocated_in_map(va_to_pg(to_merge_ch))

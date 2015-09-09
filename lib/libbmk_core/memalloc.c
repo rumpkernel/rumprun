@@ -71,6 +71,8 @@
 #include <bmk-core/pgalloc.h>
 #include <bmk-core/printf.h>
 
+#include <bmk-pcpu/pcpu.h>
+
 #endif
 
 
@@ -195,7 +197,7 @@ bmk_memalloc_init(void)
 	unsigned amt;
 	int bucket;
 
-	pagesz = bmk_pagesize;
+	pagesz = BMK_PCPU_PAGE_SIZE;
 	bmk_assert(pagesz > 0);
 
 	bucket = 0;

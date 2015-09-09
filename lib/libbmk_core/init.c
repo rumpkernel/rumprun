@@ -24,26 +24,21 @@
  */
 
 #include <bmk-core/core.h>
-
 #include <bmk-core/memalloc.h>
+
+#include <bmk-pcpu/pcpu.h>
 
 unsigned long bmk_stackpageorder;
 unsigned long bmk_stacksize;
 
-unsigned long bmk_pagesize;
-unsigned long bmk_pageshift;
-
 unsigned long bmk_memsize;
 
 int
-bmk_core_init(unsigned long stackpageorder, unsigned long pageshift)
+bmk_core_init(unsigned long stackpageorder)
 {
 
-	bmk_pagesize = 1<<pageshift;
-	bmk_pageshift = pageshift;
-
 	bmk_stackpageorder = stackpageorder;
-	bmk_stacksize = (1<<stackpageorder) * bmk_pagesize;
+	bmk_stacksize = (1<<stackpageorder) * BMK_PCPU_PAGE_SIZE;
 
 	bmk_memalloc_init();
 
