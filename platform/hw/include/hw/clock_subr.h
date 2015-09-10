@@ -30,62 +30,6 @@
 #ifndef _BMK_CLOCK_SUBR_H_
 #define _BMK_CLOCK_SUBR_H_
 
-#include <hw/kernel.h>
-
-/* Some handy constants. */
-#define SECS_PER_MINUTE		60
-#define SECS_PER_HOUR		3600
-#define SECS_PER_DAY		86400
-#define DAYS_PER_COMMON_YEAR    365
-#define DAYS_PER_LEAP_YEAR      366
-#define SECS_PER_COMMON_YEAR	(SECS_PER_DAY * DAYS_PER_COMMON_YEAR)
-#define SECS_PER_LEAP_YEAR	(SECS_PER_DAY * DAYS_PER_LEAP_YEAR)
-
-/* Traditional POSIX base year */
-#define	POSIX_BASE_YEAR	1970
-
-/* Some handy functions */
-static inline int
-days_in_month(int m)
-{
-	switch (m) {
-	case 2:
-		return 28;
-	case 4: case 6: case 9: case 11:
-		return 30;
-	case 1: case 3: case 5: case 7: case 8: case 10: case 12:
-		return 31;
-	default:
-		return -1;
-	}
-}
-
-/*
- * This inline avoids some unnecessary modulo operations
- * as compared with the usual macro:
- *   ( ((year % 4) == 0 &&
- *      (year % 100) != 0) ||
- *     ((year % 400) == 0) )
- * It is otherwise equivalent.
- */
-static inline int
-is_leap_year(uint64_t year)
-{
-	if ((year & 3) != 0)
-		return 0;
-
-	if ((year % 100) != 0)
-		return 1;
-
-	return (year % 400) == 0;
-}
-
-static inline int
-days_per_year(uint64_t year)
-{
-	return is_leap_year(year) ? DAYS_PER_LEAP_YEAR : DAYS_PER_COMMON_YEAR;
-}
-
 /*
  * "POSIX time" to/from "YY/MM/DD/hh/mm/ss"
  */
@@ -98,7 +42,7 @@ struct bmk_clock_ymdhms {
 	uint8_t dt_sec;
 };
 
-bmk_time_t bmk_clock_ymdhms_to_secs(struct bmk_clock_ymdhms *);
+bmk_time_t clock_ymdhms_to_secs(struct bmk_clock_ymdhms *);
 
 /*
  * BCD to binary.
@@ -106,7 +50,7 @@ bmk_time_t bmk_clock_ymdhms_to_secs(struct bmk_clock_ymdhms *);
 static inline unsigned int
 bcdtobin(unsigned int bcd)
 {
-        return ((bcd >> 4) & 0x0f) * 10 + (bcd & 0x0f);
+	return ((bcd >> 4) & 0x0f) * 10 + (bcd & 0x0f);
 }
 
 #endif /* _BMK_CLOCK_SUBR_H_ */

@@ -183,7 +183,7 @@ rtc_gettimeofday(void)
 
 	spl0();
 
-	return bmk_clock_ymdhms_to_secs(&dt) * NSEC_PER_SEC;
+	return clock_ymdhms_to_secs(&dt) * NSEC_PER_SEC;
 }
 
 void
