@@ -23,18 +23,10 @@
  * SUCH DAMAGE.
  */
 
-#include <hw/types.h>
-#include <hw/multiboot.h>
 #include <hw/kernel.h>
 
-#include <bmk-core/core.h>
-#include <bmk-core/string.h>
-#include <bmk-core/memalloc.h>
-#include <bmk-core/pgalloc.h>
 #include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
-#include <bmk-core/queue.h>
-#include <bmk-core/sched.h>
 
 int spldepth = 1;
 
