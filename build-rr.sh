@@ -53,6 +53,9 @@ RUMPSRC=src-netbsd
 BUILDRUMP=$(pwd)/buildrump.sh
 KERNONLY=false
 
+# overriden by script if true
+HAVECXX=false
+
 # figure out where gmake lies
 if [ -z "${MAKE}" ]; then
 	MAKE=make
@@ -212,6 +215,9 @@ buildrump ()
 	MACHINE_ARCH=$(${RUMPMAKE} -f /dev/null -V '${MACHINE_ARCH}')
 	[ -n "${MACHINE_ARCH}" ] || die could not figure out target machine arch
 
+	[ $(${RUMPMAKE} -f bsd.own.mk -V '${_BUILDRUMP_CXX}') != 'yes' ] \
+	    || HAVECXX=true
+
 	makeconfigmk ${PLATFORMDIR}/config.mk
 
 	cat >> ${RUMPTOOLS}/mk.conf << EOF
@@ -245,7 +251,7 @@ builduserspace ()
 	usermtree ${RUMPDEST}
 
 	LIBS="$(stdlibs ${RUMPSRC})"
-	! havecxx || LIBS="${LIBS} $(stdlibsxx ${RUMPSRC})"
+	! ${HAVECXX} || LIBS="${LIBS} $(stdlibsxx ${RUMPSRC})"
 
 	userincludes ${RUMPSRC} ${LIBS} $(pwd)/lib/librumprun_tester
 	for lib in ${LIBS}; do
@@ -254,7 +260,7 @@ builduserspace ()
 	makeuserlib $(pwd)/lib/librumprun_tester ${PLATFORM}
 
 	# build unwind bits if we support c++
-	if havecxx; then
+	if ${HAVECXX}; then
 		( cd lib/librumprun_unwind
 		    ${RUMPMAKE} dependall && ${RUMPMAKE} install )
 	fi
@@ -314,7 +320,7 @@ makeconfigmk ()
 	done
 
 	# c++ is optional, wrap it iff available
-	if havecxx; then
+	if ${HAVECXX}; then
 		echo "CONFIG_CXX=yes" >> ${1}
 		wraponetool ${1} CXX
 	else
