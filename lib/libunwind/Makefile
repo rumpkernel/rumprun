@@ -2,7 +2,7 @@
 
 RUMPTOP= ${TOPRUMP}
 
-LIB=	rumprun_unwind
+LIB=	unwind
 
 CPPFLAGS+= -isystem ${DESTDIR}/usr/include/c++
 
