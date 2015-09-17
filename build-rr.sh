@@ -261,7 +261,7 @@ builduserspace ()
 
 	# build unwind bits if we support c++
 	if ${HAVECXX}; then
-		( cd lib/librumprun_unwind
+		( cd lib/libunwind
 		    ${RUMPMAKE} dependall && ${RUMPMAKE} install )
 	fi
 }

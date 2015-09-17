@@ -43,7 +43,7 @@ case $0 in
 *-g++|*-clang++)
 	CC="!CXX!"
 	CFLAGS="!CXXFLAGS!"
-	EXTRALIBS=-lrumprun_unwind
+	EXTRALIBS=-lunwind
 	;;
 *)
 	echo "$0: internal error, unknown invocation"
