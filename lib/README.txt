@@ -11,5 +11,13 @@ bmk_rumpuser:
 rumprun_base:
 	"userspace" routines, implement some libc interfaces, etc.
 
-rumprun_unwind:
+rumpkern_bmktc:
+	bmk hypercall timecounter driver for the NetBSD kernel
+
+unwind:
 	reachover library for NetBSD's stack unwind support (for C++)
+
+compiler_rt:
+	reachover library for NetBSD's compiler runtime support (the
+	bits are usually in libc, so this library is necessary only in
+	"kernonly" mode)
