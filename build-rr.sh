@@ -34,13 +34,13 @@ die ()
 helpme ()
 {
 
-	printf "Usage: $0 [-k] [-o objdir] [-s srcdir] [-q] hw|xen\n"
+	printf "Usage: $0 [-k] [-o objdir] [-q] [-s srcdir] hw|xen\n"
 	printf "\t    [-- buildrump.sh options]\n"
 	printf "\n"
 	printf "\t-k: build kernel only, without libc or tools (expert-only)\n"
 	printf "\t-o: use non-default object directory (under development)\n"
-	printf "\t-s: specify alternative src-netbsd location (expert-only)\n"
 	printf "\t-q: quiet(er) build.  option maybe be specified twice.\n\n"
+	printf "\t-s: specify alternative src-netbsd location (expert-only)\n"
 	printf "buildrump.sh options are passed to buildrump.sh (expert-only)\n"
 	printf "\n"
 	printf "The toolchain is picked up from the environment.  See the\n"
