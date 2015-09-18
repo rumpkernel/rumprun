@@ -34,8 +34,11 @@ die ()
 helpme ()
 {
 
-	echo "Usage: $0 [-k] [-s srcdir] [-q] hw|xen [-- buildrump.sh options]"
+	printf "Usage: $0 [-k] [-o objdir] [-s srcdir] [-q] hw|xen\n"
+	printf "\t    [-- buildrump.sh options]\n"
+	printf "\n"
 	printf "\t-k: build kernel only, without libc or tools (expert-only)\n"
+	printf "\t-o: use non-default object directory (under development)\n"
 	printf "\t-s: specify alternative src-netbsd location (expert-only)\n"
 	printf "\t-q: quiet(er) build.  option maybe be specified twice.\n\n"
 	printf "buildrump.sh options are passed to buildrump.sh (expert-only)\n"
@@ -52,6 +55,8 @@ STDJ='-j4'
 RUMPSRC=src-netbsd
 BUILDRUMP=$(pwd)/buildrump.sh
 KERNONLY=false
+
+unset RUMPOBJ
 
 # overriden by script if true
 HAVECXX=false
@@ -72,10 +77,13 @@ parseargs ()
 {
 
 	orignargs=$#
-	while getopts '?kqs:' opt; do
+	while getopts '?ko:qs:' opt; do
 		case "$opt" in
 		'k')
 			KERNONLY=true
+			;;
+		'o')
+			RUMPOBJ="${OPTARG}"
 			;;
 		's')
 			RUMPSRC=${OPTARG}
@@ -121,7 +129,6 @@ parseargs ()
 	export BUILD_QUIET
 
 	RUMPTOOLS=${PLATFORMDIR}/rumptools
-	RUMPOBJ=${PLATFORMDIR}/rumpobj
 	RUMPDEST=${PLATFORMDIR}/rump
 
 	ARGSSHIFT=$((${orignargs} - $#))
@@ -197,6 +204,10 @@ buildrump ()
 
 	unset extracflags
 	[ "${MACHINE}" = "amd64" ] && extracflags='-F CFLAGS=-mno-red-zone'
+
+	if [ -z "${RUMPOBJ}" ]; then
+		RUMPOBJ="./obj-${PLATFORM}-${MACHINE}"
+	fi
 
 	# build tools
 	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
