@@ -53,8 +53,10 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 	STUBWARN();
 
 	/* should probably track contents, maybe later */
-	if (oact)
+	if (oact) {
 		memset(oact, 0, sizeof(*oact));
+		oact->sa_handler = SIG_IGN;
+	}
 	return 0;
 }
 __strong_alias(sigaction,__sigaction14);
