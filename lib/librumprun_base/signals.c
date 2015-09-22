@@ -50,7 +50,9 @@ sigaction(int sig, const struct sigaction *act, struct sigaction *oact)
 {
 	static int warned = 0;
 
-	STUBWARN();
+	if (act && (act->sa_flags & SA_SIGINFO || act->sa_handler != SIG_IGN)) {
+		STUBWARN();
+	}
 
 	/* should probably track contents, maybe later */
 	if (oact) {
