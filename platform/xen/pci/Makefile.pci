@@ -3,7 +3,7 @@ PCIDIR!=	cd ${.PARSEDIR} ; pwd -P
 .include "${PCIDIR}/../config.mk"
 .include "${BUILDRUMP_TOOLFLAGS}"
 
-PCI_HYPERCALLS=		rumphyper_pci.c
+PCI_HYPERCALLS=		rumphyper_pci.c rumphyper_dma.c
 PCI_HYPERCALLS_PATH:=	${PCIDIR}
 PCI_CPPFLAGS:=		-I${PCIDIR}/../xen/include
 

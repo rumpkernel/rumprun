@@ -32,83 +32,51 @@
 
 #include "pci_user.h"
 
-#define PCI_CONF_ADDR 0xcf8
-#define PCI_CONF_DATA 0xcfc
-
 int
-rumpcomp_pci_iospace_init(void)
+rumpcomp_pci_dmalloc(size_t size, size_t align,
+	unsigned long *pap, unsigned long *vap)
 {
+	void *mem;
+	int i;
+
+        for (i = 0; size >> (i + BMK_PCPU_PAGE_SHIFT); i++)
+                continue;
+
+	mem = bmk_pgalloc(i);
+	if (!mem)
+		return BMK_ENOMEM;
+
+	*pap = (unsigned long)mem;
+	*vap = (unsigned long)mem;
 
 	return 0;
 }
 
-static uint32_t
-makeaddr(unsigned bus, unsigned dev, unsigned fun, int reg)
-{
-
-	return (1<<31) | (bus<<16) | (dev <<11) | (fun<<8) | (reg & 0xfc);
-}
-
 int
-rumpcomp_pci_confread(unsigned bus, unsigned dev, unsigned fun, int reg,
-	unsigned int *value)
+rumpcomp_pci_dmamem_map(struct rumpcomp_pci_dmaseg *dss, size_t nseg,
+	size_t totlen, void **vap)
 {
-	uint32_t addr;
-	unsigned int data;
 
-	addr = makeaddr(bus, dev, fun, reg);
-	outl(PCI_CONF_ADDR, addr);
-	data = inl(PCI_CONF_DATA);
+	if (nseg > 1)
+		return 1;
 
-	*value = data;
+	*vap = (void *)dss[0].ds_vacookie;
 	return 0;
 }
 
-int
-rumpcomp_pci_confwrite(unsigned bus, unsigned dev, unsigned fun, int reg,
-	unsigned int value)
+void
+rumpcomp_pci_dmafree(unsigned long mem, size_t size)
 {
-	uint32_t addr;
+	int i;
 
-	addr = makeaddr(bus, dev, fun, reg);
-	outl(PCI_CONF_ADDR, addr);
-	outl(PCI_CONF_DATA, value);
-
-	return 0;
+        for (i = 0; size >> (i + BMK_PCPU_PAGE_SHIFT); i++)
+                continue;
+	bmk_pgfree((void *)mem, i);
 }
 
-static int intrs[BMK_MAXINTR];
-
-int
-rumpcomp_pci_irq_map(unsigned bus, unsigned device, unsigned fun,
-	int intrline, unsigned cookie)
+unsigned long
+rumpcomp_pci_virt_to_mach(void *virt)
 {
 
-	if (cookie > BMK_MAXINTR)
-		return BMK_EGENERIC;
-
-	intrs[cookie] = intrline;
-	return 0;
-}
-
-void *
-rumpcomp_pci_irq_establish(unsigned cookie, int (*handler)(void *), void *data)
-{
-
-	if (bmk_isr_init(handler, data, intrs[cookie]) == 0)
-		return &intrs[cookie];
-	else
-		return NULL;
-}
-
-/*
- * Well at least there's some benefit to running on physical memory.
- * This stuff is really trivial.
- */
-
-void *
-rumpcomp_pci_map(unsigned long addr, unsigned long len)
-{
-
-	return (void *)addr;
+	return (unsigned long)virt;
 }
