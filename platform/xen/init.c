@@ -55,8 +55,9 @@ get_config(char *cmdline)
 	char *cfg;
 	int retry;
 
-	if (rumprun_config_isonrootfs_p(cmdline))
-		return cmdline;
+	cfg = rumprun_config_path(cmdline);
+	if (cfg != NULL)
+		return cfg;
 
 	if (xenbus_transaction_start(&txn))
 		return jsonordie();
