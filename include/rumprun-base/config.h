@@ -32,7 +32,7 @@
 extern int rumprun_cmdline_argc;
 extern char **rumprun_cmdline_argv;
 
-int	rumprun_config_isonrootfs_p(char *);
+char *rumprun_config_path(char *);
 
 void	rumprun_config(char *);
 void	rumprun_deconfig(void);
