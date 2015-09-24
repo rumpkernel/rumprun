@@ -785,8 +785,8 @@ bake_iso ()
 	mkdir -p "${ISODIR}/boot/grub"
 	printf 'set timeout=0\n' > "${ISODIR}/boot/grub/grub.cfg"
 	printf 'menuentry "rumpkernel" {\n' >> "${ISODIR}/boot/grub/grub.cfg"
-	printf '\tmultiboot /boot/%s ROOTFSCFG=/json.cfg\n}\n' $(basename $1) \
-	    >> "${ISODIR}/boot/grub/grub.cfg"
+	printf '\tmultiboot /boot/%s _RUMPRUN_ROOTFSCFG=/json.cfg\n}\n' \
+	    $(basename $1) >> "${ISODIR}/boot/grub/grub.cfg"
 	cp ${bootimage} "${ISODIR}/boot"
 	cp "${TMPDIR}/json.cfg" "${ISODIR}"
 	grub-mkrescue "${ISODIR}" -o ${opt_name}
@@ -867,7 +867,7 @@ make_ec2 ()
 	printf 'default 0\ntimeout 1\n' > "${EC2DIR}/boot/grub/menu.lst"
 	printf 'title %s\n' "${opt_name}" >> "${EC2DIR}/boot/grub/menu.lst"
 	printf '  root (hd0)\n' >> "${EC2DIR}/boot/grub/menu.lst"
-	printf '  kernel /boot/%s ROOTFSCFG=/json.cfg\n' \
+	printf '  kernel /boot/%s _RUMPRUN_ROOTFSCFG=/json.cfg\n' \
 	    $(basename ${bootimage}) >> "${EC2DIR}/boot/grub/menu.lst"
 	cp ${bootimage} "${EC2DIR}/boot"
 	cp "${TMPDIR}/json.cfg" "${EC2DIR}"

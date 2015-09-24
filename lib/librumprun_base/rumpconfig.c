@@ -611,7 +611,7 @@ getcmdlinefromroot(const char *cfgname)
 }
 
 
-#define ROOTCFG "ROOTFSCFG="
+#define ROOTCFG "_RUMPRUN_ROOTFSCFG="
 static const size_t rootcfglen = sizeof(ROOTCFG)-1;
 char *
 rumprun_config_path(char *cmdline)
