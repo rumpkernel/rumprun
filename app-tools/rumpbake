@@ -42,14 +42,14 @@ if [ "${RUMPRUN_WARNING_STFU}" != 'please' ]; then
 	exec 1>&3 3>&-
 fi
 
-die()
+_die()
 {
 
 	echo ">> ERROR: $*"
 	exit 1
 }
 
-usage ()
+_usage ()
 {
 	cat <<EOM
 rumpbake version: ${_RUMPBAKE_VERSION}
@@ -67,7 +67,7 @@ EOM
 	exit 1
 }
 
-nuketmpdir ()
+_nuketmpdir ()
 {
 
 	nukeme="${TMPDIR}"
@@ -84,14 +84,14 @@ addconfig ()
 	shift
 
 	eval [ \"\${CONFIG_PRESENT_${confname}}\" != 'yes' ] \
-	    || die config ${confname} already specified "(from ${CURCONF})"
+	    || _die config ${confname} already specified "(from ${CURCONF})"
 	eval CONFIG_PRESENT_${confname}=yes
 
 	ALLCONFIGS="${ALLCONFIGS} ${confname}"
 	eval CONFIG_${confname}=\"$@\"
 }
 
-readconfig ()
+_readconfig ()
 {
 	CURCONF="${1}"
 
@@ -103,10 +103,10 @@ readconfig ()
 	unset RUMPBAKE_CONFVERS
 	. "${CURCONF}"
 	[ "${RUMPBAKE_CONFVERS}" = "${_RUMPBAKE_VERSION}" ] \
-	    || die ${CURCONF} version mismatch: expecting ${_RUMPBAKE_VERSION}
+	    || _die ${CURCONF} version mismatch: expecting ${_RUMPBAKE_VERSION}
 }
 
-getoneinfo ()
+_getoneinfo ()
 {
 
 	bin="$1"
@@ -117,7 +117,7 @@ getoneinfo ()
 	tmp="$(${READELF} -p ${notesect} ${bin} 2>/dev/null \
 	    | sed -n '/.*rumprun_'"${var}"': /p')"
 	[ -n "${tmp}" ] \
-	    || die "Could not extract \"${var}\" from ${bin}.  Not rumprun bin?"
+	    || _die "Could not extract \"${var}\" from ${bin}. Not rumprun bin?"
 
 	# now that we've verified the entry is present, reduce to
 	# contents (which may be empty)
@@ -126,29 +126,29 @@ getoneinfo ()
 	cvar=$(echo ${var} | tr '[a-z]' '[A-Z]')
 
 	eval [ \"\${RUMPBAKE_${cvar}:=${tmp}}\" = \"${tmp}\" ] || \
-	    die ${var} mismatch in binaries
+	    _die ${var} mismatch in binaries
 }
 
-getbininfo ()
+_getbininfo ()
 {
 
 	# extract bake recipe
 	for x in tuple tooldir backingcc cflags; do
-		getoneinfo "${1}" ${x}
+		_getoneinfo "${1}" ${x}
 	done
 }
 
 APP_TOOLS_DIR=$(dirname $0)
 
-readconfig "${APP_TOOLS_DIR}/rumpbake.conf"
+_readconfig "${APP_TOOLS_DIR}/rumpbake.conf"
 
 while getopts "c:" opt; do
 	case "${opt}" in
 	c)
-		readconfig "${OPTARG}"
+		_readconfig "${OPTARG}"
 		;;
 	*)
-		usage
+		_usage
 		;;
 	esac
 done
@@ -161,13 +161,13 @@ if [ "${TARGET}" = "list" ]; then
 fi
 
 OUTPUT="${2}"
-[ $# -gt 2 ] || usage
+[ $# -gt 2 ] || _usage
 shift 2
 
 # We need readelf to extract the ELF note with the baking recipe.
 # Just any readelf will do, but we need one.
 type ${READELF} >/dev/null 2>&1 \
-    || die 'Cannot find ${READELF}. Set $READELF env variable'
+    || _die 'Cannot find ${READELF}. Set $READELF env variable'
 unset RUMPBAKE_BACKINGCC
 unset RUMPBAKE_TUPLE
 unset RUMPBAKE_CFLAGS
@@ -204,14 +204,14 @@ for component in ${CONFIG}; do
 done
 
 TMPDIR=$(mktemp -d /tmp/rumpbake.XXXXXX)
-trap nuketmpdir 0 INT TERM
+trap _nuketmpdir 0 INT TERM
 
 # Check if the file is a relocatable object produced by a rumprun toolchain.
 # Create a temporary object with a unique "main"
 objnum=1
 allobjs=
 for f in "$@"; do
-	getbininfo ${f}
+	_getbininfo ${f}
 
 	${RUMPBAKE_TOOLDIR}/${RUMPBAKE_TUPLE}-objcopy			\
 	    --redefine-sym main=rumpbake_main${objnum}			\
