@@ -215,7 +215,7 @@ for f in "$@"; do
 
 	${RUMPBAKE_TOOLDIR}/${RUMPBAKE_TUPLE}-objcopy			\
 	    --redefine-sym main=rumpbake_main${objnum}			\
-	    -G rumpbake_main${objnum} ${f} ${TMPDIR}/tmp${objnum}.obj
+	    ${f} ${TMPDIR}/tmp${objnum}.obj
 	allobjs="${allobjs} ${TMPDIR}/tmp${objnum}.obj"
 	objnum=$((${objnum}+1))
 done
