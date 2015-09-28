@@ -219,6 +219,8 @@ _nuketmpdir ()
 
 _readconfig ()
 {
+	local x
+
 	CURCONF="${1}"
 
 	if [ ! -f "${CURCONF}" ]; then
@@ -231,6 +233,11 @@ _readconfig ()
 	${_VERSOK} || _die "config version not specified (${CURCONF})"
 
 	unset CURCONF
+
+	# limit visibility of _configs
+	for x in ${ALLCONFIGS}; do
+		[ "${x#_}" = "${x}" ] || _filter ${x} ALLCONFIGS
+	done
 }
 
 _getoneinfo ()
