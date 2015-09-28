@@ -1,5 +1,6 @@
 #!/bin/sh
 #
+# Copyright (c) 2015 Antti Kantee.  All Rights Reserved.
 # Copyright (c) 2015 Martin Lucina.  All Rights Reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -24,7 +25,7 @@
 # SUCH DAMAGE.
 #
 
-_RUMPBAKE_VERSION=20150828
+_RUMPBAKE_VERSION=20150928
 
 #
 # rumpbake: script for final stage linking ("baking") of a unikernel image
@@ -47,6 +48,147 @@ _die()
 
 	echo ">> ERROR: $*"
 	exit 1
+}
+
+#
+# configuration management
+#
+
+_filter ()
+{
+	local filtee vname tmplist
+
+	filtee=$1
+	vname=$2
+	for x in $(eval echo \${${vname}}); do
+		[ "${filtee}" = "${x}" ] || tmplist="${tmplist} ${x}"
+	done
+
+	eval ${vname}="\${tmplist}"
+}
+
+_haveconf ()
+{
+
+	for x in ${ALLCONFIGS}; do
+		[ "${x}" != "${1}" ] || return
+	done
+	_die "config ${1} not found (${CURCONF})"
+}
+
+_nothaveconf ()
+{
+
+	for x in ${ALLCONFIGS}; do
+		[ "${x}" != "${1}" ] \
+		    || _die "config ${1} already exists (${CURCONF})"
+	done
+}
+
+# implement "sort | uniq" ourselves so that we don't completely
+# screw up the order of the arguments.  not 100% sure it matters, but it's
+# easy enough
+_uniq ()
+{
+	local listname newlist
+
+	listname=$1
+	shift || _die need listname for _uniq
+
+	eval _UNIQREMAINING=\${$listname}
+	set -- ${_UNIQREMAINING}
+	while [ $# -gt 0 ]; do
+		newlist="${newlist} $1"
+		_filter $1 _UNIQREMAINING
+		set -- ${_UNIQREMAINING}
+	done
+	eval ${listname}=\${newlist}
+}
+
+ALLCONFIGS=
+bakeconf_version ()
+{
+
+	[ "${1}" = "${_RUMPBAKE_VERSION}" ] \
+	    || _die ${CURCONF} mismatch: expect ${_RUMPBAKE_VERSION}, got \"$1\"
+	_VERSOK=true
+}
+
+bakeconf_create ()
+{
+	local confname descr
+
+	confname=$1
+	shift || _die "bakeconf_create: not enough arguments (${CURCONF})"
+	[ -n "$*" ] || _die "bakeconf_create: need description (${CURCONF})"
+
+	_nothaveconf ${confname}
+
+	ALLCONFIGS="${ALLCONFIGS} ${confname}"
+	eval CONFDESCR_${confname}=\"${*}\"
+}
+
+bakeconf_assimilate ()
+{
+	local to from
+
+	to=$1
+	shift || _die not enough arguments to bakeconf_assimilate
+	_haveconf ${to}
+
+	for from; do
+		_haveconf ${from}
+		eval CONFIG_${to}=\"\${CONFIG_${to}} \${CONFIG_${from}}\"
+	done
+	_uniq CONFIG_${to}
+}
+
+bakeconf_nuke ()
+{
+
+	[ $# -eq 1 ] || _die "bakeconf_nuke: wrong number of args (${CURCONF})"
+	_haveconf ${1}
+	_filter ${1} ALLCONFIGS
+}
+
+bakeconf_elem_add ()
+{
+	local confname
+
+	confname=$1
+	shift || _die "not enough args to bakeconf_elem_add (${CURCONF})"
+
+	_haveconf ${confname}
+	eval CONFIG_${confname}=\"\${CONFIG_${confname}} $@\"
+	_uniq CONFIG_${confname}
+}
+
+bakeconf_elem_del ()
+{
+	local confname compvar
+
+	confname=$1
+	shift || _die "not enough args to bakeconf_elem_del (${CURCONF})"
+
+	_haveconf ${confname}
+
+	compvar=CONFIG_${confname}
+	for x; do
+		_filter ${x} ${compvar}
+	done
+}
+
+# debug routine
+bakeconf__dump ()
+{
+	local confname
+
+	confname=$1
+	shift || _die "not enough args to bakeconf__dump (${CURCONF})"
+
+	_haveconf ${confname}
+
+	eval echo \${CONFIG_${confname}}
 }
 
 _usage ()
@@ -75,22 +217,6 @@ _nuketmpdir ()
 	rm -rf ${nukeme}
 }
 
-ALLCONFIGS=
-addconfig ()
-{
-	[ $# -ge 2 ] || { echo rumpbake.conf error; exit 1; }
-
-	confname=$1
-	shift
-
-	eval [ \"\${CONFIG_PRESENT_${confname}}\" != 'yes' ] \
-	    || _die config ${confname} already specified "(from ${CURCONF})"
-	eval CONFIG_PRESENT_${confname}=yes
-
-	ALLCONFIGS="${ALLCONFIGS} ${confname}"
-	eval CONFIG_${confname}=\"$@\"
-}
-
 _readconfig ()
 {
 	CURCONF="${1}"
@@ -100,10 +226,11 @@ _readconfig ()
 		exit 1
 	fi
 
-	unset RUMPBAKE_CONFVERS
+	_VERSOK=false
 	. "${CURCONF}"
-	[ "${RUMPBAKE_CONFVERS}" = "${_RUMPBAKE_VERSION}" ] \
-	    || _die ${CURCONF} version mismatch: expecting ${_RUMPBAKE_VERSION}
+	${_VERSOK} || _die "config version not specified (${CURCONF})"
+
+	unset CURCONF
 }
 
 _getoneinfo ()
@@ -156,7 +283,11 @@ shift $((${OPTIND}-1))
 
 TARGET="${1}"
 if [ "${TARGET}" = "list" ]; then
-	echo ${ALLCONFIGS} | xargs -n 1 echo
+	for x in ${ALLCONFIGS}; do
+		[ "${x#_}" = "${x}" ] || continue
+		eval mydesc="\${CONFDESCR_${x}}"
+		printf '%-16s: %s\n' "${x}" "${mydesc}"
+	done
 	exit 0
 fi
 
@@ -187,21 +318,7 @@ if [ "$c" != "$config" ]; then
 fi
 
 PLATFORM=${config%%_*}
-eval CONFIG="\${CONFIG_${config}}"
-
-# Parse CONFIG, mapping each component to $LIBS_component and each resulting
-# lib to -l$lib
-LIBS="-lrumpkern_bmktc -lrumpvfs"
-for component in ${CONFIG}; do
-	eval libs="\${LIBS_${component}}"
-	if [ -z "${libs}" ]; then
-		LIBS="${LIBS} -l${component}"
-	else
-		for lib in ${libs}; do
-			LIBS="${LIBS} -l${lib}"
-		done
-	fi
-done
+eval LIBS="\${CONFIG_${config}}"
 
 TMPDIR=$(mktemp -d /tmp/rumpbake.XXXXXX)
 trap _nuketmpdir 0 INT TERM
