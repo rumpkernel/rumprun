@@ -351,7 +351,7 @@ done
 
 # Final link using cc to produce the unikernel image.
 ${RUMPBAKE_BACKINGCC} ${RUMPBAKE_CFLAGS}				\
-    -specs=${RUMPBAKE_TOOLDIR}/rumprun-${PLATFORM}-specs-bake		\
+    -specs=${RUMPBAKE_TOOLDIR}/specs-bake-${RUMPBAKE_TUPLE}-${PLATFORM}	\
     -o ${OUTPUT} ${allobjs}						\
     -Wl,--whole-archive ${LIBS} || exit 1
 

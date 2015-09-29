@@ -31,7 +31,7 @@ _APP_TOOL_TARGETS:=							\
     $(APP_TOOLS_DIR)/$(GNUPLATFORM)-$(_CXXVARIANT)			\
     $(APP_TOOL_SPECS:%=$(APP_TOOLS_DIR)/%)				\
     $(APP_TOOL_PASSTHROUGH:%=$(APP_TOOLS_DIR)/$(GNUPLATFORM)-%)		\
-    $(APP_TOOLS_DIR)/rumprun-$(APP_TOOLS_PLATFORM)-specs-bake
+    $(APP_TOOLS_DIR)/specs-bake-$(GNUPLATFORM)-$(APP_TOOLS_PLATFORM)
 
 .PHONY: app-tools
 app-tools: $(_APP_TOOL_TARGETS)
@@ -67,7 +67,7 @@ $(foreach spec,${APP_TOOL_SPECS},$(eval \
     $(call APPTOOLS_templ,${spec}.in,${spec})))
 $(eval $(call APPTOOLS_templ,cc.in,$(GNUPLATFORM)-${_CCVARIANT}))
 $(eval $(call APPTOOLS_templ,cc.in,$(GNUPLATFORM)-${_CXXVARIANT}))
-$(eval $(call APPTOOLS_templ,specs-bake.in,rumprun-$(APP_TOOLS_PLATFORM)-specs-bake))
+$(eval $(call APPTOOLS_templ,specs-bake.in,specs-bake-$(GNUPLATFORM)-$(APP_TOOLS_PLATFORM)))
 
 define APPTOOLS_passthrough
 uptool_$1=$(shell echo $1 | tr '[:lower:]' '[:upper:]')
