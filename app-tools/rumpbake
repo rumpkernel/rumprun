@@ -325,7 +325,7 @@ if [ "$c" != "$config" ]; then
 	exit 1
 fi
 
-PLATFORM=${config%%_*}
+PLATFORM=${config%_*}
 eval LIBS="\${CONFIG_${config}}"
 
 TMPDIR=$(mktemp -d /tmp/rumpbake.XXXXXX)
