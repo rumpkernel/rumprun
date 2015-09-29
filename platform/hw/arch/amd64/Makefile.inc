@@ -2,7 +2,7 @@ OBJS_BMK+=	arch/amd64/locore.o arch/amd64/intr.o
 OBJS_BMK+=	arch/amd64/machdep.o
 
 OBJS_BMK+=	arch/x86/boot.o
-OBJS_BMK+=	arch/x86/vgacons.o
+OBJS_BMK+=	arch/x86/cons.o arch/x86/vgacons.o arch/x86/serialcons.o
 OBJS_BMK+=	arch/x86/cpu_subr.o
 OBJS_BMK+=	arch/x86/x86_subr.o
 OBJS_BMK+=	arch/x86/clock.o

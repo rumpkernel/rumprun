@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2014 Antti Kantee.  All Rights Reserved.
+ * Copyright (c) 2015 Martin Lucina.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,49 +28,39 @@
 
 #include <arch/x86/cons.h>
 
-#define CONS_MAGENTA 0x500
-static volatile uint16_t *cons_buf = (volatile uint16_t *)CONS_ADDRESS;
+#include <bmk-core/printf.h>
 
-static void
-cons_putat(int c, int x, int y)
+static void (*vcons_putc)(int) = vgacons_putc;
+static uint16_t *bios_com1_base = (uint16_t *)BIOS_COM1_BASE;
+static uint16_t *bios_crtc_base = (uint16_t *)BIOS_CRTC_BASE;
+
+void
+cons_init(void)
 {
 
-	cons_buf[x + y*CONS_WIDTH] = CONS_MAGENTA|c;
+	/*
+	 * If the BIOS says no CRTC is present and a serial port is present,
+	 * use the serial console. Otherwise use the VGA console.
+	 */
+	if (*bios_crtc_base == 0 && *bios_com1_base != 0) {
+		serialcons_init(*bios_com1_base, 115200);
+		vcons_putc = serialcons_putc;
+	}
+	bmk_printf_init(vcons_putc, NULL);
 }
 
-/* display a character in the next available slot */
 void
-vgacons_putc(int c)
+cons_putc(int c)
 {
-	static int cons_x;
-	static int cons_y;
-	int x;
-	int doclear = 0;
 
-	if (c == '\n') {
-		cons_x = 0;
-		cons_y++;
-		doclear = 1;
-	} else if (c == '\r') {
-		cons_x = 0;
-	} else if (c == '\t') {
-		cons_x = (cons_x+8) & ~7;
-	} else {
-		cons_putat(c, cons_x++, cons_y);
-	}
-	if (cons_x == CONS_WIDTH) {
-		cons_x = 0;
-		cons_y++;
-		doclear = 1;
-	}
-	if (cons_y == CONS_HEIGHT) {
-		cons_y--;
-		/* scroll screen up one line */
-		for (x = 0; x < (CONS_HEIGHT-1)*CONS_WIDTH; x++)
-			cons_buf[x] = cons_buf[x+CONS_WIDTH];
-	}
-	if (doclear) {
-		for (x = 0; x < CONS_WIDTH; x++)
-			cons_putat(' ', x, cons_y);
-	}
+	vcons_putc(c);
+}
+
+void
+cons_puts(const char *s)
+{
+	int c;
+
+	while ((c = *s++) != 0)
+		vcons_putc(c);
 }

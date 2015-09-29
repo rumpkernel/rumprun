@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2014 Antti Kantee.  All Rights Reserved.
+ * Copyright (c) 2015 Martin Lucina.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,49 +28,33 @@
 
 #include <arch/x86/cons.h>
 
-#define CONS_MAGENTA 0x500
-static volatile uint16_t *cons_buf = (volatile uint16_t *)CONS_ADDRESS;
+static uint16_t combase = 0;
 
-static void
-cons_putat(int c, int x, int y)
+void
+serialcons_init(uint16_t combase_init, int speed)
 {
+	uint16_t divisor = 115200 / speed;
 
-	cons_buf[x + y*CONS_WIDTH] = CONS_MAGENTA|c;
+	combase = combase_init;
+	outb(combase + COM_IER, 0x00);
+	outb(combase + COM_LCTL, 0x80);
+	outb(combase + COM_DLBL, divisor & 0xff);
+	outb(combase + COM_DLBH, divisor >> 8);
+	outb(combase + COM_LCTL, 0x03);
+	outb(combase + COM_FIFO, 0xc7);
 }
 
-/* display a character in the next available slot */
 void
-vgacons_putc(int c)
+serialcons_putc(int c)
 {
-	static int cons_x;
-	static int cons_y;
-	int x;
-	int doclear = 0;
 
-	if (c == '\n') {
-		cons_x = 0;
-		cons_y++;
-		doclear = 1;
-	} else if (c == '\r') {
-		cons_x = 0;
-	} else if (c == '\t') {
-		cons_x = (cons_x+8) & ~7;
-	} else {
-		cons_putat(c, cons_x++, cons_y);
-	}
-	if (cons_x == CONS_WIDTH) {
-		cons_x = 0;
-		cons_y++;
-		doclear = 1;
-	}
-	if (cons_y == CONS_HEIGHT) {
-		cons_y--;
-		/* scroll screen up one line */
-		for (x = 0; x < (CONS_HEIGHT-1)*CONS_WIDTH; x++)
-			cons_buf[x] = cons_buf[x+CONS_WIDTH];
-	}
-	if (doclear) {
-		for (x = 0; x < CONS_WIDTH; x++)
-			cons_putat(' ', x, cons_y);
-	}
+	if (!combase)
+		return;
+
+	/*
+	 * Write a single character at a time, while the output FIFO has space.
+	 */
+	while ((inb(combase + COM_LSR) & 0x20) == 0)
+		;
+	outb(combase + COM_DATA, c);
 }

@@ -31,3 +31,14 @@
 #define CONS_WIDTH	80
 #define CONS_HEIGHT	25
 #define CONS_ADDRESS	0xb8000
+
+#define COM_DATA	0
+#define COM_DLBL	0
+#define COM_DLBH	1
+#define COM_IER		1
+#define COM_FIFO	2
+#define COM_LCTL	3
+#define COM_LSR		5
+
+#define BIOS_COM1_BASE	0x400
+#define BIOS_CRTC_BASE	0x463
