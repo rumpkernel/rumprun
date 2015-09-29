@@ -122,6 +122,10 @@ bakeconf_create ()
 	shift || _die "bakeconf_create: not enough arguments (${CURCONF})"
 	[ -n "$*" ] || _die "bakeconf_create: need description (${CURCONF})"
 
+	if ! echo ${confname} | egrep -q '^(|xen|hw)_'; then
+		_die "bakeconf_create: invalid conf \"$confname\" (${CURCONF})"
+	fi
+
 	_nothaveconf ${confname}
 
 	ALLCONFIGS="${ALLCONFIGS} ${confname}"
