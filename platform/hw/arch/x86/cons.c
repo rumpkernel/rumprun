@@ -31,8 +31,11 @@
 #include <bmk-core/printf.h>
 
 static void (*vcons_putc)(int) = vgacons_putc;
-static uint16_t *bios_com1_base = (uint16_t *)BIOS_COM1_BASE;
-static uint16_t *bios_crtc_base = (uint16_t *)BIOS_CRTC_BASE;
+
+/*
+ * Filled in by locore from BIOS data area.
+ */
+uint16_t bios_com1_base, bios_crtc_base;
 
 void
 cons_init(void)
@@ -42,8 +45,8 @@ cons_init(void)
 	 * If the BIOS says no CRTC is present and a serial port is present,
 	 * use the serial console. Otherwise use the VGA console.
 	 */
-	if (*bios_crtc_base == 0 && *bios_com1_base != 0) {
-		serialcons_init(*bios_com1_base, 115200);
+	if (bios_crtc_base == 0 && bios_com1_base != 0) {
+		serialcons_init(bios_com1_base, 115200);
 		vcons_putc = serialcons_putc;
 	}
 	bmk_printf_init(vcons_putc, NULL);

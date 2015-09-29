@@ -44,6 +44,12 @@ ENTRY(_start)
 	/* save multiboot info pointer */
 	pushl %ebx
 
+	/* save BIOS data area values */
+	movw BIOS_COM1_BASE, %bx
+	movw %bx, bios_com1_base
+	movw BIOS_CRTC_BASE, %bx
+	movw %bx, bios_crtc_base
+
 	/* clear console */
 	pushl %eax
 	movw $0x20, %ax
