@@ -25,7 +25,7 @@
 # SUCH DAMAGE.
 #
 
-_RUMPBAKE_VERSION=20150928
+_RUMPBAKE_VERSION=20150930
 
 #
 # rumpbake: script for final stage linking ("baking") of a unikernel image
@@ -106,7 +106,7 @@ _uniq ()
 }
 
 ALLCONFIGS=
-bakeconf_version ()
+version ()
 {
 
 	[ "${1}" = "${_RUMPBAKE_VERSION}" ] \
@@ -114,16 +114,16 @@ bakeconf_version ()
 	_VERSOK=true
 }
 
-bakeconf_create ()
+create ()
 {
 	local confname descr
 
 	confname=$1
-	shift || _die "bakeconf_create: not enough arguments (${CURCONF})"
-	[ -n "$*" ] || _die "bakeconf_create: need description (${CURCONF})"
+	shift || _die "create: not enough arguments (${CURCONF})"
+	[ -n "$*" ] || _die "create: need description (${CURCONF})"
 
 	if ! echo ${confname} | egrep -q '^(|xen|hw)_'; then
-		_die "bakeconf_create: invalid conf \"$confname\" (${CURCONF})"
+		_die "create: invalid conf \"$confname\" (${CURCONF})"
 	fi
 
 	_nothaveconf ${confname}
@@ -132,12 +132,12 @@ bakeconf_create ()
 	eval CONFDESCR_${confname}=\"${*}\"
 }
 
-bakeconf_assimilate ()
+assimilate ()
 {
 	local to from
 
 	to=$1
-	shift || _die not enough arguments to bakeconf_assimilate
+	shift || _die not enough arguments to assimilate
 	_haveconf ${to}
 
 	for from; do
@@ -147,32 +147,32 @@ bakeconf_assimilate ()
 	_uniq CONFIG_${to}
 }
 
-bakeconf_nuke ()
+nuke ()
 {
 
-	[ $# -eq 1 ] || _die "bakeconf_nuke: wrong number of args (${CURCONF})"
+	[ $# -eq 1 ] || _die "nuke: wrong number of args (${CURCONF})"
 	_haveconf ${1}
 	_filter ${1} ALLCONFIGS
 }
 
-bakeconf_elem_add ()
+add ()
 {
 	local confname
 
 	confname=$1
-	shift || _die "not enough args to bakeconf_elem_add (${CURCONF})"
+	shift || _die "not enough args to add (${CURCONF})"
 
 	_haveconf ${confname}
 	eval CONFIG_${confname}=\"\${CONFIG_${confname}} $@\"
 	_uniq CONFIG_${confname}
 }
 
-bakeconf_elem_del ()
+remove ()
 {
 	local confname compvar
 
 	confname=$1
-	shift || _die "not enough args to bakeconf_elem_del (${CURCONF})"
+	shift || _die "not enough args to remove (${CURCONF})"
 
 	_haveconf ${confname}
 
@@ -183,12 +183,12 @@ bakeconf_elem_del ()
 }
 
 # debug routine
-bakeconf__dump ()
+debugdump ()
 {
 	local confname
 
 	confname=$1
-	shift || _die "not enough args to bakeconf__dump (${CURCONF})"
+	shift || _die "not enough args to debugdump (${CURCONF})"
 
 	_haveconf ${confname}
 
