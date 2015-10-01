@@ -50,6 +50,8 @@ serialcons_putc(int c)
 
 	if (!combase)
 		return;
+	if (c == '\n')
+		serialcons_putc('\r');
 
 	/*
 	 * Write a single character at a time, while the output FIFO has space.
