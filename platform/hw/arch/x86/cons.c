@@ -27,6 +27,7 @@
 #include <hw/kernel.h>
 
 #include <arch/x86/cons.h>
+#include <arch/x86/hypervisor.h>
 
 #include <bmk-core/printf.h>
 
@@ -40,12 +41,26 @@ uint16_t bios_com1_base, bios_crtc_base;
 void
 cons_init(void)
 {
+	int prefer_serial = 0;
+	int hypervisor;
+
+	hypervisor = hypervisor_detect();
 
 	/*
-	 * If the BIOS says no CRTC is present and a serial port is present,
-	 * use the serial console. Otherwise use the VGA console.
+	 * If running under Xen use the serial console.
 	 */
-	if (bios_crtc_base == 0 && bios_com1_base != 0) {
+	if (hypervisor == HYPERVISOR_XEN)
+		prefer_serial = 1;
+
+	/*
+	 * If the BIOS says no CRTC is present use the serial console if
+	 * available.
+	 */
+	if (bios_crtc_base == 0)
+		prefer_serial = 1;
+
+	if (prefer_serial && bios_com1_base != 0) {
+		cons_puts("Using serial console.");
 		serialcons_init(bios_com1_base, 115200);
 		vcons_putc = serialcons_putc;
 	}
