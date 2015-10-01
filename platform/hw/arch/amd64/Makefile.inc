@@ -6,6 +6,7 @@ OBJS_BMK+=	arch/x86/cons.o arch/x86/vgacons.o arch/x86/serialcons.o
 OBJS_BMK+=	arch/x86/cpu_subr.o
 OBJS_BMK+=	arch/x86/x86_subr.o
 OBJS_BMK+=	arch/x86/clock.o
+OBJS_BMK+=      arch/x86/hypervisor.o
 
 LDSCRIPT=	arch/amd64/kern.ldscript
 
