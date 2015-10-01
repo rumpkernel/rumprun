@@ -293,11 +293,11 @@ done
 shift $((${OPTIND}-1))
 
 TARGET="${1}"
-if [ "${TARGET}" = "list" -o "${TARGET}" = "justlist" ]; then
+if [ "${TARGET}" = "list" ]; then
 	for x in ${ALLCONFIGS}; do
 		eval mydesc="\${CONFDESCR_${x}}"
 		printf '%-16s' "${x}"
-		[ "${TARGET}" != "list" ] || printf ': %s' "${mydesc}"
+		printf ': %s' "${mydesc}"
 		printf '\n'
 	done
 	exit 0

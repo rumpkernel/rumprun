@@ -39,7 +39,8 @@ buildtest: ../../tests/hello/hello.c ${OBJ_DIR}/rumprun.o commonlibs app-tools
 	@echo Testing baking ...
 	@export RUMPRUN_WARNING_STFU=please ; for board in \
 	    $(shell RUMPRUN_WARNING_STFU=please \
-		${APP_TOOLS_DIR}/rumpbake justlist | grep ^${PLATFORM}); do \
+		${APP_TOOLS_DIR}/rumpbake list \
+		| awk '/^${PLATFORM}/{print $$1}'); do \
 			echo $${board} ; \
 			${APP_TOOLS_DIR}/rumpbake $${board} $@.$${board} $@ \
 			    || exit 1;\
