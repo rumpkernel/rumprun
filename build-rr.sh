@@ -273,7 +273,11 @@ builduserspace ()
 	# build unwind bits if we support c++
 	if ${HAVECXX}; then
 		( cd lib/libunwind
-		    ${RUMPMAKE} dependall && ${RUMPMAKE} install )
+		    ${RUMPMAKE} ${STDJ} obj
+		    ${RUMPMAKE} ${STDJ} includes
+		    ${RUMPMAKE} ${STDJ} dependall
+		    ${RUMPMAKE} ${STDJ} install
+		)
 	fi
 }
 

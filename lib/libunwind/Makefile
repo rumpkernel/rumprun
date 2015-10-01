@@ -3,6 +3,7 @@
 RUMPTOP= ${TOPRUMP}
 
 LIB=	unwind
+INCSDIR=/usr/include
 
 CPPFLAGS+= -isystem ${DESTDIR}/usr/include/c++
 
