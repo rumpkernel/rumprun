@@ -49,7 +49,6 @@ SYSTRAP(2, "#NMI")
 SYSTRAP(3, "#BP")
 SYSTRAP(4, "#OF")
 SYSTRAP(5, "#BR")
-SYSTRAP(6, "#UD")
 SYSTRAP(7, "#NM")
 SYSTRAP(8, "#DF")
 SYSTRAP(10, "#TS")
@@ -79,6 +78,7 @@ ENTRY(x86_trap_##num)							 \
 END(x86_trap_##num)
 
 FATTRAP(0, "divide-by-zero")
+FATTRAP(6, "invalid opcode")
 FATTRAP(14, "page fault")
 
 /*
