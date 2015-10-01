@@ -84,27 +84,6 @@ x86_cpuid(uint32_t level, uint32_t *eax_out, uint32_t *ebx_out,
 {
 	uint32_t eax_, ebx_, ecx_, edx_;
 
-	/*
-	 * Verify if the requested CPUID level is supported. If not, just
-	 * zero everything and return, hoping the caller knows what to do.
-	 * This is better than the documented operation for invalid values of
-	 * level, which is to behave as if CPUID had been called with the
-	 * maximum supported level.
-	 */
-	eax_ = (level < 0x80000000) ? 0 : 0x80000000;
-	__asm__(
-		"cpuid"
-		: "=a" (eax_), "=b" (ebx_), "=c" (ecx_), "=d" (edx_)
-		: "0" (eax_)
-	);
-	if (eax_ < level) {
-		*eax_out = *ebx_out = *ecx_out = *edx_out = 0;
-		return;
-	}
-
-	/*
-	 * Call requested CPUID level.
-	 */
 	__asm__(
 		"cpuid"
 		: "=a" (eax_), "=b" (ebx_), "=c" (ecx_), "=d" (edx_)

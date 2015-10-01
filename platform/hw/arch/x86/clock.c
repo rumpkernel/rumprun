@@ -191,14 +191,23 @@ x86_initclocks(void)
 {
 	uint64_t tsc_freq;
 	uint32_t eax, ebx, ecx, edx;
+	uint32_t have_tsc = 0, invariant_tsc = 0;
 
 	/* Verify that TSC is supported. */
-	x86_cpuid(0x1, &eax, &ebx, &ecx, &edx);
-	if (!(edx & (1 << 4)))
+	x86_cpuid(0x0, &eax, &ebx, &ecx, &edx);
+	if (eax >= 0x1) {
+		x86_cpuid(0x1, &eax, &ebx, &ecx, &edx);
+		have_tsc = edx & (1 << 4);
+	}
+	if (!have_tsc)
 		bmk_platform_halt("Processor does not support RDTSC");
 	/* And that it is invariant. TODO: Potentially halt here if not? */
-	x86_cpuid(0x80000007, &eax, &ebx, &ecx, &edx);
-	if (!(edx & (1 << 8)))
+	x86_cpuid(0x80000000, &eax, &ebx, &ecx, &edx);
+	if (eax >= 0x80000007) {
+		x86_cpuid(0x80000007, &eax, &ebx, &ecx, &edx);
+		invariant_tsc = edx & (1 << 8);
+	}
+	if (!invariant_tsc)
 		bmk_printf("WARNING: Processor claims to not support "
 		    "invariant TSC.\n");
 
