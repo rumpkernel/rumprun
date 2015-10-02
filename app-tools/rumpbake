@@ -32,6 +32,7 @@ _RUMPBAKE_VERSION=20150930
 #
 
 : ${READELF:=readelf}
+unset runcmd
 
 if [ "${RUMPRUN_WARNING_STFU}" != 'please' ]; then
 	exec 3>&1 1>&2
@@ -218,7 +219,7 @@ _nuketmpdir ()
 
 	nukeme="${TMPDIR}"
 	TMPDIR=''
-	rm -rf ${nukeme}
+	${runcmd} rm -rf ${nukeme}
 }
 
 _readconfig ()
@@ -280,10 +281,13 @@ APP_TOOLS_DIR=$(dirname $0)
 
 _readconfig "${APP_TOOLS_DIR}/rumpbake.conf"
 
-while getopts "c:" opt; do
+while getopts "c:n" opt; do
 	case "${opt}" in
 	c)
 		_readconfig "${OPTARG}"
+		;;
+	n)
+		runcmd=echo
 		;;
 	*)
 		_usage
@@ -332,7 +336,9 @@ fi
 PLATFORM=${config%%_*}
 eval LIBS="\${CONFIG_${config}}"
 
-TMPDIR=$(mktemp -d /tmp/rumpbake.XXXXXX)
+# duh
+TMPDIR=/tmp/rumpbake.XXXXXX
+[ -z "${runcmd}" ] && TMPDIR=$(mktemp -d ${TMPDIR})
 trap _nuketmpdir 0 INT TERM
 
 # Check if the file is a relocatable object produced by a rumprun toolchain.
@@ -342,7 +348,7 @@ allobjs=
 for f in "$@"; do
 	_getbininfo ${f}
 
-	${RUMPBAKE_TOOLDIR}/${RUMPBAKE_TUPLE}-objcopy			\
+	${runcmd} ${RUMPBAKE_TOOLDIR}/${RUMPBAKE_TUPLE}-objcopy		\
 	    --redefine-sym main=rumpbake_main${objnum}			\
 	    ${f} ${TMPDIR}/tmp${objnum}.obj
 	allobjs="${allobjs} ${TMPDIR}/tmp${objnum}.obj"
@@ -350,7 +356,7 @@ for f in "$@"; do
 done
 
 # Final link using cc to produce the unikernel image.
-${RUMPBAKE_BACKINGCC} ${RUMPBAKE_CFLAGS}				\
+${runcmd} ${RUMPBAKE_BACKINGCC} ${RUMPBAKE_CFLAGS}			\
     -specs=${RUMPBAKE_TOOLDIR}/specs-bake-${RUMPBAKE_TUPLE}-${PLATFORM}	\
     -o ${OUTPUT} ${allobjs}						\
     -Wl,--whole-archive ${LIBS} || exit 1
