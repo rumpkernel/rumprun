@@ -56,7 +56,7 @@
  * through the freelists in va, and the pgmap is used only as a lookup
  * table for coalescing entries when pages are freed.
  */
-static unsigned long minpage_addr;
+static unsigned long minpage_addr, maxpage_addr;
 #define va_to_pg(x) (((unsigned long)x - minpage_addr)>>BMK_PCPU_PAGE_SHIFT)
 
 /*
@@ -68,7 +68,9 @@ static unsigned long *alloc_bitmap;
 #define PAGES_PER_MAPWORD (sizeof(unsigned long) * 8)
 
 #define allocated_in_map(_pn) \
-  (alloc_bitmap[(_pn)/PAGES_PER_MAPWORD] & (1UL<<((_pn)&(PAGES_PER_MAPWORD-1))))
+  (((_pn) >= (minpage_addr << BMK_PCPU_PAGE_SHIFT)) && \
+   ((_pn) <  (maxpage_addr << BMK_PCPU_PAGE_SHIFT)) && \
+  alloc_bitmap[(_pn)/PAGES_PER_MAPWORD] & (1UL<<((_pn)&(PAGES_PER_MAPWORD-1))))
 
 /*
  * Hint regarding bitwise arithmetic in map_{alloc,free}:
@@ -232,6 +234,7 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 
 	min = bmk_round_page(min);
 	max = bmk_trunc_page(max);
+	maxpage_addr = max;
 
 	for (i = 0; i < FREELIST_SIZE; i++) {
 		free_head[i]       = &free_tail[i];
