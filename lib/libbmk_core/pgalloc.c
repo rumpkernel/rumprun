@@ -43,6 +43,12 @@
 
 #include <bmk-pcpu/pcpu.h>
 
+#ifndef BMK_PGALLOC_DEBUG
+#define DPRINTF(x)
+#else
+#define DPRINTF(x) bmk_printf x
+#endif
+
 /*
  * The allocation bitmap is offset to the first page loaded, which is
  * nice if someone loads memory starting in high ranges.  Notably,
@@ -140,14 +146,14 @@ static chunk_head_t  *free_tail;
  * Prints allocation[0/1] for @nr_pages, starting at @start
  * address (virtual).
  */
-static void
+static void __attribute__((used))
 print_allocation(void *start, int nr_pages)
 {
 	unsigned long pfn_start = va_to_pg(start);
 	int count;
 
 	for (count = 0; count < nr_pages; count++) {
-		if(allocated_in_map(pfn_start + count))
+		if (allocated_in_map(pfn_start + count))
 			bmk_printf("1");
 		else
 			bmk_printf("0");
@@ -161,11 +167,11 @@ print_allocation(void *start, int nr_pages)
  * at @start (virtual).
  */
 #define MAXCHUNKS 1024
-static void
+static void __attribute__((used))
 print_chunks(void *start, int nr_pages)
 {
 	char chunks[MAXCHUNKS+1], current='A';
-	int order, count;
+	unsigned order, count;
 	chunk_head_t *head;
 	unsigned long pfn_start = va_to_pg(start);
 
