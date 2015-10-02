@@ -67,10 +67,22 @@ static unsigned long minpage_addr, maxpage_addr;
 static unsigned long *alloc_bitmap;
 #define PAGES_PER_MAPWORD (sizeof(unsigned long) * 8)
 
-#define allocated_in_map(_pn) \
-  (((_pn) >= (minpage_addr << BMK_PCPU_PAGE_SHIFT)) && \
-   ((_pn) <  (maxpage_addr << BMK_PCPU_PAGE_SHIFT)) && \
-  alloc_bitmap[(_pn)/PAGES_PER_MAPWORD] & (1UL<<((_pn)&(PAGES_PER_MAPWORD-1))))
+static int
+page_is_managed(unsigned long pagenum)
+{
+
+	return (pagenum >= (minpage_addr << BMK_PCPU_PAGE_SHIFT))
+	    && (pagenum < (maxpage_addr << BMK_PCPU_PAGE_SHIFT));
+}
+
+static int
+allocated_in_map(unsigned long pagenum)
+{
+
+	bmk_assert(page_is_managed(pagenum));
+	return alloc_bitmap[pagenum/PAGES_PER_MAPWORD] \
+	    & (1UL<<(pagenum&(PAGES_PER_MAPWORD-1)));
+}
 
 /*
  * Hint regarding bitwise arithmetic in map_{alloc,free}:
@@ -335,7 +347,7 @@ bmk_pgfree(void *pointer, int order)
 {
 	chunk_head_t *freed_ch, *to_merge_ch;
 	chunk_tail_t *freed_ct;
-	unsigned long mask;
+	unsigned long mask, page;
 
 	DPRINTF(("bmk_pgfree: freeing 0x%lx bytes at %p\n",
 	    1UL<<(order+BMK_PCPU_PAGE_SHIFT), pointer));
@@ -353,7 +365,8 @@ bmk_pgfree(void *pointer, int order)
 		mask = 1UL << (order + BMK_PCPU_PAGE_SHIFT);
 		if ((unsigned long)freed_ch & mask) {
 			to_merge_ch = (chunk_head_t *)((char *)freed_ch - mask);
-			if (allocated_in_map(va_to_pg(to_merge_ch))
+			page = va_to_pg(to_merge_ch);
+			if (!page_is_managed(page) || allocated_in_map(page)
 			    || to_merge_ch->level != order)
 				break;
 
@@ -361,7 +374,8 @@ bmk_pgfree(void *pointer, int order)
 			freed_ch = to_merge_ch;
 		} else {
 			to_merge_ch = (chunk_head_t *)((char *)freed_ch + mask);
-			if (allocated_in_map(va_to_pg(to_merge_ch))
+			page = va_to_pg(to_merge_ch);
+			if (!page_is_managed(page) || allocated_in_map(page)
 			    || to_merge_ch->level != order)
 				break;
 
