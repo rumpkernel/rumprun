@@ -54,7 +54,6 @@ SYSTRAP(8, "#DF")
 SYSTRAP(10, "#TS")
 SYSTRAP(11, "#NP")
 SYSTRAP(12, "#SS")
-SYSTRAP(13, "#GP")
 SYSTRAP(17, "#AC")
 
 /*
@@ -79,6 +78,7 @@ END(x86_trap_##num)
 
 FATTRAP(0, "divide-by-zero")
 FATTRAP(6, "invalid opcode")
+FATTRAP(13, "general protection")
 FATTRAP(14, "page fault")
 
 /*
