@@ -341,7 +341,7 @@ bmk_pgfree(void *pointer, int order)
 	map_free(pointer, 1UL << order);
 
 	/* Create free chunk */
-	freed_ch = (chunk_head_t *)pointer;
+	freed_ch = pointer;
 	freed_ct = (chunk_tail_t *)((char *)pointer
 	    + (1UL<<(order + BMK_PCPU_PAGE_SHIFT)))-1;
 
