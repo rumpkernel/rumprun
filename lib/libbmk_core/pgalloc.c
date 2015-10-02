@@ -321,6 +321,9 @@ bmk_pgalloc(int order)
 	}
 
 	map_alloc(alloc_ch, 1UL<<order);
+	DPRINTF(("bmk_pgalloc: allocated 0x%lx bytes at %p\n",
+	    1UL<<(order+BMK_PCPU_PAGE_SHIFT), alloc_ch));
+
 	return alloc_ch;
 }
 
@@ -330,6 +333,9 @@ bmk_pgfree(void *pointer, int order)
 	chunk_head_t *freed_ch, *to_merge_ch;
 	chunk_tail_t *freed_ct;
 	unsigned long mask;
+
+	DPRINTF(("bmk_pgfree: freeing 0x%lx bytes at %p\n",
+	    1UL<<(order+BMK_PCPU_PAGE_SHIFT), pointer));
 
 	/* First free the chunk */
 	map_free(pointer, 1UL << order);
