@@ -162,8 +162,8 @@ chunklevel(struct chunk_head *ch)
 
 /* Linked lists of free chunks of different powers-of-two in size. */
 #define FREELIST_SIZE ((sizeof(void*)<<3)-BMK_PCPU_PAGE_SHIFT)
-static struct chunk_head **free_head;
-static struct chunk_head  *free_tail;
+static struct chunk_head *free_head[FREELIST_SIZE];
+static struct chunk_head  free_tail[FREELIST_SIZE];
 #define FREELIST_EMPTY(_l) ((_l)->next == NULL)
 
 #ifdef BMK_PGALLOC_DEBUG
@@ -263,15 +263,6 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	called = 1;
 
 	bmk_assert(max > min);
-
-	/*
-	 * XXX: allocate dynamically so that we don't have to know
-	 * PAGE_SIZE at compile-time.  FIXXXME
-	 */
-	free_head = (void *)min;
-	min += FREELIST_SIZE * sizeof(*free_head);
-	free_tail = (void *)min;
-	min += FREELIST_SIZE * sizeof(*free_tail);
 
 	min = bmk_round_page(min);
 	max = bmk_trunc_page(max);
