@@ -35,16 +35,16 @@ helpme ()
 {
 
 	printf "Usage: $0 [-k] [-o objdir] [-q] [-s srcdir] hw|xen\n"
-	printf "\t    [-- buildrump.sh options]\n"
+	printf "\t    [-- buildrump.sh opts]\n"
 	printf "\n"
-	printf "\t-k: build kernel only, without libc or tools (expert-only)\n"
+	printf "\t-q: quiet(er) build.  option may be specified twice.\n\n"
 	printf "\t-o: use non-default object directory (under development)\n"
-	printf "\t-q: quiet(er) build.  option maybe be specified twice.\n\n"
-	printf "\t-s: specify alternative src-netbsd location (expert-only)\n"
-	printf "buildrump.sh options are passed to buildrump.sh (expert-only)\n"
+	printf "\t-k: build kernel only, without libc or tools (expert-only)\n"
+	printf "\t-s: specify alternative src-netbsd location (expert-only)\n\n"
+	printf "\tbuildrump.sh opts are passed to buildrump.sh (expert-only)\n"
 	printf "\n"
 	printf "The toolchain is picked up from the environment.  See the\n"
-	printf "rumprun wiki for more information.\n"
+	printf "Rumprun wiki for more information.\n"
 	exit 1
 }
 
