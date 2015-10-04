@@ -155,7 +155,6 @@ static chunk_head_t  *free_tail;
 #define FREELIST_EMPTY(_l) ((_l)->next == NULL)
 
 #ifdef BMK_PGALLOC_DEBUG
-/* XXX: this debug code hasn't been compiled in this reincarnation */
 /*
  * Prints allocation[0/1] for @nr_pages, starting at @start
  * address (virtual).
