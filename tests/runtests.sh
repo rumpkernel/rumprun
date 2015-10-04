@@ -116,7 +116,13 @@ getoutput ()
 
 	img=${1}
 	shift || die 'getoutput: not enough args'
-	sed -n "/${STARTMAGIC}/,/${ENDMAGIC}/p" < ${img} | sed -n '1n;$n;p'
+	if grep -q "${STARTMAGIC}" ${img}; then
+		sed -n "/${STARTMAGIC}/,/${ENDMAGIC}/p" < ${img} \
+		    | sed -n '1n;$n;p'
+	else
+		echo '>> Did not find test delimiters.  Dumping entire file!'
+		cat ${img}
+	fi
 }
 
 runtest ()
