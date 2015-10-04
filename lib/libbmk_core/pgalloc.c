@@ -144,11 +144,21 @@ map_free(void *virt, unsigned long nr_pages)
  * BINARY BUDDY ALLOCATOR
  */
 
+#define CHUNKMAGIC 0x11020217
 struct chunk_head {
 	struct chunk_head  *next;
 	struct chunk_head **pprev;
 	int level;
+	int magic;
 };
+
+static int
+chunklevel(struct chunk_head *ch)
+{
+
+	bmk_assert(ch->magic == CHUNKMAGIC);
+	return ch->level;
+}
 
 /* Linked lists of free chunks of different powers-of-two in size. */
 #define FREELIST_SIZE ((sizeof(void*)<<3)-BMK_PCPU_PAGE_SHIFT)
@@ -306,6 +316,7 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 		ch->next        = free_head[i];
 		ch->pprev       = &free_head[i];
 		ch->next->pprev = &ch->next;
+		ch->magic	= CHUNKMAGIC;
 		free_head[i]    = ch;
 	}
 }
@@ -332,6 +343,9 @@ bmk_pgalloc(int order)
 	free_head[i] = alloc_ch->next;
 	alloc_ch->next->pprev = alloc_ch->pprev;
 
+	bmk_assert(alloc_ch->magic == CHUNKMAGIC);
+	alloc_ch->magic = 0;
+
 	/* We may have to break the chunk a number of times. */
 	while (i != (unsigned)order) {
 		/* Split into two equal parts. */
@@ -342,6 +356,7 @@ bmk_pgalloc(int order)
 		spare_ch->level = i;
 		spare_ch->next  = free_head[i];
 		spare_ch->pprev = &free_head[i];
+		spare_ch->magic = CHUNKMAGIC;
 
 		/* Link in the spare chunk. */
 		spare_ch->next->pprev = &spare_ch->next;
@@ -379,8 +394,10 @@ bmk_pgfree(void *pointer, int order)
 			to_merge_ch = addr2ch(freed_ch, -mask);
 			if (!addr_is_managed(to_merge_ch) \
 			    || allocated_in_map(to_merge_ch)
-			    || to_merge_ch->level != order)
+			    || chunklevel(to_merge_ch) != order)
 				break;
+
+			freed_ch->magic = 0;
 
 			/* Merge with predecessor */
 			freed_ch = to_merge_ch;
@@ -388,9 +405,13 @@ bmk_pgfree(void *pointer, int order)
 			to_merge_ch = addr2ch(freed_ch, mask);
 			if (!addr_is_managed(to_merge_ch)
 			    || allocated_in_map(to_merge_ch)
-			    || to_merge_ch->level != order)
+			    || chunklevel(to_merge_ch) != order)
 				break;
+
+			freed_ch->magic = 0;
 		}
+
+		to_merge_ch->magic = 0;
 
 		/* We are commited to merging, unlink the chunk */
 		*(to_merge_ch->pprev) = to_merge_ch->next;
@@ -403,6 +424,7 @@ bmk_pgfree(void *pointer, int order)
 	freed_ch->level = order;
 	freed_ch->next  = free_head[order];
 	freed_ch->pprev = &free_head[order];
+	freed_ch->magic = CHUNKMAGIC;
 
 	freed_ch->next->pprev = &freed_ch->next;
 	free_head[order] = freed_ch;
