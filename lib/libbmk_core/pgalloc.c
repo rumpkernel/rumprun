@@ -56,8 +56,8 @@
  * through the freelists in va, and the pgmap is used only as a lookup
  * table for coalescing entries when pages are freed.
  */
-static unsigned long minpage_addr, maxpage_addr;
-#define va_to_pg(x) (((unsigned long)x - minpage_addr)>>BMK_PCPU_PAGE_SHIFT)
+static unsigned long minpage, maxpage;
+#define va_to_pg(x) (((unsigned long)x>>BMK_PCPU_PAGE_SHIFT) - minpage)
 
 /*
  * ALLOCATION BITMAP
@@ -71,8 +71,7 @@ static int
 page_is_managed(unsigned long pagenum)
 {
 
-	return (pagenum >= (minpage_addr << BMK_PCPU_PAGE_SHIFT))
-	    && (pagenum < (maxpage_addr << BMK_PCPU_PAGE_SHIFT));
+	return pagenum >= minpage && pagenum < maxpage;
 }
 
 static int
@@ -245,7 +244,6 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 
 	min = bmk_round_page(min);
 	max = bmk_trunc_page(max);
-	maxpage_addr = max;
 
 	for (i = 0; i < FREELIST_SIZE; i++) {
 		free_head[i]       = &free_tail[i];
@@ -258,8 +256,10 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	bitmap_size  = bmk_round_page(bitmap_size);
 	alloc_bitmap = (unsigned long *)min;
 	min         += bitmap_size;
-	minpage_addr = min;
 	range        = max - min;
+
+	minpage	= min >> BMK_PCPU_PAGE_SHIFT;
+	maxpage = max >> BMK_PCPU_PAGE_SHIFT;
 
 	/* All allocated by default. */
 	bmk_memset(alloc_bitmap, ~0, bitmap_size);
