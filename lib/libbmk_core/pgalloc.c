@@ -161,16 +161,11 @@ chunklevel(struct chunk_head *ch)
 }
 
 /* Linked lists of free chunks of different powers-of-two in size. */
-#define FREELIST_SIZE ((sizeof(void*)<<3)-BMK_PCPU_PAGE_SHIFT)
-static struct chunk_head *free_head[FREELIST_SIZE];
-static struct chunk_head  free_tail[FREELIST_SIZE];
-#define FREELIST_EMPTY(_l) ((_l)->next == NULL)
+#define FREELIST_LEVELS ((sizeof(void*)<<3)-BMK_PCPU_PAGE_SHIFT)
+static struct chunk_head *free_head[FREELIST_LEVELS];
+static struct chunk_head  free_tail[FREELIST_LEVELS];
 
 #ifdef BMK_PGALLOC_DEBUG
-/*
- * Prints allocation[0/1] for @nr_pages, starting at @start
- * address (virtual).
- */
 static void __attribute__((used))
 print_allocation(void *start, unsigned nr_pages)
 {
@@ -187,8 +182,7 @@ print_allocation(void *start, unsigned nr_pages)
 }
 
 /*
- * Prints chunks (making them with letters) for @nr_pages starting
- * at @start (virtual).
+ * Prints chunks (making them with letters) for nr_pages.
  */
 #define MAXCHUNKS 1024
 static void __attribute__((used))
@@ -205,9 +199,9 @@ print_chunks(void *start, int nr_pages)
 		    "Increase buffer size\n", __func__, MAXCHUNKS);
 	}
 
-	for (order=0; order < FREELIST_SIZE; order++) {
+	for (order=0; order < FREELIST_LEVELS; order++) {
 		head = free_head[order];
-		while (!FREELIST_EMPTY(head)) {
+		while (head->next != NULL) {
 			unsigned long headva;
 
 			headva = va_to_pg(head);
@@ -230,11 +224,12 @@ sanity_check(void)
 	unsigned int x;
 	struct chunk_head *head;
 
-	for (x = 0; x < FREELIST_SIZE; x++) {
+	for (x = 0; x < FREELIST_LEVELS; x++) {
 		for (head = free_head[x];
-		    !FREELIST_EMPTY(head);
+		    head->next != NULL;
 		    head = head->next) {
 			bmk_assert(!allocated_in_map(head));
+			bmk_assert(head->magic == CHUNKMAGIC);
 			if (head->next)
 				bmk_assert(head->next->pprev == &head->next);
 		}
@@ -247,8 +242,7 @@ sanity_check(void)
 
 
 /*
- * Initialise allocator, placing addresses [@min,@max] in free pool.
- * @min and @max are PHYSICAL addresses.
+ * Load [min,max] as available addresses.
  */
 void
 bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
@@ -267,7 +261,10 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	min = bmk_round_page(min);
 	max = bmk_trunc_page(max);
 
-	for (i = 0; i < FREELIST_SIZE; i++) {
+	DPRINTF(("bmk_pgalloc_loadmem: available memory [0x%lx,0x%lx]\n",
+	    min, max));
+
+	for (i = 0; i < FREELIST_LEVELS; i++) {
 		free_head[i]       = &free_tail[i];
 		free_tail[i].pprev = &free_head[i];
 		free_tail[i].next  = NULL;
@@ -302,6 +299,9 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 		min   += (1UL<<i);
 		range -= (1UL<<i);
 
+		DPRINTF(("bmk_pgalloc_loadmem: byte chunk 0x%lx at %p\n",
+		    1UL<<i, ch));
+
 		i -= BMK_PCPU_PAGE_SHIFT;
 		ch->level       = i;
 		ch->next        = free_head[i];
@@ -312,7 +312,6 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	}
 }
 
-/* Allocate 2^@order contiguous pages. Returns a VIRTUAL address. */
 void *
 bmk_pgalloc(int order)
 {
@@ -320,11 +319,11 @@ bmk_pgalloc(int order)
 	struct chunk_head *alloc_ch, *spare_ch;
 
 	/* Find smallest order which can satisfy the request. */
-	for (i = order; i < FREELIST_SIZE; i++) {
-		if (!FREELIST_EMPTY(free_head[i]))
+	for (i = order; i < FREELIST_LEVELS; i++) {
+		if (free_head[i]->next != NULL)
 			break;
 	}
-	if (i == FREELIST_SIZE) {
+	if (i == FREELIST_LEVELS) {
 		bmk_printf("cannot handle page request order %d!\n", order);
 		return 0;
 	}
@@ -379,7 +378,7 @@ bmk_pgfree(void *pointer, int order)
 	freed_ch = pointer;
 
 	/* Now, possibly we can conseal chunks together */
-	while ((unsigned)order < FREELIST_SIZE) {
+	while ((unsigned)order < FREELIST_LEVELS) {
 		mask = order2size(order);
 		if ((unsigned long)freed_ch & mask) {
 			to_merge_ch = addr2ch(freed_ch, -mask);
