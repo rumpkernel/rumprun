@@ -58,8 +58,9 @@
  * through the freelists in va, and the pgmap is used only as a lookup
  * table for coalescing entries when pages are freed.
  */
-static unsigned long minpage, maxpage;
-#define va_to_pg(x) (((unsigned long)x>>BMK_PCPU_PAGE_SHIFT) - minpage)
+static void *minpage_addr, *maxpage_addr;
+#define va_to_pg(x) \
+    (((unsigned long)x - (unsigned long)minpage_addr)>>BMK_PCPU_PAGE_SHIFT)
 
 /*
  * ALLOCATION BITMAP
@@ -70,17 +71,19 @@ static unsigned long *alloc_bitmap;
 #define PAGES_PER_MAPWORD (sizeof(unsigned long) * 8)
 
 static int
-page_is_managed(unsigned long pagenum)
+addr_is_managed(void *addr)
 {
 
-	return pagenum >= minpage && pagenum < maxpage;
+	return addr >= minpage_addr && addr < maxpage_addr;
 }
 
 static int
-allocated_in_map(unsigned long pagenum)
+allocated_in_map(void *addr)
 {
+	unsigned long pagenum;
 
-	bmk_assert(page_is_managed(pagenum));
+	bmk_assert(addr_is_managed(addr));
+	pagenum = va_to_pg(addr);
 	return alloc_bitmap[pagenum/PAGES_PER_MAPWORD] \
 	    & (1UL<<(pagenum&(PAGES_PER_MAPWORD-1)));
 }
@@ -161,13 +164,12 @@ static chunk_head_t  *free_tail;
  * address (virtual).
  */
 static void __attribute__((used))
-print_allocation(void *start, int nr_pages)
+print_allocation(void *start, unsigned nr_pages)
 {
-	unsigned long pfn_start = va_to_pg(start);
-	int count;
+	unsigned long addr = (unsigned long)start;
 
-	for (count = 0; count < nr_pages; count++) {
-		if (allocated_in_map(pfn_start + count))
+	for (; nr_pages > 0; nr_pages--, addr += BMK_PCPU_PAGE_SIZE) {
+		if (allocated_in_map((void *)addr))
 			bmk_printf("1");
 		else
 			bmk_printf("0");
@@ -224,7 +226,7 @@ sanity_check(void)
 		for (head = free_head[x];
 		    !FREELIST_EMPTY(head);
 		    head = head->next) {
-			bmk_assert(!allocated_in_map(va_to_pg(head)));
+			bmk_assert(!allocated_in_map(head));
 			if (head->next)
 				bmk_assert(head->next->pprev == &head->next);
 		}
@@ -280,8 +282,8 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	min         += bitmap_size;
 	range        = max - min;
 
-	minpage	= min >> BMK_PCPU_PAGE_SHIFT;
-	maxpage = max >> BMK_PCPU_PAGE_SHIFT;
+	minpage_addr = (void *)min;
+	maxpage_addr = (void *)max;
 
 	/* All allocated by default. */
 	bmk_memset(alloc_bitmap, ~0, bitmap_size);
@@ -370,7 +372,7 @@ bmk_pgfree(void *pointer, int order)
 {
 	chunk_head_t *freed_ch, *to_merge_ch;
 	chunk_tail_t *freed_ct;
-	unsigned long mask, page;
+	unsigned long mask;
 
 	DPRINTF(("bmk_pgfree: freeing 0x%lx bytes at %p\n",
 	    1UL<<(order+BMK_PCPU_PAGE_SHIFT), pointer));
@@ -388,8 +390,8 @@ bmk_pgfree(void *pointer, int order)
 		mask = 1UL << (order + BMK_PCPU_PAGE_SHIFT);
 		if ((unsigned long)freed_ch & mask) {
 			to_merge_ch = (chunk_head_t *)((char *)freed_ch - mask);
-			page = va_to_pg(to_merge_ch);
-			if (!page_is_managed(page) || allocated_in_map(page)
+			if (!addr_is_managed(to_merge_ch) \
+			    || allocated_in_map(to_merge_ch)
 			    || to_merge_ch->level != order)
 				break;
 
@@ -397,8 +399,8 @@ bmk_pgfree(void *pointer, int order)
 			freed_ch = to_merge_ch;
 		} else {
 			to_merge_ch = (chunk_head_t *)((char *)freed_ch + mask);
-			page = va_to_pg(to_merge_ch);
-			if (!page_is_managed(page) || allocated_in_map(page)
+			if (!addr_is_managed(to_merge_ch)
+			    || allocated_in_map(to_merge_ch)
 			    || to_merge_ch->level != order)
 				break;
 
