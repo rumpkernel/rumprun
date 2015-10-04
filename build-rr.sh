@@ -77,7 +77,7 @@ parseargs ()
 {
 
 	orignargs=$#
-	while getopts '?ko:qs:' opt; do
+	while getopts '?hko:qs:' opt; do
 		case "$opt" in
 		'k')
 			KERNONLY=true
