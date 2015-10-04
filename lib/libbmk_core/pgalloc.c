@@ -271,7 +271,7 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	}
 
 	/* Allocate space for the allocation bitmap. */
-	bitmap_size  = (max+1) >> (BMK_PCPU_PAGE_SHIFT+3);
+	bitmap_size  = ((max-min) >> (BMK_PCPU_PAGE_SHIFT+3)) + 1;
 	bitmap_size  = bmk_round_page(bitmap_size);
 	alloc_bitmap = (unsigned long *)min;
 	min         += bitmap_size;
