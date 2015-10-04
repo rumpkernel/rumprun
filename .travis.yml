@@ -39,4 +39,4 @@ notifications:
     on_success: always
     on_failure: always
 
-# touch me to force a travis rebuild
+# Touch me to force a travis rebuild
