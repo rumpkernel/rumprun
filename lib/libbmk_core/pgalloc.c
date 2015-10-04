@@ -62,6 +62,11 @@ static void *minpage_addr, *maxpage_addr;
 #define va_to_pg(x) \
     (((unsigned long)x - (unsigned long)minpage_addr)>>BMK_PCPU_PAGE_SHIFT)
 
+#define addr2ch(_addr_,_offset_) \
+    ((struct chunk_head *)(((char *)_addr_)+(_offset_)))
+#define addr2prevct(_addr_,_offset_) \
+    (((struct chunk_tail *)(((char *)_addr_)+(_offset_)))-1)
+
 /*
  * ALLOCATION BITMAP
  *  One bit per page of memory. Bit set => page is allocated.
@@ -139,23 +144,20 @@ map_free(void *virt, unsigned long nr_pages)
  * BINARY BUDDY ALLOCATOR
  */
 
-typedef struct chunk_head_st chunk_head_t;
-typedef struct chunk_tail_st chunk_tail_t;
-
-struct chunk_head_st {
-	chunk_head_t  *next;
-	chunk_head_t **pprev;
-	int            level;
+struct chunk_head {
+	struct chunk_head  *next;
+	struct chunk_head **pprev;
+	int level;
 };
 
-struct chunk_tail_st {
+struct chunk_tail {
 	int level;
 };
 
 /* Linked lists of free chunks of different powers-of-two in size. */
 #define FREELIST_SIZE ((sizeof(void*)<<3)-BMK_PCPU_PAGE_SHIFT)
-static chunk_head_t **free_head;
-static chunk_head_t  *free_tail;
+static struct chunk_head **free_head;
+static struct chunk_head  *free_tail;
 #define FREELIST_EMPTY(_l) ((_l)->next == NULL)
 
 #ifdef BMK_PGALLOC_DEBUG
@@ -188,7 +190,7 @@ print_chunks(void *start, int nr_pages)
 {
 	char chunks[MAXCHUNKS+1], current='A';
 	unsigned order, count;
-	chunk_head_t *head;
+	struct chunk_head *head;
 	unsigned long pfn_start = va_to_pg(start);
 
 	bmk_memset(chunks, (int)'_', MAXCHUNKS);
@@ -220,7 +222,7 @@ static void
 sanity_check(void)
 {
 	unsigned int x;
-	chunk_head_t *head;
+	struct chunk_head *head;
 
 	for (x = 0; x < FREELIST_SIZE; x++) {
 		for (head = free_head[x];
@@ -247,8 +249,8 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 {
 	static int called;
 	unsigned long range, bitmap_size;
-	chunk_head_t *ch;
-	chunk_tail_t *ct;
+	struct chunk_head *ch;
+	struct chunk_tail *ct;
 	unsigned int i;
 
 	if (called)
@@ -299,12 +301,12 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 			if (min & (1UL<<i))
 				break;
 
-		ch = (chunk_head_t *)min;
+		ch = addr2ch(min, 0);
 
 		min   += (1UL<<i);
 		range -= (1UL<<i);
 
-		ct = (chunk_tail_t *)min-1;
+		ct = addr2prevct(min, 0);
 		i -= BMK_PCPU_PAGE_SHIFT;
 		ch->level       = i;
 		ch->next        = free_head[i];
@@ -320,8 +322,8 @@ void *
 bmk_pgalloc(int order)
 {
 	unsigned int i;
-	chunk_head_t *alloc_ch, *spare_ch;
-	chunk_tail_t            *spare_ct;
+	struct chunk_head *alloc_ch, *spare_ch;
+	struct chunk_tail *spare_ct;
 
 	/* Find smallest order which can satisfy the request. */
 	for (i = order; i < FREELIST_SIZE; i++) {
@@ -342,10 +344,8 @@ bmk_pgalloc(int order)
 	while (i != (unsigned)order) {
 		/* Split into two equal parts. */
 		i--;
-		spare_ch = (chunk_head_t *)((char *)alloc_ch
-		    + (1UL<<(i+BMK_PCPU_PAGE_SHIFT)));
-		spare_ct = (chunk_tail_t *)((char *)spare_ch
-		    + (1UL<<(i+BMK_PCPU_PAGE_SHIFT)))-1;
+		spare_ch = addr2ch(alloc_ch, 1UL<<(i+BMK_PCPU_PAGE_SHIFT));
+		spare_ct = addr2prevct(spare_ch, 1UL<<(i+BMK_PCPU_PAGE_SHIFT));
 
 		/* Create new header for spare chunk. */
 		spare_ch->level = i;
@@ -370,8 +370,8 @@ bmk_pgalloc(int order)
 void
 bmk_pgfree(void *pointer, int order)
 {
-	chunk_head_t *freed_ch, *to_merge_ch;
-	chunk_tail_t *freed_ct;
+	struct chunk_head *freed_ch, *to_merge_ch;
+	struct chunk_tail *freed_ct;
 	unsigned long mask;
 
 	DPRINTF(("bmk_pgfree: freeing 0x%lx bytes at %p\n",
@@ -382,14 +382,13 @@ bmk_pgfree(void *pointer, int order)
 
 	/* Create free chunk */
 	freed_ch = pointer;
-	freed_ct = (chunk_tail_t *)((char *)pointer
-	    + (1UL<<(order + BMK_PCPU_PAGE_SHIFT)))-1;
+	freed_ct = addr2prevct(pointer, 1UL<<(order + BMK_PCPU_PAGE_SHIFT));
 
 	/* Now, possibly we can conseal chunks together */
 	while ((unsigned)order < FREELIST_SIZE) {
 		mask = 1UL << (order + BMK_PCPU_PAGE_SHIFT);
 		if ((unsigned long)freed_ch & mask) {
-			to_merge_ch = (chunk_head_t *)((char *)freed_ch - mask);
+			to_merge_ch = addr2ch(freed_ch, -mask);
 			if (!addr_is_managed(to_merge_ch) \
 			    || allocated_in_map(to_merge_ch)
 			    || to_merge_ch->level != order)
@@ -398,14 +397,14 @@ bmk_pgfree(void *pointer, int order)
 			/* Merge with predecessor */
 			freed_ch = to_merge_ch;
 		} else {
-			to_merge_ch = (chunk_head_t *)((char *)freed_ch + mask);
+			to_merge_ch = addr2ch(freed_ch, mask);
 			if (!addr_is_managed(to_merge_ch)
 			    || allocated_in_map(to_merge_ch)
 			    || to_merge_ch->level != order)
 				break;
 
 			/* Merge with successor */
-			freed_ct = (chunk_tail_t *)((char *)to_merge_ch+mask)-1;
+			freed_ct = addr2prevct(to_merge_ch, mask);
 		}
 
 		/* We are commited to merging, unlink the chunk */
