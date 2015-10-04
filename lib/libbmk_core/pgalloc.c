@@ -45,8 +45,10 @@
 
 #ifndef BMK_PGALLOC_DEBUG
 #define DPRINTF(x)
+#define SANITY_CHECK()
 #else
 #define DPRINTF(x) bmk_printf x
+#define SANITY_CHECK() sanity_check()
 #endif
 
 /*
@@ -211,6 +213,26 @@ print_chunks(void *start, int nr_pages)
 	chunks[nr_pages] = '\0';
 	bmk_printf("%s\n", chunks);
 }
+
+static void
+sanity_check(void)
+{
+	unsigned int x;
+	chunk_head_t *head;
+
+	for (x = 0; x < FREELIST_SIZE; x++) {
+		for (head = free_head[x];
+		    !FREELIST_EMPTY(head);
+		    head = head->next) {
+			bmk_assert(!allocated_in_map(va_to_pg(head)));
+			if (head->next)
+				bmk_assert(head->next->pprev == &head->next);
+		}
+		if (free_head[x]) {
+			bmk_assert(free_head[x]->pprev == &free_head[x]);
+		}
+	}
+}
 #endif
 
 
@@ -338,6 +360,8 @@ bmk_pgalloc(int order)
 	DPRINTF(("bmk_pgalloc: allocated 0x%lx bytes at %p\n",
 	    1UL<<(order+BMK_PCPU_PAGE_SHIFT), alloc_ch));
 
+	SANITY_CHECK();
+
 	return alloc_ch;
 }
 
@@ -398,26 +422,5 @@ bmk_pgfree(void *pointer, int order)
 	freed_ch->next->pprev = &freed_ch->next;
 	free_head[order] = freed_ch;
 
+	SANITY_CHECK();
 }
-
-#if 0
-void
-sanity_check(void)
-{
-	unsigned int x;
-	chunk_head_t *head;
-
-	for (x = 0; x < FREELIST_SIZE; x++) {
-		for (head = free_head[x];
-		    !FREELIST_EMPTY(head);
-		    head = head->next) {
-			bmk_assert(!allocated_in_map(va_to_pg(head)));
-			if (head->next)
-				ASSERT(head->next->pprev == &head->next);
-		}
-		if (free_head[x]) {
-			ASSERT(free_head[x]->pprev == &free_head[x]);
-		}
-	}
-}
-#endif
