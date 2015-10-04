@@ -67,6 +67,8 @@ static void *minpage_addr, *maxpage_addr;
 #define addr2prevct(_addr_,_offset_) \
     (((struct chunk_tail *)(((char *)_addr_)+(_offset_)))-1)
 
+#define order2size(_order_) (1UL<<(_order_ + BMK_PCPU_PAGE_SHIFT))
+
 /*
  * ALLOCATION BITMAP
  *  One bit per page of memory. Bit set => page is allocated.
@@ -297,7 +299,7 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 		 * Next chunk is limited by alignment of min, but also
 		 * must not be bigger than remaining range.
 		 */
-		for ( i = BMK_PCPU_PAGE_SHIFT; (1UL<<(i+1)) <= range; i++ )
+		for (i = BMK_PCPU_PAGE_SHIFT; (1UL<<(i+1)) <= range; i++)
 			if (min & (1UL<<i))
 				break;
 
@@ -344,8 +346,8 @@ bmk_pgalloc(int order)
 	while (i != (unsigned)order) {
 		/* Split into two equal parts. */
 		i--;
-		spare_ch = addr2ch(alloc_ch, 1UL<<(i+BMK_PCPU_PAGE_SHIFT));
-		spare_ct = addr2prevct(spare_ch, 1UL<<(i+BMK_PCPU_PAGE_SHIFT));
+		spare_ch = addr2ch(alloc_ch, order2size(i));
+		spare_ct = addr2prevct(spare_ch, order2size(i));
 
 		/* Create new header for spare chunk. */
 		spare_ch->level = i;
@@ -360,7 +362,7 @@ bmk_pgalloc(int order)
 
 	map_alloc(alloc_ch, 1UL<<order);
 	DPRINTF(("bmk_pgalloc: allocated 0x%lx bytes at %p\n",
-	    1UL<<(order+BMK_PCPU_PAGE_SHIFT), alloc_ch));
+	    order2size(order), alloc_ch));
 
 	SANITY_CHECK();
 
@@ -375,7 +377,7 @@ bmk_pgfree(void *pointer, int order)
 	unsigned long mask;
 
 	DPRINTF(("bmk_pgfree: freeing 0x%lx bytes at %p\n",
-	    1UL<<(order+BMK_PCPU_PAGE_SHIFT), pointer));
+	    order2size(order), pointer));
 
 	/* First free the chunk */
 	map_free(pointer, 1UL << order);
@@ -386,7 +388,7 @@ bmk_pgfree(void *pointer, int order)
 
 	/* Now, possibly we can conseal chunks together */
 	while ((unsigned)order < FREELIST_SIZE) {
-		mask = 1UL << (order + BMK_PCPU_PAGE_SHIFT);
+		mask = order2size(order);
 		if ((unsigned long)freed_ch & mask) {
 			to_merge_ch = addr2ch(freed_ch, -mask);
 			if (!addr_is_managed(to_merge_ch) \
