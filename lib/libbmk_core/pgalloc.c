@@ -372,6 +372,17 @@ bmk_pgalloc(int order)
 	    order2size(order), alloc_ch));
 	pgalloc_usedkb += order2size(order)>>10;
 
+#ifdef BMK_PGALLOC_DEBUG
+	{
+		unsigned npgs = 1<<order;
+		char *p = (char *)alloc_ch;
+
+		for (npgs = 1<<order; npgs; npgs--, p += BMK_PCPU_PAGE_SIZE) {
+			bmk_assert(allocated_in_map(p));
+		}
+	}
+#endif
+
 	SANITY_CHECK();
 
 	return alloc_ch;
@@ -385,6 +396,17 @@ bmk_pgfree(void *pointer, int order)
 
 	DPRINTF(("bmk_pgfree: freeing 0x%lx bytes at %p\n",
 	    order2size(order), pointer));
+
+#ifdef BMK_PGALLOC_DEBUG
+	{
+		unsigned npgs = 1<<order;
+		char *p = (char *)pointer;
+
+		for (npgs = 1<<order; npgs; npgs--, p += BMK_PCPU_PAGE_SIZE) {
+			bmk_assert(allocated_in_map(p));
+		}
+	}
+#endif
 
 	/* free the allocation in the bitmap */
 	map_free(pointer, 1UL << order);
