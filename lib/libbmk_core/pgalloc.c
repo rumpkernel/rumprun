@@ -89,8 +89,8 @@ allocated_in_map(void *addr)
 
 	bmk_assert(addr_is_managed(addr));
 	pagenum = va_to_pg(addr);
-	return alloc_bitmap[pagenum/PAGES_PER_MAPWORD] \
-	    & (1UL<<(pagenum&(PAGES_PER_MAPWORD-1)));
+	return (alloc_bitmap[pagenum/PAGES_PER_MAPWORD] \
+	    & (1UL<<(pagenum&(PAGES_PER_MAPWORD-1)))) != 0;
 }
 
 /*
