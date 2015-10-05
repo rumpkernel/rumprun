@@ -172,6 +172,22 @@ chunklevel(struct chunk_head *ch)
 static struct chunk_head *free_head[FREELIST_LEVELS];
 static struct chunk_head  free_tail[FREELIST_LEVELS];
 
+static void
+carveandlink_freechunk(void *addr, int order)
+{
+	struct chunk_head *ch = addr;
+
+	/* carve it */
+	ch->level = order;
+	ch->next = free_head[order];
+	ch->pprev = &free_head[order];
+	ch->next->pprev = &ch->next;
+	ch->magic = CHUNKMAGIC;
+
+	/* link it */
+	free_head[order] = ch;
+}
+
 #ifdef BMK_PGALLOC_DEBUG
 static void __attribute__((used))
 print_allocation(void *start, unsigned nr_pages)
@@ -273,12 +289,7 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 		    1UL<<i, ch));
 
 		i -= BMK_PCPU_PAGE_SHIFT;
-		ch->level       = i;
-		ch->next        = free_head[i];
-		ch->pprev       = &free_head[i];
-		ch->next->pprev = &ch->next;
-		ch->magic	= CHUNKMAGIC;
-		free_head[i]    = ch;
+		carveandlink_freechunk(ch, i);
 	}
 }
 
@@ -311,16 +322,7 @@ bmk_pgalloc(int order)
 		/* Split into two equal parts. */
 		i--;
 		spare_ch = addr2ch(alloc_ch, order2size(i));
-
-		/* Create new header for spare chunk. */
-		spare_ch->level = i;
-		spare_ch->next  = free_head[i];
-		spare_ch->pprev = &free_head[i];
-		spare_ch->magic = CHUNKMAGIC;
-
-		/* Link in the spare chunk. */
-		spare_ch->next->pprev = &spare_ch->next;
-		free_head[i] = spare_ch;
+		carveandlink_freechunk(spare_ch, i);
 	}
 
 	map_alloc(alloc_ch, 1UL<<order);
@@ -380,14 +382,7 @@ bmk_pgfree(void *pointer, int order)
 		order++;
 	}
 
-	/* Link the new chunk */
-	freed_ch->level = order;
-	freed_ch->next  = free_head[order];
-	freed_ch->pprev = &free_head[order];
-	freed_ch->magic = CHUNKMAGIC;
-
-	freed_ch->next->pprev = &freed_ch->next;
-	free_head[order] = freed_ch;
+	carveandlink_freechunk(freed_ch, order);
 
 	SANITY_CHECK();
 }
