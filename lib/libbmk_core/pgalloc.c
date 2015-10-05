@@ -73,7 +73,8 @@
 #define DPRINTF(x)
 #define SANITY_CHECK()
 #else
-#define DPRINTF(x) bmk_printf x
+int bmk_pgalloc_debug = 0;
+#define DPRINTF(x) if (bmk_pgalloc_debug) bmk_printf x
 #define SANITY_CHECK() sanity_check()
 #endif
 
