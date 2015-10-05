@@ -235,6 +235,7 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 {
 	static int called;
 	unsigned long range, bitmap_size;
+	unsigned long cur;
 	struct chunk_head *ch;
 	unsigned int i;
 
@@ -271,24 +272,22 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	/* Free up the memory we've been given to play with. */
 	map_free((void *)min, range>>BMK_PCPU_PAGE_SHIFT);
 
-	while (range != 0) {
+	for (cur = min; range > 0; ) {
 		/*
-		 * Next chunk is limited by alignment of min, but also
+		 * Next chunk is limited by alignment of cur, but also
 		 * must not be bigger than remaining range.
 		 */
 		for (i = 0; order2size(i+1) <= range; i++)
-			if (min & order2size(i))
+			if (cur & order2size(i))
 				break;
 
-		ch = addr2ch(min, 0);
-
-		min   += order2size(i);
+		ch = addr2ch(cur, 0);
+		carveandlink_freechunk(ch, i);
+		cur += order2size(i);
 		range -= order2size(i);
 
 		DPRINTF(("bmk_pgalloc_loadmem: byte chunk 0x%lx at %p\n",
-		    1UL<<i, ch));
-
-		carveandlink_freechunk(ch, i);
+		    order2size(i), ch));
 	}
 }
 
@@ -342,25 +341,21 @@ bmk_pgfree(void *pointer, int order)
 	DPRINTF(("bmk_pgfree: freeing 0x%lx bytes at %p\n",
 	    order2size(order), pointer));
 
-	/* First free the chunk */
+	/* free the allocation in the bitmap */
 	map_free(pointer, 1UL << order);
 
-	/* Create free chunk */
-	freed_ch = pointer;
-
-	/* Now, possibly we can conseal chunks together */
-	while ((unsigned)order < FREELIST_LEVELS) {
+	/* create as large a free chunk as we can */
+	for (freed_ch = pointer; (unsigned)order < FREELIST_LEVELS; ) {
 		mask = order2size(order);
 		if ((unsigned long)freed_ch & mask) {
 			to_merge_ch = addr2ch(freed_ch, -mask);
-			if (!addr_is_managed(to_merge_ch) \
+			if (!addr_is_managed(to_merge_ch)
 			    || allocated_in_map(to_merge_ch)
 			    || chunklevel(to_merge_ch) != order)
 				break;
-
 			freed_ch->magic = 0;
 
-			/* Merge with predecessor */
+			/* merge with predecessor, point chuck there */
 			freed_ch = to_merge_ch;
 		} else {
 			to_merge_ch = addr2ch(freed_ch, mask);
@@ -368,8 +363,9 @@ bmk_pgfree(void *pointer, int order)
 			    || allocated_in_map(to_merge_ch)
 			    || chunklevel(to_merge_ch) != order)
 				break;
-
 			freed_ch->magic = 0;
+
+			/* merge with successor, chuck is already correct */
 		}
 
 		to_merge_ch->magic = 0;
