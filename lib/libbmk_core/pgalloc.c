@@ -39,6 +39,7 @@
 #include <bmk-core/pgalloc.h>
 #include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
+#include <bmk-core/queue.h>
 #include <bmk-core/string.h>
 
 #include <bmk-pcpu/pcpu.h>
@@ -146,10 +147,10 @@ map_free(void *virt, unsigned long nr_pages)
 
 #define CHUNKMAGIC 0x11020217
 struct chunk_head {
-	struct chunk_head  *next;
-	struct chunk_head **pprev;
 	int level;
 	int magic;
+
+	LIST_ENTRY(chunk_head) entries;
 };
 
 static int
@@ -169,23 +170,17 @@ chunklevel(struct chunk_head *ch)
  * much space, leave it be for now.
  */
 #define FREELIST_LEVELS (8*(sizeof(void*))-BMK_PCPU_PAGE_SHIFT)
-static struct chunk_head *free_head[FREELIST_LEVELS];
-static struct chunk_head  free_tail[FREELIST_LEVELS];
+static LIST_HEAD(, chunk_head) freelist[FREELIST_LEVELS];
 
 static void
 carveandlink_freechunk(void *addr, int order)
 {
 	struct chunk_head *ch = addr;
 
-	/* carve it */
 	ch->level = order;
-	ch->next = free_head[order];
-	ch->pprev = &free_head[order];
-	ch->next->pprev = &ch->next;
 	ch->magic = CHUNKMAGIC;
 
-	/* link it */
-	free_head[order] = ch;
+	LIST_INSERT_HEAD(&freelist[order], ch, entries);
 }
 
 #ifdef BMK_PGALLOC_DEBUG
@@ -211,16 +206,9 @@ sanity_check(void)
 	struct chunk_head *head;
 
 	for (x = 0; x < FREELIST_LEVELS; x++) {
-		for (head = free_head[x];
-		    head->next != NULL;
-		    head = head->next) {
+		LIST_FOREACH(head, &freelist[x], entries) {
 			bmk_assert(!allocated_in_map(head));
 			bmk_assert(head->magic == CHUNKMAGIC);
-			if (head->next)
-				bmk_assert(head->next->pprev == &head->next);
-		}
-		if (free_head[x]) {
-			bmk_assert(free_head[x]->pprev == &free_head[x]);
 		}
 	}
 }
@@ -252,9 +240,7 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	    min, max));
 
 	for (i = 0; i < FREELIST_LEVELS; i++) {
-		free_head[i]       = &free_tail[i];
-		free_tail[i].pprev = &free_head[i];
-		free_tail[i].next  = NULL;
+		LIST_INIT(&freelist[i]);
 	}
 
 	/* Allocate space for the allocation bitmap. */
@@ -299,7 +285,7 @@ bmk_pgalloc(int order)
 
 	/* Find smallest order which can satisfy the request. */
 	for (i = order; i < FREELIST_LEVELS; i++) {
-		if (free_head[i]->next != NULL)
+		if (!LIST_EMPTY(&freelist[i]))
 			break;
 	}
 	if (i == FREELIST_LEVELS) {
@@ -308,9 +294,8 @@ bmk_pgalloc(int order)
 	}
 
 	/* Unlink a chunk. */
-	alloc_ch = free_head[i];
-	free_head[i] = alloc_ch->next;
-	alloc_ch->next->pprev = alloc_ch->pprev;
+	alloc_ch = LIST_FIRST(&freelist[i]);
+	LIST_REMOVE(alloc_ch, entries);
 
 	bmk_assert(alloc_ch->magic == CHUNKMAGIC);
 	alloc_ch->magic = 0;
@@ -355,7 +340,7 @@ bmk_pgfree(void *pointer, int order)
 				break;
 			freed_ch->magic = 0;
 
-			/* merge with predecessor, point chuck there */
+			/* merge with predecessor, point freed chuck there */
 			freed_ch = to_merge_ch;
 		} else {
 			to_merge_ch = addr2ch(freed_ch, mask);
@@ -365,14 +350,11 @@ bmk_pgfree(void *pointer, int order)
 				break;
 			freed_ch->magic = 0;
 
-			/* merge with successor, chuck is already correct */
+			/* merge with successor, freed chuck already correct */
 		}
 
 		to_merge_ch->magic = 0;
-
-		/* We are commited to merging, unlink the chunk */
-		*(to_merge_ch->pprev) = to_merge_ch->next;
-		to_merge_ch->next->pprev = to_merge_ch->pprev;
+		LIST_REMOVE(to_merge_ch, entries);
 
 		order++;
 	}
