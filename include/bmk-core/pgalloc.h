@@ -31,6 +31,8 @@ void		bmk_pgalloc_loadmem(unsigned long, unsigned long);
 void *		bmk_pgalloc(int);
 void		bmk_pgfree(void *, int);
 
+void		bmk_pgalloc_dumpstats(void);
+
 #define bmk_pgalloc_one() bmk_pgalloc(0)
 #define bmk_pgfree_one(p) bmk_pgfree(p, 0)
 

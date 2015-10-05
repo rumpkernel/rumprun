@@ -1,4 +1,29 @@
 /*-
+ * Copyright (c) 2015 Antti Kantee.  All Rights Reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
+ * OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+ * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+ * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+ * SUCH DAMAGE.
+ */
+
+/*-
  ****************************************************************************
  * (C) 2003 - Rolf Neugebauer - Intel Research Cambridge
  * (C) 2005 - Grzegorz Milos - Intel Research Cambridge
@@ -51,6 +76,8 @@
 #define DPRINTF(x) bmk_printf x
 #define SANITY_CHECK() sanity_check()
 #endif
+
+unsigned long pgalloc_totalkb, pgalloc_usedkb;
 
 /*
  * The allocation bitmap is offset to the first page loaded, which is
@@ -214,6 +241,34 @@ sanity_check(void)
 }
 #endif
 
+void
+bmk_pgalloc_dumpstats(void)
+{
+	struct chunk *ch;
+	unsigned long remainingkb;
+	unsigned i;
+
+	remainingkb = pgalloc_totalkb - pgalloc_usedkb;
+	bmk_printf("pgalloc total %ld kB, used %ld kB (remaining %ld kB)\n",
+	    pgalloc_totalkb, pgalloc_usedkb, remainingkb);
+
+	bmk_printf("available chunks:\n");
+	for (i = 0; i < FREELIST_LEVELS; i++) {
+		unsigned long chunks, levelhas;
+
+		if (LIST_EMPTY(&freelist[i]))
+			continue;
+
+		chunks = 0;
+		LIST_FOREACH(ch, &freelist[i], entries) {
+			chunks++;
+		}
+		levelhas = chunks * (order2size(i)>>10);
+		bmk_printf("%8ld kB: %8ld chunks, %12ld kB\t(%2ld%%)\n",
+		    order2size(i)>>10, chunks, levelhas,
+		    (100*levelhas)/remainingkb);
+	}
+}
 
 /*
  * Load [min,max] as available addresses.
@@ -252,6 +307,9 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 
 	minpage_addr = (void *)min;
 	maxpage_addr = (void *)max;
+
+	pgalloc_totalkb = range >> 10;
+	pgalloc_usedkb = 0;
 
 	/* All allocated by default. */
 	bmk_memset(alloc_bitmap, ~0, bitmap_size);
@@ -311,6 +369,7 @@ bmk_pgalloc(int order)
 	map_alloc(alloc_ch, 1UL<<order);
 	DPRINTF(("bmk_pgalloc: allocated 0x%lx bytes at %p\n",
 	    order2size(order), alloc_ch));
+	pgalloc_usedkb += order2size(order)>>10;
 
 	SANITY_CHECK();
 
@@ -328,6 +387,7 @@ bmk_pgfree(void *pointer, int order)
 
 	/* free the allocation in the bitmap */
 	map_free(pointer, 1UL << order);
+	pgalloc_usedkb -= order2size(order)>>10;
 
 	/* create as large a free chunk as we can */
 	for (freed_ch = pointer; (unsigned)order < FREELIST_LEVELS; ) {
