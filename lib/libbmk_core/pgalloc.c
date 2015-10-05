@@ -160,8 +160,15 @@ chunklevel(struct chunk_head *ch)
 	return ch->level;
 }
 
-/* Linked lists of free chunks of different powers-of-two in size. */
-#define FREELIST_LEVELS ((sizeof(void*)<<3)-BMK_PCPU_PAGE_SHIFT)
+/*
+ * Linked lists of free chunks of different powers-of-two in size.
+ * The assumption is that pointer size * NBBY = va size.  It's
+ * a pretty reasonable assumption, except that we really don't need
+ * that much address space.  The order of what most CPUs implement (48bits)
+ * would be more than plenty.  But since the unused levels don't consume
+ * much space, leave it be for now.
+ */
+#define FREELIST_LEVELS (8*(sizeof(void*))-BMK_PCPU_PAGE_SHIFT)
 static struct chunk_head *free_head[FREELIST_LEVELS];
 static struct chunk_head  free_tail[FREELIST_LEVELS];
 
