@@ -181,43 +181,6 @@ print_allocation(void *start, unsigned nr_pages)
 	bmk_printf("\n");
 }
 
-/*
- * Prints chunks (making them with letters) for nr_pages.
- */
-#define MAXCHUNKS 1024
-static void __attribute__((used))
-print_chunks(void *start, int nr_pages)
-{
-	char chunks[MAXCHUNKS+1], current='A';
-	unsigned order, count;
-	struct chunk_head *head;
-	unsigned long pfn_start = va_to_pg(start);
-
-	bmk_memset(chunks, (int)'_', MAXCHUNKS);
-	if (nr_pages > MAXCHUNKS) {
-		bmk_printf("%s: can only print %u pages."
-		    "Increase buffer size\n", __func__, MAXCHUNKS);
-	}
-
-	for (order=0; order < FREELIST_LEVELS; order++) {
-		head = free_head[order];
-		while (head->next != NULL) {
-			unsigned long headva;
-
-			headva = va_to_pg(head);
-			for (count = 0; count < 1UL<< head->level; count++) {
-				if(count + headva - pfn_start < 1000)
-					chunks[count + headva - pfn_start]
-					    = current;
-			}
-			head = head->next;
-			current++;
-		}
-	}
-	chunks[nr_pages] = '\0';
-	bmk_printf("%s\n", chunks);
-}
-
 static void
 sanity_check(void)
 {
