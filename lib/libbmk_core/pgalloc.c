@@ -276,19 +276,18 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 		 * Next chunk is limited by alignment of min, but also
 		 * must not be bigger than remaining range.
 		 */
-		for (i = BMK_PCPU_PAGE_SHIFT; (1UL<<(i+1)) <= range; i++)
-			if (min & (1UL<<i))
+		for (i = 0; order2size(i+1) <= range; i++)
+			if (min & order2size(i))
 				break;
 
 		ch = addr2ch(min, 0);
 
-		min   += (1UL<<i);
-		range -= (1UL<<i);
+		min   += order2size(i);
+		range -= order2size(i);
 
 		DPRINTF(("bmk_pgalloc_loadmem: byte chunk 0x%lx at %p\n",
 		    1UL<<i, ch));
 
-		i -= BMK_PCPU_PAGE_SHIFT;
 		carveandlink_freechunk(ch, i);
 	}
 }
