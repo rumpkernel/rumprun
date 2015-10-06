@@ -39,6 +39,23 @@ int bmk_core_init(unsigned long);
 	}								\
   } while (0)
 
+/*
+ * Compile-time assert.
+ *
+ * We use it only if cpp supports __COUNTER__ (everything from
+ * the past several years does).
+ *
+ * And hooray for cpp macro expansion.
+ */
+#ifdef __COUNTER__
+#define __bmk_ctassert_c(x,c)	typedef char __ct##c[(x) ? 1 : -1]	\
+				    __attribute__((unused))
+#define __bmk_ctassert(x,c)	__bmk_ctassert_c(x,c)
+#define bmk_ctassert(x)		__bmk_ctassert(x,__COUNTER__)
+#else
+#define bmk_ctassert(x)
+#endif
+
 extern unsigned long bmk_stackpageorder, bmk_stacksize;
 
 void *bmk_mainstackbase;
