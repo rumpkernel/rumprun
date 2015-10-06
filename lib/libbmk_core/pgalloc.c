@@ -103,6 +103,7 @@ static void *minpage_addr, *maxpage_addr;
 
 static unsigned long *alloc_bitmap;
 #define PAGES_PER_MAPWORD (sizeof(unsigned long) * 8)
+bmk_ctassert((PAGES_PER_MAPWORD & (PAGES_PER_MAPWORD-1)) == 0);
 
 static int
 addr_is_managed(void *addr)
