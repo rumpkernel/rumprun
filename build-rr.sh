@@ -217,7 +217,7 @@ buildrump ()
 	    ${extracflags} "$@" tools
 
 	echo '>>'
-	echo '>> Now that we have the appropriate tools, perfoming'
+	echo '>> Now that we have the appropriate tools, performing'
 	echo '>> further setup for rumprun build'
 	echo '>>'
 
