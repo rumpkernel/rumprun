@@ -21,7 +21,7 @@ script:
   - export CC=gcc-4.8
   - export CXX=g++-4.8
   - git submodule update --init
-  - ./build-rr.sh -qq ${KERNONLY} ${PLATFORM} ${EXTRAFLAGS}
+  - ./build-rr.sh -j16 -qq ${KERNONLY} ${PLATFORM} ${EXTRAFLAGS}
   - ./tests/buildtests.sh ${KERNONLY} ${MACHINE} ${PLATFORM} ${ELF}
   - ./tests/runtests.sh ${TESTS}
 
