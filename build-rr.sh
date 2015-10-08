@@ -24,6 +24,8 @@
 # SUCH DAMAGE.
 #
 
+set -u
+
 die ()
 {
 
@@ -50,19 +52,14 @@ helpme ()
 
 set -e
 
-# defaults
 STDJ='-j4'
-RUMPSRC=src-netbsd
 BUILDRUMP=$(pwd)/buildrump.sh
-KERNONLY=false
-
-unset RUMPOBJ
 
 # overriden by script if true
 HAVECXX=false
 
 # figure out where gmake lies
-if [ -z "${MAKE}" ]; then
+if [ -z "${MAKE:-}" ]; then
 	MAKE=make
 	! type gmake >/dev/null 2>&1 || MAKE=gmake
 fi
@@ -75,6 +72,10 @@ type ${MAKE} >/dev/null 2>&1 || die '"make" required but not found'
 
 parseargs ()
 {
+
+	KERNONLY=false
+	RUMPOBJ=
+	RUMPSRC=src-netbsd
 
 	orignargs=$#
 	while getopts '?hko:qs:' opt; do
@@ -97,6 +98,8 @@ parseargs ()
 		esac
 	done
 	shift $((${OPTIND} - 1))
+
+	: ${BUILD_QUIET:=}
 
 	[ $# -gt 0 ] || helpme
 
@@ -202,7 +205,7 @@ buildrump ()
 
 	checkprevbuilds
 
-	unset extracflags
+	extracflags=
 	[ "${MACHINE}" = "amd64" ] && extracflags='-F CFLAGS=-mno-red-zone'
 
 	if [ -z "${RUMPOBJ}" ]; then
@@ -354,6 +357,8 @@ shift ${ARGSSHIFT}
 checksubmodules
 
 . ${BUILDRUMP}/subr.sh
+
+PLATFORM_MKCONF=
 . ${PLATFORMDIR}/platform.conf
 
 buildrump "$@"
