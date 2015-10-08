@@ -69,8 +69,10 @@ rumpuser_getparam(const char *name, void *buf, size_t buflen)
 	if (buflen <= 1)
 		return BMK_EINVAL;
 
-	if (bmk_strcmp(name, RUMPUSER_PARAM_NCPU) == 0
-	    || bmk_strcmp(name, "RUMP_VERBOSE") == 0) {
+	if (bmk_strcmp(name, "RUMP_VERBOSE") == 0) {
+		bmk_strncpy(buf, "1", buflen-1);
+
+	} else if (bmk_strcmp(name, RUMPUSER_PARAM_NCPU) == 0) {
 		bmk_strncpy(buf, "1", buflen-1);
 
 	} else if (bmk_strcmp(name, RUMPUSER_PARAM_HOSTNAME) == 0) {
