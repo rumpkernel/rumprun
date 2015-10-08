@@ -36,9 +36,10 @@ die ()
 helpme ()
 {
 
-	printf "Usage: $0 [-k] [-o objdir] [-q] [-s srcdir] hw|xen\n"
+	printf "Usage: $0 [-j num] [-k] [-o objdir] [-q] [-s srcdir] hw|xen\n"
 	printf "\t    [-- buildrump.sh opts]\n"
 	printf "\n"
+	printf "\t-j: run <num> make jobs simultaneously.\n"
 	printf "\t-q: quiet(er) build.  option may be specified twice.\n\n"
 	printf "\t-o: use non-default object directory (under development)\n"
 	printf "\t-k: build kernel only, without libc or tools (expert-only)\n"
@@ -52,7 +53,6 @@ helpme ()
 
 set -e
 
-STDJ='-j4'
 BUILDRUMP=$(pwd)/buildrump.sh
 
 # overriden by script if true
@@ -76,10 +76,16 @@ parseargs ()
 	KERNONLY=false
 	RUMPOBJ=
 	RUMPSRC=src-netbsd
+	STDJ=-j4
 
 	orignargs=$#
-	while getopts '?hko:qs:' opt; do
+	while getopts '?hj:ko:qs:' opt; do
 		case "$opt" in
+		'j')
+			[ -z "$(echo ${OPTARG} | tr -d '[0-9]')" ] \
+			    || die argument to -j must be a number
+			STDJ=-j${OPTARG}
+			;;
 		'k')
 			KERNONLY=true
 			;;
