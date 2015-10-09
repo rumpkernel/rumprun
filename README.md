@@ -13,7 +13,7 @@ See the [wiki](http://wiki.rumpkernel.org/Repo:-rumprun) for more
 information and instructions.
 
 Some of our tools will throw a warning about them
-being experimental.  it does not mean that they
+being experimental.  It does not mean that they
 are not expected to produce a working result.  The wiki
 [explains](http://wiki.rumpkernel.org/Repo%3A-rumprun#experimental-nature)
 further.
