@@ -14,7 +14,9 @@ else
 TARGETS:= compiler_rt
 endif
 
-all:  include/hw/machine rumprun.o platformlibs ${TARGETS}
+MAINOBJ=	rumprun-hw-${MACHINE_ARCH}.o
+
+all:  include/hw/machine ${MAINOBJ} platformlibs ${TARGETS}
 
 include ../Makefile.inc
 
@@ -56,7 +58,7 @@ endif
 .PHONY:	clean cleandir test
 
 APP_TOOLS_PLATFORM= hw
-APP_TOOLS_OBJS_BAKE=	$(abspath rumprun.o)
+APP_TOOLS_OBJS_BAKE=	$(abspath ${MAINOBJ})
 APP_TOOLS_LDSCRIPT_BAKE:= $(abspath ${LDSCRIPT})
 APP_TOOLS_DIR:= $(abspath ../../app-tools)
 
@@ -70,7 +72,7 @@ include/hw/machine:
 
 links: include/hw/machine ../../include/bmk-pcpu
 
-rumprun.o: ${OBJS_BMK}
+${MAINOBJ}: ${OBJS_BMK}
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@
 	${OBJCOPY} -w -G bmk_* -G rumpuser_* \
 	    -G rumprun_platform_rumpuser_init -G _start $@
