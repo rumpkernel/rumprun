@@ -57,6 +57,6 @@ commonclean:
 	rm -f ${COMMONDIR}/pseudolinkstubs.c ${COMMONDIR}/pseudolinkstubs.o
 
 .PHONY: tests
-tests: ${OBJ_DIR}/rumprun.o commonlibs app-tools
+tests: ${MAINOBJ} commonlibs app-tools
 	../../tests/buildtests.sh ${PLATFORM}
 	../../tests/runtests.sh ${PLATFORM_DEFAULT_TESTER}
