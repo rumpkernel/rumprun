@@ -25,7 +25,7 @@ ifeq (${MACHINE},i386)
 LDFLAGS+= -m elf_i386
 endif
 
-OBJS= main.o $(abspath ../../platform/hw/rumprun.o)
+OBJS= main.o $(abspath ../../platform/hw/rumprun-hw-${MACHINE_ARCH}.o)
 
 .PHONY: clean
 
