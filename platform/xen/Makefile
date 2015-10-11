@@ -44,8 +44,7 @@ rump-src-y += rumphyper_bio.c
 rump-src-y += init.c
 
 # Rump kernel middleware objects to build.
-RUMP_OBJS = $(patsubst %.c,$(OBJ_DIR)/%.o,$(rump-src-y))
-RUMP_OBJS+= $(OBJ_DIR)/xen/minios.o
+RUMP_OBJS= $(OBJ_DIR)/xen/minios.o $(patsubst %.c,$(OBJ_DIR)/%.o,$(rump-src-y))
 
 $(OBJ_DIR)/%.o: %.c $(HDRS) $(EXTRA_DEPS)
 	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
