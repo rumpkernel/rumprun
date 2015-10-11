@@ -36,7 +36,7 @@ CFLAGS += -isystem ../rump/include -I.. -I../../../include
 CFLAGS += -I$(MINI-OS_ROOT)
 CFLAGS += ${BUILDRUMP_TOOL_CFLAGS}
 
-CPPFLAGS += -nostdinc -no-integrated-cpp
+CFLAGS += -nostdinc -no-integrated-cpp
 
 LDARCHLIB := -l$(ARCH_LIB_NAME)
 LDSCRIPT := $(TARGET_ARCH_DIR)/minios-$(XEN_TARGET_ARCH).lds
