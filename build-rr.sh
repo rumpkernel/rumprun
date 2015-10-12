@@ -440,7 +440,7 @@ doinstall ()
 
 	# default used to be a symlink, so this is for "compat".
 	# remove in a few months.
-	rm -f ${DESTDIR} > /dev/null 2>&1
+	rm -f ${DESTDIR} > /dev/null 2>&1 || true
 
 	mkdir -p ${DESTDIR} || die cannot create ${DESTDIR}
 	( cd ${STAGING} ; tar -cf - .) | (cd ${DESTDIR} ; tar -xf -)
