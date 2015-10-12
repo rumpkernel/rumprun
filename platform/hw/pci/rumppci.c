@@ -30,6 +30,8 @@
 
 #include <bmk-pcpu/pcpu.h>
 
+#include <bmk-rumpuser/core_types.h>
+
 #include "pci_user.h"
 
 #define PCI_CONF_ADDR 0xcf8

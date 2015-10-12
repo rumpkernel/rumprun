@@ -28,6 +28,8 @@
 int rumprun_platform_rumpuser_init(void);
 
 #define LIBRUMPUSER
+#include <bmk-rumpuser/core_types.h>
+
 #include <rump/rumpuser.h>
 
 extern struct rumpuser_hyperup rumpuser__hyp;

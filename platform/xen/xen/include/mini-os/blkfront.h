@@ -10,7 +10,7 @@ struct blkfront_aiocb
     struct blkfront_dev *aio_dev;
     uint8_t *aio_buf;
     size_t aio_nbytes;
-    off_t aio_offset;
+    int64_t aio_offset;
     size_t total_bytes;
     uint8_t is_write;
     void *data;

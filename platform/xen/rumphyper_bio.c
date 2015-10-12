@@ -36,6 +36,7 @@
 #include <bmk-core/sched.h>
 #include <bmk-core/string.h>
 
+#include <bmk-rumpuser/core_types.h>
 #include <bmk-rumpuser/rumpuser.h>
 
 static struct rumpuser_mtx *bio_mtx;

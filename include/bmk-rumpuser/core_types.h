@@ -41,8 +41,12 @@ typedef int pid_t;
 typedef unsigned long size_t;
 
 #ifdef __GNUC__
+#ifndef __dead
 #define __dead __attribute__((__noreturn__))
+#endif
+#ifndef __printflike
 #define __printflike(a,b) __attribute__((__format__ (__printf__,a,b)))
+#endif
 #else /* __GNUC__ */
 #define __dead
 #define __printflike(a,b)
