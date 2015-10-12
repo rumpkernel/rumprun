@@ -4,9 +4,10 @@
 #include <bmk-core/printf.h>
 #include <bmk-core/string.h>
 
-#include <rump/rump.h>
-
 #include "nolibc.h"
+
+#include <rump/rump.h>
+#include <rump/rump_syscalls.h>
 
 static ssize_t
 writestr(int fd, const char *str)
