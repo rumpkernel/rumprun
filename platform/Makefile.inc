@@ -9,8 +9,7 @@ COMPILERRTDIR:=	$(shell pwd)/../../lib/libcompiler_rt
 
 COMMONDIR:=	$(abspath ../)
 
-LDFLAGS_BAKE+=	-L${BASEDIR}/${PLATFORM} -L${COREDIR}/${PLATFORM}	\
-		-L${RUMPUSERDIR}/${PLATFORM}
+LDFLAGS_BAKE+=	-L${BASEDIR}/${PLATFORM}
 
 define BUILDLIB_target
 .PHONY: ${1}/${PLATFORM}/${2}

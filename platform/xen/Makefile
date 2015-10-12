@@ -17,7 +17,7 @@ MAINOBJ= $(abspath $(OBJ_DIR)/rumprun-xen-$(MACHINE_ARCH).o)
 #
 OBJ_DIR ?= $(CURDIR)/obj
 
-TARGETS= prepare links platformlibs mini-os $(MAINOBJ)
+TARGETS= prepare links mini-os $(MAINOBJ)
 
 ifneq (${KERNONLY},true)
 TARGETS+= app-tools userlibs
@@ -71,8 +71,10 @@ mini-os:
 links:
 	$(MAKE) -C xen links
 
-$(MAINOBJ): $(RUMP_OBJS)
-	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(RUMP_OBJS) -nostdlib -o $@
+$(MAINOBJ): $(RUMP_OBJS) platformlibs
+	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(RUMP_OBJS) -nostdlib -o $@ \
+	    -L${COREDIR}/xen -L${RUMPUSERDIR}/xen -Wl,--whole-archive \
+	    -lbmk_rumpuser -lbmk_core -Wl,--no-whole-archive
 
 APP_TOOLS_PLATFORM= xen
 APP_TOOLS_OBJS_BAKE=	$(MAINOBJ)

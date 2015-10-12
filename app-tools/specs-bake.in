@@ -7,8 +7,7 @@
 *lib:
 !LDFLAGS_BAKE! -L!DESTDIR!/lib						\
     --whole-archive -lrump --no-whole-archive				\
-    --start-group -lrumprun_base -lpthread -lc --end-group		\
-    -lbmk_rumpuser -lbmk_core
+    --start-group -lrumprun_base -lpthread -lc --end-group
 
 *link:
 %{m64:-m elf_x86_64;mx32:-m elf32_x86_64;m32:-m elf_i386} -T !LDSCRIPT_BAKE! %:replace-outfile(-lstdc++ -lc++) %{rdynamic:}
