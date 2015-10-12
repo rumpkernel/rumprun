@@ -111,22 +111,3 @@ clean:	arch_clean
 	rm -f $(OBJ_DIR)/*.o *~ $(OBJ_DIR)/core
 	rm -f $(OBJ_DIR)/minios.lds
 	rm -f include/xen include/mini-os/machine
-	rm -f tags TAGS
-
-define all_sources
-     ( find . -follow -name SCCS -prune -o -name '*.[chS]' -print )
-endef
-
-.PHONY: cscope
-cscope:
-	$(all_sources) > cscope.files
-	cscope -k -b -q
-
-.PHONY: tags
-tags:
-	$(all_sources) | xargs ctags
-
-.PHONY: TAGS
-TAGS:
-	$(all_sources) | xargs etags
-
