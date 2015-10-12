@@ -44,7 +44,6 @@
 
 #include <xen/grant_table.h>
 #include <xen/io/console.h>
-#include <stdarg.h>
 
 struct consfront_dev {
     domid_t dom;
@@ -62,7 +61,6 @@ struct consfront_dev {
 
 
 
-void print(int direct, const char *fmt, va_list args);
 void minios_printk(const char *fmt, ...);
 void minios_putc(int);
 void xprintk(const char *fmt, ...);

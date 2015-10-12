@@ -122,7 +122,7 @@ void minios_console_print(struct consfront_dev *dev, char *data, int length)
     ASSERT(ring_send_fn == xencons_ring_send_no_notify || sent == length);
 }
 
-void print(int direct, const char *fmt, va_list args)
+static void print(int direct, const char *fmt, va_list args)
 {
     static char   buf[1024];
     
