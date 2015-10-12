@@ -17,13 +17,6 @@ include $(MINI-OS_ROOT)/minios.mk
 CFLAGS+= -I $(MINI-OS_ROOT)/../../../include -nostdinc
 CFLAGS+= ${BUILDRUMP_TOOL_CFLAGS}
 
--include ../../config.mk
-ifeq (${BUILDRR},true)
-CFLAGS+=        -isystem ${OBJDIR}/dest.stage/include
-else
-CFLAGS+=        -isystem ${DESTDIR}/include
-endif
-
 # Sources here are all *.c *.S without $(XEN_TARGET_ARCH).S
 # This is handled in $(HEAD_ARCH_OBJ)
 ARCH_SRCS := $(wildcard *.c)
