@@ -9,14 +9,8 @@
 typedef unsigned long xenbus_transaction_t;
 #define XBT_NIL ((xenbus_transaction_t)0)
 
-#ifdef CONFIG_XENBUS
 /* Initialize the XenBus system. */
 void init_xenbus(void);
-#else
-static inline void init_xenbus(void)
-{
-}
-#endif
 
 /* Read the value associated with a path.  Returns a malloc'd error
    string on failure and sets *value to NULL.  On success, *value is
@@ -203,13 +197,7 @@ void xenbus_free(void*);
  * it must use this rather than free() when freeing data received
  * from xenbus. */
 
-#ifdef CONFIG_XENBUS
 /* Reset the XenBus system. */
 void fini_xenbus(void);
-#else
-static inline void fini_xenbus(void)
-{
-}
-#endif
 
 #endif /* MINIOS_XENBUS_H__ */

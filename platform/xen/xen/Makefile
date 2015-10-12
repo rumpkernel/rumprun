@@ -18,12 +18,9 @@ include $(MINIOS_CONFIG)
 endif
 
 # Configuration defaults
-CONFIG_XENBUS ?= y
-
 CONFIG_PCI ?= y
 
 # Export config items as compiler directives
-flags-$(CONFIG_XENBUS) += -DCONFIG_XENBUS
 flags-$(CONFIG_PCI) += -DCONFIG_PCI
 
 DEF_CFLAGS += $(flags-y)
@@ -61,7 +58,7 @@ src-y += kernel.c
 src-y += mm.c
 src-y += netfront.c
 src-$(CONFIG_PCI) += pcifront.c
-src-$(CONFIG_XENBUS) += xenbus/xenbus.c
+src-y += xenbus/xenbus.c
 src-y += console/console.c
 src-y += console/xencons_ring.c
 src-y += console/xenbus.c
