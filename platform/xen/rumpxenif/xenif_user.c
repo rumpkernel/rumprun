@@ -23,7 +23,11 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/uio.h>
+/* XXX */
+struct iovec {
+	void *iov_base;
+	unsigned long iov_len;
+};
 
 #include <mini-os/os.h>
 #include <mini-os/netfront.h>
