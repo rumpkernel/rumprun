@@ -23,7 +23,6 @@ default: prepare links commonlibs mini-os $(MAINOBJ) app-tools
 include ../Makefile.inc
 
 CPPFLAGS = -isystem xen/include -I. -I../../include
-CPPFLAGS+= -nostdinc
 CPPFLAGS+= -no-integrated-cpp -nostdinc
 
 ifeq (${BUILDRR},true)
