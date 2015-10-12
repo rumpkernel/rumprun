@@ -8,7 +8,7 @@ include ${BUILDRUMP_TOOLFLAGS}
 endif
 
 ifneq (${KERNONLY},true)
-TARGETS:= app-tools userlibs # buildtest
+TARGETS:= app-tools userlibs
 else
 TARGETS:= compiler_rt
 endif
