@@ -8,11 +8,7 @@
 #endif
 
 #ifndef __dead
-#define __dead
-#endif
-
-#ifndef __printflike
-#define __printflike(a,b)
+#define __dead __attribute__((__noreturn__))
 #endif
 
 #endif /* _BMK_TYPES_H_ */
