@@ -23,17 +23,19 @@
  * SUCH DAMAGE.
  */
 
+#include <bmk-rumpuser/core_types.h> /* XXX */
+
 #include <mini-os/types.h>
 #include <mini-os/hypervisor.h>
 #include <mini-os/kernel.h>
 #include <mini-os/xenbus.h>
 #include <xen/xen.h>
 
-#include <rumprun-base/config.h>
-#include <rumprun-base/rumprun.h>
-
 #include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
+
+#include <rumprun-base/config.h>
+#include <rumprun-base/rumprun.h>
 
 static char hardcoded_jsoncfg[] = "";
 
