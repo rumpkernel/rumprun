@@ -21,7 +21,7 @@
 #define _MINIOS_TYPES_H_
 
 /* XXX: fix the kernelside Xen driver #include abuse */
-
+#ifndef __RUMP_KERNEL__
 #include <bmk-core/types.h>
 
 #ifndef _BSD_SIZE_T_
@@ -32,6 +32,7 @@ typedef unsigned long		size_t;
 
 #ifndef offsetof
 #define offsetof(_t_,_e_) __builtin_offsetof(_t_,_e_)
+#endif
 #endif
 
 #ifdef __i386__
