@@ -31,6 +31,7 @@
 #include <bmk-core/queue.h>
 #include <bmk-core/sched.h>
 
+#include <bmk-rumpuser/core_types.h>
 #include <bmk-rumpuser/rumpuser.h>
 
 #ifdef BMK_SCREW_INTERRUPT_ROUTING
