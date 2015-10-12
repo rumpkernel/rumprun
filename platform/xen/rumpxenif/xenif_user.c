@@ -37,6 +37,7 @@ struct iovec {
 #include <bmk-core/string.h>
 #include <bmk-core/sched.h>
 
+#include <bmk-rumpuser/core_types.h>
 #include <bmk-rumpuser/rumpuser.h>
 
 #include <rumpxenif/if_virt.h>
