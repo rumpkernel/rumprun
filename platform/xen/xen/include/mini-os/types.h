@@ -21,8 +21,8 @@
 #define _MINIOS_TYPES_H_
 
 #include <sys/types.h>
-#include <stdint.h>
-#include <stddef.h>
+
+#define offsetof(_t_,_e_) __builtin_offsetof(_t_,_e_)
 
 #ifdef __i386__
 typedef struct { unsigned long pte_low, pte_high; } pte_t;
