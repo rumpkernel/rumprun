@@ -17,8 +17,16 @@ MAINOBJ= $(abspath $(OBJ_DIR)/rumprun-xen-$(MACHINE_ARCH).o)
 #
 OBJ_DIR ?= $(CURDIR)/obj
 
+TARGETS= prepare links platformlibs mini-os $(MAINOBJ)
+
+ifneq (${KERNONLY},true)
+TARGETS+= app-tools userlibs
+else
+TARGETS+= compiler_rt
+endif
+
 .PHONY: default
-default: prepare links commonlibs mini-os $(MAINOBJ) app-tools
+default: ${TARGETS}
 
 include ../Makefile.inc
 
@@ -63,7 +71,7 @@ mini-os:
 links:
 	$(MAKE) -C xen links
 
-$(MAINOBJ): $(RUMP_OBJS) commonlibs
+$(MAINOBJ): $(RUMP_OBJS)
 	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(RUMP_OBJS) -nostdlib -o $@
 
 APP_TOOLS_PLATFORM= xen

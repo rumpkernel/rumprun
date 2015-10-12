@@ -139,10 +139,6 @@ parseargs ()
 	[ -d ${PLATFORMDIR} ] || die Platform \"$PLATFORM\" not supported!
 	shift
 
-	if ${KERNONLY} && [ "${PLATFORM}" != "hw" ]; then
-		die '-k currently only supports "hw" platform'
-	fi
-
 	dodefault=true
 	while [ $# -gt 0 ]; do
 		if [ $1 = '--' ]; then
