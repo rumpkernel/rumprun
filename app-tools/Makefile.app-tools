@@ -12,8 +12,6 @@ ifdef _APPTOOLS_MISSING
 $(error ${_APPTOOLS_MISSING} not defined)
 endif
 
-LDFLAGS_BAKE+=	-L$(DESTDIR)/lib
-
 APP_TOOL_FILES=		configure make gmake toolchain.cmake recipe.s
 APP_TOOL_COMPILERS=	cc c++
 
