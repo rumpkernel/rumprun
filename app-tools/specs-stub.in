@@ -5,7 +5,7 @@
 
 
 *lib:
--L!BASE_DIR!/rumprun/lib --start-group -lpthread -lc --end-group 	\
+-L!DESTDIR!/lib --start-group -lpthread -lc --end-group 	\
     !BASE_DIR!/platform/pseudolinkstubs.o
 
 *link:

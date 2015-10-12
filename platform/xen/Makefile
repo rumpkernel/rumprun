@@ -18,13 +18,19 @@ MAINOBJ= $(abspath $(OBJ_DIR)/rumprun-xen-$(MACHINE_ARCH).o)
 OBJ_DIR ?= $(CURDIR)/obj
 
 .PHONY: default
-default: prepare commonlibs mini-os $(MAINOBJ) app-tools buildtest
+default: prepare links commonlibs mini-os $(MAINOBJ) app-tools
 
 include ../Makefile.inc
 
-CPPFLAGS = -isystem rump/include -isystem xen/include -I. -I../../include
+CPPFLAGS = -isystem xen/include -I. -I../../include
 CPPFLAGS+= -nostdinc
 CPPFLAGS+= -no-integrated-cpp -nostdinc
+
+ifeq (${BUILDRR},true)
+CPPFLAGS+=     -isystem ${OBJDIR}/dest.stage/include
+else
+CPPFLAGS+=     -isystem ${DESTDIR}/include
+endif
 
 CFLAGS += -fno-builtin ${BUILDRUMP_TOOL_CFLAGS}
 
@@ -36,8 +42,6 @@ endif
 ifeq ($(MACHINE),x86_64)
 CFLAGS += -mno-red-zone -fno-reorder-blocks -fno-asynchronous-unwind-tables
 endif
-
-LDFLAGS_BAKE+=	-L$(abspath rump/lib)
 
 rump-src-y += rumphyper_bio.c
 

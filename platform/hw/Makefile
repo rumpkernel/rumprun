@@ -1,6 +1,5 @@
 PLATFORM=hw
 PLATFORM_DEFAULT_TESTER=qemu
-OBJ_DIR=.
 
 include ../../global.mk
 -include config.mk
@@ -9,7 +8,7 @@ include ${BUILDRUMP_TOOLFLAGS}
 endif
 
 ifneq (${KERNONLY},true)
-TARGETS:= app-tools userlibs buildtest
+TARGETS:= app-tools userlibs # buildtest
 else
 TARGETS:= compiler_rt
 endif
@@ -20,8 +19,14 @@ all:  include/hw/machine ${MAINOBJ} platformlibs ${TARGETS}
 
 include ../Makefile.inc
 
-CPPFLAGS=	-Iinclude -Irump/include -I../../include -nostdinc
+CPPFLAGS=	-Iinclude -I../../include -nostdinc
 CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
+
+ifeq (${BUILDRR},true)
+CPPFLAGS+=	-I${OBJDIR}/dest.stage/include
+else
+CPPFLAGS+=	-I${DESTDIR}/include
+endif
 
 # Check if we're building for a supported target.
 supported= false
@@ -44,8 +49,6 @@ $(error only supported target is x86, you have ${MACHINE})
 endif
 
 ARCHDIR?= ${MACHINE}
-
-LDFLAGS_BAKE+=	-L$(abspath rump/lib)
 
 OBJS_BMK+=	intr.o clock_subr.o kernel.o multiboot.o undefs.o
 

@@ -32,9 +32,15 @@ DEF_CFLAGS += $(flags-y)
 include minios.mk
 
 # TODO: Import rump CPPFLAGS / include directories from top-level Makefile
-CFLAGS += -isystem ../rump/include -I.. -I../../../include
+CFLAGS += -I.. -I../../../include
 CFLAGS += -I$(MINI-OS_ROOT)
 CFLAGS += ${BUILDRUMP_TOOL_CFLAGS}
+
+ifeq (${BUILDRR},true)
+CFLAGS+=	-isystem ${OBJDIR}/dest.stage/include
+else
+CFLAGS+=	-isystem ${DESTDIR}/include
+endif
 
 CFLAGS += -nostdinc -no-integrated-cpp
 

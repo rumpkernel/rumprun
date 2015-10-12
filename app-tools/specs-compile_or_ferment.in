@@ -1,7 +1,7 @@
 %rename cpp_options old_cpp_options
  
 *cpp_options:
--nostdinc -isystem !BASE_DIR!/rumprun/include %{,c++:%{!std=*:-std=c++11}} %{,c++:-isystem !BASE_DIR!/rumprun/include/c++} %(old_cpp_options) !CPPFLAGS! -D__RUMPRUN__
+-nostdinc -isystem !DESTDIR!/include %{,c++:%{!std=*:-std=c++11}} %{,c++:-isystem !DESTDIR!/include/c++} %(old_cpp_options) !CPPFLAGS! -D__RUMPRUN__
 
 %rename cc1_options old_cc1_options
 
@@ -18,7 +18,7 @@
 
 
 *lib:
--L!BASE_DIR!/rumprun/lib
+-L!DESTDIR!/lib
 
 *link:
 %{m64:-m elf_x86_64;mx32:-m elf32_x86_64;m32:-m elf_i386} %:remove-outfile(-lstdc++) %{rdynamic:}

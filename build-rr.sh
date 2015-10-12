@@ -37,10 +37,14 @@ helpme ()
 {
 
 	printf "Usage: $0 [-j num] [-k] [-o objdir] [-q] [-s srcdir] hw|xen\n"
-	printf "\t    [-- buildrump.sh opts]\n"
+	printf "\t    [build] [install] [-- buildrump.sh opts]\n"
 	printf "\n"
+	printf "\t-d: destination base directory (under construction).\n"
 	printf "\t-j: run <num> make jobs simultaneously.\n"
 	printf "\t-q: quiet(er) build.  option may be specified twice.\n\n"
+	printf "\tThe default actions are \"build\" and \"install\"\n\n"
+
+	printf "Expert-only options:\n"
 	printf "\t-o: use non-default object directory (under development)\n"
 	printf "\t-k: build kernel only, without libc or tools (expert-only)\n"
 	printf "\t-s: specify alternative src-netbsd location (expert-only)\n\n"
@@ -70,27 +74,48 @@ type ${MAKE} >/dev/null 2>&1 || die '"make" required but not found'
 # SUBROUTINES
 #
 
+abspath ()
+{
+
+	eval mypath=\${$1}
+	case ${mypath} in
+	/*)
+		;;
+	*)
+		mypath="$(pwd)/${mypath}"
+	esac
+
+	eval ${1}="\${mypath}"
+}
+
 parseargs ()
 {
 
+	DESTDIR=./rumprun
 	KERNONLY=false
-	RUMPOBJ=
+	RROBJ=
 	RUMPSRC=src-netbsd
 	STDJ=-j4
 
+	DObuild=false
+	DOinstall=false
+
 	orignargs=$#
-	while getopts '?hj:ko:qs:' opt; do
+	while getopts '?d:hj:ko:qs:' opt; do
 		case "$opt" in
 		'j')
 			[ -z "$(echo ${OPTARG} | tr -d '[0-9]')" ] \
 			    || die argument to -j must be a number
 			STDJ=-j${OPTARG}
 			;;
+		'd')
+			DESTDIR="${OPTARG}"
+			;;
 		'k')
 			KERNONLY=true
 			;;
 		'o')
-			RUMPOBJ="${OPTARG}"
+			RROBJ="${OPTARG}"
 			;;
 		's')
 			RUMPSRC=${OPTARG}
@@ -118,12 +143,27 @@ parseargs ()
 		die '-k currently only supports "hw" platform'
 	fi
 
-	if [ $# -gt 0 ]; then
+	dodefault=true
+	while [ $# -gt 0 ]; do
 		if [ $1 = '--' ]; then
 			shift
+			break
 		else
-			die Invalid argument: $1
+			case $1 in
+			build|install)
+				eval DO${1}=true
+				;;
+			*)
+				die invalid argument $1
+				;;
+			esac
+			dodefault=false
+			shift
 		fi
+	done
+	if ${dodefault}; then
+		DObuild=true
+		DOinstall=true
 	fi
 
 	case ${RUMPSRC} in
@@ -138,7 +178,6 @@ parseargs ()
 	export BUILD_QUIET
 
 	RUMPTOOLS=${PLATFORMDIR}/rumptools
-	RUMPDEST=${PLATFORMDIR}/rump
 
 	ARGSSHIFT=$((${orignargs} - $#))
 }
@@ -197,13 +236,30 @@ checkprevbuilds ()
 	fi
 }
 
+setvars ()
+{
+
+	. ${RUMPTOOLS}/proberes.sh
+	MACHINE="${BUILDRUMP_MACHINE}"
+
+	if [ -z "${RROBJ}" ]; then
+		RROBJ="./obj-${PLATFORM}-${MACHINE}"
+	fi
+	STAGING="${RROBJ}/dest.stage"
+	BROBJ="${RROBJ}/buildrump.sh"
+
+	abspath DESTDIR
+	abspath RROBJ
+	abspath RUMPSRC
+}
+
 buildrump ()
 {
 
 	# probe
 	${BUILDRUMP}/buildrump.sh -k -s ${RUMPSRC} -T ${RUMPTOOLS} "$@" probe
-	. ${RUMPTOOLS}/proberes.sh
-	MACHINE="${BUILDRUMP_MACHINE}"
+
+	setvars
 
 	# Check that a clang build is not attempted.
 	[ -z "${BUILDRUMP_HAVE_LLVM}" ] \
@@ -214,13 +270,9 @@ buildrump ()
 	extracflags=
 	[ "${MACHINE}" = "amd64" ] && extracflags='-F CFLAGS=-mno-red-zone'
 
-	if [ -z "${RUMPOBJ}" ]; then
-		RUMPOBJ="./obj-${PLATFORM}-${MACHINE}"
-	fi
-
 	# build tools
 	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
-	    -s ${RUMPSRC} -T ${RUMPTOOLS} -o ${RUMPOBJ} -d ${RUMPDEST}	\
+	    -s ${RUMPSRC} -T ${RUMPTOOLS} -o ${BROBJ} -d ${STAGING}	\
 	    -V MKPIC=no -V RUMP_CURLWP=__thread				\
 	    -V RUMP_KERNEL_IS_LIBC=1 -V BUILDRUMP_SYSROOT=yes		\
 	    ${extracflags} "$@" tools
@@ -256,7 +308,7 @@ EOF
 
 	# build rump kernel
 	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
-	    -s ${RUMPSRC} -T ${RUMPTOOLS} -o ${RUMPOBJ} -d ${RUMPDEST}	\
+	    -s ${RUMPSRC} -T ${RUMPTOOLS} -o ${BROBJ} -d ${STAGING}	\
 	    "$@" build kernelheaders install
 
 	echo '>>'
@@ -268,7 +320,7 @@ EOF
 builduserspace ()
 {
 
-	usermtree ${RUMPDEST}
+	usermtree ${STAGING}
 
 	LIBS="$(stdlibs ${RUMPSRC})"
 	! ${HAVECXX} || LIBS="${LIBS} $(stdlibsxx ${RUMPSRC})"
@@ -337,6 +389,9 @@ makeconfigmk ()
 	echo "MACHINE_ARCH=${MACHINE_ARCH}" >> ${1}
 	echo "KERNONLY=${KERNONLY}" >> ${1}
 
+	echo "DESTDIR=${DESTDIR}" >> ${1}
+	echo "OBJDIR=${RROBJ}" >> ${1}
+
 	# wrap mandatory toolchain bits
 	for t in AR AS CC CPP LD NM OBJCOPY OBJDUMP RANLIB READELF \
             SIZE STRINGS STRIP; do
@@ -352,6 +407,44 @@ makeconfigmk ()
 	fi
 }
 
+dobuild ()
+{
+
+	checksubmodules
+
+	. ${BUILDRUMP}/subr.sh
+
+	PLATFORM_MKCONF=
+	. ${PLATFORMDIR}/platform.conf
+
+	buildrump "$@"
+	${KERNONLY} || builduserspace
+
+	# depends on config.mk
+	buildpci
+
+	buildkernlibs
+
+	# run routine specified in platform.conf
+	doextras || die 'platforms extras failed.  tillerman needs tea?'
+
+	# do final build of the platform bits
+	( cd ${PLATFORMDIR} && ${MAKE} BUILDRR=true || exit 1)
+	[ $? -eq 0 ] || die platform make failed!
+}
+
+doinstall ()
+{
+
+	setvars
+
+	# default used to be a symlink, so this is for "compat".
+	# remove in a few months.
+	rm -f ${DESTDIR} > /dev/null 2>&1
+
+	mkdir -p ${DESTDIR} || die cannot create ${DESTDIR}
+	( cd ${STAGING} ; tar -cf - .) | (cd ${DESTDIR} ; tar -xf -)
+}
 
 #
 # BEGIN SCRIPT
@@ -360,36 +453,21 @@ makeconfigmk ()
 parseargs "$@"
 shift ${ARGSSHIFT}
 
-checksubmodules
-
-. ${BUILDRUMP}/subr.sh
-
-PLATFORM_MKCONF=
-. ${PLATFORMDIR}/platform.conf
-
-buildrump "$@"
-${KERNONLY} || builduserspace
-
-# depends on config.mk
-buildpci
-
-buildkernlibs
-
-# run routine specified in platform.conf
-doextras || die 'platforms extras failed.  tillerman needs tea?'
-
-# create high-level link to rumprun components
-ln -sf ${PLATFORMDIR}/rump ./rumprun
-
-# do final build of the platform bits
-( cd ${PLATFORMDIR} && ${MAKE} || exit 1)
-[ $? -eq 0 ] || die platform make failed!
+${DObuild} && dobuild "$@"
+${DOinstall} && doinstall
 
 # echo some useful information for the user
 echo
 echo '>>'
-echo ">> Built rumprun for ${PLATFORM} : ${TOOLTUPLE}"
-echo ">> cc: ${TOOLTUPLE}-$(${RUMPMAKE} -f bsd.own.mk -V '${ACTIVE_CC}')"
+echo ">> Finished $0 for ${PLATFORM}"
+if ${DObuild}; then
+	printf ">> ${TOOLTUPLE}"
+	printf ">> cc: %s-%s\n", \
+	   ${TOOLTUPLE} "$(${RUMPMAKE} -f bsd.own.mk -V '${ACTIVE_CC}')"
+fi
+if ${DOinstall}; then
+	printf ">> installed to \"%s\"\n" ${DESTDIR}
+fi
 echo '>>'
 echo ">> $0 ran successfully"
 exit 0
