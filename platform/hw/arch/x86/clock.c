@@ -27,6 +27,8 @@
 #include <hw/kernel.h>
 #include <hw/clock_subr.h>
 
+#include <arch/x86/hypervisor.h>
+
 #include <bmk-core/core.h>
 #include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
@@ -61,6 +63,36 @@ static uint64_t tsc_base;
 
 /* RTC wall time offset at monotonic time base. */
 static bmk_time_t rtc_epochoffset;
+
+/* True if using pvclock for timekeeping, false if using TSC-based clock. */
+static int have_pvclock;
+
+/* Xen/KVM per-vcpu time ABI. */
+struct pvclock_vcpu_time_info {
+	uint32_t version;
+	uint32_t pad0;
+	uint64_t tsc_timestamp;
+	uint64_t system_time;
+	uint32_t tsc_to_system_mul;
+	int8_t tsc_shift;
+	uint8_t flags;
+	uint8_t pad[2];
+} __attribute__((__packed__));
+
+/* Xen/KVM wall clock ABI. */
+struct pvclock_wall_clock {
+	uint32_t version;
+	uint32_t sec;
+	uint32_t nsec;
+} __attribute__((__packed__));
+
+/*
+ * pvclock structures shared with hypervisor.
+ * TODO: These should be pointers (for Xen HVM support), but we can't use
+ * bmk_pgalloc() here.
+ */
+volatile static struct pvclock_vcpu_time_info pvclock_ti;
+volatile static struct pvclock_wall_clock pvclock_wc;
 
 /*
  * Calculate prod = (a * b) where a is (64.0) fixed point and b is (0.32) fixed
@@ -186,6 +218,51 @@ rtc_gettimeofday(void)
 	return clock_ymdhms_to_secs(&dt) * NSEC_PER_SEC;
 }
 
+/*
+ * Read system time using pvclock.
+ */
+static bmk_time_t
+pvclock_read_time_info(void)
+{
+	uint32_t version;
+	uint64_t delta, time_now;
+
+	do {
+		version = pvclock_ti.version;
+		__asm__ ("mfence" ::: "memory");
+		delta = rdtsc() - pvclock_ti.tsc_timestamp;
+		if (pvclock_ti.tsc_shift < 0)
+			delta >>= -pvclock_ti.tsc_shift;
+		else
+			delta <<= pvclock_ti.tsc_shift;
+		time_now = mul64_32(delta, pvclock_ti.tsc_to_system_mul) +
+			pvclock_ti.system_time;
+		__asm__ ("mfence" ::: "memory");
+	} while ((pvclock_ti.version & 1) || (pvclock_ti.version != version));
+
+	return (bmk_time_t)time_now;
+}
+
+/*
+ * Read wall time offset since system boot using pvclock.
+ */
+static bmk_time_t
+pvclock_read_wall_clock(void)
+{
+	uint32_t version;
+	bmk_time_t wc_now;
+
+	do {
+		version = pvclock_wc.version;
+		__asm__ ("mfence" ::: "memory");
+		wc_now = pvclock_wc.sec * NSEC_PER_SEC;
+		wc_now += pvclock_wc.nsec;
+		__asm__ ("mfence" ::: "memory");
+	} while ((pvclock_wc.version & 1) || (pvclock_wc.version != version));
+
+	return wc_now + pvclock_read_time_info();
+}
+
 void
 x86_initclocks(void)
 {
@@ -211,46 +288,84 @@ x86_initclocks(void)
 		bmk_printf("WARNING: Processor claims to not support "
 		    "invariant TSC.\n");
 
-	/* Initialise i8254 timer channel 0 to mode 2 at 100 Hz */
-	outb(TIMER_MODE, TIMER_SEL0 | TIMER_RATEGEN | TIMER_16BIT);
-	outb(TIMER_CNTR, (TIMER_HZ / 100) & 0xff);
-	outb(TIMER_CNTR, (TIMER_HZ / 100) >> 8);
-
 	/*
-	 * Read RTC time to use as epoch offset. This must be done just before
-	 * tsc_base is initialised in order to get a correct offset.
+	 * Prefer KVM pvclock for timekeeping if available.
 	 */
-	rtc_epochoffset = rtc_gettimeofday();
+	if (hypervisor_detect() == HYPERVISOR_KVM) {
+		bmk_printf("x86_initclocks(): using KVM pvclock\n");
+		/* Initialise KVM_MSR_SYSTEM_TIME_NEW and enable updates */
+		__asm__ __volatile("wrmsr" ::
+			"c" (0x4b564d01),
+			"a" ((uint32_t)((uintptr_t)&pvclock_ti | 0x1)),
+#if defined(__x86_64__)
+			"d" ((uint32_t)((uintptr_t)&pvclock_ti >> 32))
+#else
+			"d" (0)
+#endif
+		);
+		/* Initialise MSR_KVM_WALL_CLOCK_NEW */
+		__asm__ __volatile("wrmsr" ::
+			"c" (0x4b564d00),
+			"a" ((uint32_t)((uintptr_t)&pvclock_wc)),
+#if defined(__x86_64__)
+			"d" ((uint32_t)((uintptr_t)&pvclock_wc >> 32))
+#else
+			"d" (0)
+#endif
+		);
+		/* Initialise epoch offset using wall clock time */
+		rtc_epochoffset = pvclock_read_wall_clock();
 
+		have_pvclock = 1;
+	}
 	/*
-	 * Calculate TSC frequency by calibrating against an 0.1s delay
-	 * using the i8254 timer.
+	 * Otherwise use TSC-based timekeeping.
 	 */
-	spl0();
-	tsc_base = rdtsc();
-	i8254_delay(100000);
-	tsc_freq = (rdtsc() - tsc_base) * 10;
-	splhigh();
-	bmk_printf("x86_initclocks(): TSC frequency estimate is %llu Hz\n",
-		(unsigned long long)tsc_freq);
+	else {
+		/* Initialise i8254 timer channel 0 to mode 2 at 100 Hz */
+		outb(TIMER_MODE, TIMER_SEL0 | TIMER_RATEGEN | TIMER_16BIT);
+		outb(TIMER_CNTR, (TIMER_HZ / 100) & 0xff);
+		outb(TIMER_CNTR, (TIMER_HZ / 100) >> 8);
+
+		/*
+		 * Read RTC time to use as epoch offset. This must be done just
+		 * before tsc_base is initialised in order to get a correct
+		 * offset.
+		 */
+		rtc_epochoffset = rtc_gettimeofday();
+
+		/*
+		 * Calculate TSC frequency by calibrating against an 0.1s delay
+		 * using the i8254 timer.
+		 */
+		spl0();
+		tsc_base = rdtsc();
+		i8254_delay(100000);
+		tsc_freq = (rdtsc() - tsc_base) * 10;
+		splhigh();
+		bmk_printf("x86_initclocks(): TSC frequency estimate is %llu Hz\n",
+			(unsigned long long)tsc_freq);
+
+		/*
+		 * Calculate TSC scaling multiplier.
+		 *
+		 * (0.32) tsc_mult = NSEC_PER_SEC (32.32) / tsc_freq (32.0)
+		 */
+		tsc_mult = (NSEC_PER_SEC << 32) / tsc_freq;
+
+		/*
+		 * Monotonic time begins at tsc_base (first read of TSC before
+		 * calibration).
+		 */
+		time_base = mul64_32(tsc_base, tsc_mult);
+
+		have_pvclock = 0;
+	}
 
 	/*
 	 * Reinitialise i8254 timer channel 0 to mode 4 (one shot).
 	 */
 	outb(TIMER_MODE, TIMER_SEL0 | TIMER_ONESHOT | TIMER_16BIT);
-
-	/*
-	 * Calculate TSC scaling multiplier.
-	 *
-	 * (0.32) tsc_mult = NSEC_PER_SEC (32.32) / tsc_freq (32.0)
-	 */
-	tsc_mult = (NSEC_PER_SEC << 32) / tsc_freq;
-
-	/*
-	 * Monotonic time begins at tsc_base (first read of TSC before
-	 * calibration).
-	 */
-	time_base = mul64_32(tsc_base, tsc_mult);
 
 	/*
 	 * Map i8254 interrupt vector and enable it in the PIC.
@@ -266,17 +381,21 @@ x86_initclocks(void)
 bmk_time_t
 bmk_platform_cpu_clock_monotonic(void)
 {
-	uint64_t tsc_now, tsc_delta;
+	if (have_pvclock)
+		return pvclock_read_time_info();
+	else {
+		uint64_t tsc_now, tsc_delta;
 
-	/*
-	 * Update time_base (monotonic time) and tsc_base (TSC time).
-	 */
-	tsc_now = rdtsc();
-	tsc_delta = tsc_now - tsc_base;
-	time_base += mul64_32(tsc_delta, tsc_mult);
-	tsc_base = tsc_now;
+		/*
+		 * Update time_base (monotonic time) and tsc_base (TSC time).
+		 */
+		tsc_now = rdtsc();
+		tsc_delta = tsc_now - tsc_base;
+		time_base += mul64_32(tsc_delta, tsc_mult);
+		tsc_base = tsc_now;
 
-	return time_base;
+		return time_base;
+	}
 }
 
 /*
