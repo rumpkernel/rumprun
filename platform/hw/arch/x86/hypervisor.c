@@ -49,6 +49,8 @@ int hypervisor_detect(void)
 	 * Source: https://lkml.org/lkml/2008/10/1/246
 	 */
 	x86_cpuid(0x40000000, &eax, &ebx, &ecx, &edx);
+	if (!(eax >= 0x40000000))
+		return 0;
 	/* Xen: "XenVMMXenVMM" */
 	if (ebx == 0x566e6558 && ecx == 0x65584d4d && edx == 0x4d4d566e)
 		return HYPERVISOR_XEN;
