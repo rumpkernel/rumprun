@@ -20,14 +20,14 @@
 #ifndef _MINIOS_TYPES_H_
 #define _MINIOS_TYPES_H_
 
+/* XXX: fix the kernelside Xen driver #include abuse */
+#ifndef __RUMP_KERNEL__
 #include <bmk-core/types.h>
 
 typedef unsigned int		u_int;
 typedef unsigned long		u_long;
 typedef unsigned long		size_t;
 
-/* XXX: fix the kernelside Xen driver #include abuse */
-#ifndef offsetof
 #define offsetof(_t_,_e_) __builtin_offsetof(_t_,_e_)
 #endif
 
