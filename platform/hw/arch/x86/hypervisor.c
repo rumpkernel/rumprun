@@ -53,13 +53,13 @@ int hypervisor_detect(void)
 	if (ebx == 0x566e6558 && ecx == 0x65584d4d && edx == 0x4d4d566e)
 		return HYPERVISOR_XEN;
 	/* VMware: "VMwareVMware" */
-	else if (ebx == 0x564d7761 && ecx == 0x7265564d && edx == 0x77617265)
+	else if (ebx == 0x61774d56 && ecx == 0x4d566572 && edx == 0x65726177)
 		return HYPERVISOR_VMWARE;
 	/* Hyper-V: "Microsoft Hv" */
-	else if (ebx == 0x4d696372 && ecx == 0x6f736f66 && edx == 0x74204876)
+	else if (ebx == 0x7263694d && ecx == 0x666f736f && edx == 0x76482074)
 		return HYPERVISOR_HYPERV;
 	/* KVM: "KVMKVMKVM\0\0\0" */
-	else if (ebx == 0x4b564d4b && ecx == 0x564d4b56 && edx == 0x4d000000)
+	else if (ebx == 0x4b4d564b && ecx == 0x564b4d56 && edx == 0x0000004d)
 		return HYPERVISOR_KVM;
 
 	return 0;
