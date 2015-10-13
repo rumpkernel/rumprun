@@ -70,11 +70,11 @@ endif
 
 .PHONY: installkern
 installkern:
-	install -m 0666 ${MAINOBJ} ${INSTALLDIR}/lib
+	install -m 0444 ${MAINOBJ} ${INSTALLDIR}/lib
 
 .PHONY: installuser
 installuser:
-	install -m 0666 ${PSEUDOSTUBS}.o ${INSTALLDIR}/lib
+	install -m 0444 ${PSEUDOSTUBS}.o ${INSTALLDIR}/lib
 
 INSTALLTGTS=	installkern
 ifneq (${KERNONLY},true)
