@@ -16,6 +16,15 @@ typedef long		ssize_t;
 typedef unsigned long	size_t;
 typedef long		register_t;
 
+typedef int64_t		off_t;
+typedef uint64_t	dev_t;
+typedef uint32_t	mode_t;
+typedef int		gid_t;
+typedef int		uid_t;
+
+typedef unsigned int	u_int;
+typedef unsigned long	u_long;
+
 struct timespec;
 struct itimerspec;
 struct sigevent;
