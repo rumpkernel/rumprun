@@ -49,7 +49,6 @@ $(APP_TOOLS_DIR)/${2}:							\
 		-e 's#!APPTOOLS_CC!#$(APP_TOOLS_CC)#g;'			\
 		-e 's#!APPTOOLS_CXX!#$(APP_TOOLS_CXX)#g;'		\
 		-e 's#!GNUPLATFORM!#$(GNUPLATFORM)#g;'			\
-		-e 's#!BASE_DIR!#$(abspath ../..)#g;'			\
 		-e 's#!DESTDIR!#$(DESTDIR)#g;'				\
 		-e 's#!APPTOOLS_DIR!#$(APP_TOOLS_DIR)#g;'		\
 		-e 's#!APPTOOLS_PLATFORM!#$(APP_TOOLS_PLATFORM)#g;'	\
