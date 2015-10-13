@@ -24,11 +24,13 @@ $(eval $(call BUILDLIB_target,${COREDIR},libbmk_core.a))
 $(eval $(call BUILDLIB_target,${RUMPUSERDIR},libbmk_rumpuser.a))
 $(eval $(call BUILDLIB_target,${COMPILERRTDIR},libcompiler_rt.a,RUMPSRC=${RUMPSRC}))
 
-${COMMONDIR}/pseudolinkstubs.c: ${BASEDIR}/${PLATFORM}/librumprun_base.a
+PSEUDOSTUBS=${COMMONDIR}/rumprun-pseudolinkstubs
+
+${PSEUDOSTUBS}.c: ${BASEDIR}/${PLATFORM}/librumprun_base.a
 	sh ../makepseudolinkstubs.sh ${NM} ${RUMPSRC} $< $@
 
 commonlibs: platformlibs userlibs
-userlibs: ${BASEDIR}/${PLATFORM}/librumprun_base.a ${COMMONDIR}/pseudolinkstubs.o
+userlibs: ${BASEDIR}/${PLATFORM}/librumprun_base.a ${PSEUDOSTUBS}.o
 platformlibs: ${COREDIR}/${PLATFORM}/libbmk_core.a ${RUMPUSERDIR}/${PLATFORM}/libbmk_rumpuser.a
 compiler_rt: ${COMPILERRTDIR}/${PLATFORM}/libcompiler_rt.a
 
@@ -53,7 +55,7 @@ commonclean:
 	( cd ${RUMPUSERDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
 	( cd ${COMPILERRTDIR} && \
 		${RUMPMAKE} RUMPSRC=${RUMPSRC} MAKEOBJDIR=${PLATFORM} cleandir )
-	rm -f ${COMMONDIR}/pseudolinkstubs.c ${COMMONDIR}/pseudolinkstubs.o
+	rm -f ${PSEUDOSTUBS}.c ${PSEUDOSTUBS}.o
 
 .PHONY: tests
 tests: ${MAINOBJ} commonlibs app-tools
@@ -69,3 +71,4 @@ endif
 .PHONY: install
 install: ${MAINOBJ}
 	install -m 0666 ${MAINOBJ} ${INSTALLDIR}/lib
+	install -m 0666 ${PSEUDOSTUBS}.o ${INSTALLDIR}/lib
