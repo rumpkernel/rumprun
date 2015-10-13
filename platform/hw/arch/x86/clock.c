@@ -125,9 +125,9 @@ mul64_32(uint64_t a, uint32_t b)
 		"mov  %4,%%eax ; "  /* %eax = h                               */
 		"mov  %%edx,%4 ; "  /* t1 = ((l * b) >> 32)                   */
 		"mul  %5       ; "  /* %edx:%eax = (h * b)                    */
-		"add  %4,%%eax ; "
-		"xor  %5,%5    ; "
-		"adc  %5,%%edx ; "  /* %edx:%eax = (h * b) + ((l * b) >> 32)  */
+		"xor  %5,%5    ; "  /* t2 = 0                                 */
+		"add  %4,%%eax ; "  /* %eax = (h * b) + t1 (LSW)              */
+		"adc  %5,%%edx ; "  /* %edx = (h * b) + t1 (MSW)              */
 		: "=A" (prod), "=r" (t1), "=r" (t2)
 		: "a" (l), "1" (h), "2" (b)
 	);
