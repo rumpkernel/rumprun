@@ -26,8 +26,6 @@
 #include <bmk-core/core.h>
 #include <bmk-core/mainthread.h>
 
-#include <bmk-rumpuser/core_types.h> /* XXX */
-
 #include <rumprun-base/config.h>
 #include <rumprun-base/rumprun.h>
 
