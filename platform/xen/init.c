@@ -31,11 +31,11 @@
 #include <mini-os/xenbus.h>
 #include <xen/xen.h>
 
+#include <bmk-core/mainthread.h>
 #include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
 
 #include <rumprun-base/config.h>
-#include <rumprun-base/rumprun.h>
 
 static char hardcoded_jsoncfg[] = "";
 
@@ -57,6 +57,7 @@ get_config(char *cmdline)
 	char *cfg;
 	int retry;
 
+	/* XXX: should not be here */
 	cfg = rumprun_config_path(cmdline);
 	if (cfg != NULL)
 		return cfg;
@@ -73,14 +74,11 @@ get_config(char *cmdline)
 int
 app_main(start_info_t *si)
 {
-	void *cookie;
+	void *cmdline;
 
-	rumprun_boot(get_config((char *)si->cmd_line));
+	cmdline = get_config((char *)si->cmd_line);
+	bmk_mainthread(cmdline);
+	/* NOTREACHED */
 
-	RUNMAINS();
-
-	while ((cookie = rumprun_get_finished()) != NULL)
-		rumprun_wait(cookie);
-
-	rumprun_reboot();
+	return 0;
 }

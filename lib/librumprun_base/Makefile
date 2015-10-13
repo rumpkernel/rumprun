@@ -1,7 +1,7 @@
 LIB=		rumprun_base
 LIBISPRIVATE=	# defined
 
-SRCS=		rumprun.c
+SRCS=		main.c rumprun.c
 SRCS+=		parseargs.c rumpconfig.c
 SRCS+=		malloc.c netbsd_initfini.c signals.c
 SRCS+=		syscall_mman.c syscall_misc.c

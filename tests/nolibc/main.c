@@ -1,6 +1,7 @@
 #include <hw/kernel.h>
 
 #include <bmk-core/errno.h>
+#include <bmk-core/mainthread.h>
 #include <bmk-core/printf.h>
 #include <bmk-core/string.h>
 
@@ -16,7 +17,7 @@ writestr(int fd, const char *str)
 }
 
 void
-mainthread(void *cmdline)
+bmk_mainthread(void *cmdline)
 {
 	int rv, fd;
 

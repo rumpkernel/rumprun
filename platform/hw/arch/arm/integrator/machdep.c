@@ -34,6 +34,7 @@
 #include <hw/kernel.h>
 
 #include <bmk-core/core.h>
+#include <bmk-core/mainthread.h>
 #include <bmk-core/pgalloc.h>
 #include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
@@ -98,7 +99,7 @@ arm_boot(void)
 
 	spl0();
 
-	bmk_sched_startmain(mainthread, cmdline);
+	bmk_sched_startmain(bmk_mainthread, cmdline);
 }
 
 unsigned long bmk_cpu_arm_curtcb;

@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2014 Antti Kantee.  All Rights Reserved.
+ * Copyright (c) 2015 Antti Kantee.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,27 +23,25 @@
  * SUCH DAMAGE.
  */
 
-#include <hw/types.h>
-#include <hw/kernel.h>
-#include <hw/multiboot.h>
-
 #include <bmk-core/core.h>
 #include <bmk-core/mainthread.h>
-#include <bmk-core/sched.h>
-#include <bmk-core/printf.h>
+
+#include <bmk-rumpuser/core_types.h> /* XXX */
+
+#include <rumprun-base/config.h>
+#include <rumprun-base/rumprun.h>
 
 void
-x86_boot(struct multiboot_info *mbi)
+bmk_mainthread(void *cmdline)
 {
+	void *cookie;
 
-	cons_init();
-	bmk_printf("rump kernel bare metal bootstrap\n\n");
+	rumprun_boot(cmdline);
 
-	cpu_init();
-	bmk_sched_init();
-	multiboot(mbi);
+	RUNMAINS();
 
-	spl0();
+	while ((cookie = rumprun_get_finished()))
+		rumprun_wait(cookie);
 
-	bmk_sched_startmain(bmk_mainthread, multiboot_cmdline);
+	rumprun_reboot();
 }

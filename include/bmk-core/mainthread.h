@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2014 Antti Kantee.  All Rights Reserved.
+ * Copyright (c) 2015 Antti Kantee.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,22 +23,9 @@
  * SUCH DAMAGE.
  */
 
-#include <hw/kernel.h>
+#ifndef _BMK_CORE_MAINTHREAD_H_
+#define _BMK_CORE_MAINTHREAD_H_
 
-#include <rumprun-base/rumprun.h>
-#include <rumprun-base/config.h>
+void	bmk_mainthread(void *);
 
-void
-mainthread(void *cmdline)
-{
-	void *cookie;
-
-	rumprun_boot(cmdline);
-
-	RUNMAINS();
-
-	while ((cookie = rumprun_get_finished()) != NULL)
-		rumprun_wait(cookie);
-
-	rumprun_reboot();
-}
+#endif /* _BMK_CORE_MAINTHREAD_H_ */

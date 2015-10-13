@@ -54,10 +54,6 @@ OBJS_BMK+=	intr.o clock_subr.o kernel.o multiboot.o undefs.o
 
 include arch/${ARCHDIR}/Makefile.inc
 
-ifneq (${KERNONLY},true)
-OBJS_BMK+=	init.o
-endif
-
 .PHONY:	clean cleandir test
 
 APP_TOOLS_PLATFORM= hw
