@@ -340,17 +340,35 @@ pvclock_read_wall_clock(void)
 
 /*
  * Initialise PV clock. Returns zero if successful (PV clock is available).
+ *
+ * Source: Linux kernel, Documentation/virtual/kvm/{msr,cpuid}.txt
  */
 static int
 pvclock_init(void)
 {
+	uint32_t eax, ebx, ecx, edx;
+	uint32_t msr_kvm_system_time, msr_kvm_wall_clock;
 
 	if (hypervisor_detect() != HYPERVISOR_KVM)
 		return 1;
+	/*
+	 * Prefer new-style MSRs, and bail entirely if neither is indicated as
+	 * available by CPUID.
+	 */
+	x86_cpuid(0x40000001, &eax, &ebx, &ecx, &edx);
+	if (eax & (1 << 3)) {
+		msr_kvm_system_time = 0x4b564d01;
+		msr_kvm_wall_clock = 0x4b564d00;
+	}
+	else if (eax & (1 << 0)) {
+		msr_kvm_system_time = 0x12;
+		msr_kvm_wall_clock = 0x11;
+	}
+	else
+		return 1;
 
-	/* Initialise MSR_KVM_SYSTEM_TIME_NEW and enable updates */
 	__asm__ __volatile("wrmsr" ::
-		"c" (0x4b564d01),
+		"c" (msr_kvm_system_time),
 		"a" ((uint32_t)((uintptr_t)&pvclock_ti | 0x1)),
 #if defined(__x86_64__)
 		"d" ((uint32_t)((uintptr_t)&pvclock_ti >> 32))
@@ -358,9 +376,8 @@ pvclock_init(void)
 		"d" (0)
 #endif
 	);
-	/* Initialise MSR_KVM_WALL_CLOCK_NEW */
 	__asm__ __volatile("wrmsr" ::
-		"c" (0x4b564d00),
+		"c" (msr_kvm_wall_clock),
 		"a" ((uint32_t)((uintptr_t)&pvclock_wc)),
 #if defined(__x86_64__)
 		"d" ((uint32_t)((uintptr_t)&pvclock_wc >> 32))
