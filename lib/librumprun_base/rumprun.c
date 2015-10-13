@@ -287,7 +287,7 @@ rumprun_daemon(void)
 	pthread_mutex_unlock(&w_mtx);
 }
 
-void __dead
+void __attribute__((noreturn))
 rumprun_reboot(void)
 {
 

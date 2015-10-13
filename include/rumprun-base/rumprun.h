@@ -68,7 +68,7 @@ void *	rumprun(mainlike_fn, int, char *[]);
 int	rumprun_wait(void *);
 void *	rumprun_get_finished(void);
 
-void	rumprun_reboot(void) __dead;
+void	rumprun_reboot(void) __attribute__((noreturn));
 
 /* XXX: this prototype shouldn't be here (if it should exist at all) */
 void	rumprun_daemon(void);
