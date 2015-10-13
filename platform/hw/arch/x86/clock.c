@@ -250,17 +250,17 @@ static bmk_time_t
 pvclock_read_wall_clock(void)
 {
 	uint32_t version;
-	bmk_time_t wc_now;
+	bmk_time_t wc_boot;
 
 	do {
 		version = pvclock_wc.version;
 		__asm__ ("mfence" ::: "memory");
-		wc_now = pvclock_wc.sec * NSEC_PER_SEC;
-		wc_now += pvclock_wc.nsec;
+		wc_boot = pvclock_wc.sec * NSEC_PER_SEC;
+		wc_boot += pvclock_wc.nsec;
 		__asm__ ("mfence" ::: "memory");
 	} while ((pvclock_wc.version & 1) || (pvclock_wc.version != version));
 
-	return wc_now + pvclock_read_time_info();
+	return wc_boot;
 }
 
 void
@@ -313,7 +313,7 @@ x86_initclocks(void)
 			"d" (0)
 #endif
 		);
-		/* Initialise epoch offset using wall clock time */
+		/* Epoch offset is pvclock wall clock time at boot */
 		rtc_epochoffset = pvclock_read_wall_clock();
 
 		have_pvclock = 1;
