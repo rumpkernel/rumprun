@@ -68,7 +68,18 @@ else
 INSTALLDIR=	${DESTDIR}
 endif
 
-.PHONY: install
-install: ${MAINOBJ}
+.PHONY: installkern
+installkern:
 	install -m 0666 ${MAINOBJ} ${INSTALLDIR}/lib
+
+.PHONY: installuser
+installuser:
 	install -m 0666 ${PSEUDOSTUBS}.o ${INSTALLDIR}/lib
+
+INSTALLTGTS=	installkern
+ifneq (${KERNONLY},true)
+INSTALLTGTS+=	installuser
+endif
+
+.PHONY: install
+install: ${INSTALLTGTS}
