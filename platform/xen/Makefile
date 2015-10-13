@@ -7,7 +7,8 @@ ifdef BUILDRUMP_TOOLFLAGS
 include ${BUILDRUMP_TOOLFLAGS}
 endif
 
-MAINOBJ= $(abspath $(OBJ_DIR)/rumprun-xen-$(MACHINE_ARCH).o)
+MAINOBJNAME= rumprun-xen-$(MACHINE_ARCH).o
+MAINOBJ= $(abspath $(OBJ_DIR)/$(MAINOBJNAME))
 
 #
 # Rumprun-xen Makefile.
@@ -77,7 +78,7 @@ $(MAINOBJ): $(RUMP_OBJS) platformlibs
 	    -lbmk_rumpuser -lbmk_core -Wl,--no-whole-archive
 
 APP_TOOLS_PLATFORM= xen
-APP_TOOLS_OBJS_BAKE=	$(MAINOBJ)
+APP_TOOLS_OBJS_BAKE=	$(MAINOBJNAME)
 APP_TOOLS_LDSCRIPT_BAKE:= $(abspath $(OBJ_DIR)/xen/minios.lds)
 APP_TOOLS_DIR= $(abspath ../../app-tools)
 

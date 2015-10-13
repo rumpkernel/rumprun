@@ -425,7 +425,8 @@ dobuild ()
 	doextras || die 'platforms extras failed.  tillerman needs tea?'
 
 	# do final build of the platform bits
-	( cd ${PLATFORMDIR} && ${MAKE} BUILDRR=true || exit 1)
+	( cd ${PLATFORMDIR} \
+	    && ${MAKE} BUILDRR=true && ${MAKE} BUIDLRR=true install || exit 1)
 	[ $? -eq 0 ] || die platform make failed!
 }
 

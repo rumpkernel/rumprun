@@ -59,3 +59,13 @@ commonclean:
 tests: ${MAINOBJ} commonlibs app-tools
 	../../tests/buildtests.sh ${PLATFORM}
 	../../tests/runtests.sh ${PLATFORM_DEFAULT_TESTER}
+
+ifeq (${BUILDRR},true)
+INSTALLDIR=	${OBJDIR}/dest.stage
+else
+INSTALLDIR=	${DESTDIR}
+endif
+
+.PHONY: install
+install: ${MAINOBJ}
+	install -m 0666 ${MAINOBJ} ${INSTALLDIR}/lib
