@@ -1,5 +1,3 @@
-#include <hw/kernel.h>
-
 #include <bmk-core/errno.h>
 #include <bmk-core/mainthread.h>
 #include <bmk-core/printf.h>
@@ -39,5 +37,5 @@ bmk_mainthread(void *cmdline)
 		bmk_printf("Success?! fd=%d\n", fd);
 	}
 
-	rump_sys_reboot(0, NULL);
+	rump_sys_reboot(0, 0);
 }
