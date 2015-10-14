@@ -58,7 +58,7 @@ include arch/${ARCHDIR}/Makefile.inc
 
 APP_TOOLS_PLATFORM= hw
 APP_TOOLS_OBJS_BAKE=	${MAINOBJ}
-APP_TOOLS_LDSCRIPT_BAKE:= $(abspath ${LDSCRIPT})
+APP_TOOLS_LDSCRIPT_BAKE:= $(abspath arch/${ARCHDIR}/kern.ldscript)
 APP_TOOLS_DIR:= $(abspath ../../app-tools)
 
 include ${APP_TOOLS_DIR}/Makefile.app-tools

@@ -8,8 +8,6 @@ OBJS_BMK+=	arch/x86/x86_subr.o
 OBJS_BMK+=	arch/x86/clock.o
 OBJS_BMK+=      arch/x86/hypervisor.o
 
-LDSCRIPT=	arch/amd64/kern.ldscript
-
 CFLAGS+=	-mno-sse -mno-mmx
 
 # squash all interrupts to a single level to

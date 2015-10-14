@@ -1,7 +1,6 @@
 OBJS_BMK+=	arch/arm/integrator/locore.o
 OBJS_BMK+=	arch/arm/integrator/machdep.o
 OBJS_BMK+=	arch/arm/integrator/serialcons.o
-LDSCRIPT=	arch/arm/integrator/kern.ldscript
 
 CPPFLAGS+=	-Iarch/arm
 

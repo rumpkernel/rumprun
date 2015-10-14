@@ -7,8 +7,6 @@ OBJS_BMK+=	arch/x86/x86_subr.o
 OBJS_BMK+=	arch/x86/clock.o
 OBJS_BMK+=      arch/x86/hypervisor.o
 
-LDSCRIPT=	arch/i386/kern.ldscript
-
 CFLAGS+=	-mno-sse -mno-mmx -march=i686
 
 arch/i386/locore.o: arch/i386/locore.S
