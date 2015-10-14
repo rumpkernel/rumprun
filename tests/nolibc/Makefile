@@ -17,7 +17,7 @@ LDFLAGS+= -L$(abspath ../../lib/libcompiler_rt/${PLATFORM})
 CPPFLAGS+= -I../../include -I../../rumprun/include -I../../platform/${PLATFORM}/include
 CPPFLAGS+= -nostdlib
 
-LDSCRIPT=$(abspath ../../platform/${PLATFORM}/arch/${MACHINE}/kern.ldscript)
+LDSCRIPT=$(abspath ../../platform/${PLATFORM}/bmk.ldscript)
 
 ifeq (${MACHINE},amd64)
 LDFLAGS+= -z max-page-size=0x1000

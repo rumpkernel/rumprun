@@ -25,6 +25,8 @@ else
 TARGETS+= compiler_rt
 endif
 
+LDSCRIPT:= $(abspath $(OBJ_DIR)/xen/minios.lds)
+
 .PHONY: default
 default: ${TARGETS}
 
@@ -78,7 +80,7 @@ $(MAINOBJ): $(RUMP_OBJS) platformlibs
 
 APP_TOOLS_PLATFORM= xen
 APP_TOOLS_OBJS_BAKE=	$(MAINOBJ)
-APP_TOOLS_LDSCRIPT_BAKE:= $(abspath $(OBJ_DIR)/xen/minios.lds)
+APP_TOOLS_LDSCRIPT_BAKE:= $(LDSCRIPT)
 APP_TOOLS_DIR= $(abspath ../../app-tools)
 
 include $(APP_TOOLS_DIR)/Makefile.app-tools
@@ -87,7 +89,7 @@ include $(APP_TOOLS_DIR)/Makefile.app-tools
 
 clean:	app-tools_clean commonclean
 	$(MAKE) -C xen OBJ_DIR=$(OBJ_DIR)/xen clean
-	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/lib/*.o buildtest
+	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/lib/*.o buildtest $(MAINOBJ)
 
 cleanrump: clean
 	rm -rf rump rumpobj rumptools

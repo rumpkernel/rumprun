@@ -17,8 +17,6 @@ MAINOBJ=	rumprun-hw-${MACHINE_ARCH}.o
 
 all:  include/hw/machine ${MAINOBJ} ${TARGETS}
 
-include ../Makefile.inc
-
 CPPFLAGS=	-Iinclude -I../../include -nostdinc
 CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
 
@@ -50,7 +48,10 @@ endif
 
 ARCHDIR?= ${MACHINE}
 
+LDSCRIPT:=	$(abspath arch/${ARCHDIR}/kern.ldscript)
 OBJS_BMK+=	intr.o clock_subr.o kernel.o multiboot.o undefs.o
+
+include ../Makefile.inc
 
 include arch/${ARCHDIR}/Makefile.inc
 
@@ -58,7 +59,7 @@ include arch/${ARCHDIR}/Makefile.inc
 
 APP_TOOLS_PLATFORM= hw
 APP_TOOLS_OBJS_BAKE=	${MAINOBJ}
-APP_TOOLS_LDSCRIPT_BAKE:= $(abspath arch/${ARCHDIR}/kern.ldscript)
+APP_TOOLS_LDSCRIPT_BAKE:= ${LDSCRIPT}
 APP_TOOLS_DIR:= $(abspath ../../app-tools)
 
 include ${APP_TOOLS_DIR}/Makefile.app-tools

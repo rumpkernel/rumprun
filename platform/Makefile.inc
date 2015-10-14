@@ -29,9 +29,12 @@ PSEUDOSTUBS=${COMMONDIR}/rumprun-pseudolinkstubs
 ${PSEUDOSTUBS}.c: ${BASEDIR}/${PLATFORM}/librumprun_base.a
 	sh ../makepseudolinkstubs.sh ${NM} ${RUMPSRC} $< $@
 
+bmk.ldscript: ${LDSCRIPT}
+	ln -sf $< $@
+
 commonlibs: platformlibs userlibs
 userlibs: ${BASEDIR}/${PLATFORM}/librumprun_base.a ${PSEUDOSTUBS}.o
-platformlibs: ${COREDIR}/${PLATFORM}/libbmk_core.a ${RUMPUSERDIR}/${PLATFORM}/libbmk_rumpuser.a
+platformlibs: ${COREDIR}/${PLATFORM}/libbmk_core.a ${RUMPUSERDIR}/${PLATFORM}/libbmk_rumpuser.a bmk.ldscript
 compiler_rt: ${COMPILERRTDIR}/${PLATFORM}/libcompiler_rt.a
 
 .PHONY: buildtest
@@ -56,6 +59,7 @@ commonclean:
 	( cd ${COMPILERRTDIR} && \
 		${RUMPMAKE} RUMPSRC=${RUMPSRC} MAKEOBJDIR=${PLATFORM} cleandir )
 	rm -f ${PSEUDOSTUBS}.c ${PSEUDOSTUBS}.o
+	rm -f bmk.ldscript
 
 .PHONY: tests
 tests: ${MAINOBJ} commonlibs app-tools
