@@ -1,5 +1,7 @@
+PLATFORM?= hw
+
 include ../../global.mk
-include ../../platform/hw/config.mk
+include ../../platform/${PLATFORM}/config.mk
 
 ifdef BUILDRUMP_TOOLFLAGS
 include ${BUILDRUMP_TOOLFLAGS}
@@ -8,14 +10,14 @@ endif
 CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
 
 LDFLAGS:= -L$(abspath ../../rumprun/lib)
-LDFLAGS+= -L$(abspath ../../lib/libbmk_core/hw/)
-LDFLAGS+= -L$(abspath ../../lib/libbmk_rumpuser/hw/)
-LDFLAGS+= -L$(abspath ../../lib/libcompiler_rt/hw)
+LDFLAGS+= -L$(abspath ../../lib/libbmk_core/${PLATFORM}/)
+LDFLAGS+= -L$(abspath ../../lib/libbmk_rumpuser/${PLATFORM}/)
+LDFLAGS+= -L$(abspath ../../lib/libcompiler_rt/${PLATFORM})
 
-CPPFLAGS+= -I../../include -I../../rumprun/include -I../../platform/hw/include
+CPPFLAGS+= -I../../include -I../../rumprun/include -I../../platform/${PLATFORM}/include
 CPPFLAGS+= -nostdlib
 
-LDSCRIPT=$(abspath ../../platform/hw/arch/${MACHINE}/kern.ldscript)
+LDSCRIPT=$(abspath ../../platform/${PLATFORM}/arch/${MACHINE}/kern.ldscript)
 
 ifeq (${MACHINE},amd64)
 LDFLAGS+= -z max-page-size=0x1000
@@ -25,7 +27,7 @@ ifeq (${MACHINE},i386)
 LDFLAGS+= -m elf_i386
 endif
 
-OBJS= main.o $(abspath ../../platform/hw/rumprun-hw-${MACHINE_ARCH}.o)
+OBJS= main.o $(abspath ../../platform/${PLATFORM}/rumprun-${PLATFORM}-${MACHINE_ARCH}.o)
 
 .PHONY: clean
 
