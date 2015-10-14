@@ -10,8 +10,6 @@ endif
 CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
 
 LDFLAGS:= -L$(abspath ../../rumprun/lib)
-LDFLAGS+= -L$(abspath ../../lib/libbmk_core/${PLATFORM}/)
-LDFLAGS+= -L$(abspath ../../lib/libbmk_rumpuser/${PLATFORM}/)
 LDFLAGS+= -L$(abspath ../../lib/libcompiler_rt/${PLATFORM})
 
 CPPFLAGS+= -I../../include -I../../rumprun/include -I../../platform/${PLATFORM}/include
@@ -35,7 +33,6 @@ main.elf: ${OBJS}
 	${LD} ${LDFLAGS} -T${LDSCRIPT} 					\
 	${OBJS} 							\
 	--whole-archive -lrumpvfs -lrump --no-whole-archive		\
-	-lbmk_core -lbmk_rumpuser					\
 	-lcompiler_rt 							\
 	-o $@
 
