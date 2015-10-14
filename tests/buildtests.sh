@@ -11,6 +11,7 @@ set -e
 
 TESTMODE=apptools
 TESTCONFIGURE=true
+TESTCMAKE=$(which cmake || echo "")
 
 while getopts 'kqh' opt; do
 	case "$opt" in
@@ -59,9 +60,20 @@ test_apptools()
 	${MAKE} ${DOCXX} RUMPBAKE="${APPTOOLSDIR}/${RUMPBAKE}"
 
 	if ${TESTCONFIGURE}; then
-		cd configure
-		${APPTOOLSDIR}/${MACHINE}-rumprun-netbsd${ELF}-configure ./configure
-		${MAKE}
+		(
+			cd configure
+			${APPTOOLSDIR}/${MACHINE}-rumprun-netbsd${ELF}-configure ./configure
+			${MAKE}
+		)
+	fi
+
+	if [ -n "${TESTCMAKE}" ]; then
+		(
+			mkdir -p cmake/build
+			cd cmake/build
+			cmake -DCMAKE_TOOLCHAIN_FILE=${APPTOOLSDIR}/${MACHINE}-rumprun-netbsd${ELF}-toolchain.cmake ..
+			make
+		)
 	fi
 }
 

@@ -1,0 +1,3 @@
+#cmakedefine HAVE_SYS_EPOLL_H ${HAVE_SYS_EPOLL_H}
+#cmakedefine HAVE_SELECT ${HAVE_SELECT}
+#cmakedefine HAVE_SIGACTION ${HAVE_SIGACTION}
