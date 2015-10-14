@@ -80,7 +80,7 @@ ${MAINOBJ}: ${OBJS_BMK} platformlibs
 	    -G rumprun_platform_rumpuser_init -G _start $@
 
 clean: app-tools_clean commonclean
-	rm -f ${OBJS_BMK} include/hw/machine buildtest
+	rm -f ${OBJS_BMK} include/hw/machine buildtest ${MAINOBJ}
 
 cleandir: clean
 
