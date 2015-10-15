@@ -382,6 +382,7 @@ makeconfigmk ()
 	echo "MACHINE=${MACHINE}" >> ${1}
 	echo "MACHINE_ARCH=${MACHINE_ARCH}" >> ${1}
 	echo "KERNONLY=${KERNONLY}" >> ${1}
+	echo "PLATFORM=${PLATFORM}" >> ${1}
 
 	echo "DESTDIR=${DESTDIR}" >> ${1}
 	echo "OBJDIR=${RROBJ}" >> ${1}
