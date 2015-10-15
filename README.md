@@ -1,13 +1,13 @@
 Rumprun [![Build Status](https://travis-ci.org/rumpkernel/rumprun.svg?branch=master)](https://travis-ci.org/rumpkernel/rumprun)
 =======
 
-This repository provides the Rumprun
-[unikernel](https://en.wikipedia.org/wiki/Unikernel).  Rumprun runs on
-not only on hypervisors such as KVM and Xen, but also on bare metal.
-Rumprun can be used with or without a POSIX'y interface.  The former
-allows existing, unmodified POSIX applications to run out-of-the-box,
-while the latter allows building highly customized solutions with
-minimal footprints.
+This repository uses [rump kernels](http://rumpkernel.org) to provide
+the Rumprun [unikernel](https://en.wikipedia.org/wiki/Unikernel).
+Rumprun works on not only on hypervisors such as KVM and Xen, but also on
+bare metal.  Rumprun can be used with or without a POSIX'y interface.
+The former allows existing, unmodified POSIX applications to run
+out-of-the-box, while the latter allows building highly customized
+solutions with minimal footprints.
 
 See the [wiki](http://wiki.rumpkernel.org/Repo:-rumprun) for more
 information and instructions.
