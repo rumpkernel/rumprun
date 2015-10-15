@@ -20,7 +20,7 @@ OBJ_DIR ?= $(CURDIR)/obj
 TARGETS= prepare links mini-os $(MAINOBJ)
 
 ifneq (${KERNONLY},true)
-TARGETS+= app-tools userlibs
+TARGETS+= userlibs
 else
 TARGETS+= compiler_rt
 endif
@@ -78,14 +78,9 @@ $(MAINOBJ): $(RUMP_OBJS) platformlibs
 	    -L${COREDIR}/xen -L${RUMPUSERDIR}/xen -Wl,--whole-archive \
 	    -lbmk_rumpuser -lbmk_core -Wl,--no-whole-archive
 
-APP_TOOLS_PLATFORM= xen
-APP_TOOLS_DIR= $(abspath ../../app-tools)
+.PHONY: clean arch_clean
 
-include $(APP_TOOLS_DIR)/Makefile.app-tools
-
-.PHONY: clean arch_clean app-tools_clean
-
-clean:	app-tools_clean commonclean
+clean:	commonclean
 	$(MAKE) -C xen OBJ_DIR=$(OBJ_DIR)/xen clean
 	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/lib/*.o buildtest $(MAINOBJ)
 

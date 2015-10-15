@@ -34,7 +34,7 @@ platformlibs: ${COREDIR}/${PLATFORM}/libbmk_core.a ${RUMPUSERDIR}/${PLATFORM}/li
 compiler_rt: ${COMPILERRTDIR}/${PLATFORM}/libcompiler_rt.a
 
 .PHONY: buildtest
-buildtest: ../../tests/hello/hello.c ${MAINOBJ} commonlibs app-tools
+buildtest: ../../tests/hello/hello.c ${MAINOBJ} commonlibs
 	${APP_TOOLS_CC} -g -o $@ $< -lrumprun_tester
 	@echo Testing baking ...
 	@export RUMPRUN_WARNING_STFU=please ; for board in \
@@ -57,7 +57,7 @@ commonclean:
 	rm -f bmk.ldscript
 
 .PHONY: tests
-tests: ${MAINOBJ} commonlibs app-tools
+tests: ${MAINOBJ} commonlibs
 	../../tests/buildtests.sh ${PLATFORM}
 	../../tests/runtests.sh ${PLATFORM_DEFAULT_TESTER}
 

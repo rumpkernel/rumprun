@@ -1,14 +1,14 @@
-_APPTOOLS_PARAMS=  APP_TOOLS_PLATFORM APP_TOOLS_DIR
+ifeq ($(CONFIG),)
+$(error CONFIG missing)
+endif
 
-define varchk_tmpl
-ifeq ($${$1},)
-  _APPTOOLS_MISSING=$1
+include ${CONFIG}
+ifeq (${BUILDRUMP_TOOLFLAGS},)
+$(error invalid config file ${CONFIG})
 endif
-endef
-$(foreach var,${_APPTOOLS_PARAMS},$(eval $(call varchk_tmpl,${var})))
-ifdef _APPTOOLS_MISSING
-$(error ${_APPTOOLS_MISSING} not defined)
-endif
+include ${BUILDRUMP_TOOLFLAGS}
+
+APP_TOOLS_DIR:=		$(abspath .)
 
 APP_TOOL_FILES=		configure make gmake toolchain.cmake recipe.s
 APP_TOOL_COMPILERS=	cc c++
@@ -24,13 +24,16 @@ MACHINE_ARCH:= $(shell ${RUMPMAKE} -f bsd.own.mk -V '$${MACHINE_ARCH}')
 _CCVARIANT:=$(shell ${RUMPMAKE} -f bsd.own.mk -V '$${HAVE_LLVM:Dclang:Ugcc}')
 _CXXVARIANT:=$(shell ${RUMPMAKE} -f bsd.own.mk -V '$${HAVE_LLVM:Dclang++:Ug++}')
 
+include ../global.mk
+LDFLAGS_BAKE:= ${LDFLAGS.${PLATFORM}.${MACHINE_ARCH}}
+
 _APP_TOOL_TARGETS:=							\
     $(APP_TOOL_FILES:%=$(APP_TOOLS_DIR)/$(GNUPLATFORM)-%)		\
     $(APP_TOOLS_DIR)/$(GNUPLATFORM)-$(_CCVARIANT)			\
     $(APP_TOOLS_DIR)/$(GNUPLATFORM)-$(_CXXVARIANT)			\
     $(APP_TOOL_SPECS:%=$(APP_TOOLS_DIR)/%)				\
     $(APP_TOOL_PASSTHROUGH:%=$(APP_TOOLS_DIR)/$(GNUPLATFORM)-%)		\
-    $(APP_TOOLS_DIR)/specs-bake-$(GNUPLATFORM)-$(APP_TOOLS_PLATFORM)
+    $(APP_TOOLS_DIR)/specs-bake-$(GNUPLATFORM)-$(PLATFORM)
 
 .PHONY: app-tools
 app-tools: $(_APP_TOOL_TARGETS)
@@ -51,7 +54,7 @@ $(APP_TOOLS_DIR)/${2}:							\
 		-e 's#!GNUPLATFORM!#$(GNUPLATFORM)#g;'			\
 		-e 's#!DESTDIR!#$(DESTDIR)#g;'				\
 		-e 's#!APPTOOLS_DIR!#$(APP_TOOLS_DIR)#g;'		\
-		-e 's#!APPTOOLS_PLATFORM!#$(APP_TOOLS_PLATFORM)#g;'	\
+		-e 's#!APPTOOLS_PLATFORM!#$(PLATFORM)#g;'	\
 		-e 's#!CPPFLAGS!#$(BUILDRUMP_TOOL_CPPFLAGS)#g;'		\
 		-e 's#!CFLAGS!#$(BUILDRUMP_TOOL_CFLAGS)#g;'		\
 		-e 's#!CXXFLAGS!#$(BUILDRUMP_TOOL_CXXFLAGS)#g;'		\
@@ -65,7 +68,7 @@ $(foreach spec,${APP_TOOL_SPECS},$(eval \
     $(call APPTOOLS_templ,${spec}.in,${spec})))
 $(eval $(call APPTOOLS_templ,cc.in,$(GNUPLATFORM)-${_CCVARIANT}))
 $(eval $(call APPTOOLS_templ,cc.in,$(GNUPLATFORM)-${_CXXVARIANT}))
-$(eval $(call APPTOOLS_templ,specs-bake.in,specs-bake-$(GNUPLATFORM)-$(APP_TOOLS_PLATFORM)))
+$(eval $(call APPTOOLS_templ,specs-bake.in,specs-bake-$(GNUPLATFORM)-$(PLATFORM)))
 
 define APPTOOLS_passthrough
 uptool_$1=$(shell echo $1 | tr '[:lower:]' '[:upper:]')
@@ -77,5 +80,5 @@ $(APP_TOOLS_DIR)/$(GNUPLATFORM)-$1:
 endef
 $(foreach t,${APP_TOOL_PASSTHROUGH},$(eval $(call APPTOOLS_passthrough,${t})))
 
-app-tools_clean:
+clean:
 	rm -f $(_APP_TOOL_TARGETS)

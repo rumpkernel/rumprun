@@ -8,7 +8,7 @@ include ${BUILDRUMP_TOOLFLAGS}
 endif
 
 ifneq (${KERNONLY},true)
-TARGETS:= app-tools userlibs
+TARGETS:= userlibs
 else
 TARGETS:= compiler_rt
 endif
@@ -57,11 +57,6 @@ include arch/${ARCHDIR}/Makefile.inc
 
 .PHONY:	clean cleandir test
 
-APP_TOOLS_PLATFORM= hw
-APP_TOOLS_DIR:= $(abspath ../../app-tools)
-
-include ${APP_TOOLS_DIR}/Makefile.app-tools
-
 include/hw/machine:
 	@ln -sf ../arch/${MACHINE_ARCH} include/hw/machine
 
@@ -77,7 +72,7 @@ ${MAINOBJ}: ${OBJS_BMK} platformlibs
 	${OBJCOPY} -w -G bmk_* -G rumpuser_* -G jsmn_* \
 	    -G rumprun_platform_rumpuser_init -G _start $@
 
-clean: app-tools_clean commonclean
+clean: commonclean
 	rm -f ${OBJS_BMK} include/hw/machine buildtest ${MAINOBJ}
 
 cleandir: clean

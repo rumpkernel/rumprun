@@ -315,6 +315,7 @@ EOF
 
 builduserspace ()
 {
+	${MAKE} -C app-tools CONFIG=$(pwd)/${PLATFORMDIR}/config.mk
 
 	usermtree ${STAGING}
 
