@@ -1,7 +1,7 @@
 PLATFORM?= hw
 
 include ../../global.mk
-include ../../platform/${PLATFORM}/config.mk
+-include ../../platform/${PLATFORM}/config.mk
 
 ifdef BUILDRUMP_TOOLFLAGS
 include ${BUILDRUMP_TOOLFLAGS}
