@@ -63,10 +63,10 @@ APP_TOOLS_DIR:= $(abspath ../../app-tools)
 include ${APP_TOOLS_DIR}/Makefile.app-tools
 
 include/hw/machine:
-	@ln -s ../arch/${MACHINE_ARCH} include/hw/machine
+	ln -sf ../arch/${MACHINE_ARCH} include/hw/machine
 
 ../../include/bmk-pcpu:
-	@ln -sf ../platform/hw/include/hw/machine $@
+	ln -sf ../platform/hw/include/hw/machine $@
 
 links: include/hw/machine ../../include/bmk-pcpu
 

@@ -17,9 +17,7 @@ CPPFLAGS+= -nostdlib
 
 LDSCRIPT=$(abspath ../../platform/${PLATFORM}/bmk.ldscript)
 
-ifeq (${MACHINE},amd64)
-LDFLAGS+= -z max-page-size=0x1000
-endif
+LDFLAGS+= ${LDFLAGS.${PLATFORM}.${MACHINE_ARCH}}
 
 ifeq (${MACHINE},i386)
 LDFLAGS+= -m elf_i386

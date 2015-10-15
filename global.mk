@@ -7,3 +7,5 @@ CFLAGS+= -Wall -Wimplicit -Wmissing-prototypes -Wstrict-prototypes
 ifndef NOGCCERROR
 CFLAGS+= -Werror
 endif
+
+LDFLAGS.hw.x86_64= -z max-page-size=0x1000

@@ -14,8 +14,6 @@ CFLAGS+=	-mno-sse -mno-mmx
 # avoid having to figure out routing
 CFLAGS+=	-DBMK_SCREW_INTERRUPT_ROUTING
 
-LDFLAGS_BAKE+=	-z max-page-size=0x1000
-
 arch/amd64/locore.o: arch/amd64/locore.S
 	${CC} ${CFLAGS} ${CPPFLAGS} -D_LOCORE -c -o arch/amd64/locore.o $<
 
