@@ -23,7 +23,6 @@
  * SUCH DAMAGE.
  */
 
-#include <bmk-core/core.h>
 #include <bmk-core/mainthread.h>
 
 #include <rumprun-base/config.h>
