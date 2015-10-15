@@ -10,8 +10,6 @@ OBJS_BMK+=      arch/x86/hypervisor.o
 
 CFLAGS+=	-mno-sse -mno-mmx
 
-LDFLAGS_BAKE+= -z max-page-size=0x1000
-
 # squash all interrupts to a single level to
 # avoid having to figure out routing
 CFLAGS+=	-DBMK_SCREW_INTERRUPT_ROUTING
