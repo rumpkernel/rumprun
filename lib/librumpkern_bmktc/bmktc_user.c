@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2015 Martin Lucina.  All Rights Reserved.
+/*-
+ * Copyright (c) 2015 Antti Kantee.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -23,49 +23,13 @@
  * SUCH DAMAGE.
  */
 
-#include <sys/cdefs.h>
-#include <sys/param.h>
-#include <sys/cpu.h>
-#include <sys/kernel.h>
-#include <sys/module.h>
-#include <sys/timetc.h>
+#include <bmk-core/platform.h>
 
 #include "bmktc_user.h"
 
-MODULE(MODULE_CLASS_MISC, bmktc, NULL);
-
-static u_int
-bmktc_get(struct timecounter *tc)
+unsigned int
+rumpcomp_bmktc_gettime(void)
 {
 
-	return rumpcomp_bmktc_gettime();
-}
-
-static struct timecounter bmktc = {
-	.tc_get_timecount	= bmktc_get,
-	.tc_poll_pps 		= NULL,
-	.tc_counter_mask	= ~0,
-	.tc_frequency		= 1000000000ULL,
-	.tc_name		= "bmktc",
-	.tc_quality		= 100,
-};
-
-static int
-bmktc_modcmd(modcmd_t cmd, void *arg)
-{
-
-	switch (cmd) {
-	case MODULE_CMD_INIT:
-		tc_init(&bmktc);
-		break;
-
-	case MODULE_CMD_FINI:
-		tc_detach(&bmktc);
-		break;
-
-	default:
-		return ENOTTY;
-	}
-
-	return 0;
+	return (unsigned int)bmk_platform_cpu_clock_monotonic();
 }
