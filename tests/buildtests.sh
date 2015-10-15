@@ -84,7 +84,7 @@ test_kernonly()
 		! type gmake >/dev/null 2>&1 || MAKE=gmake
 	fi
 
-	${MAKE} kernonly-tests
+	${MAKE} PLATFORM=${PLATFORM} kernonly-tests
 }
 
 test_${TESTMODE}

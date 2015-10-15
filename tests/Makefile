@@ -6,7 +6,7 @@ all-tests:
 
 .PHONY: kernonly-tests
 kernonly-tests:
-	$(MAKE) -C nolibc
+	$(MAKE) PLATFORM=${PLATFORM} -C nolibc
 
 .PHONY: clean
 clean:
