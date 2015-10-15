@@ -417,7 +417,6 @@ dobuild ()
 
 	${KERNONLY} || builduserspace
 
-	# depends on config.mk
 	buildpci
 
 	buildkernlibs
