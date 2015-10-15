@@ -325,6 +325,7 @@ builduserspace ()
 	for lib in ${LIBS}; do
 		makeuserlib ${lib}
 	done
+	makeuserlib $(pwd)/lib/librumprun_base ${PLATFORM}
 	makeuserlib $(pwd)/lib/librumprun_tester ${PLATFORM}
 
 	# build unwind bits if we support c++
@@ -340,9 +341,6 @@ builduserspace ()
 
 buildpci ()
 {
-
-	# need links to build the hypercall module
-	${MAKE} -C ${PLATFORMDIR} links
 
 	if eval ${PLATFORM_PCI_P}; then
 		${RUMPMAKE} -f ${PLATFORMDIR}/pci/Makefile.pci ${STDJ} obj
@@ -412,6 +410,8 @@ dobuild ()
 
 	PLATFORM_MKCONF=
 	. ${PLATFORMDIR}/platform.conf
+
+	${MAKE} -C ${PLATFORMDIR} links
 
 	buildrump "$@"
 	${KERNONLY} || builduserspace

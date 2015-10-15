@@ -1,5 +1,4 @@
 LIB=		rumprun_base
-LIBISPRIVATE=	# defined
 
 SRCS=		main.c rumprun.c
 SRCS+=		parseargs.c rumpconfig.c

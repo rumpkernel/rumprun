@@ -4,12 +4,9 @@ endif
 
 COREDIR:=	$(shell pwd)/../../lib/libbmk_core
 RUMPUSERDIR:=	$(shell pwd)/../../lib/libbmk_rumpuser
-BASEDIR:=	$(shell pwd)/../../lib/librumprun_base
 COMPILERRTDIR:=	$(shell pwd)/../../lib/libcompiler_rt
 
 COMMONDIR:=	$(abspath ../)
-
-LDFLAGS_BAKE+=	-L${BASEDIR}/${PLATFORM}
 
 define BUILDLIB_target
 .PHONY: ${1}/${PLATFORM}/${2}
@@ -19,21 +16,20 @@ ${1}/${PLATFORM}/${2}:
 	    && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} ${3} dependall )
 endef
 
-$(eval $(call BUILDLIB_target,${BASEDIR},librumprun_base.a))
 $(eval $(call BUILDLIB_target,${COREDIR},libbmk_core.a))
 $(eval $(call BUILDLIB_target,${RUMPUSERDIR},libbmk_rumpuser.a))
 $(eval $(call BUILDLIB_target,${COMPILERRTDIR},libcompiler_rt.a,RUMPSRC=${RUMPSRC}))
 
 PSEUDOSTUBS=${COMMONDIR}/rumprun-pseudolinkstubs
 
-${PSEUDOSTUBS}.c: ${BASEDIR}/${PLATFORM}/librumprun_base.a
+${PSEUDOSTUBS}.c: ${OBJDIR}/dest.stage/lib/librumprun_base.a
 	sh ../makepseudolinkstubs.sh ${NM} ${RUMPSRC} $< $@
 
 bmk.ldscript: ${LDSCRIPT}
 	ln -sf $< $@
 
 commonlibs: platformlibs userlibs
-userlibs: ${BASEDIR}/${PLATFORM}/librumprun_base.a ${PSEUDOSTUBS}.o
+userlibs: ${PSEUDOSTUBS}.o
 platformlibs: ${COREDIR}/${PLATFORM}/libbmk_core.a ${RUMPUSERDIR}/${PLATFORM}/libbmk_rumpuser.a bmk.ldscript
 compiler_rt: ${COMPILERRTDIR}/${PLATFORM}/libcompiler_rt.a
 
@@ -53,7 +49,6 @@ buildtest: ../../tests/hello/hello.c ${MAINOBJ} commonlibs app-tools
 
 .PHONY: commonclean
 commonclean:
-	( cd ${BASEDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
 	( cd ${COREDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
 	( cd ${RUMPUSERDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
 	( cd ${COMPILERRTDIR} && \
