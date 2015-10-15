@@ -10,12 +10,7 @@ include ../../../global.mk
 MINI-OS_ROOT=$(CURDIR)
 export MINI-OS_ROOT
 
-ifeq ($(MINIOS_CONFIG),)
 include Config.mk
-else
-EXTRA_DEPS += $(MINIOS_CONFIG)
-include $(MINIOS_CONFIG)
-endif
 
 # Configuration defaults
 CONFIG_PCI ?= y
