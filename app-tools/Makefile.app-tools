@@ -1,5 +1,4 @@
 _APPTOOLS_PARAMS=  APP_TOOLS_PLATFORM APP_TOOLS_DIR
-_APPTOOLS_PARAMS+= APP_TOOLS_OBJS_BAKE
 _APPTOOLS_PARAMS+= LDFLAGS_BAKE
 
 define varchk_tmpl
@@ -57,7 +56,6 @@ $(APP_TOOLS_DIR)/${2}:							\
 		-e 's#!CPPFLAGS!#$(BUILDRUMP_TOOL_CPPFLAGS)#g;'		\
 		-e 's#!CFLAGS!#$(BUILDRUMP_TOOL_CFLAGS)#g;'		\
 		-e 's#!CXXFLAGS!#$(BUILDRUMP_TOOL_CXXFLAGS)#g;'		\
-		-e 's#!OBJS_BAKE!#$(APP_TOOLS_OBJS_BAKE)#g;'		\
 		-e 's#!LDFLAGS_BAKE!#$(LDFLAGS_BAKE)#g;'
 	if test -x $$<; then chmod +x $$@.tmp; fi
 	mv -f $$@.tmp $$@

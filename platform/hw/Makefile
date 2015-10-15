@@ -58,7 +58,6 @@ include arch/${ARCHDIR}/Makefile.inc
 .PHONY:	clean cleandir test
 
 APP_TOOLS_PLATFORM= hw
-APP_TOOLS_OBJS_BAKE=	${MAINOBJ}
 APP_TOOLS_DIR:= $(abspath ../../app-tools)
 
 include ${APP_TOOLS_DIR}/Makefile.app-tools

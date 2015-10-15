@@ -1,5 +1,5 @@
 *startfile:
-!DESTDIR!/lib/!OBJS_BAKE!
+!DESTDIR!/lib/rumprun-!APPTOOLS_PLATFORM!-!MACHINE_ARCH!.o
 
 *endfile:
 
