@@ -411,9 +411,10 @@ dobuild ()
 	PLATFORM_MKCONF=
 	. ${PLATFORMDIR}/platform.conf
 
+	buildrump "$@"
+
 	${MAKE} -C ${PLATFORMDIR} links
 
-	buildrump "$@"
 	${KERNONLY} || builduserspace
 
 	# depends on config.mk
