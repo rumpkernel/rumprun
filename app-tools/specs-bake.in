@@ -10,7 +10,7 @@
     --start-group -lrumprun_base -lpthread -lc --end-group
 
 *link:
-%{m64:-m elf_x86_64;mx32:-m elf32_x86_64;m32:-m elf_i386} -T !LDSCRIPT_BAKE! %:replace-outfile(-lstdc++ -lc++) %{rdynamic:}
+%{m64:-m elf_x86_64;mx32:-m elf32_x86_64;m32:-m elf_i386} -T !DESTDIR!/lib/rumprun-!APPTOOLS_PLATFORM!-!MACHINE_ARCH!.ldscript %:replace-outfile(-lstdc++ -lc++) %{rdynamic:}
 
 %rename link_libgcc old_link_libgcc
 

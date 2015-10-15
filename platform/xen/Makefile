@@ -80,7 +80,6 @@ $(MAINOBJ): $(RUMP_OBJS) platformlibs
 
 APP_TOOLS_PLATFORM= xen
 APP_TOOLS_OBJS_BAKE=	$(MAINOBJ)
-APP_TOOLS_LDSCRIPT_BAKE:= $(LDSCRIPT)
 APP_TOOLS_DIR= $(abspath ../../app-tools)
 
 include $(APP_TOOLS_DIR)/Makefile.app-tools

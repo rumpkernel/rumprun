@@ -75,6 +75,7 @@ endif
 .PHONY: installkern
 installkern:
 	install -m 0444 ${MAINOBJ} ${INSTALLDIR}/lib
+	install -m 0444 ${LDSCRIPT} ${INSTALLDIR}/lib/rumprun-${PLATFORM}-${MACHINE_ARCH}.ldscript
 
 .PHONY: installuser
 installuser:

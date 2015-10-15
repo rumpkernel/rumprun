@@ -1,5 +1,5 @@
 _APPTOOLS_PARAMS=  APP_TOOLS_PLATFORM APP_TOOLS_DIR
-_APPTOOLS_PARAMS+= APP_TOOLS_OBJS_BAKE APP_TOOLS_LDSCRIPT_BAKE
+_APPTOOLS_PARAMS+= APP_TOOLS_OBJS_BAKE
 _APPTOOLS_PARAMS+= LDFLAGS_BAKE
 
 define varchk_tmpl
@@ -21,6 +21,7 @@ APP_TOOL_PASSTHROUGH=	ar as cpp ld nm objcopy objdump ranlib readelf
 APP_TOOL_PASSTHROUGH+=	size strings strip
 
 GNUPLATFORM:= $(shell ${RUMPMAKE} -f bsd.own.mk -V '$${RUMPRUN_TUPLE}')
+MACHINE_ARCH:= $(shell ${RUMPMAKE} -f bsd.own.mk -V '$${MACHINE_ARCH}')
 
 _CCVARIANT:=$(shell ${RUMPMAKE} -f bsd.own.mk -V '$${HAVE_LLVM:Dclang:Ugcc}')
 _CXXVARIANT:=$(shell ${RUMPMAKE} -f bsd.own.mk -V '$${HAVE_LLVM:Dclang++:Ug++}')
@@ -48,6 +49,7 @@ $(APP_TOOLS_DIR)/${2}:							\
 		-e 's#!CXX!#$(CXX)#g;'					\
 		-e 's#!APPTOOLS_CC!#$(APP_TOOLS_CC)#g;'			\
 		-e 's#!APPTOOLS_CXX!#$(APP_TOOLS_CXX)#g;'		\
+		-e 's#!MACHINE_ARCH!#$(MACHINE_ARCH)#g;'		\
 		-e 's#!GNUPLATFORM!#$(GNUPLATFORM)#g;'			\
 		-e 's#!DESTDIR!#$(DESTDIR)#g;'				\
 		-e 's#!APPTOOLS_DIR!#$(APP_TOOLS_DIR)#g;'		\
@@ -56,8 +58,7 @@ $(APP_TOOLS_DIR)/${2}:							\
 		-e 's#!CFLAGS!#$(BUILDRUMP_TOOL_CFLAGS)#g;'		\
 		-e 's#!CXXFLAGS!#$(BUILDRUMP_TOOL_CXXFLAGS)#g;'		\
 		-e 's#!OBJS_BAKE!#$(APP_TOOLS_OBJS_BAKE)#g;'		\
-		-e 's#!LDFLAGS_BAKE!#$(LDFLAGS_BAKE)#g;'		\
-		-e 's#!LDSCRIPT_BAKE!#$(APP_TOOLS_LDSCRIPT_BAKE)#g;'
+		-e 's#!LDFLAGS_BAKE!#$(LDFLAGS_BAKE)#g;'
 	if test -x $$<; then chmod +x $$@.tmp; fi
 	mv -f $$@.tmp $$@
 endef
