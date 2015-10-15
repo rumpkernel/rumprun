@@ -35,37 +35,17 @@
 #include <bmk-core/platform.h>
 #include <bmk-core/printf.h>
 
-#include <rumprun-base/config.h>
-
-static char hardcoded_jsoncfg[] = "";
-
 static char *
-jsonordie(void)
-{
-
-	if (hardcoded_jsoncfg[0] == '\0')
-		bmk_platform_halt("could not get configuration");
-
-	bmk_printf("using hardcoded_jsoncfg\n");
-	return hardcoded_jsoncfg;
-}
-
-static char *
-get_config(char *cmdline)
+get_xenstorecfg(void)
 {
 	xenbus_transaction_t txn;
 	char *cfg;
 	int retry;
 
-	/* XXX: should not be here */
-	cfg = rumprun_config_path(cmdline);
-	if (cfg != NULL)
-		return cfg;
-
 	if (xenbus_transaction_start(&txn))
-		return jsonordie();
-	if (xenbus_read(txn, "rumprun/cfg", &cfg) != NULL)
-		cfg = jsonordie();
+		return NULL;
+	xenbus_read(txn, "rumprun/cfg", &cfg);
+	/* XXX: unclear what the "retry" param is supposed to signify */
 	xenbus_transaction_end(txn, 0, &retry);
 
 	return cfg;
@@ -74,9 +54,20 @@ get_config(char *cmdline)
 int
 app_main(start_info_t *si)
 {
-	void *cmdline;
+	char *cmdline;
 
-	cmdline = get_config((char *)si->cmd_line);
+	/*
+	 * So, what we currently do is:
+	 *   1) try to fetch the config from xenstore.  if available, use that
+	 *   2) else, just pass the command line to bmk_mainthread
+	 *
+	 * Not sure if we eventually need to pass both, but we can change
+	 * it later.
+	 */
+
+	if ((cmdline = get_xenstorecfg()) == NULL)
+		cmdline = (char *)si->cmd_line;
+
 	bmk_mainthread(cmdline);
 	/* NOTREACHED */
 
