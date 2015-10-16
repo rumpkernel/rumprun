@@ -18,7 +18,6 @@ APP_TOOL_PASSTHROUGH=	ar as cpp ld nm objcopy objdump ranlib readelf
 APP_TOOL_PASSTHROUGH+=	size strings strip
 
 GNUPLATFORM:= $(shell ${RUMPMAKE} -f bsd.own.mk -V '$${RUMPRUN_TUPLE}')
-MACHINE_ARCH:= $(shell ${RUMPMAKE} -f bsd.own.mk -V '$${MACHINE_ARCH}')
 
 _CCVARIANT:=$(shell ${RUMPMAKE} -f bsd.own.mk -V '$${HAVE_LLVM:Dclang:Ugcc}')
 _CXXVARIANT:=$(shell ${RUMPMAKE} -f bsd.own.mk -V '$${HAVE_LLVM:Dclang++:Ug++}')
