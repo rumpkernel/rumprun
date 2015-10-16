@@ -11,7 +11,6 @@ include ${BUILDRUMP_TOOLFLAGS}
 APP_TOOLS_DIR:=		$(abspath .)
 
 APP_TOOL_FILES=		configure make gmake toolchain.cmake recipe.s
-APP_TOOL_COMPILERS=	cc c++
 
 APP_TOOL_SPECS=		specs-compile_or_ferment specs-stub
 
