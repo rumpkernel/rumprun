@@ -2,6 +2,20 @@ ifeq (${PLATFORM},)
 $(error need to specify $$PLATFORM!)
 endif
 
+ifneq (${KERNONLY},true)
+TARGETS:= userlibs
+else
+TARGETS:= compiler_rt
+endif
+
+ifeq (${BUILDRR},true)
+CPPFLAGS+=      -I${OBJDIR}/dest.stage/include
+else
+CPPFLAGS+=      -I${DESTDIR}/include
+endif
+
+MAINOBJ:=	rumprun-${PLATFORM}-${MACHINE_ARCH}.o
+
 COREDIR:=	$(shell pwd)/../../lib/libbmk_core
 RUMPUSERDIR:=	$(shell pwd)/../../lib/libbmk_rumpuser
 COMPILERRTDIR:=	$(shell pwd)/../../lib/libcompiler_rt

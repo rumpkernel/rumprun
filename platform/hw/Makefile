@@ -1,3 +1,5 @@
+default: all
+
 PLATFORM=hw
 PLATFORM_DEFAULT_TESTER=qemu
 
@@ -7,24 +9,8 @@ ifdef BUILDRUMP_TOOLFLAGS
 include ${BUILDRUMP_TOOLFLAGS}
 endif
 
-ifneq (${KERNONLY},true)
-TARGETS:= userlibs
-else
-TARGETS:= compiler_rt
-endif
-
-MAINOBJ=	rumprun-hw-${MACHINE_ARCH}.o
-
-all:  include/hw/machine ${MAINOBJ} ${TARGETS}
-
 CPPFLAGS=	-Iinclude -I../../include -nostdinc
 CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
-
-ifeq (${BUILDRR},true)
-CPPFLAGS+=	-I${OBJDIR}/dest.stage/include
-else
-CPPFLAGS+=	-I${DESTDIR}/include
-endif
 
 # Check if we're building for a supported target.
 supported= false
@@ -52,10 +38,11 @@ LDSCRIPT:=	$(abspath arch/${ARCHDIR}/kern.ldscript)
 OBJS_BMK+=	intr.o clock_subr.o kernel.o multiboot.o undefs.o
 
 include ../Makefile.inc
-
 include arch/${ARCHDIR}/Makefile.inc
 
-.PHONY:	clean cleandir test
+.PHONY:	clean cleandir test all
+
+all:  include/hw/machine ${MAINOBJ} ${TARGETS}
 
 include/hw/machine:
 	@ln -sf ../arch/${MACHINE_ARCH} include/hw/machine

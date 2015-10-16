@@ -7,8 +7,6 @@ ifdef BUILDRUMP_TOOLFLAGS
 include ${BUILDRUMP_TOOLFLAGS}
 endif
 
-MAINOBJ= rumprun-xen-$(MACHINE_ARCH).o
-
 #
 # Rumprun-xen Makefile.
 # Abandon all hope, ye who enter here:
@@ -17,29 +15,17 @@ MAINOBJ= rumprun-xen-$(MACHINE_ARCH).o
 #
 OBJ_DIR ?= $(CURDIR)/obj
 
-TARGETS= prepare links mini-os $(MAINOBJ)
+include ../Makefile.inc
 
-ifneq (${KERNONLY},true)
-TARGETS+= userlibs
-else
-TARGETS+= compiler_rt
-endif
+TARGETS= prepare links mini-os $(MAINOBJ)
 
 LDSCRIPT:= $(abspath $(OBJ_DIR)/xen/minios.lds)
 
 .PHONY: default
 default: ${TARGETS}
 
-include ../Makefile.inc
-
 CPPFLAGS = -isystem xen/include -I. -I../../include
 CPPFLAGS+= -no-integrated-cpp -nostdinc
-
-ifeq (${BUILDRR},true)
-CPPFLAGS+=     -isystem ${OBJDIR}/dest.stage/include
-else
-CPPFLAGS+=     -isystem ${DESTDIR}/include
-endif
 
 CFLAGS += -fno-builtin ${BUILDRUMP_TOOL_CFLAGS}
 
