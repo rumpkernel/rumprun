@@ -283,6 +283,9 @@ buildrump ()
 	MACHINE_ARCH=$(${RUMPMAKE} -f /dev/null -V '${MACHINE_ARCH}')
 	[ -n "${MACHINE_ARCH}" ] || die could not figure out target machine arch
 
+	TOOLTUPLE=$(${RUMPMAKE} -f bsd.own.mk \
+	    -V '${MACHINE_GNU_PLATFORM:S/--netbsd/-rumprun-netbsd/}')
+
 	[ $(${RUMPMAKE} -f bsd.own.mk -V '${_BUILDRUMP_CXX}') != 'yes' ] \
 	    || HAVECXX=true
 
@@ -298,8 +301,6 @@ EOF
 	[ -z "${PLATFORM_MKCONF}" ] \
 	    || echo "${PLATFORM_MKCONF}" >> ${RUMPTOOLS}/mk.conf
 
-	TOOLTUPLE=$(${RUMPMAKE} -f bsd.own.mk \
-	    -V '${MACHINE_GNU_PLATFORM:S/--netbsd/-rumprun-netbsd/}')
 	echo "RUMPRUN_TUPLE=${TOOLTUPLE}" >> ${RUMPTOOLS}/mk.conf
 
 	# build rump kernel
@@ -382,6 +383,7 @@ makeconfigmk ()
 	echo "BUILDRUMP_TOOLFLAGS=$(pwd)/${RUMPTOOLS}/toolchain-conf.mk" >> ${1}
 	echo "MACHINE=${MACHINE}" >> ${1}
 	echo "MACHINE_ARCH=${MACHINE_ARCH}" >> ${1}
+	echo "TOOLTUPLE=${TOOLTUPLE}" >> ${1}
 	echo "KERNONLY=${KERNONLY}" >> ${1}
 	echo "PLATFORM=${PLATFORM}" >> ${1}
 
