@@ -316,7 +316,7 @@ EOF
 
 builduserspace ()
 {
-	${MAKE} -C app-tools CONFIG=$(pwd)/${PLATFORMDIR}/config.mk
+	${MAKE} -C app-tools RUMPRUN_MKCONF=$(pwd)/${PLATFORMDIR}/config.mk
 
 	usermtree ${STAGING}
 

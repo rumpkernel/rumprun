@@ -1,10 +1,10 @@
-ifeq ($(CONFIG),)
-$(error CONFIG missing)
+ifeq ($(RUMPRUN_MKCONF),)
+$(error RUMPRUN_MKCONF missing)
 endif
 
-include ${CONFIG}
+include ${RUMPRUN_MKCONF}
 ifeq (${BUILDRUMP_TOOLFLAGS},)
-$(error invalid config file ${CONFIG})
+$(error invalid config file ${RUMPRUN_MKCONF})
 endif
 include ${BUILDRUMP_TOOLFLAGS}
 
