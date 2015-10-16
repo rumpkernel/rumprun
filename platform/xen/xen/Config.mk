@@ -3,7 +3,11 @@
 include $(MINI-OS_ROOT)/../config.mk
 
 # Where to find xen headers from.  XXX: this can probably be done better
+ifeq ($(shell uname -s),NetBSD)
+XEN_HEADERS ?= /usr/pkg/include/xen
+else
 XEN_HEADERS ?= /usr/include/xen
+endif
 
 # from Xen/Config.mk
 XEN_COMPILE_ARCH ?= $(patsubst amd64,x86_64,$(patsubst i386,x86_32,${MACHINE}))
