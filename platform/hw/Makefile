@@ -1,6 +1,5 @@
 default: all
 
-PLATFORM=hw
 PLATFORM_DEFAULT_TESTER=qemu
 
 include ../../global.mk

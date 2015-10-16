@@ -1,4 +1,3 @@
-PLATFORM=xen
 PLATFORM_DEFAULT_TESTER=xen
 
 include ../../global.mk
