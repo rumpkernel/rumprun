@@ -34,16 +34,15 @@ platformlibs: ${COREDIR}/${PLATFORM}/libbmk_core.a ${RUMPUSERDIR}/${PLATFORM}/li
 compiler_rt: ${COMPILERRTDIR}/${PLATFORM}/libcompiler_rt.a
 
 .PHONY: buildtest
-buildtest: ../../tests/hello/hello.c ${MAINOBJ} commonlibs
-	${APP_TOOLS_CC} -g -o $@ $< -lrumprun_tester
+buildtest: ../../tests/hello/hello.c
+	${TOOLTUPLE}-gcc -g -o $@ $< -lrumprun_tester
 	@echo Testing baking ...
 	@export RUMPRUN_WARNING_STFU=please ; for board in \
 	    $(shell RUMPRUN_WARNING_STFU=please \
-		${APP_TOOLS_DIR}/rumpbake list \
+		rumpbake list \
 		| awk '/^${PLATFORM}/{print $$1}'); do \
 			echo $${board} ; \
-			${APP_TOOLS_DIR}/rumpbake $${board} $@.$${board} $@ \
-			    || exit 1;\
+			rumpbake $${board} $@.$${board} $@ || exit 1;\
 	done
 	@echo done
 
