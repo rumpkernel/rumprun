@@ -1,3 +1,6 @@
+.PHONY: all
+all: default
+
 PLATFORM_DEFAULT_TESTER=xen
 
 include ../../global.mk
@@ -14,16 +17,16 @@ endif
 #
 OBJ_DIR ?= $(CURDIR)/obj
 
+LDSCRIPT:= $(abspath $(OBJ_DIR)/xen/minios.lds)
+
 include ../Makefile.inc
 
 TARGETS= prepare links mini-os $(MAINOBJ)
 
-LDSCRIPT:= $(abspath $(OBJ_DIR)/xen/minios.lds)
-
 .PHONY: default
 default: ${TARGETS}
 
-CPPFLAGS = -isystem xen/include -I. -I../../include
+CPPFLAGS+= -isystem xen/include -I. -I../../include
 CPPFLAGS+= -no-integrated-cpp -nostdinc
 
 CFLAGS += -fno-builtin ${BUILDRUMP_TOOL_CFLAGS}
