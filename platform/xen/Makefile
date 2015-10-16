@@ -21,10 +21,8 @@ LDSCRIPT:= $(abspath $(OBJ_DIR)/xen/minios.lds)
 
 include ../Makefile.inc
 
-TARGETS= prepare links mini-os $(MAINOBJ)
-
 .PHONY: default
-default: ${TARGETS}
+default: prepare links mini-os ${MAINOBJ} ${TARGETS}
 
 CPPFLAGS+= -isystem xen/include -I. -I../../include
 CPPFLAGS+= -no-integrated-cpp -nostdinc
