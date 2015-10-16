@@ -13,24 +13,20 @@ LDFLAGS:= -L$(abspath ../../rumprun/lib)
 LDFLAGS+= -L$(abspath ../../lib/libcompiler_rt/${PLATFORM})
 
 CPPFLAGS+= -I../../include -I../../rumprun/include -I../../platform/${PLATFORM}/include
-CPPFLAGS+= -nostdlib
 
 LDSCRIPT=$(abspath ../../platform/${PLATFORM}/bmk.ldscript)
 
 LDFLAGS+= ${LDFLAGS.${PLATFORM}.${MACHINE_ARCH}}
-
-ifeq (${MACHINE},i386)
-LDFLAGS+= -m elf_i386
-endif
 
 OBJS= main.o $(abspath ../../platform/${PLATFORM}/rumprun-${PLATFORM}-${MACHINE_ARCH}.o)
 
 .PHONY: clean
 
 main.elf: ${OBJS}
-	${LD} ${LDFLAGS} -T${LDSCRIPT} 					\
+	${CC} ${CFLAGS} ${LDFLAGS} -T${LDSCRIPT} 			\
 	${OBJS} 							\
-	--whole-archive -lrumpvfs -lrump --no-whole-archive		\
+	-nostdlib							\
+	-Wl,--whole-archive -lrumpvfs -lrump -Wl,--no-whole-archive	\
 	-lcompiler_rt 							\
 	-o $@
 
