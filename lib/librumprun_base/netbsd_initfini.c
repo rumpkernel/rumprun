@@ -114,7 +114,7 @@ _netbsd_userlevel_init(void)
 	runinit();
 
 	/* XXX: we should probably use csu, but this is quicker for now */
-	__progname = "rumprun";
+	__progname = strdup("rumprun");
 }
 
 void

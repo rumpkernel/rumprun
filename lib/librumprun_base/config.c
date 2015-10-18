@@ -647,7 +647,7 @@ rumprun_config(char *cmdline)
 	while (*cmdline != '{') {
 		if (*cmdline == '\0') {
 			warnx("could not find start of json.  no config?");
-			makeargv("rumprun");
+			makeargv(strdup("rumprun"));
 			return;
 		}
 		cmdline++;
