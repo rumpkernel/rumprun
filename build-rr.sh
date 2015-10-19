@@ -462,8 +462,8 @@ echo
 echo '>>'
 echo ">> Finished $0 for ${PLATFORM}"
 if ${DObuild}; then
-	printf ">> ${TOOLTUPLE}\n"
-	printf ">> cc: %s-%s\n", \
+	printf ">> toolchain tuple: ${TOOLTUPLE}\n"
+	printf ">> cc wrapper: %s-%s\n" \
 	   ${TOOLTUPLE} "$(${RUMPMAKE} -f bsd.own.mk -V '${ACTIVE_CC}')"
 fi
 if ${DOinstall}; then
