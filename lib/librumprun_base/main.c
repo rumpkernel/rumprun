@@ -28,6 +28,27 @@
 #include <rumprun-base/config.h>
 #include <rumprun-base/rumprun.h>
 
+/*
+ * for baking multiple executables into a single binary
+ * XXX: should not depend on explicit symbol names with hardcoded
+ * limits
+ */
+mainlike_fn rumprun_notmain;
+mainlike_fn rumpbake_main1;
+mainlike_fn rumpbake_main2;
+mainlike_fn rumpbake_main3;
+mainlike_fn rumpbake_main4;
+mainlike_fn rumpbake_main5;
+mainlike_fn rumpbake_main6;
+mainlike_fn rumpbake_main7;
+mainlike_fn rumpbake_main8;
+
+#define RUNMAIN(i)							\
+	if (rumpbake_main##i == rumprun_notmain)			\
+		break;							\
+	rumprun(rumpbake_main##i,					\
+	    rumprun_cmdline_argc, rumprun_cmdline_argv);
+
 void
 bmk_mainthread(void *cmdline)
 {
@@ -35,7 +56,16 @@ bmk_mainthread(void *cmdline)
 
 	rumprun_boot(cmdline);
 
-	RUNMAINS();
+	do {
+		RUNMAIN(1);
+		RUNMAIN(2);
+		RUNMAIN(3);
+		RUNMAIN(4);
+		RUNMAIN(5);
+		RUNMAIN(6);
+		RUNMAIN(7);
+		RUNMAIN(8);
+	} while (/*CONSTCOND*/0);
 
 	while ((cookie = rumprun_get_finished()))
 		rumprun_wait(cookie);
