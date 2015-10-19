@@ -26,6 +26,8 @@
 #ifndef _BMKCOMMON_RUMPRUN_CONFIG_H_
 #define _BMKCOMMON_RUMPRUN_CONFIG_H_
 
+#include <sys/queue.h>
+
 /* yeah, simple */
 #define RUMPRUN_DEFAULTUSERSTACK ((32*(sizeof(void *)/4)*4096)/1024)
 
@@ -36,5 +38,19 @@ char *rumprun_config_path(char *);
 
 void	rumprun_config(char *);
 void	rumprun_deconfig(void);
+
+#define RUMPRUN_EXEC_BACKGROUND 0x01
+#define RUMPRUN_EXEC_PIPE	0x02
+struct rumprun_exec {
+	int rre_flags;
+
+	TAILQ_ENTRY(rumprun_exec) rre_entries;
+
+	int rre_argc;
+	char *rre_argv[];
+};
+
+TAILQ_HEAD(rumprun_execs, rumprun_exec);
+extern struct rumprun_execs rumprun_execs;
 
 #endif /* _BMKCOMMON_RUMPRUN_CONFIG_H_ */

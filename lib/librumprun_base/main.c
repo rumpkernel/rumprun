@@ -24,6 +24,7 @@
  */
 
 #include <bmk-core/mainthread.h>
+#include <bmk-core/printf.h>
 
 #include <rumprun-base/config.h>
 #include <rumprun-base/rumprun.h>
@@ -47,15 +48,22 @@ mainlike_fn rumpbake_main8;
 	if (rumpbake_main##i == rumprun_notmain)			\
 		break;							\
 	rumprun(rumpbake_main##i,					\
-	    rumprun_cmdline_argc, rumprun_cmdline_argv);
+	    rre->rre_argc, rre->rre_argv);				\
+	rre = TAILQ_NEXT(rre, rre_entries);				\
+	if (rre == NULL) {						\
+		bmk_printf("out of argv entries\n");			\
+		break;							\
+	}
 
 void
 bmk_mainthread(void *cmdline)
 {
+	struct rumprun_exec *rre;
 	void *cookie;
 
 	rumprun_boot(cmdline);
 
+	rre = TAILQ_FIRST(&rumprun_execs);
 	do {
 		RUNMAIN(1);
 		RUNMAIN(2);

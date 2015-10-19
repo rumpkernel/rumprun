@@ -93,26 +93,26 @@ token2cstr(jsmntok_t *t, char *data)
 	return T_STR(t, data);
 }
 
-int rumprun_cmdline_argc;
-char **rumprun_cmdline_argv;
+struct rumprun_execs rumprun_execs = TAILQ_HEAD_INITIALIZER(rumprun_execs);
 
 static void
 makeargv(char *argvstr)
 {
+	struct rumprun_exec *rre;
 	char **argv;
 	int nargs;
 
-	assert(rumprun_cmdline_argc == 0 && rumprun_cmdline_argv == NULL);
-
 	rumprun_parseargs(argvstr, &nargs, 0);
-	argv = malloc(sizeof(*argv) * (nargs+2));
-	if (argv == NULL)
-		errx(1, "could not allocate argv");
+	rre = malloc(sizeof(*rre) + (nargs+1) * sizeof(*argv));
+	if (rre == NULL)
+		err(1, "could not allocate rre");
 
-	rumprun_parseargs(argvstr, &nargs, argv);
-	argv[nargs] = argv[nargs+1] = '\0';
-	rumprun_cmdline_argv = argv;
-	rumprun_cmdline_argc = nargs;
+	rumprun_parseargs(argvstr, &nargs, rre->rre_argv);
+	rre->rre_argv[nargs] = NULL;
+	rre->rre_flags = 0;
+	rre->rre_argc = nargs;
+
+	TAILQ_INSERT_TAIL(&rumprun_execs, rre, rre_entries);
 }
 
 static int
@@ -124,6 +124,130 @@ handle_cmdline(jsmntok_t *t, int left, char *data)
 	makeargv(token2cstr(t, data));
 
 	return 1;
+}
+
+/*
+ * "rc": [
+ *	{ "bin" : "binname",
+ *	  "argv" : [ "arg1", "arg2", ... ], (optional)
+ *	  "runmode" : "& OR |" (optional)
+ *	},
+ *      ....
+ * ]
+ */
+static int
+addbin(jsmntok_t *t, char *data)
+{
+	jsmntok_t *t_bin, *t_argv, *t_runmode;
+	struct rumprun_exec *rre;
+	jsmntok_t *key, *value;
+	char *binname;
+	int binsize = 1;
+	int objleft = t->size;
+	int rreflags, i;
+
+	T_CHECKTYPE(t, data, JSMN_OBJECT, __func__);
+	t++;
+
+	/* process and validate data */
+	t_bin = t_argv = t_runmode = NULL;
+	while (objleft--) {
+		int mysize;
+
+		key = t;
+		value = t+1;
+
+		T_CHECKTYPE(key, data, JSMN_STRING, __func__);
+
+		if (T_STREQ(key, data, "bin")) {
+			t_bin = value;
+
+			T_CHECKSIZE(key, data, 1, __func__);
+			T_CHECKTYPE(value, data, JSMN_STRING, __func__);
+			T_CHECKSIZE(value, data, 0, __func__);
+
+			mysize = 1 + 1;
+		} else if (T_STREQ(key, data, "argv")) {
+			T_CHECKTYPE(value, data, JSMN_ARRAY, __func__);
+
+			t_argv = value;
+
+			/* key + array + array contents */
+			mysize = 1 + 1 + value->size;
+		} else if (T_STREQ(key, data, "runmode")) {
+			t_runmode = value;
+
+			T_CHECKSIZE(key, data, 1, __func__);
+			T_CHECKTYPE(value, data, JSMN_STRING, __func__);
+			T_CHECKSIZE(value, data, 0, __func__);
+
+			mysize = 1 + 1;
+		} else {
+			errx(1, "unexpected key \"%.*s\" in \"%s\"",
+			    T_PRINTFSTAR(key, data), __func__);
+		}
+
+		t += mysize;
+		binsize += mysize;
+	}
+
+	if (!t_bin)
+		errx(1, "missing \"bin\" for rc entry");
+	binname = token2cstr(t_bin, data);
+
+	if (t_runmode) {
+		bool sizeok = T_SIZE(t_runmode) == 1;
+
+		if (sizeok && *T_STR(t_runmode,data) == '|') {
+			rreflags = RUMPRUN_EXEC_PIPE;
+		} else if (sizeok && *T_STR(t_runmode,data) == '&') {
+			rreflags = RUMPRUN_EXEC_BACKGROUND;
+		} else {
+			errx(1, "invalid runmode \"%.*s\" for bin \"%.*s\"",
+			    T_PRINTFSTAR(t_runmode, data),
+			    T_PRINTFSTAR(t_bin, data));
+		}
+	} else {
+		rreflags = 0;
+	}
+
+	/* ok, we got everything.  save into rumprun_exec structure */
+	rre = malloc(sizeof(*rre) + (2+t_argv->size) * sizeof(char *));
+	if (rre == NULL)
+		err(1, "allocate rumprun_exec");
+	rre->rre_flags = rreflags;
+	rre->rre_argc = 1+t_argv->size;
+	rre->rre_argv[0] = binname;
+	for (i = 1, t = t_argv+1; i <= t_argv->size; i++, t++) {
+		T_CHECKTYPE(t, data, JSMN_STRING, __func__);
+		rre->rre_argv[i] = token2cstr(t, data);
+	}
+	rre->rre_argv[rre->rre_argc] = NULL;
+
+	TAILQ_INSERT_TAIL(&rumprun_execs, rre, rre_entries);
+
+	return binsize;
+}
+
+static int
+handle_rc(jsmntok_t *t, int left, char *data)
+{
+	int onesize, totsize;
+
+	T_CHECKTYPE(t, data, JSMN_ARRAY, __func__);
+
+	totsize = 1;
+	t++;
+	left--;
+
+	while (left) {
+		onesize = addbin(t, data);
+		left -= onesize;
+		totsize += onesize;
+		t += onesize;
+	}
+
+	return totsize;
 }
 
 static int
@@ -534,6 +658,7 @@ struct {
 	int (*handler)(jsmntok_t *, int, char *);
 } parsers[] = {
 	{ "cmdline", handle_cmdline },
+	{ "rc_TESTING", handle_rc },
 	{ "env", handle_env },
 	{ "hostname", handle_hostname },
 	{ "blk", handle_blk },
