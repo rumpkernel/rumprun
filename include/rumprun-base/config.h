@@ -31,9 +31,6 @@
 /* yeah, simple */
 #define RUMPRUN_DEFAULTUSERSTACK ((32*(sizeof(void *)/4)*4096)/1024)
 
-extern int rumprun_cmdline_argc;
-extern char **rumprun_cmdline_argv;
-
 char *rumprun_config_path(char *);
 
 void	rumprun_config(char *);
