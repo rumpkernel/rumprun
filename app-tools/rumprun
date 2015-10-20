@@ -159,8 +159,10 @@ createif_qemu ()
 	scratch="${1#*,}"
 	ifbasename="${scratch%%,*}"
 	qemuargs="${scratch#*,}"
+	# 52:54:00 is QEMU registered OUI
+	ifmac="52:54:00$(od -N 3 -A n -t x1 /dev/urandom | tr ' ' :)"
 
-	opt_netif="${opt_netif} -net nic,model=virtio ${qemuargs}"
+	opt_netif="${opt_netif} -net nic,model=virtio,macaddr=${ifmac} ${qemuargs}"
 	eval ${iftag}2ifname=${ifbasename}${nindex}
 	eval ${iftag}2cloner=false
 	nindex=$(expr $nindex + 1)
