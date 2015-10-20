@@ -213,7 +213,6 @@ rumprun(int flags, int (*mainfun)(int, char *[]), int argc, char *argv[])
 	LIST_INSERT_HEAD(&rumprunners, rr, rr_entries);
 
 	/* async launch? */
-	printf("flags is %x\n", flags);
 	if ((flags & (RUMPRUN_EXEC_BACKGROUND | RUMPRUN_EXEC_PIPE)) != 0) {
 		return rr;
 	}
