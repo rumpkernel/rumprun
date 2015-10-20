@@ -510,40 +510,38 @@ configetfs(const char *path, int hard)
 	return p;
 }
 
-static void
-mount_ufs(const char *fstype, const char *dev, const char *mp)
+static bool
+mount_blk(const char *dev, const char *mp)
 {
-	struct ufs_args mntargs = { .fspec = __UNCONST(dev) };
+	struct ufs_args mntargs_ufs = { .fspec = __UNCONST(dev) };
+	struct iso_args mntargs_iso = { .fspec = dev };
 
-	if (mount(fstype, mp, 0, &mntargs, sizeof(mntargs)) == -1)
-		err(1, "rumprun_config: mount_%s failed", fstype);
-}
-
-static void
-mount_cd9660(const char *fstype, const char *dev, const char *mp)
-{
-	struct iso_args mntargs = { .fspec = dev };
-
+	if (mount(MOUNT_FFS, mp, 0, &mntargs_ufs, sizeof(mntargs_ufs)) == 0)
+		return true;
+	if (mount(MOUNT_EXT2FS, mp, 0, &mntargs_ufs, sizeof(mntargs_ufs)) == 0)
+		return true;
 	if (mount(MOUNT_CD9660,
-	    mp, MNT_RDONLY, &mntargs, sizeof(mntargs)) == -1)
-		err(1, "rumprun_config: mount_cd9660 failed");
+	    mp, MNT_RDONLY, &mntargs_iso, sizeof(mntargs_iso)) == 0)
+		return true;
+
+	return false;
 }
 
-static void
-mount_kernfs(const char *fstype, const char *dev, const char *mp)
+static bool
+mount_kernfs(const char *dev, const char *mp)
 {
 
-	if (mount(MOUNT_KERNFS, mp, 0, NULL, 0) == -1)
-		err(1, "rumprun_config: mount_%s failed", fstype);
+	if (mount(MOUNT_KERNFS, mp, 0, NULL, 0) == 0)
+		return true;
+
+	return false;
 }
 
 struct {
 	const char *mt_fstype;
-	void (*mt_mount)(const char *, const char *, const char *);
+	bool (*mt_mount)(const char *, const char *);
 } mounters[] = {
-	{ "ffs",	mount_ufs, },
-	{ "ext2fs",	mount_ufs, },
-	{ "cd9660",	mount_cd9660 },
+	{ "blk",	mount_blk },
 	{ "kernfs",	mount_kernfs },
 };
 
@@ -612,7 +610,7 @@ handle_blk(jsmntok_t *t, int left, char *data)
 		unsigned mi;
 
 		if (!fstype) {
-			err(1, "no fstype for mountpoint \"%s\"\n", mp);
+			errx(1, "no fstype for mountpoint \"%s\"\n", mp);
 		}
 
 		for (chunk = mp;;) {
@@ -639,7 +637,10 @@ handle_blk(jsmntok_t *t, int left, char *data)
 
 		for (mi = 0; mi < __arraycount(mounters); mi++) {
 			if (strcmp(fstype, mounters[mi].mt_fstype) == 0) {
-				mounters[mi].mt_mount(fstype, path, mp);
+				if (!mounters[mi].mt_mount(path, mp))
+					errx(1, "failed to mount fs type "
+					    "\"%s\" from \"%s\" to \"%s\"",
+					    fstype, path, mp);
 				break;
 			}
 		}
@@ -674,7 +675,6 @@ getcmdlinefromroot(const char *cfgname)
 		"/dev/ld0a",
 		"/dev/sd0a",
 	};
-	struct iso_args mntargs;
 	struct stat sb;
 	unsigned int i;
 	int fd;
@@ -688,12 +688,8 @@ getcmdlinefromroot(const char *cfgname)
 	 * Maybe use mountroot() here somehow?
 	 */
 	for (i = 0; i < __arraycount(tryroot); i++) {
-		memset(&mntargs, 0, sizeof(mntargs));
-		mntargs.fspec = tryroot[i];
-		if (mount(MOUNT_CD9660, "/rootfs", MNT_RDONLY,
-		    &mntargs, sizeof(mntargs)) == 0) {
+		if (mount_blk(tryroot[i], "/rootfs"))
 			break;
-		}
 	}
 
 	/* didn't find it that way.  one more try: etfs for sda1 (EC2) */
@@ -704,8 +700,8 @@ getcmdlinefromroot(const char *cfgname)
 		if (!devpath)
 			errx(1, "failed to mount rootfs from image");
 
-		/* mount call will either succeed or panic */
-		mount_ufs("ext2fs", devpath, "/rootfs");
+		if (!mount_blk(devpath, "/rootfs"))
+			errx(1, "failed to mount /rootfs");
 	}
 
 	/*

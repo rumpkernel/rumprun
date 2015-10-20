@@ -252,33 +252,6 @@ json_finalize_block ()
 	json_append_ln }
 }
 
-# Detect the filesystem type of the image at $1.
-detect_fstype ()
-{
-	eval $(blkid -o export $1)
-	if [ $? -ne 0 ]; then
-		TYPE=unknown
-	fi
-	case ${TYPE} in
-	ext2)
-		echo ext2fs
-		return 0
-		;;
-	ufs)
-		echo ffs
-		return 0
-		;;
-	iso9660)
-		echo cd9660
-		return 0
-		;;
-	*)
-		echo unknown
-		return 1
-		;;
-	esac
-}
-
 json_store_netspec ()
 {
 
@@ -438,8 +411,7 @@ parse_blkspec ()
 	mountpoint=$(echo "$spec" | sed -n 's/.*,\(.*\)/\1/p')
 
 	if [ -n "$mountpoint" ]; then
-		fstype=$(detect_fstype "$image")
-		[ $? -ne 0 ] && die "File $image: unknown fstype"
+		fstype="blk"
 	fi
 
 	${store_blkspec}
