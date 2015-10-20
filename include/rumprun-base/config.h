@@ -34,7 +34,6 @@
 char *rumprun_config_path(char *);
 
 void	rumprun_config(char *);
-void	rumprun_deconfig(void);
 
 #define RUMPRUN_EXEC_BACKGROUND 0x01
 #define RUMPRUN_EXEC_PIPE	0x02

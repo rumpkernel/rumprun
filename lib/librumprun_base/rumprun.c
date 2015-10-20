@@ -297,7 +297,6 @@ void __attribute__((noreturn))
 rumprun_reboot(void)
 {
 
-	rumprun_deconfig();
 	_netbsd_userlevel_fini();
 	rump_sys_reboot(0, 0);
 

@@ -812,10 +812,3 @@ rumprun_config(char *cmdline)
 
 	free(tokens);
 }
-
-void
-rumprun_deconfig(void)
-{
-
-	return; /* TODO */
-}
