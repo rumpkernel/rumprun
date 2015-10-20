@@ -193,7 +193,7 @@ mainbouncer(void *arg)
 }
 
 void *
-rumprun(int (*mainfun)(int, char *[]), int argc, char *argv[])
+rumprun(int flags, int (*mainfun)(int, char *[]), int argc, char *argv[])
 {
 	struct rumprunner *rr;
 
@@ -211,6 +211,12 @@ rumprun(int (*mainfun)(int, char *[]), int argc, char *argv[])
 		return NULL;
 	}
 	LIST_INSERT_HEAD(&rumprunners, rr, rr_entries);
+
+	/* async launch? */
+	printf("flags is %x\n", flags);
+	if ((flags & (RUMPRUN_EXEC_BACKGROUND | RUMPRUN_EXEC_PIPE)) != 0) {
+		return rr;
+	}
 
 	pthread_mutex_lock(&w_mtx);
 	while ((rr->rr_flags & (RUMPRUNNER_DONE|RUMPRUNNER_DAEMON)) == 0) {

@@ -47,7 +47,7 @@ mainlike_fn rumpbake_main8;
 #define RUNMAIN(i)							\
 	if (rumpbake_main##i == rumprun_notmain)			\
 		break;							\
-	rumprun(rumpbake_main##i,					\
+	rumprun(rre->rre_flags, rumpbake_main##i,			\
 	    rre->rre_argc, rre->rre_argv);				\
 	rre = TAILQ_NEXT(rre, rre_entries);				\
 	if (rre == NULL) {						\

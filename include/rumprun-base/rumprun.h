@@ -31,7 +31,7 @@ mainlike_fn main;
 
 void	rumprun_boot(char *);
 
-void *	rumprun(mainlike_fn, int, char *[]);
+void *	rumprun(int, mainlike_fn, int, char *[]);
 int	rumprun_wait(void *);
 void *	rumprun_get_finished(void);
 
