@@ -31,8 +31,6 @@
 /* yeah, simple */
 #define RUMPRUN_DEFAULTUSERSTACK ((32*(sizeof(void *)/4)*4096)/1024)
 
-char *rumprun_config_path(char *);
-
 void	rumprun_config(char *);
 
 #define RUMPRUN_EXEC_BACKGROUND 0x01
