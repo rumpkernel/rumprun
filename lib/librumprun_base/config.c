@@ -750,6 +750,7 @@ void
 rumprun_config(char *cmdline)
 {
 	char *cfg;
+	struct rumprun_exec *rre;
 	jsmn_parser p;
 	jsmntok_t *tokens = NULL;
 	jsmntok_t *t;
@@ -808,6 +809,17 @@ rumprun_config(char *cmdline)
 		if (i == __arraycount(parsers))
 			errx(1, "no match for key \"%.*s\"",
 			    T_PRINTFSTAR(t, cmdline));
+	}
+
+	/*
+	 * Before we start running things, perform some sanity checks
+	 */
+	rre = TAILQ_LAST(&rumprun_execs, rumprun_execs);
+	if (rre == NULL) {
+		errx(1, "rumprun_config: no bins");
+	}
+	if (rre->rre_flags & RUMPRUN_EXEC_PIPE) {
+		errx(1, "rumprun_config: last bin may not output to pipe");
 	}
 
 	free(tokens);
