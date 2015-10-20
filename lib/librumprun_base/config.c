@@ -198,10 +198,12 @@ addbin(jsmntok_t *t, char *data)
 	if (t_runmode) {
 		bool sizeok = T_SIZE(t_runmode) == 1;
 
-		if (sizeok && *T_STR(t_runmode,data) == '|') {
-			rreflags = RUMPRUN_EXEC_PIPE;
-		} else if (sizeok && *T_STR(t_runmode,data) == '&') {
+		if (sizeok && *T_STR(t_runmode,data) == '&') {
 			rreflags = RUMPRUN_EXEC_BACKGROUND;
+#ifdef notyet
+		} else if (sizeok && *T_STR(t_runmode,data) == '|') {
+			rreflags = RUMPRUN_EXEC_PIPE;
+#endif
 		} else {
 			errx(1, "invalid runmode \"%.*s\" for bin \"%.*s\"",
 			    T_PRINTFSTAR(t_runmode, data),
