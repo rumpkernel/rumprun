@@ -793,7 +793,14 @@ rumprun_config(char *cmdline)
 
 	T_CHECKTYPE(tokens, cmdline, JSMN_OBJECT, __func__);
 
-	for (t = &tokens[1]; t < &tokens[ntok]; ) {
+	for (t = &tokens[0]; t < &tokens[ntok]; ) {
+		/* allow multiple levels of object nesting */
+		if (t->type == JSMN_OBJECT) {
+			t++;
+			continue;
+		}
+
+		T_CHECKTYPE(t, cmdline, JSMN_STRING, __func__);
 		for (i = 0; i < __arraycount(parsers); i++) {
 			if (T_STREQ(t, cmdline, parsers[i].name)) {
 				int left;
