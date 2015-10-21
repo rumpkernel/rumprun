@@ -234,17 +234,13 @@ addbin(jsmntok_t *t, char *data)
 static int
 handle_rc(jsmntok_t *t, int left, char *data)
 {
-	int onesize, totsize;
+	int onesize, totsize, rem;
 
 	T_CHECKTYPE(t, data, JSMN_ARRAY, __func__);
 
-	totsize = 1;
-	t++;
-	left--;
-
-	while (left) {
+	rem = t->size;
+	for (t++, totsize = 1; rem; rem--) {
 		onesize = addbin(t, data);
-		left -= onesize;
 		totsize += onesize;
 		t += onesize;
 	}
