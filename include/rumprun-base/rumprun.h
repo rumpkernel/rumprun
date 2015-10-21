@@ -40,4 +40,6 @@ void	rumprun_reboot(void) __attribute__((noreturn));
 /* XXX: this prototype shouldn't be here (if it should exist at all) */
 void	rumprun_daemon(void);
 
+extern int rumprun_cold;
+
 #endif /* _RUMPRUN_BASE_RUMPRUN_H_ */

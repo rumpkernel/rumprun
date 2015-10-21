@@ -73,6 +73,8 @@ __weak_alias(rumpbake_main8,rumprun_notmain);
 
 __weak_alias(rump_init_server,rumprun_enosys);
 
+int rumprun_cold = 1;
+
 void
 rumprun_boot(char *cmdline)
 {
@@ -128,6 +130,8 @@ rumprun_boot(char *cmdline)
 
 	pthread_mutex_init(&w_mtx, NULL);
 	pthread_cond_init(&w_cv, NULL);
+
+	rumprun_cold = 0;
 }
 
 /*

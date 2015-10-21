@@ -38,9 +38,18 @@
 #include <time.h>
 #include <unistd.h>
 
+#include <rumprun-base/rumprun.h>
+
 void __dead
 _exit(int eval)
 {
+
+	if (__predict_false(rumprun_cold)) {
+		printf("\n=== bootstrap failed\n");
+		reboot(0, NULL);
+		/*NOTREACHED*/
+	}
+
 	if (eval) {
 		printf("\n=== ERROR: _exit(%d) called ===\n", eval);
 	} else {
