@@ -200,10 +200,8 @@ addbin(jsmntok_t *t, char *data)
 
 		if (sizeok && *T_STR(t_runmode,data) == '&') {
 			rreflags = RUMPRUN_EXEC_BACKGROUND;
-#ifdef notyet
 		} else if (sizeok && *T_STR(t_runmode,data) == '|') {
 			rreflags = RUMPRUN_EXEC_PIPE;
-#endif
 		} else {
 			errx(1, "invalid runmode \"%.*s\" for bin \"%.*s\"",
 			    T_PRINTFSTAR(t_runmode, data),

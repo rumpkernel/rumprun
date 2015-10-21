@@ -135,14 +135,15 @@ rumprun_boot(char *cmdline)
  * because otherwise libpthread goes haywire because it doesn't understand
  * the concept of multiple main threads (which is sort of understandable ...)
  */
-#define RUMPRUNNER_DONE		0x01
-#define RUMPRUNNER_DAEMON	0x02
+#define RUMPRUNNER_DONE		0x11
+#define RUMPRUNNER_DAEMON	0x12
 struct rumprunner {
 	int (*rr_mainfun)(int, char *[]);
 	int rr_argc;
 	char **rr_argv;
 
 	pthread_t rr_mainthread;
+	struct lwp *rr_lwp;
 
 	int rr_flags;
 
@@ -171,7 +172,7 @@ mainbouncer(void *arg)
 	const char *progname = rr->rr_argv[0];
 	int rv;
 
-	rump_pub_lwproc_rfork(RUMP_RFFDG);
+	rump_pub_lwproc_switch(rr->rr_lwp);
 
 	pthread_cleanup_push(releaseme, rr);
 
@@ -192,6 +193,55 @@ mainbouncer(void *arg)
 	exit(rv);
 }
 
+static void
+setupproc(struct rumprunner *rr)
+{
+	static int pipein = -1;
+	int pipefd[2], newpipein;
+	const char *progname = rr->rr_argv[0];
+
+	if (rump_pub_lwproc_curlwp() != NULL) {
+		errx(1, "setupproc() needs support for non-implicit callers");
+	}
+
+	/* is the target output a pipe? */
+	if (rr->rr_flags & RUMPRUN_EXEC_PIPE) {
+		if (pipe(pipefd) == -1) {
+			err(1, "cannot create pipe for %s", progname);
+		}
+		newpipein = pipefd[0];
+	} else {
+		newpipein = -1;
+	}
+
+	rump_pub_lwproc_rfork(RUMP_RFFDG);
+	rr->rr_lwp = rump_pub_lwproc_curlwp();
+
+	/* set output pipe to stdout if piping */
+	if ((rr->rr_flags & RUMPRUN_EXEC_PIPE) && pipefd[1] != STDOUT_FILENO) {
+		if (dup2(pipefd[1], STDOUT_FILENO) == -1)
+			err(1, "dup2 stdout");
+		close(pipefd[1]);
+	}
+	if (pipein != -1 && pipein != STDIN_FILENO) {
+		if (dup2(pipein, STDIN_FILENO) == -1)
+			err(1, "dup2 input");
+		close(pipein);
+	}
+
+	rump_pub_lwproc_switch(NULL);
+
+	/* pipe descriptors have been copied.  close them in parent */
+	if (rr->rr_flags & RUMPRUN_EXEC_PIPE) {
+		close(pipefd[1]);
+	}
+	if (pipein != -1) {
+		close(pipein);
+	}
+
+	pipein = newpipein;
+}
+
 void *
 rumprun(int flags, int (*mainfun)(int, char *[]), int argc, char *argv[])
 {
@@ -203,7 +253,9 @@ rumprun(int flags, int (*mainfun)(int, char *[]), int argc, char *argv[])
 	rr->rr_mainfun = mainfun;
 	rr->rr_argc = argc;
 	rr->rr_argv = argv;
-	rr->rr_flags = 0;
+	rr->rr_flags = flags; /* XXX */
+
+	setupproc(rr);
 
 	if (pthread_create(&rr->rr_mainthread, NULL, mainbouncer, rr) != 0) {
 		fprintf(stderr, "rumprun: running %s failed\n", argv[0]);
