@@ -16,23 +16,26 @@ endif
 
 MAINOBJ:=	${RROBJ}/rumprun-${PLATFORM}-${MACHINE_ARCH}.o
 
-COREDIR:=	$(shell pwd)/../../lib/libbmk_core
-RUMPUSERDIR:=	$(shell pwd)/../../lib/libbmk_rumpuser
-COMPILERRTDIR:=	$(shell pwd)/../../lib/libcompiler_rt
+RROBJLIB:=	${RROBJ}/lib
+LIBDIR:=	$(abspath ../../lib)
 
 COMMONDIR:=	$(abspath ../)
 
 define BUILDLIB_target
-.PHONY: ${1}/${PLATFORM}/${2}
-${1}/${PLATFORM}/${2}:
-	( cd ${1} \
-	    && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} ${3} obj \
-	    && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} ${3} dependall )
+.PHONY: $${RROBJLIB}/${1}/${1}.a
+$${RROBJLIB}/${1}/${1}.a:
+	( cd $${LIBDIR}/${1} \
+	    && ${RUMPMAKE} MAKEOBJDIR=${RROBJLIB}/${1} ${2} obj \
+	    && ${RUMPMAKE} MAKEOBJDIR=${RROBJLIB}/${1} ${2} dependall )
+
+${1}_clean:
+	( cd $${LIBDIR}/${1} && \
+	    ${RUMPMAKE} MAKEOBJDIR=${RROBJLIB}/${1} ${2} cleandir )
 endef
 
-$(eval $(call BUILDLIB_target,${COREDIR},libbmk_core.a))
-$(eval $(call BUILDLIB_target,${RUMPUSERDIR},libbmk_rumpuser.a))
-$(eval $(call BUILDLIB_target,${COMPILERRTDIR},libcompiler_rt.a,RUMPSRC=${RUMPSRC}))
+$(eval $(call BUILDLIB_target,libbmk_core))
+$(eval $(call BUILDLIB_target,libbmk_rumpuser))
+$(eval $(call BUILDLIB_target,libcompiler_rt,RUMPSRC=${RUMPSRC}))
 
 PSEUDOSTUBS=${RROBJ}/rumprun-pseudolinkstubs
 
@@ -44,8 +47,8 @@ bmk.ldscript: ${LDSCRIPT}
 
 commonlibs: platformlibs userlibs
 userlibs: ${PSEUDOSTUBS}.o
-platformlibs: ${COREDIR}/${PLATFORM}/libbmk_core.a ${RUMPUSERDIR}/${PLATFORM}/libbmk_rumpuser.a bmk.ldscript
-compiler_rt: ${COMPILERRTDIR}/${PLATFORM}/libcompiler_rt.a
+platformlibs: ${RROBJLIB}/libbmk_core/libbmk_core.a ${RROBJLIB}/libbmk_rumpuser/libbmk_rumpuser.a bmk.ldscript
+compiler_rt: ${RROBJLIB}/libcompiler_rt/libcompiler_rt.a
 
 .PHONY: buildtest
 buildtest: ../../tests/hello/hello.c
@@ -61,11 +64,7 @@ buildtest: ../../tests/hello/hello.c
 	@echo done
 
 .PHONY: commonclean
-commonclean:
-	( cd ${COREDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
-	( cd ${RUMPUSERDIR} && ${RUMPMAKE} MAKEOBJDIR=${PLATFORM} cleandir )
-	( cd ${COMPILERRTDIR} && \
-		${RUMPMAKE} RUMPSRC=${RUMPSRC} MAKEOBJDIR=${PLATFORM} cleandir )
+commonclean: libbmk_core_clean libbmk_rumpuser_clean libcompiler_rt_clean
 	rm -f ${PSEUDOSTUBS}.c ${PSEUDOSTUBS}.o
 	rm -f bmk.ldscript
 

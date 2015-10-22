@@ -50,8 +50,8 @@ links: include/hw/machine ../../include/bmk-pcpu
 
 ${MAINOBJ}: ${OBJS_BMK} platformlibs
 	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS_BMK} -o $@ \
-	    -L${COREDIR}/hw -L${RUMPUSERDIR}/hw	-Wl,--whole-archive \
-	    -lbmk_rumpuser -lbmk_core -Wl,--no-whole-archive
+	    -L${RROBJLIB}/libbmk_core -L${RROBJLIB}/libbmk_rumpuser \
+	    -Wl,--whole-archive -lbmk_rumpuser -lbmk_core -Wl,--no-whole-archive
 	${OBJCOPY} -w -G bmk_* -G rumpuser_* -G jsmn_* \
 	    -G rumprun_platform_rumpuser_init -G _start $@
 
