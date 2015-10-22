@@ -48,7 +48,7 @@ $(APP_TOOLS_DIR)/${2}:							\
 		-e 's#!APPTOOLS_CXX!#$(APP_TOOLS_CXX)#g;'		\
 		-e 's#!MACHINE_ARCH!#$(MACHINE_ARCH)#g;'		\
 		-e 's#!GNUPLATFORM!#$(TOOLTUPLE)#g;'			\
-		-e 's#!DESTDIR!#$(DESTDIR)#g;'				\
+		-e 's#!DESTDIR!#$(RRDEST)#g;'				\
 		-e 's#!APPTOOLS_DIR!#$(APP_TOOLS_DIR)#g;'		\
 		-e 's#!APPTOOLS_PLATFORM!#$(PLATFORM)#g;'		\
 		-e 's#!CPPFLAGS!#$(BUILDRUMP_TOOL_CPPFLAGS)#g;'		\

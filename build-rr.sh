@@ -91,7 +91,7 @@ abspath ()
 parseargs ()
 {
 
-	DESTDIR=./rumprun
+	RRDEST=./rumprun
 	KERNONLY=false
 	RROBJ=
 	RUMPSRC=src-netbsd
@@ -109,7 +109,7 @@ parseargs ()
 			STDJ=-j${OPTARG}
 			;;
 		'd')
-			DESTDIR="${OPTARG}"
+			RRDEST="${OPTARG}"
 			;;
 		'k')
 			KERNONLY=true
@@ -244,7 +244,7 @@ setvars ()
 	STAGING="${RROBJ}/dest.stage"
 	BROBJ="${RROBJ}/buildrump.sh"
 
-	abspath DESTDIR
+	abspath RRDEST
 	abspath RROBJ
 	abspath RUMPSRC
 }
@@ -289,7 +289,9 @@ buildrump ()
 	[ $(${RUMPMAKE} -f bsd.own.mk -V '${_BUILDRUMP_CXX}') != 'yes' ] \
 	    || HAVECXX=true
 
-	makeconfigmk ${RROBJ}/config.mk
+	makeconfig ${RROBJ}/config.mk ''
+	makeconfig ${RROBJ}/config.sh \"
+	export RUMPRUN_MKCONF="${RROBJ}/config.mk"
 
 	cat >> ${RUMPTOOLS}/mk.conf << EOF
 .if defined(LIB) && \${LIB} == "pthread"
@@ -366,45 +368,46 @@ wraponetool ()
 
 	configfile=$1
 	tool=$2
+	quote=$3
 
 	tpath=$(${RUMPMAKE} -f bsd.own.mk -V "\${${tool}}")
 	if ! [ -n "${tpath}" -a -x ${tpath} ]; then
 		die Could not locate buildrump.sh tool \"${tool}\".
 	fi
-	echo "${tool}=${tpath}" >> ${configfile}
+	echo "${tool}=${quote}${tpath}${quote}" >> ${configfile}
 }
 
-makeconfigmk ()
+makeconfig ()
 {
 
-	echo "BUILDRUMP=${BUILDRUMP}" > ${1}
-	echo "RUMPSRC=${RUMPSRC}" >> ${1}
-	echo "RUMPMAKE=${RUMPMAKE}" >> ${1}
-	echo "BUILDRUMP_TOOLFLAGS=$(pwd)/${RUMPTOOLS}/toolchain-conf.mk" >> ${1}
-	echo "MACHINE=${MACHINE}" >> ${1}
-	echo "MACHINE_ARCH=${MACHINE_ARCH}" >> ${1}
-	echo "TOOLTUPLE=${TOOLTUPLE}" >> ${1}
-	echo "KERNONLY=${KERNONLY}" >> ${1}
-	echo "PLATFORM=${PLATFORM}" >> ${1}
+	quote="${2}"
 
-	echo "DESTDIR=${DESTDIR}" >> ${1}
-	echo "OBJDIR=${RROBJ}" >> ${1}
+	echo "BUILDRUMP=${quote}${BUILDRUMP}${quote}" > ${1}
+	echo "RUMPSRC=${quote}${RUMPSRC}${quote}" >> ${1}
+	echo "RUMPMAKE=${quote}${RUMPMAKE}${quote}" >> ${1}
+	echo "BUILDRUMP_TOOLFLAGS=${quote}$(pwd)/${RUMPTOOLS}/toolchain-conf.mk${quote}" >> ${1}
+	echo "MACHINE=${quote}${MACHINE}${quote}" >> ${1}
+	echo "MACHINE_ARCH=${quote}${MACHINE_ARCH}${quote}" >> ${1}
+	echo "TOOLTUPLE=${quote}${TOOLTUPLE}${quote}" >> ${1}
+	echo "KERNONLY=${quote}${KERNONLY}${quote}" >> ${1}
+	echo "PLATFORM=${quote}${PLATFORM}${quote}" >> ${1}
+
+	echo "RRDEST=${quote}${RRDEST}${quote}" >> ${1}
+	echo "RROBJ=${quote}${RROBJ}${quote}" >> ${1}
 
 	# wrap mandatory toolchain bits
 	for t in AR AS CC CPP LD NM OBJCOPY OBJDUMP RANLIB READELF \
             SIZE STRINGS STRIP; do
-		wraponetool ${1} ${t}
+		wraponetool ${1} ${t} "${quote}"
 	done
 
 	# c++ is optional, wrap it iff available
 	if ${HAVECXX}; then
 		echo "CONFIG_CXX=yes" >> ${1}
-		wraponetool ${1} CXX
+		wraponetool ${1} CXX "${quote}"
 	else
 		echo "CONFIG_CXX=no" >> ${1}
 	fi
-
-	export RUMPRUN_MKCONF=${1}
 }
 
 dobuild ()
@@ -443,10 +446,10 @@ doinstall ()
 
 	# default used to be a symlink, so this is for "compat".
 	# remove in a few months.
-	rm -f ${DESTDIR} > /dev/null 2>&1 || true
+	rm -f ${RRDEST} > /dev/null 2>&1 || true
 
-	mkdir -p ${DESTDIR} || die cannot create ${DESTDIR}
-	( cd ${STAGING} ; tar -cf - .) | (cd ${DESTDIR} ; tar -xf -)
+	mkdir -p ${RRDEST} || die cannot create ${RRDEST}
+	( cd ${STAGING} ; tar -cf - .) | (cd ${RRDEST} ; tar -xf -)
 }
 
 #
@@ -473,7 +476,7 @@ if ${DObuild}; then
 	   ${TOOLTUPLE} "$(${RUMPMAKE} -f bsd.own.mk -V '${ACTIVE_CC}')"
 fi
 if ${DOinstall}; then
-	printf ">> installed to \"%s\"\n" ${DESTDIR}
+	printf ">> installed to \"%s\"\n" ${RRDEST}
 fi
 echo '>>'
 echo ">> $0 ran successfully"

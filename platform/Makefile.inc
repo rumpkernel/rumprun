@@ -9,9 +9,9 @@ TARGETS:= compiler_rt
 endif
 
 ifeq (${BUILDRR},true)
-CPPFLAGS+=      -I${OBJDIR}/dest.stage/include
+CPPFLAGS+=      -I${RROBJ}/dest.stage/include
 else
-CPPFLAGS+=      -I${DESTDIR}/include
+CPPFLAGS+=      -I${RRDEST}/include
 endif
 
 MAINOBJ:=	rumprun-${PLATFORM}-${MACHINE_ARCH}.o
@@ -36,7 +36,7 @@ $(eval $(call BUILDLIB_target,${COMPILERRTDIR},libcompiler_rt.a,RUMPSRC=${RUMPSR
 
 PSEUDOSTUBS=${COMMONDIR}/rumprun-pseudolinkstubs
 
-${PSEUDOSTUBS}.c: ${OBJDIR}/dest.stage/lib/librumprun_base.a
+${PSEUDOSTUBS}.c: ${RROBJ}/dest.stage/lib/librumprun_base.a
 	sh ../makepseudolinkstubs.sh ${NM} ${RUMPSRC} $< $@
 
 bmk.ldscript: ${LDSCRIPT}
@@ -75,9 +75,9 @@ tests: ${MAINOBJ} commonlibs
 	../../tests/runtests.sh ${PLATFORM_DEFAULT_TESTER}
 
 ifeq (${BUILDRR},true)
-INSTALLDIR=	${OBJDIR}/dest.stage
+INSTALLDIR=	${RROBJ}/dest.stage
 else
-INSTALLDIR=	${DESTDIR}
+INSTALLDIR=	${RRDEST}
 endif
 
 .PHONY: installkern
