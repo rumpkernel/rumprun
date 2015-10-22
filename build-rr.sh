@@ -463,6 +463,10 @@ ${DOinstall} && doinstall
 echo
 echo '>>'
 echo ">> Finished $0 for ${PLATFORM}"
+echo '>>'
+echo ">> For Rumprun developers (if you're not sure, you don't need it):"
+echo "export RUMPRUN_MKCONF=\"${RROBJ}/config.mk\""
+echo '>>'
 if ${DObuild}; then
 	printf ">> toolchain tuple: ${TOOLTUPLE}\n"
 	printf ">> cc wrapper: %s-%s\n" \
