@@ -22,9 +22,9 @@ script:
   - export CC=gcc-4.8
   - export CXX=g++-4.8
   - git submodule update --init
-  - ./build-rr.sh -j16 -qq ${KERNONLY} ${PLATFORM} ${EXTRAFLAGS}
-  - ./tests/buildtests.sh -o myobj ${KERNONLY} ${MACHINE} ${PLATFORM} ${ELF}
-  - RUMPRUN_SHCONF=$(pwd)/myobj/config.sh ./tests/runtests.sh ${TESTS}
+  - ./build-rr.sh -o myobj -j16 -qq ${KERNONLY} ${PLATFORM} ${EXTRAFLAGS}
+  - RUMPRUN_SHCONF=./myobj/config.sh ./tests/buildtests.sh ${KERNONLY}
+  - ./tests/runtests.sh ${TESTS}
 
 notifications:
   irc:
