@@ -90,12 +90,6 @@ tests: ${MAINOBJ} commonlibs
 	../../tests/buildtests.sh ${PLATFORM}
 	../../tests/runtests.sh ${PLATFORM_DEFAULT_TESTER}
 
-ifeq (${BUILDRR},true)
-INSTALLDIR=	${RROBJ}/dest.stage
-else
-INSTALLDIR=	${RRDEST}
-endif
-
 .PHONY: installkern
 installkern:
 	install -m 0444 ${MAINOBJ} ${INSTALLDIR}/lib
