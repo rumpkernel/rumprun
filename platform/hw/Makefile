@@ -1,9 +1,13 @@
+ifeq ($(RUMPRUN_MKCONF),)
+$(error RUMPRUN_MKCONF missing)
+endif
+include ${RUMPRUN_MKCONF}
+
 default: all
 
 PLATFORM_DEFAULT_TESTER=qemu
 
 include ../../global.mk
--include config.mk
 ifdef BUILDRUMP_TOOLFLAGS
 include ${BUILDRUMP_TOOLFLAGS}
 endif
@@ -67,5 +71,4 @@ cleanrump: clean
 	rm -rf rump rumpobj rumptools
 
 distcleanrump: cleanrump
-	rm -f config.mk
 	${MAKE} -C ../../tests clean

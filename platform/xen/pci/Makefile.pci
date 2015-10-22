@@ -1,6 +1,6 @@
 PCIDIR!=	cd ${.PARSEDIR} ; pwd -P
 
-.include "${PCIDIR}/../config.mk"
+.include "${RUMPRUN_MKCONF}"
 .include "${BUILDRUMP_TOOLFLAGS}"
 
 PCI_HYPERCALLS=		rumphyper_pci.c rumphyper_dma.c

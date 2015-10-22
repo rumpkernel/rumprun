@@ -1,11 +1,14 @@
-PLATFORM?= hw
+ifeq ($(RUMPRUN_MKCONF),)
+$(error RUMPRUN_MKCONF missing)
+endif
+include ${RUMPRUN_MKCONF}
+
+ifeq (${BUILDRUMP_TOOLFLAGS},)
+$(error invalid config file ${RUMPRUN_MKCONF})
+endif
+include ${BUILDRUMP_TOOLFLAGS}
 
 include ../../global.mk
--include ../../platform/${PLATFORM}/config.mk
-
-ifdef BUILDRUMP_TOOLFLAGS
-include ${BUILDRUMP_TOOLFLAGS}
-endif
 
 CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
 

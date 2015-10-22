@@ -14,7 +14,7 @@ CPPFLAGS+=	-I${.CURDIR}/../xen/include -D__RUMP_KERNEL__ -I${.CURDIR}/..
 CPPFLAGS+=	-I${.CURDIR}/../../../include
 
 .if ${BUILDRR:Uno} == "true"
-.include "${.CURDIR}/../config.mk"
+.include "${RUMPRUN_MKCONF}"
 CPPFLAGS+=	-I${OBJDIR}/dest.stage/include
 .endif
 

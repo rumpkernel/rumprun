@@ -1,6 +1,9 @@
 # Useful config stuff
 
-include $(MINI-OS_ROOT)/../config.mk
+feq ($(RUMPRUN_MKCONF),)
+$(error RUMPRUN_MKCONF missing)
+endif
+include ${RUMPRUN_MKCONF}
 
 # Where to find xen headers from.  XXX: this can probably be done better
 ifeq ($(shell uname -s),NetBSD)

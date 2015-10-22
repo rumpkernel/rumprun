@@ -289,7 +289,7 @@ buildrump ()
 	[ $(${RUMPMAKE} -f bsd.own.mk -V '${_BUILDRUMP_CXX}') != 'yes' ] \
 	    || HAVECXX=true
 
-	makeconfigmk ${PLATFORMDIR}/config.mk
+	makeconfigmk ${RROBJ}/config.mk
 
 	cat >> ${RUMPTOOLS}/mk.conf << EOF
 .if defined(LIB) && \${LIB} == "pthread"
@@ -316,7 +316,7 @@ EOF
 
 builduserspace ()
 {
-	${MAKE} -C app-tools RUMPRUN_MKCONF=$(pwd)/${PLATFORMDIR}/config.mk
+	${MAKE} -C app-tools
 
 	usermtree ${STAGING}
 
@@ -403,6 +403,8 @@ makeconfigmk ()
 	else
 		echo "CONFIG_CXX=no" >> ${1}
 	fi
+
+	export RUMPRUN_MKCONF=${1}
 }
 
 dobuild ()
