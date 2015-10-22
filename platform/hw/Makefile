@@ -1,16 +1,9 @@
-ifeq ($(RUMPRUN_MKCONF),)
-$(error RUMPRUN_MKCONF missing)
-endif
-include ${RUMPRUN_MKCONF}
+include ../../global.mk
+include ${BUILDRUMP_TOOLFLAGS}
 
 default: all
 
 PLATFORM_DEFAULT_TESTER=qemu
-
-include ../../global.mk
-ifdef BUILDRUMP_TOOLFLAGS
-include ${BUILDRUMP_TOOLFLAGS}
-endif
 
 CPPFLAGS=	-Iinclude -I../../include -nostdinc
 CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}

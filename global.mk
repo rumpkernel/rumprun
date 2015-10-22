@@ -1,3 +1,11 @@
+ifeq ($(RUMPRUN_MKCONF),)
+$(error RUMPRUN_MKCONF missing)
+endif
+include ${RUMPRUN_MKCONF}
+ifeq (${RRDEST},)
+$(error invalid RUMPRUN_MKCONF)
+endif
+
 DBG?=	 -O2 -g
 CFLAGS+= -std=gnu99 ${DBG}
 CFLAGS+= -fno-stack-protector -ffreestanding

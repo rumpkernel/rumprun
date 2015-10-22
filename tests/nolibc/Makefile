@@ -1,14 +1,5 @@
-ifeq ($(RUMPRUN_MKCONF),)
-$(error RUMPRUN_MKCONF missing)
-endif
-include ${RUMPRUN_MKCONF}
-
-ifeq (${BUILDRUMP_TOOLFLAGS},)
-$(error invalid config file ${RUMPRUN_MKCONF})
-endif
-include ${BUILDRUMP_TOOLFLAGS}
-
 include ../../global.mk
+include ${BUILDRUMP_TOOLFLAGS}
 
 CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
 

@@ -1,17 +1,10 @@
-ifeq ($(RUMPRUN_MKCONF),)
-$(error RUMPRUN_MKCONF missing)
-endif
-include ${RUMPRUN_MKCONF}
-
 .PHONY: all
 all: default
 
 PLATFORM_DEFAULT_TESTER=xen
 
 include ../../global.mk
-ifdef BUILDRUMP_TOOLFLAGS
 include ${BUILDRUMP_TOOLFLAGS}
-endif
 
 #
 # Rumprun-xen Makefile.
