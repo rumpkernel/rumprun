@@ -12,7 +12,7 @@ LDSCRIPT=$(abspath ../../platform/${PLATFORM}/bmk.ldscript)
 
 LDFLAGS+= ${LDFLAGS.${PLATFORM}.${MACHINE_ARCH}}
 
-OBJS= main.o ${RROBJ}/rumprun-${PLATFORM}-${MACHINE_ARCH}.o)
+OBJS= main.o ${RROBJ}/rumprun-${PLATFORM}-${MACHINE_ARCH}.o
 
 .PHONY: clean
 
