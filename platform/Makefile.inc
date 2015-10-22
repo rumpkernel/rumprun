@@ -3,10 +3,11 @@ $(error need to specify $$PLATFORM!)
 endif
 
 ifneq (${KERNONLY},true)
-TARGETS:= userlibs
-else
-TARGETS:= compiler_rt
+TARGETS= userlibs
 endif
+# XXX: compiler_rt needs to be built only for KERNONLY=true,
+# building it always makes testing easier
+TARGETS+= compiler_rt
 
 ifeq (${BUILDRR},true)
 CPPFLAGS+=      -I${RROBJ}/dest.stage/include
