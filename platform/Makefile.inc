@@ -2,12 +2,17 @@ ifeq (${PLATFORM},)
 $(error need to specify $$PLATFORM!)
 endif
 
+TARGETS=	rumpkernlibs
+# compiler_rt is strictly speaking necessary only in KERNONLY=true,
+# but building it always makes testing kernonly easier
+TARGETS+=	compiler_rt
+INSTALLTGTS=	librumpkern_bmktc_install
+
 ifneq (${KERNONLY},true)
-TARGETS= userlibs
+TARGETS+=	userlibs
+INSTALLTGTS+=	librumprun_base_install librumprun_tester_install
+INSTALLTGTS+=	libunwind_install
 endif
-# XXX: compiler_rt needs to be built only for KERNONLY=true,
-# building it always makes testing easier
-TARGETS+= compiler_rt
 
 ifeq (${BUILDRR},true)
 CPPFLAGS+=      -I${RROBJ}/dest.stage/include
@@ -29,6 +34,12 @@ $${RROBJLIB}/${1}/${1}.a:
 	    && ${RUMPMAKE} MAKEOBJDIR=${RROBJLIB}/${1} ${2} obj \
 	    && ${RUMPMAKE} MAKEOBJDIR=${RROBJLIB}/${1} ${2} dependall )
 
+.PHONY: ${1}_install
+${1}_install:
+	( cd $${RROBJLIB}/${1} && \
+	    install -m 0444 ${1}.a $${INSTALLDIR}/lib )
+
+.PHONY: ${1}_clean
 ${1}_clean:
 	( cd $${LIBDIR}/${1} && \
 	    ${RUMPMAKE} MAKEOBJDIR=${RROBJLIB}/${1} ${2} cleandir )
@@ -36,19 +47,24 @@ endef
 
 $(eval $(call BUILDLIB_target,libbmk_core))
 $(eval $(call BUILDLIB_target,libbmk_rumpuser))
+$(eval $(call BUILDLIB_target,librumpkern_bmktc))
+$(eval $(call BUILDLIB_target,librumprun_base))
+$(eval $(call BUILDLIB_target,librumprun_tester))
+$(eval $(call BUILDLIB_target,libunwind))
 $(eval $(call BUILDLIB_target,libcompiler_rt,RUMPSRC=${RUMPSRC}))
 
 PSEUDOSTUBS=${RROBJ}/rumprun-pseudolinkstubs
 
-${PSEUDOSTUBS}.c: ${RROBJ}/dest.stage/lib/librumprun_base.a
+${PSEUDOSTUBS}.c: ${RROBJLIB}/librumprun_base/librumprun_base.a
 	sh ../makepseudolinkstubs.sh ${NM} ${RUMPSRC} $< $@
 
 bmk.ldscript: ${LDSCRIPT}
 	ln -sf $< $@
 
 commonlibs: platformlibs userlibs
-userlibs: ${PSEUDOSTUBS}.o
+userlibs: ${PSEUDOSTUBS}.o ${RROBJLIB}/librumprun_base/librumprun_base.a ${RROBJLIB}/librumprun_tester/librumprun_tester.a ${RROBJLIB}/libunwind/libunwind.a
 platformlibs: ${RROBJLIB}/libbmk_core/libbmk_core.a ${RROBJLIB}/libbmk_rumpuser/libbmk_rumpuser.a bmk.ldscript
+rumpkernlibs: ${RROBJLIB}/librumpkern_bmktc/librumpkern_bmktc.a
 compiler_rt: ${RROBJLIB}/libcompiler_rt/libcompiler_rt.a
 
 .PHONY: buildtest
@@ -89,7 +105,7 @@ installkern:
 installuser:
 	install -m 0444 ${PSEUDOSTUBS}.o ${INSTALLDIR}/lib
 
-INSTALLTGTS=	installkern
+INSTALLTGTS+=	installkern
 ifneq (${KERNONLY},true)
 INSTALLTGTS+=	installuser
 endif

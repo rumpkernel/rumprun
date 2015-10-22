@@ -212,11 +212,10 @@ checkprevbuilds ()
 		. ./.prevbuild
 		: ${PB_KERNONLY:=false} # "bootstrap", remove in a few months
 		if [ "${PB_MACHINE}" != "${MACHINE}" \
-		    -o "${PB_PLATFORM}" != "${PLATFORM}" \
 		    -o "${PB_KERNONLY}" != "${KERNONLY}" \
 		]; then
 			echo '>> ERROR:'
-			echo '>> Building for multiple machine/platform combos'
+			echo '>> Building for multiple machine combos'
 			echo '>> from the same rumprun source tree is currently'
 			echo '>> not supported.  See rumprun issue #35.'
 			printf '>> %20s: %s/%s nolibc=%s\n' 'Previously built' \
@@ -227,7 +226,6 @@ checkprevbuilds ()
 		fi
 	else
 		echo PB_MACHINE=${MACHINE} > ./.prevbuild
-		echo PB_PLATFORM=${PLATFORM} >> ./.prevbuild
 		echo PB_KERNONLY=${KERNONLY} >> ./.prevbuild
 	fi
 }
@@ -329,18 +327,6 @@ builduserspace ()
 	for lib in ${LIBS}; do
 		makeuserlib ${lib}
 	done
-	makeuserlib $(pwd)/lib/librumprun_base ${PLATFORM}
-	makeuserlib $(pwd)/lib/librumprun_tester ${PLATFORM}
-
-	# build unwind bits if we support c++
-	if ${HAVECXX}; then
-		( cd lib/libunwind
-		    ${RUMPMAKE} ${STDJ} obj
-		    ${RUMPMAKE} ${STDJ} includes
-		    ${RUMPMAKE} ${STDJ} dependall
-		    ${RUMPMAKE} ${STDJ} install
-		)
-	fi
 }
 
 buildpci ()
@@ -351,16 +337,6 @@ buildpci ()
 		${RUMPMAKE} -f ${PLATFORMDIR}/pci/Makefile.pci ${STDJ} dependall
 		${RUMPMAKE} -f ${PLATFORMDIR}/pci/Makefile.pci ${STDJ} install
 	fi
-}
-
-buildkernlibs ()
-{
-
-	( cd lib/librumpkern_bmktc
-		${RUMPMAKE} ${STDJ} obj
-		${RUMPMAKE} ${STDJ} dependall
-		${RUMPMAKE} ${STDJ} install
-	)
 }
 
 wraponetool ()
@@ -427,8 +403,6 @@ dobuild ()
 	${KERNONLY} || builduserspace
 
 	buildpci
-
-	buildkernlibs
 
 	# run routine specified in platform.conf
 	doextras || die 'platforms extras failed.  tillerman needs tea?'

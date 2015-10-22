@@ -58,7 +58,7 @@ links:
 
 $(MAINOBJ): $(RUMP_OBJS) platformlibs
 	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(RUMP_OBJS) -nostdlib -o $@ \
-	    -L${RROBJLIB}/libbmk_core -L${RROBJLIB}libbmk_rumpuser \
+	    -L${RROBJLIB}/libbmk_core -L${RROBJLIB}/libbmk_rumpuser \
 	    -Wl,--whole-archive -lbmk_rumpuser -lbmk_core -Wl,--no-whole-archive
 
 .PHONY: clean arch_clean
