@@ -22,7 +22,7 @@ while getopts 'kqh' opt; do
 		TESTCONFIGURE=false
 		;;
 	'h'|'?')
-		echo "$0 [-k|-q] MACHINE PLATFORM [ELF]"
+		echo "$0 [-k|-q]"
 		exit 1
 	esac
 done
