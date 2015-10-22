@@ -28,13 +28,10 @@ while getopts 'kqh' opt; do
 done
 shift $((${OPTIND} - 1))
 
-[ -n "${1}" ] || { echo '>> need machine' ; exit 1; }
-[ -n "${2}" ] || { echo '>> need platform' ; exit 1; }
+[ -n "${RUMPRUN_SHCONF}" ] || { echo '>> need RUMPRUN_SHCONF'; exit 1; }
+. "${RUMPRUN_SHCONF}"
 
 cd "$(dirname $0)"
-MACHINE=$1
-PLATFORM=$2
-ELF=$3
 
 test_apptools()
 {
@@ -52,17 +49,14 @@ test_apptools()
 		exit 1
 	esac
 
-	# XXX
-	export DOCXX=$(grep ^CONFIG_CXX ../platform/${PLATFORM}/config.mk)
+	export MAKE=${APPTOOLSDIR}/${TOOLTUPLE}-${MAKE-make}
 
-	export MAKE=${APPTOOLSDIR}/${MACHINE}-rumprun-netbsd${ELF}-${MAKE-make}
-
-	${MAKE} ${DOCXX} RUMPBAKE="${APPTOOLSDIR}/${RUMPBAKE}"
+	${MAKE} CONFIG_CXX=${CONFIG_CXX} RUMPBAKE="${APPTOOLSDIR}/${RUMPBAKE}"
 
 	if ${TESTCONFIGURE}; then
 		(
 			cd configure
-			${APPTOOLSDIR}/${MACHINE}-rumprun-netbsd${ELF}-configure ./configure
+			${APPTOOLSDIR}/${TOOLTUPLE}-configure ./configure
 			${MAKE}
 		)
 	fi
@@ -71,7 +65,7 @@ test_apptools()
 		(
 			mkdir -p cmake/build
 			cd cmake/build
-			cmake -DCMAKE_TOOLCHAIN_FILE=${APPTOOLSDIR}/${MACHINE}-rumprun-netbsd${ELF}-toolchain.cmake ..
+			cmake -DCMAKE_TOOLCHAIN_FILE=${APPTOOLSDIR}/${TOOLTUPLE}-toolchain.cmake ..
 			make
 		)
 	fi
