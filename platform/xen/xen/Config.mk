@@ -1,6 +1,6 @@
 # Useful config stuff
 
-feq ($(RUMPRUN_MKCONF),)
+ifeq ($(RUMPRUN_MKCONF),)
 $(error RUMPRUN_MKCONF missing)
 endif
 include ${RUMPRUN_MKCONF}
