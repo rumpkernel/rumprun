@@ -14,7 +14,7 @@ else
 CPPFLAGS+=      -I${RRDEST}/include
 endif
 
-MAINOBJ:=	rumprun-${PLATFORM}-${MACHINE_ARCH}.o
+MAINOBJ:=	${RROBJ}/rumprun-${PLATFORM}-${MACHINE_ARCH}.o
 
 COREDIR:=	$(shell pwd)/../../lib/libbmk_core
 RUMPUSERDIR:=	$(shell pwd)/../../lib/libbmk_rumpuser
@@ -34,7 +34,7 @@ $(eval $(call BUILDLIB_target,${COREDIR},libbmk_core.a))
 $(eval $(call BUILDLIB_target,${RUMPUSERDIR},libbmk_rumpuser.a))
 $(eval $(call BUILDLIB_target,${COMPILERRTDIR},libcompiler_rt.a,RUMPSRC=${RUMPSRC}))
 
-PSEUDOSTUBS=${COMMONDIR}/rumprun-pseudolinkstubs
+PSEUDOSTUBS=${RROBJ}/rumprun-pseudolinkstubs
 
 ${PSEUDOSTUBS}.c: ${RROBJ}/dest.stage/lib/librumprun_base.a
 	sh ../makepseudolinkstubs.sh ${NM} ${RUMPSRC} $< $@
