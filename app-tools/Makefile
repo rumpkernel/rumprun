@@ -73,7 +73,7 @@ $(TOOLTUPLE)-$1:
 
 BRTOOLS+= $${toolval_${1}}
 endef
-$(foreach t,${_BINS},$(eval $(call binwrapper,${t})))
+$(foreach t,${_BIN_G},$(eval $(call binwrapper,${t})))
 
 ${BRLIBEXECDIR}:
 	mkdir -p $@
