@@ -20,7 +20,7 @@ SPECS=	${_SPECS} specs-bake-${TOOLTUPLE}-${PLATFORM}
 _BINS=	ar as cpp ld nm objcopy objdump ranlib readelf size strings strip
 BINS=	$(_BINS:%=$(TOOLTUPLE)-%)
 BINS+=	$(TOOLTUPLE)-$(_CCVARIANT) $(TOOLTUPLE)-$(_CXXVARIANT)
-BINS+=	rumpbake rumprun rumpstop
+BINS+=	rumprun-bake rumprun rumpstop
 
 .PHONY: app-tools
 app-tools: ${FILES} ${SPECS} ${BINS}
@@ -61,7 +61,7 @@ $(foreach spec,${_SPECS},$(eval \
 $(eval $(call templ,cc.in,$(TOOLTUPLE)-${_CCVARIANT}))
 $(eval $(call templ,cc.in,$(TOOLTUPLE)-${_CXXVARIANT}))
 $(eval $(call templ,specs-bake.in,specs-bake-$(TOOLTUPLE)-$(PLATFORM)))
-$(eval $(call templ,rumpbake.in,rumpbake))
+$(eval $(call templ,rumprun-bake.in,rumprun-bake))
 
 define binwrapper
 uptool_$1=$(shell echo $1 | tr '[:lower:]' '[:upper:]')
@@ -85,10 +85,11 @@ install-buildrumpwrappers: ${BRLIBEXECDIR} ${BRTOOLS}
 
 install-bins: ${BINS}
 	install -m 0755 ${BINS} ${INSTALLDIR}/bin
+	ln -f ${INSTALLDIR}/bin/rumprun-bake ${INSTALLDIR}/bin/rumpbake
 
 install-files: ${SPECS} ${FILES} ${INSTALLDIR}/etc
 	install -m 0644 ${FILES} ${SPECS} ${INSTALLDIR}/share
-	install -m 0644 rumpbake.conf ${INSTALLDIR}/etc
+	install -m 0644 rumprun-bake.conf ${INSTALLDIR}/etc
 
 install: install-buildrumpwrappers install-bins install-files
 

@@ -28,17 +28,23 @@
 _RUMPBAKE_VERSION=20150930
 
 #
-# rumpbake: script for final stage linking ("baking") of a unikernel image
+# rumprun-bake: script for final stage linking ("baking") of a unikernel image
 #
 
 : ${READELF:=readelf}
 unset runcmd
 
+if [ "$(basename $0)" = "rumpbake" ]; then
+	echo '>>'
+	echo '>> name "rumpbake" is deprecated.  use rumprun-bake instead'
+	echo '>>'
+fi
+
 if [ "${RUMPRUN_WARNING_STFU}" != 'please' ]; then
 	exec 3>&1 1>&2
 	echo
 	echo !!!
-	echo !!! NOTE: rumpbake is experimental. syntax may change in the future
+	echo !!! NOTE: rumprun-bake is experimental. syntax may change in the future
 	echo !!!
 	echo
 	exec 1>&3 3>&-
@@ -199,10 +205,10 @@ debugdump ()
 _usage ()
 {
 	cat <<EOM
-rumpbake version: ${_RUMPBAKE_VERSION}
+rumprun-bake version: ${_RUMPBAKE_VERSION}
 
-usage: rumpbake [-c conffile] config output input [input ...]
-       rumpbake list
+usage: rumprun-bake [-c conffile] config output input [input ...]
+       rumprun-bake list
 
 When invoked the single argument "list", lists supported target boards.
 
@@ -229,7 +235,7 @@ _readconfig ()
 	CURCONF="${1}"
 
 	if [ ! -f "${CURCONF}" ]; then
-		echo "rumpbake: error: Configuration file ${CURCONF} not found"
+		echo "rumprun-bake: error: Configuration file ${CURCONF} not found"
 		exit 1
 	fi
 
@@ -277,7 +283,7 @@ _getbininfo ()
 	done
 }
 
-_readconfig "!DESTDIR!/etc/rumpbake.conf"
+_readconfig "!DESTDIR!/etc/rumprun-bake.conf"
 
 while getopts "c:n" opt; do
 	case "${opt}" in
@@ -329,7 +335,7 @@ for c in ${ALLCONFIGS}; do
 	[ "$c" = "$config" ] && break
 done
 if [ "$c" != "$config" ]; then
-	echo "rumpbake: error: unsupported config \"$config\""
+	echo "rumprun-bake: error: unsupported config \"$config\""
 	exit 1
 fi
 
@@ -337,7 +343,7 @@ PLATFORM=${config%%_*}
 eval LIBS="\${CONFIG_${config}}"
 
 # duh
-TMPDIR=/tmp/rumpbake.XXXXXX
+TMPDIR=/tmp/rumprun-bake.XXXXXX
 [ -z "${runcmd}" ] && TMPDIR=$(mktemp -d ${TMPDIR})
 trap _nuketmpdir 0 INT TERM
 
