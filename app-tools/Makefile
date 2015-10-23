@@ -17,10 +17,11 @@ FILES=	$(_FILES:%=$(TOOLTUPLE)-%)
 _SPECS=	specs-compile_or_ferment specs-stub
 SPECS=	${_SPECS} specs-bake-${TOOLTUPLE}-${PLATFORM}
 
-_BINS=	ar as cpp ld nm objcopy objdump ranlib readelf size strings strip
-BINS=	$(_BINS:%=$(TOOLTUPLE)-%)
-BINS+=	$(TOOLTUPLE)-$(_CCVARIANT) $(TOOLTUPLE)-$(_CXXVARIANT)
-BINS+=	rumprun-bake rumprun rumpstop
+_BIN_G=	ar as cpp ld nm objcopy objdump ranlib readelf size strings strip
+BIN_G=	$(_BIN_G:%=$(TOOLTUPLE)-%)
+BIN_G+=	$(TOOLTUPLE)-$(_CCVARIANT) $(TOOLTUPLE)-$(_CXXVARIANT)
+BIN_G+=	rumprun-bake
+BINS=	${BIN_G} rumprun rumpstop
 
 .PHONY: app-tools
 app-tools: ${FILES} ${SPECS} ${BINS}
@@ -94,4 +95,4 @@ install-files: ${SPECS} ${FILES} ${INSTALLDIR}/etc
 install: install-buildrumpwrappers install-bins install-files
 
 clean:
-	rm -f ${FILES} ${SPECS} ${BINS}
+	rm -f ${FILES} ${SPECS} ${BIN_G}
