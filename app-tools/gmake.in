@@ -1,6 +1,0 @@
-#!/bin/sh
-
-export CC=!APPTOOLS_CC!
-export CXX=!APPTOOLS_CXX!
-
-exec gmake "$@"

@@ -1,9 +1,0 @@
-#!/bin/sh
-# invoke this (for example) as  .../app-configure ./configure --prefix=...
-set -e
-prog=$1; shift
-
-export CC=!APPTOOLS_CC!
-export CXX=!APPTOOLS_CXX!
-
-exec "$prog" --host=!GNUPLATFORM! "$@"
