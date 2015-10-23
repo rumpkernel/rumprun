@@ -316,7 +316,8 @@ EOF
 
 builduserspace ()
 {
-	${MAKE} -C app-tools
+	${MAKE} -C app-tools BUILDRR=true
+	${MAKE} -C app-tools BUILDRR=true install
 
 	usermtree ${STAGING}
 

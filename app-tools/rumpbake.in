@@ -277,9 +277,7 @@ _getbininfo ()
 	done
 }
 
-APP_TOOLS_DIR=$(dirname $0)
-
-_readconfig "${APP_TOOLS_DIR}/rumpbake.conf"
+_readconfig "!DESTDIR!/etc/rumpbake.conf"
 
 while getopts "c:n" opt; do
 	case "${opt}" in
@@ -318,6 +316,8 @@ type ${READELF} >/dev/null 2>&1 \
 unset RUMPBAKE_BACKINGCC
 unset RUMPBAKE_TUPLE
 unset RUMPBAKE_CFLAGS
+
+# XXX: TOOLDIR is just dirname $0, so can simplify that bit
 unset RUMPBAKE_TOOLDIR
 
 [ $# -le 8 ] || { echo '>> max 8 binaries supported currently' ; exit 1; }
@@ -348,7 +348,7 @@ allobjs=
 for f in "$@"; do
 	_getbininfo ${f}
 
-	${runcmd} ${RUMPBAKE_TOOLDIR}/${RUMPBAKE_TUPLE}-objcopy		\
+	${runcmd} ${RUMPBAKE_TOOLDIR}/bin/${RUMPBAKE_TUPLE}-objcopy	\
 	    --redefine-sym main=rumpbake_main${objnum}			\
 	    ${f} ${TMPDIR}/tmp${objnum}.obj
 	allobjs="${allobjs} ${TMPDIR}/tmp${objnum}.obj"
@@ -357,7 +357,7 @@ done
 
 # Final link using cc to produce the unikernel image.
 ${runcmd} ${RUMPBAKE_BACKINGCC} ${RUMPBAKE_CFLAGS}			\
-    -specs=${RUMPBAKE_TOOLDIR}/specs-bake-${RUMPBAKE_TUPLE}-${PLATFORM}	\
+    -specs=${RUMPBAKE_TOOLDIR}/share/specs-bake-${RUMPBAKE_TUPLE}-${PLATFORM}	\
     -o ${OUTPUT} ${allobjs}						\
     -Wl,--whole-archive ${LIBS} || exit 1
 
