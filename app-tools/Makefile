@@ -8,6 +8,8 @@ $(error invalid config file ${RUMPRUN_MKCONF})
 endif
 include ${BUILDRUMP_TOOLFLAGS}
 
+TOOLOBJ:= ${RROBJ}/app-tools
+
 _CCVARIANT:=$(shell ${RUMPMAKE} -f bsd.own.mk -V '$${HAVE_LLVM:Dclang:Ugcc}')
 _CXXVARIANT:=$(shell ${RUMPMAKE} -f bsd.own.mk -V '$${HAVE_LLVM:Dclang++:Ug++}')
 
@@ -21,10 +23,15 @@ _BIN_G=	ar as cpp ld nm objcopy objdump ranlib readelf size strings strip
 BIN_G=	$(_BIN_G:%=$(TOOLTUPLE)-%)
 BIN_G+=	$(TOOLTUPLE)-$(_CCVARIANT) $(TOOLTUPLE)-$(_CXXVARIANT)
 BIN_G+=	rumprun-bake
-BINS=	${BIN_G} rumprun rumpstop
+STATICBIN= rumprun rumpstop
+
+GENS.bin=	${BIN_G:%=${TOOLOBJ}/%}
+GENS.files=	${FILES:%=${TOOLOBJ}/%}
+GENS.specs=	${SPECS:%=${TOOLOBJ}/%}
+GENS=		${GENS.bin} ${GENS.files} ${GENS.specs}
 
 .PHONY: app-tools
-app-tools: ${FILES} ${SPECS} ${BINS}
+app-tools: ${GENS}
 
 include ../global.mk
 LDFLAGS_BAKE:= ${LDFLAGS.${PLATFORM}.${MACHINE_ARCH}}
@@ -38,9 +45,12 @@ LIBEXEC_CXX:= $(subst ${BRSOURCEDIR},${BRLIBEXECDIR},${CXX})
 TOOLS_CC := ${RRDEST}/bin/$(TOOLTUPLE)-${_CCVARIANT}
 TOOLS_CXX := ${RRDEST}/bin/$(TOOLTUPLE)-${_CXXVARIANT}
 
+${TOOLOBJ}:
+	mkdir -p "$@"
+
 define templ
-${2}: ${1} Makefile
-	sed <$$< >$$@.tmp						\
+${TOOLOBJ}/${2}: ${1} Makefile ${TOOLOBJ}
+	sed <$$< > $$@							\
 		-e 's#!CC!#$(LIBEXEC_CC)#g;'				\
 		-e 's#!CXX!#$(LIBEXEC_CXX)#g;'				\
 		-e 's#!APPTOOLS_CC!#$(TOOLS_CC)#g;'			\
@@ -53,12 +63,9 @@ ${2}: ${1} Makefile
 		-e 's#!CFLAGS!#$(BUILDRUMP_TOOL_CFLAGS)#g;'		\
 		-e 's#!CXXFLAGS!#$(BUILDRUMP_TOOL_CXXFLAGS)#g;'		\
 		-e 's#!LDFLAGS_BAKE!#$(LDFLAGS_BAKE)#g;'
-	mv -f $$@.tmp $$@
 endef
-$(foreach file,${_FILES},$(eval \
-    $(call templ,${file}.in,$(TOOLTUPLE)-${file})))
-$(foreach spec,${_SPECS},$(eval \
-    $(call templ,${spec}.in,${spec})))
+$(foreach file,${_FILES},$(eval $(call templ,${file}.in,${TOOLTUPLE}-${file})))
+$(foreach spec,${_SPECS},$(eval $(call templ,${spec}.in,${spec})))
 $(eval $(call templ,cc.in,$(TOOLTUPLE)-${_CCVARIANT}))
 $(eval $(call templ,cc.in,$(TOOLTUPLE)-${_CXXVARIANT}))
 $(eval $(call templ,specs-bake.in,specs-bake-$(TOOLTUPLE)-$(PLATFORM)))
@@ -67,9 +74,9 @@ $(eval $(call templ,rumprun-bake.in,rumprun-bake))
 define binwrapper
 uptool_$1=$(shell echo $1 | tr '[:lower:]' '[:upper:]')
 toolval_$1=$${$${uptool_$1}}
-$(TOOLTUPLE)-$1:
+${TOOLOBJ}/$(TOOLTUPLE)-$1: ${TOOLOBJ}
 	printf '#!/bin/sh\n\nexec %s "$$$${@}"\n' \
-	    $$(subst ${BRSOURCEDIR},${BRLIBEXECDIR},$${toolval_${1}}) >$$@
+	    $$(subst ${BRSOURCEDIR},${BRLIBEXECDIR},$${toolval_${1}}) > $$@
 
 BRTOOLS+= $${toolval_${1}}
 endef
@@ -84,15 +91,16 @@ ${INSTALLDIR}/etc:
 install-buildrumpwrappers: ${BRLIBEXECDIR} ${BRTOOLS}
 	install -m 0755 ${BRTOOLS} ${CC} ${CXX} ${BRLIBEXECDIR}
 
-install-bins: ${BINS}
-	install -m 0755 ${BINS} ${INSTALLDIR}/bin
+install-bins: ${GENS.bin} ${STATICBIN}
+	install -m 0755 ${GENS.bin} ${INSTALLDIR}/bin
+	install -m 0755 ${STATICBIN} ${INSTALLDIR}/bin
 	ln -f ${INSTALLDIR}/bin/rumprun-bake ${INSTALLDIR}/bin/rumpbake
 
-install-files: ${SPECS} ${FILES} ${INSTALLDIR}/etc
-	install -m 0644 ${FILES} ${SPECS} ${INSTALLDIR}/share
+install-files: ${GENS.files} ${GENS.specs} ${INSTALLDIR}/etc
+	install -m 0644 ${GENS.files} ${GENS.specs} ${INSTALLDIR}/share
 	install -m 0644 rumprun-bake.conf ${INSTALLDIR}/etc
 
 install: install-buildrumpwrappers install-bins install-files
 
 clean:
-	rm -f ${FILES} ${SPECS} ${BIN_G}
+	rm -f ${GENS}
