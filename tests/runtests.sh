@@ -25,12 +25,12 @@
 # SUCH DAMAGE.
 #
 
-cd $(dirname $0) || die 'could not enter test dir'
-
 [ -n "${RUMPRUN_SHCONF}" ] || { echo '>> need RUMPRUN_SHCONF'; exit 1; }
 . "${RUMPRUN_SHCONF}"
 
 export PATH="${PATH}:${RRDEST}/bin"
+
+cd $(dirname $0) || die 'could not enter test dir'
 
 # we know, we knooooooow
 export RUMPRUN_WARNING_STFU=please
