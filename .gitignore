@@ -1,16 +1,2 @@
 *~
 *.o
-obj
-
-platform/*/img/*.ffs
-rump
-rump-kernel
-rumpobj
-rumptools
-platform/xen/xen/include/mini-os/machine
-platform/xen/xen/include/xen
-
-platform/*/config.mk
-platform/*/tests/hello/hello
-platform/*/tests/hello/hellopp
-platform/*/tests/wopr/wopr
