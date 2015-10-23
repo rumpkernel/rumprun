@@ -24,7 +24,7 @@ script:
   - git submodule update --init
   - ./build-rr.sh -o myobj -j16 -qq ${KERNONLY} ${PLATFORM} ${EXTRAFLAGS}
   - RUMPRUN_SHCONF=./myobj/config.sh RUMPRUN_MKCONF=$(pwd)/myobj/config.mk ./tests/buildtests.sh ${KERNONLY}
-  - ./tests/runtests.sh ${TESTS}
+  - RUMPRUN_SHCONF=./myobj/config.sh ./tests/runtests.sh ${TESTS}
 
 notifications:
   irc:

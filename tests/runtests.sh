@@ -26,8 +26,10 @@
 #
 
 cd $(dirname $0) || die 'could not enter test dir'
-RUMPRUN=$(pwd)/../app-tools/rumprun
-RUMPSTOP=$(pwd)/../app-tools/rumpstop
+
+[ -n "${RUMPRUN_SHCONF}" ] || { echo '>> need RUMPRUN_SHCONF'; exit 1; }
+
+export PATH="${PATH}:${RRDEST}/bin"
 
 # we know, we knooooooow
 export RUMPRUN_WARNING_STFU=please
@@ -74,7 +76,7 @@ runguest ()
 	# img2=$3
 
 	[ -n "${img1}" ] || die runtest without a disk image
-	cookie=$(${RUMPRUN} ${OPT_SUDO} ${STACK} -b ${img1} ${testprog} __test)
+	cookie=$(rumprun ${OPT_SUDO} ${STACK} -b ${img1} ${testprog} __test)
 	if [ $? -ne 0 -o -z "${cookie}" ]; then
 		TEST_RESULT=ERROR
 		TEST_ECODE=-2
@@ -105,7 +107,7 @@ runguest ()
 			sleep 1
 		done
 
-		${RUMPSTOP} ${OPT_SUDO} ${cookie}
+		rumpstop ${OPT_SUDO} ${cookie}
 	fi
 
 	echo ">> Result: ${TEST_RESULT} (${TEST_ECODE})"

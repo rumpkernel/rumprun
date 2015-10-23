@@ -35,7 +35,6 @@ cd "$(dirname $0)"
 
 test_apptools()
 {
-	APPTOOLSDIR=$(pwd)/../app-tools
 
 	case ${PLATFORM} in
 	hw)
@@ -49,15 +48,19 @@ test_apptools()
 		exit 1
 	esac
 
-	export MAKE=${APPTOOLSDIR}/${TOOLTUPLE}-${MAKE-make}
+	export PATH="${PATH}:${RRDEST}/bin"
+	export CC="${RRDEST}/bin/${TOOLTUPLE}-gcc"
+	export CXX="${RRDEST}/bin/${TOOLTUPLE}-g++"
+	export CONFIG_CXX
+	export RUMPBAKE
 
-	${MAKE} CONFIG_CXX=${CONFIG_CXX} RUMPBAKE="${APPTOOLSDIR}/${RUMPBAKE}"
+	make
 
 	if ${TESTCONFIGURE}; then
 		(
 			cd configure
-			${APPTOOLSDIR}/${TOOLTUPLE}-configure ./configure
-			${MAKE}
+			./configure --host=${TOOLTUPLE}
+			make
 		)
 	fi
 
@@ -65,7 +68,7 @@ test_apptools()
 		(
 			mkdir -p cmake/build
 			cd cmake/build
-			cmake -DCMAKE_TOOLCHAIN_FILE=${APPTOOLSDIR}/${TOOLTUPLE}-toolchain.cmake ..
+			cmake -DCMAKE_TOOLCHAIN_FILE=${RRDEST}/share/${TOOLTUPLE}-toolchain.cmake ..
 			make
 		)
 	fi
