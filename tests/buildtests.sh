@@ -38,10 +38,10 @@ test_apptools()
 
 	case ${PLATFORM} in
 	hw)
-		RUMPBAKE="rumpbake hw_generic"
+		RUMPBAKE="rumprun-bake hw_generic"
 		;;
 	xen)
-		RUMPBAKE="rumpbake xen_pv"
+		RUMPBAKE="rumprun-bake xen_pv"
 		;;
 	*)
 		echo ">> unknown platform \"$PLATFORM\""
