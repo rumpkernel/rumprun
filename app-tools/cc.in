@@ -36,12 +36,12 @@ die()
 # Determine if we're being run as C or C++.
 case $0 in
 *-gcc|*-clang)
-	CC="!CC!"
+	CC="!LIBEXEC_CC!"
 	CFLAGS="!CFLAGS!"
 	EXTRALIBS=
 	;;
 *-g++|*-clang++)
-	CC="!CXX!"
+	CC="!LIBEXEC_CXX!"
 	CFLAGS="!CXXFLAGS!"
 	EXTRALIBS="-lc++ -lunwind"
 	;;
@@ -82,7 +82,7 @@ ferment)
 	${CC} ${CFLAGS} -no-integrated-cpp \
 	    -specs=!DESTDIR!/share/specs-compile_or_ferment \
 	    -Wl,-r -Wl,-u,main \
-	    "$@" !DESTDIR!/share/!GNUPLATFORM!-recipe.s ${EXTRALIBS} || die
+	    "$@" !DESTDIR!/share/!TOOLTUPLE!-recipe.s ${EXTRALIBS} || die
 
 	# If the presumed output file did not change, and the compiler
 	# did not flag an error, assume this is a command which does not

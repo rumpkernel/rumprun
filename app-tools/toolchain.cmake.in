@@ -1,13 +1,13 @@
 #
-# CMake toolchain file for cross-compiling to !GNUPLATFORM!
+# CMake toolchain file for cross-compiling to !TOOLTUPLE!
 #
 # When building software with CMake, specify as -DCMAKE_TOOLCHAIN_FILE=...
 #
 
 set(CMAKE_SYSTEM_NAME Generic)
 
-set(CMAKE_C_COMPILER !APPTOOLS_CC!)
-set(CMAKE_CXX_COMPILER !APPTOOLS_CXX!)
+set(CMAKE_C_COMPILER !TOOLS_CC!)
+set(CMAKE_CXX_COMPILER !TOOLS_CXX!)
 
 set(CMAKE_FIND_ROOT_PATH !DESTDIR!)
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)

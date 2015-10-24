@@ -51,14 +51,14 @@ ${TOOLOBJ}:
 define templ
 ${TOOLOBJ}/${2}: ${1} Makefile ${TOOLOBJ}
 	sed <$$< > $$@							\
-		-e 's#!CC!#$(LIBEXEC_CC)#g;'				\
-		-e 's#!CXX!#$(LIBEXEC_CXX)#g;'				\
-		-e 's#!APPTOOLS_CC!#$(TOOLS_CC)#g;'			\
-		-e 's#!APPTOOLS_CXX!#$(TOOLS_CXX)#g;'			\
+		-e 's#!LIBEXEC_CC!#$(LIBEXEC_CC)#g;'			\
+		-e 's#!LIBEXEC_CXX!#$(LIBEXEC_CXX)#g;'			\
+		-e 's#!TOOLS_CC!#$(TOOLS_CC)#g;'			\
+		-e 's#!TOOLS_CXX!#$(TOOLS_CXX)#g;'			\
 		-e 's#!MACHINE_ARCH!#$(MACHINE_ARCH)#g;'		\
-		-e 's#!GNUPLATFORM!#$(TOOLTUPLE)#g;'			\
+		-e 's#!TOOLTUPLE!#$(TOOLTUPLE)#g;'			\
 		-e 's#!DESTDIR!#$(RRDEST)#g;'				\
-		-e 's#!APPTOOLS_PLATFORM!#$(PLATFORM)#g;'		\
+		-e 's#!PLATFORM!#$(PLATFORM)#g;'			\
 		-e 's#!CPPFLAGS!#$(BUILDRUMP_TOOL_CPPFLAGS)#g;'		\
 		-e 's#!CFLAGS!#$(BUILDRUMP_TOOL_CFLAGS)#g;'		\
 		-e 's#!CXXFLAGS!#$(BUILDRUMP_TOOL_CXXFLAGS)#g;'		\
