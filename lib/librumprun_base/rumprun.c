@@ -139,8 +139,8 @@ rumprun_boot(char *cmdline)
  * because otherwise libpthread goes haywire because it doesn't understand
  * the concept of multiple main threads (which is sort of understandable ...)
  */
-#define RUMPRUNNER_DONE		0x11
-#define RUMPRUNNER_DAEMON	0x12
+#define RUMPRUNNER_DONE		0x10
+#define RUMPRUNNER_DAEMON	0x20
 struct rumprunner {
 	int (*rr_mainfun)(int, char *[]);
 	int rr_argc;
