@@ -247,11 +247,11 @@ checkprevinst ()
 			echo '>> directory will be fixed eventually.'
 			exit 1
 		fi
-	else
-		echo PB_MACHINE=${MACHINE} > ${RROBJ}/.rumprun-installation
-		echo PB_PLATFORM=${PLATFORM} >> ${RROBJ}/.rumprun-installation
-		echo PB_KERNONLY=${KERNONLY} >> ${RROBJ}/.rumprun-installation
 	fi
+
+	echo PB_MACHINE=${MACHINE} > ${RROBJ}/.rumprun-installation
+	echo PB_PLATFORM=${PLATFORM} >> ${RROBJ}/.rumprun-installation
+	echo PB_KERNONLY=${KERNONLY} >> ${RROBJ}/.rumprun-installation
 }
 
 setvars ()
