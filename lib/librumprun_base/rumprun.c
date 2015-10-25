@@ -327,9 +327,11 @@ rumprun_get_finished(void)
 
 /*
  * Detaches current program.  Must always be called from
- * the main thread of an application.
+ * the main thread of an application.  That's fine, since
+ * given that the counterpart on a regular system (daemon()) forks,
+ * it too must be called before threads are taken into use.
  *
- * XXX: there's no public prototype for this for now.
+ * It is expected that POSIX programs call this routine via daemon().
  */
 void
 rumprun_daemon(void)
