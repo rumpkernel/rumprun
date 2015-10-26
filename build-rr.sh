@@ -218,10 +218,10 @@ checkprevbuilds ()
 			echo '>> Building for multiple machine combos'
 			echo '>> from the same rumprun source tree is currently'
 			echo '>> not supported.  See rumprun issue #35.'
-			printf '>> %20s: %s/%s nolibc=%s\n' 'Previously built' \
-			    ${PB_PLATFORM} ${PB_MACHINE} ${PB_KERNONLY}
-			printf '>> %20s: %s/%s nolibc=%s\n' 'Now building' \
-			    ${PLATFORM} ${MACHINE} ${KERNONLY}
+			printf '>> %20s: %s nolibc=%s\n' 'Previously built' \
+			    ${PB_MACHINE} ${PB_KERNONLY}
+			printf '>> %20s: %s nolibc=%s\n' 'Now building' \
+			    ${MACHINE} ${KERNONLY}
 			exit 1
 		fi
 	else
