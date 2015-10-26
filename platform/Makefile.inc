@@ -60,7 +60,7 @@ $(eval $(call BUILDLIB_target,librumprun_tester))
 $(eval $(call BUILDLIB_target,libunwind))
 $(eval $(call BUILDLIB_target,libcompiler_rt,RUMPSRC=${RUMPSRC}))
 
-PSEUDOSTUBS=${RROBJ}/rumprun-pseudolinkstubs
+PSEUDOSTUBS=${RROBJ}/rumprun-${MACHINE_ARCH}-pseudolinkstubs
 
 ${PSEUDOSTUBS}.c: ${RROBJLIB}/librumprun_base/librumprun_base.a
 	sh ../makepseudolinkstubs.sh ${NM} ${RUMPSRC} $< $@
