@@ -3,7 +3,7 @@ include ${BUILDRUMP_TOOLFLAGS}
 
 CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
 
-LDFLAGS:= -L$(abspath ../../rumprun/lib)
+LDFLAGS:= -L$(abspath ../../rumprun/lib/rumprun-${PLATFORM}-${MACHINE_ARCH})
 LDFLAGS+= -L${RROBJ}/lib/libcompiler_rt
 
 CPPFLAGS+= -I../../include -I../../rumprun/include -I../../platform/${PLATFORM}/include
