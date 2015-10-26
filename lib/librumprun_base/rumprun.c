@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/mount.h>
 #include <sys/queue.h>
+#include <sys/sysctl.h>
 
 #include <assert.h>
 #include <err.h>
@@ -113,6 +114,22 @@ rumprun_boot(char *cmdline)
 	} else {
 		warnx("FAILED: mount tmpfs on /tmp: %s", strerror(tmpfserrno));
 	}
+
+	/*
+	 * We set duplicate address detection off for
+	 * immediately operational DHCP addresses.
+	 * (note: we don't check for errors since net.inet.ip.dad_count
+	 * is not present if the networking stack isn't present)
+	 */
+#if 0
+	/* XXXX: cpp macro lossage in the src-netbsd, cannot fix easily now */
+	int x = 0;
+	sysctlbyname("net.inet.ip.dad_count", NULL, NULL, &x, sizeof(x));
+#else
+	extern int rumpns_ip_dad_count;
+	rumpns_ip_dad_count = 0;
+#endif
+
 
 	rumprun_config(cmdline);
 
