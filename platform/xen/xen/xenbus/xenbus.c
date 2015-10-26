@@ -257,8 +257,10 @@ static void xenbus_thread_func(void *ign)
             prod = xenstore_buf->rsp_prod;
             DEBUG("Rsp_cons %d, rsp_prod %d.\n", xenstore_buf->rsp_cons,
                     xenstore_buf->rsp_prod);
-            if (xenstore_buf->rsp_prod - xenstore_buf->rsp_cons < sizeof(msg))
+            if (xenstore_buf->rsp_prod - xenstore_buf->rsp_cons < sizeof(msg)) {
+                minios_notify_remote_via_evtchn(start_info.store_evtchn);
                 break;
+            }
             rmb();
             memcpy_from_ring(xenstore_buf->rsp,
                     &msg,
@@ -269,8 +271,10 @@ static void xenbus_thread_func(void *ign)
                     xenstore_buf->rsp_prod - xenstore_buf->rsp_cons,
                     msg.req_id);
             if (xenstore_buf->rsp_prod - xenstore_buf->rsp_cons <
-                    sizeof(msg) + msg.len)
+                    sizeof(msg) + msg.len) {
+                minios_notify_remote_via_evtchn(start_info.store_evtchn);
                 break;
+            }
 
             DEBUG("Message is good.\n");
 
@@ -325,6 +329,9 @@ static void xenbus_thread_func(void *ign)
                             req_info[msg.req_id].for_queue);
                 spin_unlock(&xenbus_req_lock);
             }
+
+            wmb();
+            minios_notify_remote_via_evtchn(start_info.store_evtchn);
         }
     }
 }
