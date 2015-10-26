@@ -308,6 +308,9 @@ buildrump ()
 	MACHINE_ARCH=$(${RUMPMAKE} -f /dev/null -V '${MACHINE_ARCH}')
 	[ -n "${MACHINE_ARCH}" ] || die could not figure out target machine arch
 
+	# this is slightly ridiculous
+	echo ${MACHINE_ARCH} > ${RROBJ}/.machine_arch
+
 	TOOLTUPLE=$(${RUMPMAKE} -f bsd.own.mk \
 	    -V '${MACHINE_GNU_PLATFORM:S/--netbsd/-rumprun-netbsd/}')
 
@@ -425,6 +428,10 @@ dobuild ()
 	. ${PLATFORMDIR}/platform.conf
 
 	buildrump "$@"
+	mkdir -p ${STAGING}/lib/rumprun-${MACHINE_ARCH} \
+	    || die cannot create libdir
+	mkdir -p ${STAGING}/lib/rumprun-${PLATFORM}-${MACHINE_ARCH} \
+	    || die cannot create libdir
 
 	${MAKE} -C ${PLATFORMDIR} links
 
@@ -452,9 +459,29 @@ doinstall ()
 
 	checkprevinst
 
+	MACHINE_ARCH=$(cat ${RROBJ}/.machine_arch)
+
 	mkdir -p ${RRDEST} || die cannot create ${RRDEST}
 	cp ${RROBJ}/.rumprun-installation ${RRDEST}/
-	( cd ${STAGING} ; tar -cf - .) | (cd ${RRDEST} ; tar -xf -)
+	(
+		# first, move things to where we want them to be
+		cd ${STAGING}
+		rm -rf lib/pkgconfig
+		find lib -maxdepth 1 -name librump\*.a \
+		    -exec mv -f '{}' lib/rumprun-${PLATFORM}-${MACHINE_ARCH}/ \;
+		find lib -maxdepth 1 -name \*.a \
+		    -exec mv -f '{}' lib/rumprun-${MACHINE_ARCH}/ \;
+
+		# make sure special cases are visible everywhere
+		for x in c pthread ; do
+			rm -f lib/rumprun-${PLATFORM}-${MACHINE_ARCH}/lib${x}.a
+			set -x
+			ln -s ../rumprun-${MACHINE_ARCH}/lib${x}.a \
+			    lib/rumprun-${PLATFORM}-${MACHINE_ARCH}/lib${x}.a
+		done
+
+		tar -cf - .
+	) | (cd ${RRDEST} ; tar -xf -)
 }
 
 #

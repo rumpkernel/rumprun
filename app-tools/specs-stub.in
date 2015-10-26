@@ -5,7 +5,8 @@
 
 
 *lib:
--L!DESTDIR!/lib --start-group -lpthread -lc --end-group 	\
+-L!DESTDIR!/lib/rumprun-!MACHINE_ARCH!		\
+    --start-group -lpthread -lc --end-group 	\
     !DESTDIR!/lib/rumprun-pseudolinkstubs.o
 
 *link:

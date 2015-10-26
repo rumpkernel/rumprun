@@ -10,8 +10,8 @@ INSTALLTGTS=	librumpkern_bmktc_install
 
 ifneq (${KERNONLY},true)
 TARGETS+=	userlibs
-INSTALLTGTS+=	librumprun_base_install librumprun_tester_install
-INSTALLTGTS+=	libunwind_install
+INSTALLTGTS+=	librumprun_base_install librumprun_tester_install2
+INSTALLTGTS+=	libunwind_install2
 endif
 
 ifeq (${BUILDRR},true)
@@ -37,7 +37,14 @@ $${RROBJLIB}/${1}/${1}.a:
 .PHONY: ${1}_install
 ${1}_install:
 	( cd $${RROBJLIB}/${1} && \
-	    install -m 0444 ${1}.a $${INSTALLDIR}/lib )
+	    install -m 0444 ${1}.a \
+	      $${INSTALLDIR}/lib/rumprun-${PLATFORM}-${MACHINE_ARCH} )
+
+.PHONY: ${1}_install2
+${1}_install2:
+	( cd $${RROBJLIB}/${1} && \
+	    install -m 0444 ${1}.a \
+	      $${INSTALLDIR}/lib/rumprun-${MACHINE_ARCH} )
 
 .PHONY: ${1}_clean
 ${1}_clean:

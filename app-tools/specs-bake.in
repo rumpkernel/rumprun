@@ -5,7 +5,7 @@
 
 
 *lib:
-!LDFLAGS_BAKE! -L!DESTDIR!/lib						\
+!LDFLAGS_BAKE! -L!DESTDIR!/lib/rumprun-!PLATFORM!-!MACHINE_ARCH!	\
     --whole-archive -lrump --no-whole-archive				\
     --start-group -lrumprun_base -lpthread -lc --end-group
 
