@@ -96,6 +96,7 @@ parseargs ()
 	RROBJ=
 	RUMPSRC=src-netbsd
 	STDJ=-j4
+	EXTSRC=
 
 	DObuild=false
 	DOinstall=false
@@ -119,6 +120,7 @@ parseargs ()
 			;;
 		's')
 			RUMPSRC=${OPTARG}
+			EXTSRC=-extsrc
 			;;
 		'q')
 			BUILD_QUIET=${BUILD_QUIET:=-}q
@@ -261,7 +263,7 @@ setvars ()
 	MACHINE="${BUILDRUMP_MACHINE}"
 
 	if [ -z "${RROBJ}" ]; then
-		RROBJ="./obj-${PLATFORM}-${MACHINE}"
+		RROBJ="./obj-${PLATFORM}-${MACHINE}${EXTSRC}"
 		${KERNONLY} && RROBJ="${RROBJ}-kernonly"
 	fi
 	STAGING="${RROBJ}/dest.stage"
