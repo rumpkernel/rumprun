@@ -436,7 +436,6 @@ doinstall ()
 	MACHINE_ARCH=$(cat ${RROBJ}/.machine_arch)
 
 	mkdir -p ${RRDEST} || die cannot create ${RRDEST}
-	cp ${RROBJ}/.rumprun-installation ${RRDEST}/
 	(
 		# first, move things to where we want them to be
 		cd ${STAGING}
