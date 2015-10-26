@@ -475,7 +475,6 @@ doinstall ()
 		# make sure special cases are visible everywhere
 		for x in c pthread ; do
 			rm -f lib/rumprun-${PLATFORM}-${MACHINE_ARCH}/lib${x}.a
-			set -x
 			ln -s ../rumprun-${MACHINE_ARCH}/lib${x}.a \
 			    lib/rumprun-${PLATFORM}-${MACHINE_ARCH}/lib${x}.a
 		done
