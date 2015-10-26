@@ -232,30 +232,6 @@ checkprevbuilds ()
 	fi
 }
 
-checkprevinst ()
-{
-
-	if [ -f ${RRDEST}/.rumprun-installation ]; then
-		. ${RRDEST}/.rumprun-installation
-		if [ "${PB_MACHINE}" != "${MACHINE}" \
-		    -o "${PB_PLATFORM}" != "${PLATFORM}" \
-		    -o "${PB_KERNONLY}" != "${KERNONLY}" \
-		]; then
-			echo '>> ERROR:'
-			echo ">> Directory \"${RRDEST}\":"
-			echo '>> Rumprun installation already found.'
-			echo '>> Install to a different directory.'
-			echo '>> Allowing multiple installations into same'
-			echo '>> directory will be fixed eventually.'
-			exit 1
-		fi
-	fi
-
-	echo PB_MACHINE=${MACHINE} > ${RROBJ}/.rumprun-installation
-	echo PB_PLATFORM=${PLATFORM} >> ${RROBJ}/.rumprun-installation
-	echo PB_KERNONLY=${KERNONLY} >> ${RROBJ}/.rumprun-installation
-}
-
 setvars ()
 {
 
@@ -456,8 +432,6 @@ doinstall ()
 	# default used to be a symlink, so this is for "compat".
 	# remove in a few months.
 	rm -f ${RRDEST} > /dev/null 2>&1 || true
-
-	checkprevinst
 
 	MACHINE_ARCH=$(cat ${RROBJ}/.machine_arch)
 
