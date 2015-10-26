@@ -262,6 +262,7 @@ setvars ()
 
 	if [ -z "${RROBJ}" ]; then
 		RROBJ="./obj-${PLATFORM}-${MACHINE}"
+		${KERNONLY} && RROBJ="${RROBJ}-kernonly"
 	fi
 	STAGING="${RROBJ}/dest.stage"
 	BROBJ="${RROBJ}/buildrump.sh"
