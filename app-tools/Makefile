@@ -91,6 +91,7 @@ ${INSTALLDIR}/etc:
 
 install-buildrumpwrappers: ${BRLIBEXECINST} ${BRTOOLS}
 	install -m 0755 ${BRTOOLS} ${CC} ${CXX} ${BRLIBEXECINST}
+	install -m 0755 ${BRSOURCEDIR}/brprintmetainfo ${BRLIBEXECINST}
 
 install-bins: ${GENS.bin} ${STATICBIN}
 	install -m 0755 ${GENS.bin} ${INSTALLDIR}/bin

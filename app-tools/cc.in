@@ -51,7 +51,7 @@ case $0 in
 	;;
 esac
 
-PRMETA=$(dirname ${CC})/brprintmetainfo
+PRMETA="$(dirname ${CC})/brprintmetainfo"
 
 # Figure out what we're supposed to be doing. Assume we're fermenting
 # and switch to compilation if -c / -S / -E was passed.
