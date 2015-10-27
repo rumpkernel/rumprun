@@ -36,14 +36,14 @@ GENS=		${GENS.bin} ${GENS.files} ${GENS.archspecs} ${GENS.machspecs}
 app-tools: ${GENS}
 
 include ../global.mk
-LDFLAGS_BAKE:= ${LDFLAGS.${MACHINE_ARCH}.${PLATFORM}}
+LDFLAGS_BAKE:= ${LDFLAGS.${MACHINE_GNU_ARCH}.${PLATFORM}}
 
 BRSOURCEDIR:=$(dir ${AR})
-BRLIBEXECINST:= ${INSTALLDIR}/libexec/rumprun-${MACHINE_ARCH}-${PLATFORM}/
-BRLIBEXECDEST:= ${RRDEST}/libexec/rumprun-${MACHINE_ARCH}-${PLATFORM}/
+BRLIBEXECINST:= ${INSTALLDIR}/libexec/rumprun-${MACHINE_GNU_ARCH}-${PLATFORM}/
+BRLIBEXECDEST:= ${RRDEST}/libexec/rumprun-${MACHINE_GNU_ARCH}-${PLATFORM}/
 
-ARCHDIR:= rumprun-${MACHINE_ARCH}
-MACHDIR:= rumprun-${MACHINE_ARCH}-${PLATFORM}
+ARCHDIR:= rumprun-${MACHINE_GNU_ARCH}
+MACHDIR:= rumprun-${MACHINE_GNU_ARCH}-${PLATFORM}
 
 LIBEXEC_CC:= $(subst ${BRSOURCEDIR},${BRLIBEXECDEST},${CC})
 LIBEXEC_CXX:= $(subst ${BRSOURCEDIR},${BRLIBEXECDEST},${CXX})
@@ -61,7 +61,7 @@ ${TOOLOBJ}/${2}: ${1} Makefile ${TOOLOBJ}
 		-e 's#!LIBEXEC_CXX!#$(LIBEXEC_CXX)#g;'			\
 		-e 's#!TOOLS_CC!#$(TOOLS_CC)#g;'			\
 		-e 's#!TOOLS_CXX!#$(TOOLS_CXX)#g;'			\
-		-e 's#!MACHINE_ARCH!#$(MACHINE_ARCH)#g;'		\
+		-e 's#!MACHINE_GNU_ARCH!#$(MACHINE_GNU_ARCH)#g;'	\
 		-e 's#!TOOLTUPLE!#$(TOOLTUPLE)#g;'			\
 		-e 's#!DESTDIR!#$(RRDEST)#g;'				\
 		-e 's#!PLATFORM!#$(PLATFORM)#g;'			\

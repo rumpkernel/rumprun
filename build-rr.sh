@@ -237,7 +237,7 @@ setvars ()
 
 	. ${RUMPTOOLS}/proberes.sh
 	MACHINE="${BUILDRUMP_MACHINE}"
-	MACHINE_ARCH="${BUILDRUMP_MACHINE_GNU_ARCH}"
+	MACHINE_GNU_ARCH="${BUILDRUMP_MACHINE_GNU_ARCH}"
 
 	if [ -z "${RROBJ}" ]; then
 		RROBJ="./obj-${MACHINE}-${PLATFORM}${EXTSRC}"
@@ -266,7 +266,7 @@ buildrump ()
 	checkprevbuilds
 
 	extracflags=
-	[ "${MACHINE_ARCH}" = "x86_64" ] \
+	[ "${MACHINE_GNU_ARCH}" = "x86_64" ] \
 	    && extracflags='-F CFLAGS=-mno-red-zone'
 
 	# build tools
@@ -282,9 +282,6 @@ buildrump ()
 	echo '>>'
 
 	RUMPMAKE=$(pwd)/${RUMPTOOLS}/rumpmake
-
-	# this is slightly ridiculous
-	echo ${MACHINE_ARCH} > ${RROBJ}/.machine_arch
 
 	TOOLTUPLE=$(${RUMPMAKE} -f bsd.own.mk \
 	    -V '${MACHINE_GNU_PLATFORM:S/--netbsd/-rumprun-netbsd/}')
@@ -369,7 +366,7 @@ makeconfig ()
 	echo "RUMPMAKE=${quote}${RUMPMAKE}${quote}" >> ${1}
 	echo "BUILDRUMP_TOOLFLAGS=${quote}$(pwd)/${RUMPTOOLS}/toolchain-conf.mk${quote}" >> ${1}
 	echo "MACHINE=${quote}${MACHINE}${quote}" >> ${1}
-	echo "MACHINE_ARCH=${quote}${MACHINE_ARCH}${quote}" >> ${1}
+	echo "MACHINE_GNU_ARCH=${quote}${MACHINE_GNU_ARCH}${quote}" >> ${1}
 	echo "TOOLTUPLE=${quote}${TOOLTUPLE}${quote}" >> ${1}
 	echo "KERNONLY=${quote}${KERNONLY}${quote}" >> ${1}
 	echo "PLATFORM=${quote}${PLATFORM}${quote}" >> ${1}
@@ -403,9 +400,9 @@ dobuild ()
 	. ${PLATFORMDIR}/platform.conf
 
 	buildrump "$@"
-	mkdir -p ${STAGING}/lib/rumprun-${MACHINE_ARCH} \
+	mkdir -p ${STAGING}/lib/rumprun-${MACHINE_GNU_ARCH} \
 	    || die cannot create libdir
-	mkdir -p ${STAGING}/lib/rumprun-${MACHINE_ARCH}-${PLATFORM} \
+	mkdir -p ${STAGING}/lib/rumprun-${MACHINE_GNU_ARCH}-${PLATFORM} \
 	    || die cannot create libdir
 
 	${MAKE} -C ${PLATFORMDIR} links
@@ -442,15 +439,15 @@ doinstall ()
 		cd ${STAGING}
 		rm -rf lib/pkgconfig
 		find lib -maxdepth 1 -name librump\*.a \
-		    -exec mv -f '{}' lib/rumprun-${MACHINE_ARCH}-${PLATFORM}/ \;
+		    -exec mv -f '{}' lib/rumprun-${MACHINE_GNU_ARCH}-${PLATFORM}/ \;
 		find lib -maxdepth 1 -name \*.a \
-		    -exec mv -f '{}' lib/rumprun-${MACHINE_ARCH}/ \;
+		    -exec mv -f '{}' lib/rumprun-${MACHINE_GNU_ARCH}/ \;
 
 		# make sure special cases are visible everywhere
 		for x in c pthread ; do
-			rm -f lib/rumprun-${MACHINE_ARCH}-${PLATFORM}/lib${x}.a
-			ln -s ../rumprun-${MACHINE_ARCH}/lib${x}.a \
-			    lib/rumprun-${MACHINE_ARCH}-${PLATFORM}/lib${x}.a
+			rm -f lib/rumprun-${MACHINE_GNU_ARCH}-${PLATFORM}/lib${x}.a
+			ln -s ../rumprun-${MACHINE_GNU_ARCH}/lib${x}.a \
+			    lib/rumprun-${MACHINE_GNU_ARCH}-${PLATFORM}/lib${x}.a
 		done
 		find . -maxdepth 1 \! -path . \! -path ./include\* \
 		    | xargs tar -cf -

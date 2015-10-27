@@ -30,7 +30,7 @@ $(error only supported target is x86, you have ${MACHINE})
 endif
 
 ARCHDIR?= ${MACHINE}
-HW_MACHINE_ARCH?= ${MACHINE_ARCH}
+HW_MACHINE_ARCH?= ${MACHINE_GNU_ARCH}
 
 LDSCRIPT:=	$(abspath arch/${ARCHDIR}/kern.ldscript)
 OBJS_BMK+=	intr.o clock_subr.o kernel.o multiboot.o undefs.o

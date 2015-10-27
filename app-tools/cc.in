@@ -70,7 +70,7 @@ done
 case ${MODE} in
 compile)
 	exec ${CC} ${CFLAGS} -no-integrated-cpp \
-	    -specs=!DESTDIR!/lib/rumprun-!MACHINE_ARCH!/specs-compile_or_ferment \
+	    -specs=!DESTDIR!/lib/rumprun-!MACHINE_GNU_ARCH!/specs-compile_or_ferment \
 	    "$@" ${EXTRALIBS}
 	;;
 ferment)
@@ -80,7 +80,7 @@ ferment)
 	# with no rump components. '-u main' is necessary to pull in main if the
 	# user is linking it in from a library.
 	${CC} ${CFLAGS} -no-integrated-cpp \
-	    -specs=!DESTDIR!/lib/rumprun-!MACHINE_ARCH!/specs-compile_or_ferment \
+	    -specs=!DESTDIR!/lib/rumprun-!MACHINE_GNU_ARCH!/specs-compile_or_ferment \
 	    -Wl,-r -Wl,-u,main \
 	    "$@" !DESTDIR!/share/!TOOLTUPLE!-recipe.s ${EXTRALIBS} || die
 
@@ -102,7 +102,7 @@ ferment)
 
 	# Try a stub link with minimal rump components. If that fails then stop.
 	${CC} ${CFLAGS} -no-integrated-cpp \
-	    -specs=!DESTDIR!/lib/rumprun-!MACHINE_ARCH!/specs-stub \
+	    -specs=!DESTDIR!/lib/rumprun-!MACHINE_GNU_ARCH!/specs-stub \
 	    ${OUTFILE} -o /dev/null
 	if [ $? -ne 0 ]; then
 		if [ "${RUMPRUN_STUBLINK}" = "succeed" ]; then
