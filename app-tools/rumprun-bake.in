@@ -207,7 +207,8 @@ _usage ()
 	cat <<EOM
 rumprun-bake version: ${_RUMPBAKE_VERSION}
 
-usage: rumprun-bake [-c conffile] config output input [input ...]
+usage: rumprun-bake [-b bootspec.json -b ...] [-c conffile]
+           config output input [input ...]
        rumprun-bake list
 
 When invoked the single argument "list", lists supported target boards.
@@ -283,10 +284,29 @@ _getbininfo ()
 	done
 }
 
+_bootspec_append ()
+{
+
+	echo '"{\\n"' >> ${TMPDIR}/cfg.c
+	sed 's/"/\\"/g;s/^/"/;s/$/\\n"/' < $1 >> ${TMPDIR}/cfg.c
+	echo '"},\\n"' >> ${TMPDIR}/cfg.c
+}
+
 _readconfig "!DESTDIR!/etc/rumprun-bake.conf"
 
-while getopts "c:n" opt; do
+# duh
+TMPDIR=/tmp/rumprun-bake.XXXXXX
+[ -z "${runcmd}" ] && TMPDIR=$(mktemp -d ${TMPDIR})
+trap _nuketmpdir 0 INT TERM
+
+# initialize json config
+echo 'char rumprun_configdata[] = ""' > ${TMPDIR}/cfg.c
+
+while getopts "b:c:n" opt; do
 	case "${opt}" in
+	b)
+		_bootspec_append "${OPTARG}"
+		;;
 	c)
 		_readconfig "${OPTARG}"
 		;;
@@ -299,6 +319,9 @@ while getopts "c:n" opt; do
 	esac
 done
 shift $((${OPTIND}-1))
+
+# finalize json config
+echo '"";' >> ${TMPDIR}/cfg.c
 
 TARGET="${1}"
 if [ "${TARGET}" = "list" ]; then
@@ -342,11 +365,6 @@ fi
 PLATFORM=${config%%_*}
 eval LIBS="\${CONFIG_${config}}"
 
-# duh
-TMPDIR=/tmp/rumprun-bake.XXXXXX
-[ -z "${runcmd}" ] && TMPDIR=$(mktemp -d ${TMPDIR})
-trap _nuketmpdir 0 INT TERM
-
 # Check if the file is a relocatable object produced by a rumprun toolchain.
 # Create a temporary object with a unique "main"
 objnum=1
@@ -364,7 +382,7 @@ done
 # Final link using cc to produce the unikernel image.
 ${runcmd} ${RUMPBAKE_BACKINGCC} ${RUMPBAKE_CFLAGS}			\
     -specs=${RUMPBAKE_TOOLDIR}/share/specs-bake-${RUMPBAKE_TUPLE}-${PLATFORM}	\
-    -o ${OUTPUT} ${allobjs}						\
+    -o ${OUTPUT} ${allobjs} ${TMPDIR}/cfg.c				\
     -Wl,--whole-archive ${LIBS} || exit 1
 
 exit 0

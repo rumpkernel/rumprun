@@ -662,90 +662,11 @@ struct {
 	{ "net", handle_net },
 };
 
-/* don't believe we can have a >64k config */
-#define CFGMAXSIZE (64*1024)
-static char *
-getcmdlinefromroot(const char *cfgname)
-{
-	const char *tryroot[] = {
-		"/dev/ld0a",
-		"/dev/sd0a",
-	};
-	struct stat sb;
-	unsigned int i;
-	int fd;
-	char *p;
-
-	if (mkdir("/rootfs", 0777) == -1)
-		err(1, "mkdir /rootfs failed");
-
-	/*
-	 * XXX: should not be hardcoded to cd9660.  but it is for now.
-	 * Maybe use mountroot() here somehow?
-	 */
-	for (i = 0; i < __arraycount(tryroot); i++) {
-		if (mount_blk(tryroot[i], "/rootfs"))
-			break;
-	}
-
-	/* didn't find it that way.  one more try: etfs for sda1 (EC2) */
-	if (i == __arraycount(tryroot)) {
-		char *devpath;
-
-		devpath = configetfs("sda1", 0);
-		if (!devpath)
-			errx(1, "failed to mount rootfs from image");
-
-		if (!mount_blk(devpath, "/rootfs"))
-			errx(1, "failed to mount /rootfs");
-	}
-
-	/*
-	 * Ok, we've successfully mounted /rootfs.  Now get the config.
-	 */
-
-	while (*cfgname == '/')
-		cfgname++;
-	if (chdir("/rootfs") == -1)
-		err(1, "chdir rootfs");
-
-	if ((fd = open(cfgname, O_RDONLY)) == -1)
-		err(1, "open %s", cfgname);
-	if (stat(cfgname, &sb) == -1)
-		err(1, "stat %s", cfgname);
-
-	if (sb.st_size > CFGMAXSIZE)
-		errx(1, "unbelievable cfg file size, increase CFGMAXSIZE");
-	if ((p = malloc(sb.st_size+1)) == NULL)
-		err(1, "cfgname storage");
-
-	if (read(fd, p, sb.st_size) != sb.st_size)
-		err(1, "read cfgfile");
-	close(fd);
-
-	p[sb.st_size] = '\0';
-	return p;
-}
-
-
-#define ROOTCFG "_RUMPRUN_ROOTFSCFG="
-static const size_t rootcfglen = sizeof(ROOTCFG)-1;
-static char *
-rumprun_config_path(char *cmdline)
-{
-	char *cfg = strstr(cmdline, ROOTCFG);
-
-	if (cfg != NULL)
-		cfg += rootcfglen;
-
-	return cfg;
-}
-#undef ROOTCFG
+extern char rumprun_configdata[];
 
 void
 rumprun_config(char *cmdline)
 {
-	char *cfg;
 	struct rumprun_exec *rre;
 	jsmn_parser p;
 	jsmntok_t *tokens = NULL;
@@ -754,14 +675,7 @@ rumprun_config(char *cmdline)
 	unsigned int i;
 	int ntok;
 
-	/* is the config file on rootfs?  if so, mount & dig it out */
-	cfg = rumprun_config_path(cmdline);
-	if (cfg != NULL) {
-		cmdline = getcmdlinefromroot(cfg);
-		if (cmdline == NULL)
-			errx(1, "could not get cfg from rootfs");
-	}
-
+	cmdline = rumprun_configdata;
 	while (*cmdline != '{') {
 		if (*cmdline == '\0') {
 			warnx("could not find start of json.  no config?");
@@ -770,8 +684,8 @@ rumprun_config(char *cmdline)
 		}
 		cmdline++;
 	}
-
 	cmdline_len = strlen(cmdline);
+
 	jsmn_init(&p);
 	ntok = jsmn_parse(&p, cmdline, cmdline_len, NULL, 0);
 
