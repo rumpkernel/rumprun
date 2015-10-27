@@ -435,7 +435,10 @@ doinstall ()
 
 	MACHINE_ARCH=$(cat ${RROBJ}/.machine_arch)
 
-	mkdir -p ${RRDEST} || die cannot create ${RRDEST}
+	mkdir -p ${RRDEST}/include/rumprun \
+	    || die cannot create ${RRDEST}/include/rumprun
+
+	# copy everything except include
 	(
 		# first, move things to where we want them to be
 		cd ${STAGING}
@@ -451,9 +454,13 @@ doinstall ()
 			ln -s ../rumprun-${MACHINE_ARCH}/lib${x}.a \
 			    lib/rumprun-${PLATFORM}-${MACHINE_ARCH}/lib${x}.a
 		done
-
-		tar -cf - .
+		find . -maxdepth 1 \! -path . \! -path ./include\* \
+		    | xargs tar -cf -
 	) | (cd ${RRDEST} ; tar -xf -)
+
+	# copy include to destdir/include/rumprun
+	( cd ${STAGING}/include ; tar -cf - . ) \
+	    | ( cd ${RRDEST}/include/rumprun ; tar -xf - )
 }
 
 #

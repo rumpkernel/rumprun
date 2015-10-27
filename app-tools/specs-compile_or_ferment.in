@@ -1,7 +1,7 @@
 %rename cpp_options old_cpp_options
  
 *cpp_options:
--nostdinc -isystem !DESTDIR!/include %{,c++:%{!std=*:-std=c++11}} %{,c++:-isystem !DESTDIR!/include/c++} %(old_cpp_options) !CPPFLAGS! -D__RUMPRUN__
+-nostdinc -isystem !DESTDIR!/include/rumprun %{,c++:%{!std=*:-std=c++11}} %{,c++:-isystem !DESTDIR!/include/rumprun/c++} %(old_cpp_options) !CPPFLAGS! -D__RUMPRUN__
 
 %rename cc1_options old_cc1_options
 
