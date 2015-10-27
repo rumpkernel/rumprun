@@ -9,7 +9,7 @@ LDFLAGS+= -L${RROBJ}/lib/libcompiler_rt
 CPPFLAGS+= -I../../include -I../../rumprun/include/rumprun
 CPPFLAGS+= -I../../platform/${PLATFORM}/include
 
-LDSCRIPT=$(abspath ../../platform/${PLATFORM}/bmk.ldscript)
+LDSCRIPT= ${RROBJ}/bmk.ldscript
 
 LDFLAGS+= ${LDFLAGS.${PLATFORM}.${MACHINE_ARCH}}
 

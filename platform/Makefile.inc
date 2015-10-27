@@ -66,12 +66,12 @@ PSEUDOSTUBS:= ${RROBJ}/pseudolinkstubs
 ${PSEUDOSTUBS}.c: ${RROBJLIB}/librumprun_base/librumprun_base.a
 	sh ../makepseudolinkstubs.sh ${NM} ${RUMPSRC} $< $@
 
-bmk.ldscript: ${LDSCRIPT}
+${RROBJ}/bmk.ldscript: ${LDSCRIPT}
 	ln -sf $< $@
 
 commonlibs: platformlibs userlibs
 userlibs: ${PSEUDOSTUBS}.o ${RROBJLIB}/librumprun_base/librumprun_base.a ${RROBJLIB}/librumprun_tester/librumprun_tester.a ${RROBJLIB}/libunwind/libunwind.a
-platformlibs: ${RROBJLIB}/libbmk_core/libbmk_core.a ${RROBJLIB}/libbmk_rumpuser/libbmk_rumpuser.a bmk.ldscript
+platformlibs: ${RROBJLIB}/libbmk_core/libbmk_core.a ${RROBJLIB}/libbmk_rumpuser/libbmk_rumpuser.a ${RROBJ}/bmk.ldscript
 rumpkernlibs: ${RROBJLIB}/librumpkern_bmktc/librumpkern_bmktc.a
 compiler_rt: ${RROBJLIB}/libcompiler_rt/libcompiler_rt.a
 
@@ -91,7 +91,7 @@ buildtest: ../../tests/hello/hello.c
 .PHONY: commonclean
 commonclean: libbmk_core_clean libbmk_rumpuser_clean libcompiler_rt_clean
 	rm -f ${PSEUDOSTUBS}.c ${PSEUDOSTUBS}.o
-	rm -f bmk.ldscript
+	rm -f ${RROBJ}/bmk.ldscript
 
 .PHONY: tests
 tests: ${MAINOBJ} commonlibs
