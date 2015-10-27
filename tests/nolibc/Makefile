@@ -6,7 +6,8 @@ CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
 LDFLAGS:= -L$(abspath ../../rumprun/lib/rumprun-${PLATFORM}-${MACHINE_ARCH})
 LDFLAGS+= -L${RROBJ}/lib/libcompiler_rt
 
-CPPFLAGS+= -I../../include -I../../rumprun/include -I../../platform/${PLATFORM}/include
+CPPFLAGS+= -I../../include -I../../rumprun/include/rumprun
+CPPFLAGS+= -I../../platform/${PLATFORM}/include
 
 LDSCRIPT=$(abspath ../../platform/${PLATFORM}/bmk.ldscript)
 
