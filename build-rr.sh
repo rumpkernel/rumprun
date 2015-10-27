@@ -422,7 +422,7 @@ dobuild ()
 
 	# do final build of the platform bits
 	( cd ${PLATFORMDIR} \
-	    && ${MAKE} ${STDJ} BUILDRR=true \
+	    && ${MAKE} BUILDRR=true \
 	    && ${MAKE} BUILDRR=true install || exit 1)
 	[ $? -eq 0 ] || die platform make failed!
 }
