@@ -294,6 +294,7 @@ static void xenbus_thread_func(void *ign)
 		event->path = data;
 		event->token = event->path + bmk_strlen(event->path) + 1;
 
+                mb();
                 xenstore_buf->rsp_cons += msg.len + sizeof(msg);
 
                 spin_lock(&xenbus_req_lock);
@@ -323,6 +324,7 @@ static void xenbus_thread_func(void *ign)
                     req_info[msg.req_id].for_queue->reply,
                     MASK_XENSTORE_IDX(xenstore_buf->rsp_cons),
                     msg.len + sizeof(msg));
+                mb();
                 xenstore_buf->rsp_cons += msg.len + sizeof(msg);
                 spin_lock(&xenbus_req_lock);
                 queue_event(req_info[msg.req_id].reply_queue,
