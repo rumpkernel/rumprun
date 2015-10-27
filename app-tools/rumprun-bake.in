@@ -361,9 +361,11 @@ for f in "$@"; do
 	objnum=$((${objnum}+1))
 done
 
+MACHINE_ARCH=${RUMPBAKE_TUPLE%%-*}
+
 # Final link using cc to produce the unikernel image.
 ${runcmd} ${RUMPBAKE_BACKINGCC} ${RUMPBAKE_CFLAGS}			\
-    -specs=${RUMPBAKE_TOOLDIR}/share/specs-bake-${RUMPBAKE_TUPLE}-${PLATFORM}	\
+    -specs=${RUMPBAKE_TOOLDIR}/lib/rumprun-${MACHINE_ARCH}-${PLATFORM}/specs-bake \
     -o ${OUTPUT} ${allobjs}						\
     -Wl,--whole-archive ${LIBS} || exit 1
 

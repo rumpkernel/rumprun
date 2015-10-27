@@ -16,8 +16,9 @@ _CXXVARIANT:=$(shell ${RUMPMAKE} -f bsd.own.mk -V '$${HAVE_LLVM:Dclang++:Ug++}')
 _FILES=	toolchain.cmake recipe.s
 FILES=	$(_FILES:%=$(TOOLTUPLE)-%)
 
-_SPECS=	specs-compile_or_ferment specs-stub
-SPECS=	${_SPECS} specs-bake-${TOOLTUPLE}-${PLATFORM}
+SPECS_ARCH:= specs-compile_or_ferment specs-stub
+SPECS_MACH:= specs-bake
+SPECS:= ${SPECS_ARCH} ${SPECS_MACH}
 
 _BIN_G=	ar as cpp ld nm objcopy objdump ranlib readelf size strings strip
 BIN_G=	$(_BIN_G:%=$(TOOLTUPLE)-%)
@@ -27,8 +28,9 @@ STATICBIN= rumprun rumpstop
 
 GENS.bin=	${BIN_G:%=${TOOLOBJ}/%}
 GENS.files=	${FILES:%=${TOOLOBJ}/%}
-GENS.specs=	${SPECS:%=${TOOLOBJ}/%}
-GENS=		${GENS.bin} ${GENS.files} ${GENS.specs}
+GENS.archspecs=	${SPECS_ARCH:%=${TOOLOBJ}/%}
+GENS.machspecs=	${SPECS_MACH:%=${TOOLOBJ}/%}
+GENS=		${GENS.bin} ${GENS.files} ${GENS.archspecs} ${GENS.machspecs}
 
 .PHONY: app-tools
 app-tools: ${GENS}
@@ -39,6 +41,9 @@ LDFLAGS_BAKE:= ${LDFLAGS.${MACHINE_ARCH}.${PLATFORM}}
 BRSOURCEDIR:=$(dir ${AR})
 BRLIBEXECINST:= ${INSTALLDIR}/libexec/rumprun-${MACHINE_ARCH}-${PLATFORM}/
 BRLIBEXECDEST:= ${RRDEST}/libexec/rumprun-${MACHINE_ARCH}-${PLATFORM}/
+
+ARCHDIR:= rumprun-${MACHINE_ARCH}
+MACHDIR:= rumprun-${MACHINE_ARCH}-${PLATFORM}
 
 LIBEXEC_CC:= $(subst ${BRSOURCEDIR},${BRLIBEXECDEST},${CC})
 LIBEXEC_CXX:= $(subst ${BRSOURCEDIR},${BRLIBEXECDEST},${CXX})
@@ -66,7 +71,7 @@ ${TOOLOBJ}/${2}: ${1} Makefile ${TOOLOBJ}
 		-e 's#!LDFLAGS_BAKE!#$(LDFLAGS_BAKE)#g;'
 endef
 $(foreach file,${_FILES},$(eval $(call templ,${file}.in,${TOOLTUPLE}-${file})))
-$(foreach spec,${_SPECS},$(eval $(call templ,${spec}.in,${spec})))
+$(foreach spec,${SPECS},$(eval $(call templ,${spec}.in,${spec})))
 $(eval $(call templ,cc.in,$(TOOLTUPLE)-${_CCVARIANT}))
 $(eval $(call templ,cc.in,$(TOOLTUPLE)-${_CXXVARIANT}))
 $(eval $(call templ,specs-bake.in,specs-bake-$(TOOLTUPLE)-$(PLATFORM)))
@@ -98,8 +103,11 @@ install-bins: ${GENS.bin} ${STATICBIN}
 	install -m 0755 ${STATICBIN} ${INSTALLDIR}/bin
 	ln -f ${INSTALLDIR}/bin/rumprun-bake ${INSTALLDIR}/bin/rumpbake
 
-install-files: ${GENS.files} ${GENS.specs} ${INSTALLDIR}/etc
-	install -m 0644 ${GENS.files} ${GENS.specs} ${INSTALLDIR}/share
+install-files: ${GENS.files} ${GENS.archspecs} ${GENS.machspecs} \
+    ${INSTALLDIR}/etc
+	install -m 0644 ${GENS.files} ${INSTALLDIR}/share
+	install -m 0644 ${GENS.archspecs} ${INSTALLDIR}/lib/${ARCHDIR}
+	install -m 0644 ${GENS.machspecs} ${INSTALLDIR}/lib/${MACHDIR}
 	install -m 0644 rumprun-bake.conf ${INSTALLDIR}/etc
 
 install: install-buildrumpwrappers install-bins install-files
