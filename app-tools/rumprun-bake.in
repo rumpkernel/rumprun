@@ -129,7 +129,7 @@ create ()
 	shift || _die "create: not enough arguments (${CURCONF})"
 	[ -n "$*" ] || _die "create: need description (${CURCONF})"
 
-	if ! echo ${confname} | egrep -q '^(|xen|hw)_'; then
+	if ! echo ${confname} | egrep -q '^(xen|hw)?_'; then
 		_die "create: invalid conf \"$confname\" (${CURCONF})"
 	fi
 
