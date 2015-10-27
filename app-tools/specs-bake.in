@@ -1,5 +1,5 @@
 *startfile:
-!DESTDIR!/lib/rumprun-!PLATFORM!-!MACHINE_ARCH!.o
+!DESTDIR!/lib/rumprun-!PLATFORM!-!MACHINE_ARCH!/rumprun.o
 
 *endfile:
 

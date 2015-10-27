@@ -20,7 +20,7 @@ else
 CPPFLAGS+=      -I${RRDEST}/include/rumprun
 endif
 
-MAINOBJ:=	${RROBJ}/rumprun-${PLATFORM}-${MACHINE_ARCH}.o
+MAINOBJ:=	${RROBJ}/rumprun.o
 
 RROBJLIB:=	${RROBJ}/lib
 LIBDIR:=	$(abspath ../../lib)
@@ -99,7 +99,7 @@ tests: ${MAINOBJ} commonlibs
 
 .PHONY: installkern
 installkern:
-	install -m 0444 ${MAINOBJ} ${INSTALLDIR}/lib
+	install -m 0444 ${MAINOBJ} ${INSTALLDIR}/lib/rumprun-${PLATFORM}-${MACHINE_ARCH}
 	install -m 0444 ${LDSCRIPT} ${INSTALLDIR}/lib/rumprun-${PLATFORM}-${MACHINE_ARCH}.ldscript
 
 .PHONY: installuser
