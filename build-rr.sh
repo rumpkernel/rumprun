@@ -237,6 +237,7 @@ setvars ()
 
 	. ${RUMPTOOLS}/proberes.sh
 	MACHINE="${BUILDRUMP_MACHINE}"
+	MACHINE_ARCH="${BUILDRUMP_MACHINE_GNU_ARCH}"
 
 	if [ -z "${RROBJ}" ]; then
 		RROBJ="./obj-${MACHINE}-${PLATFORM}${EXTSRC}"
@@ -265,7 +266,8 @@ buildrump ()
 	checkprevbuilds
 
 	extracflags=
-	[ "${MACHINE}" = "amd64" ] && extracflags='-F CFLAGS=-mno-red-zone'
+	[ "${MACHINE_ARCH}" = "x86_64" ] \
+	    && extracflags='-F CFLAGS=-mno-red-zone'
 
 	# build tools
 	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
@@ -432,8 +434,6 @@ doinstall ()
 	# default used to be a symlink, so this is for "compat".
 	# remove in a few months.
 	rm -f ${RRDEST} > /dev/null 2>&1 || true
-
-	MACHINE_ARCH=$(cat ${RROBJ}/.machine_arch)
 
 	mkdir -p ${RRDEST}/include/rumprun \
 	    || die cannot create ${RRDEST}/include/rumprun
