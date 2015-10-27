@@ -14,6 +14,7 @@ HASPCI= y
 # assume we're doing "make clean"
 MACHINE?= i386
 ifeq (${MACHINE},i386)
+HW_MACHINE_ARCH=i386
 supported:= true
 endif
 ifeq (${MACHINE},amd64)
@@ -29,6 +30,7 @@ $(error only supported target is x86, you have ${MACHINE})
 endif
 
 ARCHDIR?= ${MACHINE}
+HW_MACHINE_ARCH?= ${MACHINE_ARCH}
 
 LDSCRIPT:=	$(abspath arch/${ARCHDIR}/kern.ldscript)
 OBJS_BMK+=	intr.o clock_subr.o kernel.o multiboot.o undefs.o
@@ -41,7 +43,7 @@ include arch/${ARCHDIR}/Makefile.inc
 all:  include/hw/machine ${MAINOBJ} ${TARGETS}
 
 include/hw/machine:
-	@ln -sf ../arch/${MACHINE_ARCH} include/hw/machine
+	@ln -sf ../arch/${HW_MACHINE_ARCH} include/hw/machine
 
 ../../include/bmk-pcpu:
 	@ln -sf ../platform/hw/include/hw/machine $@
