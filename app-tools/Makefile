@@ -37,10 +37,11 @@ include ../global.mk
 LDFLAGS_BAKE:= ${LDFLAGS.${PLATFORM}.${MACHINE_ARCH}}
 
 BRSOURCEDIR:=$(dir ${AR})
-BRLIBEXECDIR:= ${RRDEST}/libexec/rumprun-${PLATFORM}-${MACHINE_ARCH}/
+BRLIBEXECINST:= ${INSTALLDIR}/libexec/rumprun-${PLATFORM}-${MACHINE_ARCH}/
+BRLIBEXECDEST:= ${RRDEST}/libexec/rumprun-${PLATFORM}-${MACHINE_ARCH}/
 
-LIBEXEC_CC:= $(subst ${BRSOURCEDIR},${BRLIBEXECDIR},${CC})
-LIBEXEC_CXX:= $(subst ${BRSOURCEDIR},${BRLIBEXECDIR},${CXX})
+LIBEXEC_CC:= $(subst ${BRSOURCEDIR},${BRLIBEXECDEST},${CC})
+LIBEXEC_CXX:= $(subst ${BRSOURCEDIR},${BRLIBEXECDEST},${CXX})
 
 TOOLS_CC := ${RRDEST}/bin/$(TOOLTUPLE)-${_CCVARIANT}
 TOOLS_CXX := ${RRDEST}/bin/$(TOOLTUPLE)-${_CXXVARIANT}
@@ -76,20 +77,20 @@ uptool_$1=$(shell echo $1 | tr '[:lower:]' '[:upper:]')
 toolval_$1=$${$${uptool_$1}}
 ${TOOLOBJ}/$(TOOLTUPLE)-$1: ${TOOLOBJ}
 	printf '#!/bin/sh\n\nexec %s "$$$${@}"\n' \
-	    $$(subst ${BRSOURCEDIR},${BRLIBEXECDIR},$${toolval_${1}}) > $$@
+	    $$(subst ${BRSOURCEDIR},${BRLIBEXECDEST},$${toolval_${1}}) > $$@
 
 BRTOOLS+= $${toolval_${1}}
 endef
 $(foreach t,${_BIN_G},$(eval $(call binwrapper,${t})))
 
-${BRLIBEXECDIR}:
+${BRLIBEXECINST}:
 	mkdir -p $@
 
 ${INSTALLDIR}/etc:
 	mkdir -p $@
 
-install-buildrumpwrappers: ${BRLIBEXECDIR} ${BRTOOLS}
-	install -m 0755 ${BRTOOLS} ${CC} ${CXX} ${BRLIBEXECDIR}
+install-buildrumpwrappers: ${BRLIBEXECINST} ${BRTOOLS}
+	install -m 0755 ${BRTOOLS} ${CC} ${CXX} ${BRLIBEXECINST}
 
 install-bins: ${GENS.bin} ${STATICBIN}
 	install -m 0755 ${GENS.bin} ${INSTALLDIR}/bin
