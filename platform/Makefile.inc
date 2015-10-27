@@ -27,6 +27,9 @@ LIBDIR:=	$(abspath ../../lib)
 
 COMMONDIR:=	$(abspath ../)
 
+INSTALLDIR_LIBARCH:=	${INSTALLDIR}/lib/rumprun-${MACHINE_ARCH}
+INSTALLDIR_LIBPLAT:=	${INSTALLDIR}/lib/rumprun-${PLATFORM}-${MACHINE_ARCH}
+
 define BUILDLIB_target
 .PHONY: $${RROBJLIB}/${1}/${1}.a
 $${RROBJLIB}/${1}/${1}.a:
@@ -37,14 +40,12 @@ $${RROBJLIB}/${1}/${1}.a:
 .PHONY: ${1}_install
 ${1}_install:
 	( cd $${RROBJLIB}/${1} && \
-	    install -m 0444 ${1}.a \
-	      $${INSTALLDIR}/lib/rumprun-${PLATFORM}-${MACHINE_ARCH} )
+	    install -m 0444 ${1}.a $${INSTALLDIR_LIBPLAT} )
 
 .PHONY: ${1}_install2
 ${1}_install2:
 	( cd $${RROBJLIB}/${1} && \
-	    install -m 0444 ${1}.a \
-	      $${INSTALLDIR}/lib/rumprun-${MACHINE_ARCH} )
+	    install -m 0444 ${1}.a $${INSTALLDIR_LIBARCH} )
 
 .PHONY: ${1}_clean
 ${1}_clean:
@@ -99,12 +100,12 @@ tests: ${MAINOBJ} commonlibs
 
 .PHONY: installkern
 installkern:
-	install -m 0444 ${MAINOBJ} ${INSTALLDIR}/lib/rumprun-${PLATFORM}-${MACHINE_ARCH}
+	install -m 0444 ${MAINOBJ} ${INSTALLDIR_LIBPLAT}
 	install -m 0444 ${LDSCRIPT} ${INSTALLDIR}/lib/rumprun-${PLATFORM}-${MACHINE_ARCH}.ldscript
 
 .PHONY: installuser
 installuser:
-	install -m 0444 ${PSEUDOSTUBS}.o ${INSTALLDIR}/lib/rumprun-${MACHINE_ARCH}
+	install -m 0444 ${PSEUDOSTUBS}.o ${INSTALLDIR_LIBARCH}
 
 INSTALLTGTS+=	installkern
 ifneq (${KERNONLY},true)
