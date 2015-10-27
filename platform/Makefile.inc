@@ -60,7 +60,7 @@ $(eval $(call BUILDLIB_target,librumprun_tester))
 $(eval $(call BUILDLIB_target,libunwind))
 $(eval $(call BUILDLIB_target,libcompiler_rt,RUMPSRC=${RUMPSRC}))
 
-PSEUDOSTUBS=${RROBJ}/rumprun-${MACHINE_ARCH}-pseudolinkstubs
+PSEUDOSTUBS:= ${RROBJ}/pseudolinkstubs
 
 ${PSEUDOSTUBS}.c: ${RROBJLIB}/librumprun_base/librumprun_base.a
 	sh ../makepseudolinkstubs.sh ${NM} ${RUMPSRC} $< $@
@@ -104,7 +104,7 @@ installkern:
 
 .PHONY: installuser
 installuser:
-	install -m 0444 ${PSEUDOSTUBS}.o ${INSTALLDIR}/lib
+	install -m 0444 ${PSEUDOSTUBS}.o ${INSTALLDIR}/lib/rumprun-${MACHINE_ARCH}
 
 INSTALLTGTS+=	installkern
 ifneq (${KERNONLY},true)
