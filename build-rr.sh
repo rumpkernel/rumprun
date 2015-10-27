@@ -283,9 +283,6 @@ buildrump ()
 
 	RUMPMAKE=$(pwd)/${RUMPTOOLS}/rumpmake
 
-	MACHINE_ARCH=$(${RUMPMAKE} -f /dev/null -V '${MACHINE_ARCH}')
-	[ -n "${MACHINE_ARCH}" ] || die could not figure out target machine arch
-
 	# this is slightly ridiculous
 	echo ${MACHINE_ARCH} > ${RROBJ}/.machine_arch
 
