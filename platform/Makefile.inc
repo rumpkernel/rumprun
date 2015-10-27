@@ -28,7 +28,7 @@ LIBDIR:=	$(abspath ../../lib)
 COMMONDIR:=	$(abspath ../)
 
 INSTALLDIR_LIBARCH:=	${INSTALLDIR}/lib/rumprun-${MACHINE_ARCH}
-INSTALLDIR_LIBPLAT:=	${INSTALLDIR}/lib/rumprun-${PLATFORM}-${MACHINE_ARCH}
+INSTALLDIR_LIBPLAT:=	${INSTALLDIR}/lib/rumprun-${MACHINE_ARCH}-${PLATFORM}
 
 define BUILDLIB_target
 .PHONY: $${RROBJLIB}/${1}/${1}.a
@@ -101,7 +101,7 @@ tests: ${MAINOBJ} commonlibs
 .PHONY: installkern
 installkern:
 	install -m 0444 ${MAINOBJ} ${INSTALLDIR_LIBPLAT}
-	install -m 0444 ${LDSCRIPT} ${INSTALLDIR}/lib/rumprun-${PLATFORM}-${MACHINE_ARCH}.ldscript
+	install -m 0444 ${LDSCRIPT} ${INSTALLDIR}/lib/rumprun-${MACHINE_ARCH}-${PLATFORM}.ldscript
 
 .PHONY: installuser
 installuser:

@@ -16,7 +16,7 @@ ifndef NOGCCERROR
 CFLAGS+= -Werror
 endif
 
-LDFLAGS.hw.x86_64= -z max-page-size=0x1000
+LDFLAGS.x86_64.hw= -z max-page-size=0x1000
 
 ifeq (${BUILDRR},true)
 INSTALLDIR=     ${RROBJ}/dest.stage

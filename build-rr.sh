@@ -239,7 +239,7 @@ setvars ()
 	MACHINE="${BUILDRUMP_MACHINE}"
 
 	if [ -z "${RROBJ}" ]; then
-		RROBJ="./obj-${PLATFORM}-${MACHINE}${EXTSRC}"
+		RROBJ="./obj-${MACHINE}-${PLATFORM}${EXTSRC}"
 		${KERNONLY} && RROBJ="${RROBJ}-kernonly"
 	fi
 	STAGING="${RROBJ}/dest.stage"
@@ -406,7 +406,7 @@ dobuild ()
 	buildrump "$@"
 	mkdir -p ${STAGING}/lib/rumprun-${MACHINE_ARCH} \
 	    || die cannot create libdir
-	mkdir -p ${STAGING}/lib/rumprun-${PLATFORM}-${MACHINE_ARCH} \
+	mkdir -p ${STAGING}/lib/rumprun-${MACHINE_ARCH}-${PLATFORM} \
 	    || die cannot create libdir
 
 	${MAKE} -C ${PLATFORMDIR} links
@@ -444,15 +444,15 @@ doinstall ()
 		cd ${STAGING}
 		rm -rf lib/pkgconfig
 		find lib -maxdepth 1 -name librump\*.a \
-		    -exec mv -f '{}' lib/rumprun-${PLATFORM}-${MACHINE_ARCH}/ \;
+		    -exec mv -f '{}' lib/rumprun-${MACHINE_ARCH}-${PLATFORM}/ \;
 		find lib -maxdepth 1 -name \*.a \
 		    -exec mv -f '{}' lib/rumprun-${MACHINE_ARCH}/ \;
 
 		# make sure special cases are visible everywhere
 		for x in c pthread ; do
-			rm -f lib/rumprun-${PLATFORM}-${MACHINE_ARCH}/lib${x}.a
+			rm -f lib/rumprun-${MACHINE_ARCH}-${PLATFORM}/lib${x}.a
 			ln -s ../rumprun-${MACHINE_ARCH}/lib${x}.a \
-			    lib/rumprun-${PLATFORM}-${MACHINE_ARCH}/lib${x}.a
+			    lib/rumprun-${MACHINE_ARCH}-${PLATFORM}/lib${x}.a
 		done
 		find . -maxdepth 1 \! -path . \! -path ./include\* \
 		    | xargs tar -cf -
