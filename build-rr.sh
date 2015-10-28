@@ -175,8 +175,6 @@ parseargs ()
 	export RUMPSRC
 	export BUILD_QUIET
 
-	RUMPTOOLS=${PLATFORMDIR}/rumptools
-
 	ARGSSHIFT=$((${orignargs} - $#))
 }
 
@@ -246,6 +244,7 @@ setvars ()
 	fi
 	STAGING="${RROBJ}/dest.stage"
 	BROBJ="${RROBJ}/buildrump.sh"
+	RUMPTOOLS="${RROBJ}/rumptools"
 
 	abspath RRDEST
 	abspath RROBJ
