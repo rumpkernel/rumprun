@@ -29,7 +29,7 @@ printf 'int _stubnosys(void); int _stubnosys(void) {return -1;}\n' \
 printf "__strong_alias(_start,_stubnosys);\n\n" >> ${OUTPUT}
 
 # symbols not convered by libc
-nm -o -g --defined-only ${BASELIB} | awk '
+${NM} -o -g --defined-only ${BASELIB} | awk '
 $(NF-1) == "T" {
 	printf("__strong_alias(%s,_stubnosys);\n", $NF);
 	next
