@@ -427,7 +427,7 @@ run_xen ()
 {
 
 	type ${READELF} >/dev/null 2>&1 \
-	    || _die 'Cannot find ${READELF}. Set $READELF env variable'
+	    || die 'Cannot find ${READELF}. Set $READELF env variable'
 
 	[ -z "${DUMPCMD}" ] || echo WARNING: -D not perfectly supported by Xen
 
@@ -584,7 +584,7 @@ run_qemu ()
 {
 
 	type ${READELF} >/dev/null 2>&1 \
-	    || _die 'Cannot find ${READELF}. Set $READELF env variable'
+	    || die 'Cannot find ${READELF}. Set $READELF env variable'
 
 	store_blkspec=json_store_qemu_blkspec
 	store_netspec=json_store_netspec
