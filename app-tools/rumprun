@@ -29,6 +29,8 @@
 # rumprun: "driver" script for running rumprun application stacks
 #
 
+: ${READELF:=readelf}
+
 # default values
 MEM_DEFAULT=64
 
@@ -424,6 +426,9 @@ parse_blkspec ()
 run_xen ()
 {
 
+	type ${READELF} >/dev/null 2>&1 \
+	    || _die 'Cannot find ${READELF}. Set $READELF env variable'
+
 	[ -z "${DUMPCMD}" ] || echo WARNING: -D not perfectly supported by Xen
 
 	# try to find gdbsx from common locations
@@ -559,10 +564,10 @@ EOM
 
 	# Attach debugger if requested.
 	if [ -n "$opt_debug" ]; then
-		if objdump -f ${app} | grep -q elf64; then
-			bits=64
-		else
+		if ! ${READELF} -h ${app} | grep -q ELF64; then
 			bits=32
+		else
+			bits=64
 		fi
 		${DUMPCMD} ${sudo} ${gdbsx} -a ${domid} ${bits} ${opt_debug} &
 	fi
@@ -577,6 +582,9 @@ EOM
 
 run_qemu ()
 {
+
+	type ${READELF} >/dev/null 2>&1 \
+	    || _die 'Cannot find ${READELF}. Set $READELF env variable'
 
 	store_blkspec=json_store_qemu_blkspec
 	store_netspec=json_store_netspec
@@ -665,10 +673,10 @@ run_qemu ()
 
 	# XXX: using host objdump here is wrong, but xen uses it too,
 	# and both offenses should be easy to fix at the same time
-	if objdump -f ${1} | grep -q elf64; then
-		qemu=qemu-system-x86_64
-	else
+	if ! ${READELF} -h ${1} | grep -q ELF64; then
 		qemu=qemu-system-i386
+	else
+		qemu=qemu-system-x86_64
 	fi
 
 	qemucmd="${DUMPCMD} ${qemu} ${opt_netif} ${opt_kvm}		\
