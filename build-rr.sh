@@ -235,7 +235,8 @@ checkprevbuilds ()
 setvars ()
 {
 
-	. ${RUMPTOOLS}/proberes.sh
+	# probe us some vars
+	eval $(${BUILDRUMP}/buildrump.sh "$@" probe)
 	MACHINE="${BUILDRUMP_MACHINE}"
 	MACHINE_GNU_ARCH="${BUILDRUMP_MACHINE_GNU_ARCH}"
 
@@ -253,11 +254,6 @@ setvars ()
 
 buildrump ()
 {
-
-	# probe
-	${BUILDRUMP}/buildrump.sh -k -s ${RUMPSRC} -T ${RUMPTOOLS} "$@" probe
-
-	setvars
 
 	# Check that a clang build is not attempted.
 	[ -z "${BUILDRUMP_HAVE_LLVM}" ] \
@@ -424,8 +420,6 @@ dobuild ()
 doinstall ()
 {
 
-	setvars
-
 	# default used to be a symlink, so this is for "compat".
 	# remove in a few months.
 	rm -f ${RRDEST} > /dev/null 2>&1 || true
@@ -465,6 +459,7 @@ doinstall ()
 parseargs "$@"
 shift ${ARGSSHIFT}
 
+setvars "$@"
 ${DObuild} && dobuild "$@"
 ${DOinstall} && doinstall
 
