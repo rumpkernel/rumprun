@@ -7,6 +7,7 @@ SECTIONS
   _text = .;			/* Text and read-only data */
   .text : {
 	*(.text)
+	*(.text.*)
 	*(.gnu.warning)
 	} = 0x9090
 
@@ -60,7 +61,6 @@ SECTIONS
 
   /* Sections to be discarded */
   /DISCARD/ : {
-	*(.text.exit)
 	*(.data.exit)
 	*(.exitcall.exit)
 	}
