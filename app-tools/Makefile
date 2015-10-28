@@ -42,6 +42,8 @@ BRSOURCEDIR:=$(dir ${AR})
 BRLIBEXECINST:= ${INSTALLDIR}/libexec/rumprun-${MACHINE_GNU_ARCH}-${PLATFORM}/
 BRLIBEXECDEST:= ${RRDEST}/libexec/rumprun-${MACHINE_GNU_ARCH}-${PLATFORM}/
 
+INSTALLDIR_ARCH:= ${INSTALLDIR}/rumprun-${MACHINE_GNU_ARCH}
+
 ARCHDIR:= rumprun-${MACHINE_GNU_ARCH}
 MACHDIR:= rumprun-${MACHINE_GNU_ARCH}-${PLATFORM}
 
@@ -94,6 +96,9 @@ ${BRLIBEXECINST}:
 ${INSTALLDIR}/etc:
 	mkdir -p $@
 
+${INSTALLDIR_ARCH}/share:
+	mkdir -p $@
+
 install-buildrumpwrappers: ${BRLIBEXECINST} ${BRTOOLS}
 	install -m 0755 ${BRTOOLS} ${CC} ${CXX} ${BRLIBEXECINST}
 	install -m 0755 ${BRSOURCEDIR}/brprintmetainfo ${BRLIBEXECINST}
@@ -104,10 +109,10 @@ install-bins: ${GENS.bin} ${STATICBIN}
 	ln -f ${INSTALLDIR}/bin/rumprun-bake ${INSTALLDIR}/bin/rumpbake
 
 install-files: ${GENS.files} ${GENS.archspecs} ${GENS.machspecs} \
-    ${INSTALLDIR}/etc
-	install -m 0644 ${GENS.files} ${INSTALLDIR}/share
-	install -m 0644 ${GENS.archspecs} ${INSTALLDIR}/lib/${ARCHDIR}
-	install -m 0644 ${GENS.machspecs} ${INSTALLDIR}/lib/${MACHDIR}
+    ${INSTALLDIR}/etc ${INSTALLDIR_ARCH}/share
+	install -m 0644 ${GENS.files} ${INSTALLDIR_ARCH}/share
+	install -m 0644 ${GENS.archspecs} ${INSTALLDIR_ARCH}/lib
+	install -m 0644 ${GENS.machspecs} ${INSTALLDIR_ARCH}/lib/rumprun-${PLATFORM}
 	install -m 0644 rumprun-bake.conf ${INSTALLDIR}/etc
 
 install: install-buildrumpwrappers install-bins install-files

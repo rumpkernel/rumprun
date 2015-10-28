@@ -395,9 +395,7 @@ dobuild ()
 	. ${PLATFORMDIR}/platform.conf
 
 	buildrump "$@"
-	mkdir -p ${STAGING}/lib/rumprun-${MACHINE_GNU_ARCH} \
-	    || die cannot create libdir
-	mkdir -p ${STAGING}/lib/rumprun-${MACHINE_GNU_ARCH}-${PLATFORM} \
+	mkdir -p ${STAGING}/rumprun-${MACHINE_GNU_ARCH}/lib/rumprun-${PLATFORM}\
 	    || die cannot create libdir
 
 	${MAKE} -C ${PLATFORMDIR} links
@@ -423,7 +421,7 @@ doinstall ()
 	# remove in a few months.
 	rm -f ${RRDEST} > /dev/null 2>&1 || true
 
-	mkdir -p ${RRDEST}/include/rumprun \
+	mkdir -p ${RRDEST}/rumprun-${MACHINE_GNU_ARCH}/include \
 	    || die cannot create ${RRDEST}/include/rumprun
 
 	# copy everything except include
@@ -432,15 +430,15 @@ doinstall ()
 		cd ${STAGING}
 		rm -rf lib/pkgconfig
 		find lib -maxdepth 1 -name librump\*.a \
-		    -exec mv -f '{}' lib/rumprun-${MACHINE_GNU_ARCH}-${PLATFORM}/ \;
+		    -exec mv -f '{}' rumprun-${MACHINE_GNU_ARCH}/lib/rumprun-${PLATFORM}/ \;
 		find lib -maxdepth 1 -name \*.a \
-		    -exec mv -f '{}' lib/rumprun-${MACHINE_GNU_ARCH}/ \;
+		    -exec mv -f '{}' rumprun-${MACHINE_GNU_ARCH}/lib/ \;
 
 		# make sure special cases are visible everywhere
 		for x in c pthread ; do
-			rm -f lib/rumprun-${MACHINE_GNU_ARCH}-${PLATFORM}/lib${x}.a
-			ln -s ../rumprun-${MACHINE_GNU_ARCH}/lib${x}.a \
-			    lib/rumprun-${MACHINE_GNU_ARCH}-${PLATFORM}/lib${x}.a
+			rm -f rumprun-${MACHINE_GNU_ARCH}/lib/rumprun-${PLATFORM}/lib${x}.a
+			ln -s ../lib${x}.a \
+			    rumprun-${MACHINE_GNU_ARCH}/lib/rumprun-${PLATFORM}/lib${x}.a
 		done
 		find . -maxdepth 1 \! -path . \! -path ./include\* \
 		    | xargs tar -cf -
@@ -448,7 +446,7 @@ doinstall ()
 
 	# copy include to destdir/include/rumprun
 	( cd ${STAGING}/include ; tar -cf - . ) \
-	    | ( cd ${RRDEST}/include/rumprun ; tar -xf - )
+	    | ( cd ${RRDEST}/rumprun-${MACHINE_GNU_ARCH}/include ; tar -xf - )
 }
 
 #

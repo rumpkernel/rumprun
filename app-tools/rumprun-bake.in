@@ -365,7 +365,7 @@ MACHINE_GNU_ARCH=${RUMPBAKE_TUPLE%%-*}
 
 # Final link using cc to produce the unikernel image.
 ${runcmd} ${RUMPBAKE_BACKINGCC} ${RUMPBAKE_CFLAGS}			\
-    -specs=${RUMPBAKE_TOOLDIR}/lib/rumprun-${MACHINE_GNU_ARCH}-${PLATFORM}/specs-bake \
+    -specs=${RUMPBAKE_TOOLDIR}/rumprun-${MACHINE_GNU_ARCH}/lib/rumprun-${PLATFORM}/specs-bake \
     -o ${OUTPUT} ${allobjs}						\
     -Wl,--whole-archive ${LIBS} || exit 1
 

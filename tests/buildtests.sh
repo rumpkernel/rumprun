@@ -68,7 +68,7 @@ test_apptools()
 		(
 			mkdir -p cmake/build
 			cd cmake/build
-			cmake -DCMAKE_TOOLCHAIN_FILE=${RRDEST}/share/${TOOLTUPLE}-toolchain.cmake ..
+			cmake -DCMAKE_TOOLCHAIN_FILE=${RRDEST}/rumprun-${MACHINE_GNU_ARCH}/share/${TOOLTUPLE}-toolchain.cmake ..
 			make
 		)
 	fi
