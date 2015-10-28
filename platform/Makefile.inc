@@ -17,7 +17,7 @@ endif
 ifeq (${BUILDRR},true)
 CPPFLAGS+=      -I${RROBJ}/dest.stage/include
 else
-CPPFLAGS+=      -I${RRDEST}/include/rumprun
+CPPFLAGS+=      -I${RRDEST}/rumprun-${MACHINE_GNU_ARCH}/include
 endif
 
 MAINOBJ:=	${RROBJ}/rumprun.o
