@@ -652,10 +652,24 @@ run_qemu ()
 	done
 	shift $((${OPTIND}-1))
 
+	check_app $1
+	# XXX: using host objdump here is wrong, but xen uses it too,
+	# and both offenses should be easy to fix at the same time
+	if ! ${READELF} -h ${1} | grep -q ELF64; then
+		qemu=qemu-system-i386
+	else
+		qemu=qemu-system-x86_64
+	fi
+
 	if [ "${variant}" = "kvm" ]; then
 		opt_kvm="-enable-kvm -cpu host"
 	else
-		opt_kvm=-no-kvm
+		# really old qemu versions don't support -no-kvm
+		if ${qemu} -no-kvm -h >/dev/null 2>&1; then
+			opt_kvm=-no-kvm
+		else
+			opt_kvm=
+		fi
 	fi
 
 	json_append_ln "\"cmdline\": \""$@"\""
@@ -668,16 +682,6 @@ run_qemu ()
 	json_coma="$(sed 's/,/,,/g' < "${TMPDIR}/json.cfg")"
 
 	[ -n "${opt_netif}" ] || opt_netif="-net none"
-
-	check_app $1
-
-	# XXX: using host objdump here is wrong, but xen uses it too,
-	# and both offenses should be easy to fix at the same time
-	if ! ${READELF} -h ${1} | grep -q ELF64; then
-		qemu=qemu-system-i386
-	else
-		qemu=qemu-system-x86_64
-	fi
 
 	qemucmd="${DUMPCMD} ${qemu} ${opt_netif} ${opt_kvm}		\
 	    ${opt_drivespec} ${opt_debug} ${opt_pause} -m ${opt_mem}	\
