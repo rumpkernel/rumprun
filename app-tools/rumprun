@@ -408,9 +408,8 @@ parse_blkspec ()
 {
 	spec=$1
 
-	image_path=${spec%,*}
-	[ -n "$image_path" ] || usage
-	image=$(readlink -f "$image_path")
+	image="${spec%,*}"
+	[ -n "$image" ] || usage
 	[ -f "$image" ] || die "File $image_path does not exist"
 	mountpoint=$(echo "$spec" | sed -n 's/.*,\(.*\)/\1/p')
 
@@ -531,7 +530,7 @@ run_xen ()
 	json_finalize_block
 
 	name=${opt_name:-rumprun-$(basename "$1")}
-	app=$(readlink -f "$1")
+	app="$1"
 	[ -f "$app" ] || die "rumprun unikernel $1 does not exist"
 	shift
 	check_app ${app}
