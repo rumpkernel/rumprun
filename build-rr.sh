@@ -24,7 +24,7 @@
 # SUCH DAMAGE.
 #
 
-set -u
+set -eu
 
 die ()
 {
@@ -54,8 +54,6 @@ helpme ()
 	printf "Rumprun wiki for more information.\n"
 	exit 1
 }
-
-set -e
 
 BUILDRUMP=$(pwd)/buildrump.sh
 
