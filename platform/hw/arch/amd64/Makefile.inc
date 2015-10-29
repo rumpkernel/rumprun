@@ -1,12 +1,12 @@
-OBJS_BMK+=	arch/amd64/locore.o arch/amd64/intr.o
-OBJS_BMK+=	arch/amd64/machdep.o
+ASMS=	arch/amd64/locore.S arch/amd64/intr.S
+SRCS+=	arch/amd64/machdep.c
 
-OBJS_BMK+=	arch/x86/boot.o
-OBJS_BMK+=	arch/x86/cons.o arch/x86/vgacons.o arch/x86/serialcons.o
-OBJS_BMK+=	arch/x86/cpu_subr.o
-OBJS_BMK+=	arch/x86/x86_subr.o
-OBJS_BMK+=	arch/x86/clock.o
-OBJS_BMK+=      arch/x86/hypervisor.o
+SRCS+=	arch/x86/boot.c
+SRCS+=	arch/x86/cons.c arch/x86/vgacons.c arch/x86/serialcons.c
+SRCS+=	arch/x86/cpu_subr.c
+SRCS+=	arch/x86/x86_subr.c
+SRCS+=	arch/x86/clock.c
+SRCS+=	arch/x86/hypervisor.c
 
 CFLAGS+=	-mno-sse -mno-mmx
 
@@ -14,8 +14,7 @@ CFLAGS+=	-mno-sse -mno-mmx
 # avoid having to figure out routing
 CFLAGS+=	-DBMK_SCREW_INTERRUPT_ROUTING
 
-arch/amd64/locore.o: arch/amd64/locore.S
-	${CC} ${CFLAGS} ${CPPFLAGS} -D_LOCORE -c -o arch/amd64/locore.o $<
-
-arch/amd64/intr.o: arch/amd64/intr.S
-	${CC} ${CFLAGS} ${CPPFLAGS} -D_LOCORE -c -o arch/amd64/intr.o $<
+.PHONY: archdirs
+archdirs:
+	mkdir -p ${RROBJ}/platform/arch/amd64
+	mkdir -p ${RROBJ}/platform/arch/x86

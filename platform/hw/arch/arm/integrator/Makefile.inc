@@ -1,8 +1,10 @@
-OBJS_BMK+=	arch/arm/integrator/locore.o
-OBJS_BMK+=	arch/arm/integrator/machdep.o
-OBJS_BMK+=	arch/arm/integrator/serialcons.o
+ASMS=	arch/arm/integrator/locore.o
+
+SRCS+=	arch/arm/integrator/machdep.o
+SRCS+=	arch/arm/integrator/serialcons.o
 
 CPPFLAGS+=	-Iarch/arm
 
-arch/arm/integrator/locore.o: arch/arm/integrator/locore.S
-	${CC} ${CFLAGS} ${CPPFLAGS} -D_LOCORE -c -o $@ $<
+.PHONY: archdirs
+archdirs:
+        mkdir -p ${RROBJ}/platform/arch/arm/integrator

@@ -1,13 +1,17 @@
-OBJS_BMK+=	arch/i386/locore.o arch/i386/machdep.o
+ASMS=	arch/i386/locore.o
 
-OBJS_BMK+=	arch/x86/boot.o
-OBJS_BMK+=	arch/x86/cons.o arch/x86/vgacons.o arch/x86/serialcons.o
-OBJS_BMK+=	arch/x86/cpu_subr.o
-OBJS_BMK+=	arch/x86/x86_subr.o
-OBJS_BMK+=	arch/x86/clock.o
-OBJS_BMK+=      arch/x86/hypervisor.o
+SRCS+=	arch/i386/machdep.o
+
+SRCS+=	arch/x86/boot.o
+SRCS+=	arch/x86/cons.o arch/x86/vgacons.o arch/x86/serialcons.o
+SRCS+=	arch/x86/cpu_subr.o
+SRCS+=	arch/x86/x86_subr.o
+SRCS+=	arch/x86/clock.o
+SRCS+=      arch/x86/hypervisor.o
 
 CFLAGS+=	-mno-sse -mno-mmx -march=i686
 
-arch/i386/locore.o: arch/i386/locore.S
-	${CC} ${CFLAGS} ${CPPFLAGS} -D_LOCORE -c -o arch/i386/locore.o $<
+.PHONY: archdirs
+archdirs:
+	mkdir -p ${RROBJ}/platform/arch/i386
+	mkdir -p ${RROBJ}/platform/arch/x86
