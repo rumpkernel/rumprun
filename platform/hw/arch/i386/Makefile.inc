@@ -1,13 +1,13 @@
-ASMS=	arch/i386/locore.o
+ASMS=	arch/i386/locore.S
 
-SRCS+=	arch/i386/machdep.o
+SRCS+=	arch/i386/machdep.c
 
-SRCS+=	arch/x86/boot.o
-SRCS+=	arch/x86/cons.o arch/x86/vgacons.o arch/x86/serialcons.o
-SRCS+=	arch/x86/cpu_subr.o
-SRCS+=	arch/x86/x86_subr.o
-SRCS+=	arch/x86/clock.o
-SRCS+=      arch/x86/hypervisor.o
+SRCS+=	arch/x86/boot.c
+SRCS+=	arch/x86/cons.c arch/x86/vgacons.c arch/x86/serialcons.c
+SRCS+=	arch/x86/cpu_subr.c
+SRCS+=	arch/x86/x86_subr.c
+SRCS+=	arch/x86/clock.c
+SRCS+=	arch/x86/hypervisor.c
 
 CFLAGS+=	-mno-sse -mno-mmx -march=i686
 

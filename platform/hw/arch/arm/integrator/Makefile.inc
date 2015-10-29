@@ -1,7 +1,7 @@
-ASMS=	arch/arm/integrator/locore.o
+ASMS=	arch/arm/integrator/locore.S
 
-SRCS+=	arch/arm/integrator/machdep.o
-SRCS+=	arch/arm/integrator/serialcons.o
+SRCS+=	arch/arm/integrator/machdep.c
+SRCS+=	arch/arm/integrator/serialcons.c
 
 CPPFLAGS+=	-Iarch/arm
 
