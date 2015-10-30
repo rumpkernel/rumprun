@@ -5,7 +5,7 @@ default: all
 
 PLATFORM_DEFAULT_TESTER=qemu
 
-CPPFLAGS=	-Iinclude -I../../include -nostdinc
+CPPFLAGS=	-Iinclude -I../../include -I${RROBJ}/include -nostdinc
 CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
 
 # Check if we're building for a supported target.
@@ -43,15 +43,16 @@ OBJS:=	$(patsubst %.c,${RROBJ}/platform/%.o,${SRCS}) \
 
 .PHONY:	clean cleandir test all
 
-all:  include/hw/machine archdirs ${MAINOBJ} ${TARGETS}
+all:  links archdirs ${MAINOBJ} ${TARGETS}
 
-include/hw/machine:
-	@ln -sf ../arch/${HW_MACHINE_ARCH} include/hw/machine
+${RROBJ}/include/hw/machine:
+	@mkdir -p ${RROBJ}/include/hw
+	@ln -sf $(shell pwd)/include/arch/${HW_MACHINE_ARCH} $@
 
-../../include/bmk-pcpu:
-	@ln -sf ../platform/hw/include/hw/machine $@
+${RROBJ}/include/bmk-pcpu:
+	@ln -sf ${RROBJ}/include/hw/machine $@
 
-links: include/hw/machine ../../include/bmk-pcpu
+links: ${RROBJ}/include/hw/machine ${RROBJ}/include/bmk-pcpu
 
 ${RROBJ}/platform/%.o: %.c
 	${CC} ${CPPFLAGS} ${CFLAGS} -c $< -o $@
