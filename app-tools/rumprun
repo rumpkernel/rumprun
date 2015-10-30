@@ -162,7 +162,7 @@ createif_qemu ()
 	ifbasename="${scratch%%,*}"
 	qemuargs="${scratch#*,}"
 	# 52:54:00 is QEMU registered OUI
-	ifmac="52:54:00$(od -N 3 -A n -t x1 /dev/urandom | tr ' ' :)"
+	ifmac=$(od -N 3 -A n -t x1 /dev/urandom | xargs printf "52:54:00:%s:%s:%s\n")
 
 	opt_netif="${opt_netif} -net nic,model=virtio,macaddr=${ifmac} ${qemuargs}"
 	eval ${iftag}2ifname=${ifbasename}${nindex}
