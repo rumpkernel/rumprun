@@ -206,6 +206,8 @@ checksubmodules ()
 checkprevbuilds ()
 {
 
+	[ "${PLATFORM}" = "xen" ] || return 0
+
 	if [ -f .prevbuild ]; then
 		. ./.prevbuild
 		: ${PB_KERNONLY:=false} # "bootstrap", remove in a few months
