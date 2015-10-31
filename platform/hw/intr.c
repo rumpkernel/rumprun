@@ -114,10 +114,16 @@ doisr(void *arg)
 		bmk_sched_blockprepare();
 
 		spl0();
+#if 0
+		/*
+		 * This fires occasionally, should investigate some
+		 * day.  A good way to repeat it is to use sysproxy.
+		 */
 		if (didwork != totwork) {
 			bmk_printf("stray interrupt(s): 0x%x\n",
 			    totwork & ~didwork);
 		}
+#endif
 		bmk_sched_block();
 		didwork = totwork = 0;
 		splhigh();
