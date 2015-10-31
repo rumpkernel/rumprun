@@ -89,7 +89,7 @@ abspath ()
 parseargs ()
 {
 
-	RRDEST=./rumprun
+	RRDEST=
 	KERNONLY=false
 	RROBJ=
 	RUMPSRC=src-netbsd
@@ -129,6 +129,8 @@ parseargs ()
 		esac
 	done
 	shift $((${OPTIND} - 1))
+
+	[ -n "${RRDEST}" ] || RRDEST=./rumprun${EXTSRC}
 
 	: ${BUILD_QUIET:=}
 
