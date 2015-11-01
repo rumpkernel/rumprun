@@ -10,7 +10,6 @@ CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
 
 # Check if we're building for a supported target.
 supported= false
-HASPCI= y
 # assume we're doing "make clean"
 MACHINE?= i386
 ifeq (${MACHINE},i386)
@@ -22,7 +21,6 @@ supported:= true
 endif
 ifeq (${MACHINE},evbarm)
 supported:= true
-HASPCI:= n
 ARCHDIR= arm/integrator
 endif
 ifneq (${supported},true)
