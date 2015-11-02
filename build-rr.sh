@@ -419,6 +419,10 @@ dobuild ()
 doinstall ()
 {
 
+	# sanity check
+	[ -d "${STAGING}" ] \
+	    || die 'No objdir. No build or build with different params?'
+
 	# default used to be a symlink, so this is for "compat".
 	# remove in a few months.
 	rm -f ${RRDEST} > /dev/null 2>&1 || true
