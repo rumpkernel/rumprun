@@ -46,7 +46,6 @@
 
 #ifdef MEMALLOC_TESTING
 #define PAGE_SIZE getpagesize()
-#define MSTATS
 
 #include <sys/cdefs.h>
 
@@ -54,9 +53,7 @@
 #if defined(RCHECK)
 #include <sys/uio.h>
 #endif
-#if defined(RCHECK) || defined(MSTATS)
 #include <stdio.h>
-#endif
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -135,22 +132,17 @@ static	union overhead *nextf[NBUCKETS];
 static	unsigned long pagesz;		/* page size */
 static	int pagebucket;			/* page size bucket */
 
-#ifdef MSTATS
 /*
  * nmalloc[i] is the difference between the number of mallocs and frees
  * for a given block size.
  */
-static	u_int nmalloc[NBUCKETS];
-#endif
+static unsigned nmalloc[NBUCKETS];
 
 /* not currently reentrant on mini-os */
 #define malloc_lock()
 #define malloc_unlock()
 
 static void morecore(int);
-#ifdef MSTATS
-void mstats(const char *);
-#endif
 
 #if defined(RCHECK) || defined(MEMALLOC_TESTING)
 #define	bmk_assert(p)   if (!(p)) botch(__STRING(p))
@@ -280,9 +272,9 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 	op->ov_index = bucket;
 	op->ov_alignpad = alignpad;
 	op->ov_who = who;
-#ifdef MSTATS
+
   	nmalloc[bucket]++;
-#endif
+
 	malloc_unlock();
 #ifdef RCHECK
 	/*
@@ -428,9 +420,8 @@ bmk_memfree(void *cp, enum bmk_memwho who)
 	op = (void *)origp;
 	op->ov_next = nextf[(unsigned int)size];/* also clobbers ov_magic */
   	nextf[(unsigned int)size] = op;
-#ifdef MSTATS
+
   	nmalloc[(unsigned long)size]--;
-#endif
 
 	malloc_unlock();
 }
@@ -475,7 +466,6 @@ bmk_memrealloc_user(void *cp, unsigned long nbytes)
 	return np;
 }
 
-#ifdef MSTATS
 /*
  * mstats - print out statistics about malloc
  * 
@@ -484,29 +474,27 @@ bmk_memrealloc_user(void *cp, unsigned long nbytes)
  * frees for each size category.
  */
 void
-mstats(const char *s)
+bmk_memalloc_printstats(void)
 {
-  	int i, j;
-  	union overhead *p;
-  	int totfree = 0,
-  	totused = 0;
+	union overhead *p;
+	unsigned long totfree = 0, totused = 0;
+	int i, j;
 
-  	fprintf(stderr, "Memory allocation statistics %s\nfree:\t", s);
-  	for (i = 0; i < NBUCKETS; i++) {
-  		for (j = 0, p = nextf[i]; p; p = p->ov_next, j++)
+	bmk_printf("Memory allocation statistics\nfree:\t");
+	for (i = 0; i < NBUCKETS; i++) {
+		for (j = 0, p = nextf[i]; p; p = p->ov_next, j++)
   			;
-  		fprintf(stderr, " %d", j);
-  		totfree += j * (1 << (i + 3));
+		bmk_printf(" %d", j);
+		totfree += j * (1 << (i + 3));
   	}
-  	fprintf(stderr, "\nused:\t");
-  	for (i = 0; i < NBUCKETS; i++) {
-  		fprintf(stderr, " %d", nmalloc[i]);
+	bmk_printf("\nused:\t");
+	for (i = 0; i < NBUCKETS; i++) {
+		bmk_printf(" %d", nmalloc[i]);
   		totused += nmalloc[i] * (1 << (i + 3));
   	}
-  	fprintf(stderr, "\n\tTotal in use: %d, total free: %d\n",
-	    totused, totfree);
+	bmk_printf("\n\tTotal in use: %lukB, total free in buckets: %lukB\n",
+	    totused/1024, totfree/1024);
 }
-#endif
 
 
 /*

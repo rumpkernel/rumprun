@@ -78,4 +78,7 @@ void *  bmk_memrealloc_user(void *, unsigned long);
 
 void *  bmk_xmalloc_bmk(unsigned long);
 
+/* diagnostic */
+void	bmk_memalloc_printstats(void);
+
 #endif /* _BMK_CORE_MEMALLOC_H_ */
