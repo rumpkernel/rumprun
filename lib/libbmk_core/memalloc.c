@@ -107,7 +107,6 @@ union	overhead {
 #define MINALIGN 16
 static	union overhead *nextf[NBUCKETS];
 
-static	unsigned long pagesz;		/* page size */
 static	int pagebucket;			/* page size bucket */
 
 /*
@@ -128,12 +127,11 @@ bmk_memalloc_init(void)
 	unsigned amt;
 	int bucket;
 
-	pagesz = BMK_PCPU_PAGE_SIZE;
-	bmk_assert(pagesz > 0);
+	bmk_assert(BMK_PCPU_PAGE_SIZE > 0);
 
 	bucket = 0;
 	amt = 1<<MINSHIFT;
-	while (pagesz > amt) {
+	while (BMK_PCPU_PAGE_SIZE > amt) {
 		amt <<= 1;
 		bucket++;
 	}
@@ -163,7 +161,7 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 	 * stored in hash buckets which satisfies request.
 	 * Account for space used per block for accounting.
 	 */
-	if (allocbytes <= pagesz - RSLOP) {
+	if (allocbytes <= BMK_PCPU_PAGE_SIZE - RSLOP) {
 #ifndef RCHECK
 		amt = 1<<MINSHIFT;	/* size of first bucket */
 		bucket = 0;
@@ -172,7 +170,7 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 		bucket = 1;
 #endif
 	} else {
-		amt = (unsigned)pagesz;
+		amt = (unsigned)BMK_PCPU_PAGE_SIZE;
 		bucket = pagebucket;
 	}
 	while (allocbytes > amt) {
@@ -267,8 +265,8 @@ morecore(int bucket)
 
 	if (bucket < pagebucket) {
 		amt = 0;
-  		nblks = pagesz / (1<<(bucket + MINSHIFT));
-		sz = pagesz / nblks;
+		nblks = BMK_PCPU_PAGE_SIZE / (1<<(bucket + MINSHIFT));
+		sz = BMK_PCPU_PAGE_SIZE / nblks;
 	} else {
 		amt = bucket - pagebucket;
 		nblks = 1;
