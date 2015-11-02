@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013 Antti Kantee.  All rights reserved.
+ * Copyright (c) 2013, 2015 Antti Kantee.  All rights reserved.
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -38,10 +38,7 @@
  * implementation, the available sizes are 2^n-4 (or 2^n-10) bytes long.
  * This is designed for use in a virtual memory environment.
  *
- * Modified for Xen Mini-OS:
- *  + allocate backing storage with page_alloc() instead of sbrk()
- *  + support alignment
- *  + use ANSI C (hey, there's no rush!)
+ * Modified for bmk by Antti Kantee over 30 years later.
  */
 
 #include <bmk-core/core.h>
@@ -119,7 +116,7 @@ static	int pagebucket;			/* page size bucket */
  */
 static unsigned nmalloc[NBUCKETS];
 
-/* not currently reentrant on mini-os */
+/* not multicore */
 #define malloc_lock()
 #define malloc_unlock()
 
@@ -355,10 +352,13 @@ bmk_memfree(void *cp, enum bmk_memwho who)
 }
 
 /*
- * don't do any of "storage compaction" nonsense, "just" the three modes:
+ * Don't do any of "storage compaction" nonsense, "just" the three modes:
  *   + cp == NULL ==> malloc
  *   + nbytes == 0 ==> free
  *   + else ==> realloc
+ *
+ * Also, assume that realloc() is always called from POSIX compat code,
+ * because nobody sane would use realloc()
  */
 void *
 bmk_memrealloc_user(void *cp, unsigned long nbytes)
