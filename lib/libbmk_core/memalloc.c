@@ -67,14 +67,7 @@ union	overhead {
 		unsigned long	ovu_alignpad;	/* padding for alignment */
 		uint8_t		ovu_magic;	/* magic number */
 		uint8_t		ovu_index;	/* bucket # */
-
-		/* this will be put under RCHECK later */
-		uint16_t	ovu_who;	/* who allocated */
-
-#ifdef RCHECK
-		uint16_t	ovu_rmagic;	/* range magic number */
-		unsigned long	ovu_size;	/* actual block size */
-#endif
+		uint8_t		ovu_who;	/* who allocated */
 	} ovu;
 #define	ov_alignpad	ovu.ovu_alignpad
 #define	ov_magic	ovu.ovu_magic
@@ -87,15 +80,6 @@ union	overhead {
 #define	MAGIC		0xef		/* magic # on accounting info */
 #define UNMAGIC		0x12		/* magic # != MAGIC */
 #define UNMAGIC2	0x24		/* magic # != MAGIC/UNMAGIC */
-#ifdef RCHECK
-#define RMAGIC		0x5555		/* magic # on range info */
-#endif
-
-#ifdef RCHECK
-#define	RSLOP		sizeof (unsigned short)
-#else
-#define	RSLOP		0
-#endif
 
 /*
  * nextf[i] is the pointer to the next free block of size 2^(i+MINSHIFT).  The
@@ -161,14 +145,9 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 	 * stored in hash buckets which satisfies request.
 	 * Account for space used per block for accounting.
 	 */
-	if (allocbytes <= BMK_PCPU_PAGE_SIZE - RSLOP) {
-#ifndef RCHECK
+	if (allocbytes <= BMK_PCPU_PAGE_SIZE) {
 		amt = 1<<MINSHIFT;	/* size of first bucket */
 		bucket = 0;
-#else
-		amt = 1<<(MINSHIFT+1);	/* size of first bucket */
-		bucket = 1;
-#endif
 	} else {
 		amt = (unsigned)BMK_PCPU_PAGE_SIZE;
 		bucket = pagebucket;
@@ -213,15 +192,6 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
   	nmalloc[bucket]++;
 
 	malloc_unlock();
-#ifdef RCHECK
-	/*
-	 * Record allocated size of block and
-	 * bound space with magic numbers.
-	 */
-	op->ov_size = (nbytes + RSLOP - 1) & ~(RSLOP - 1);
-	op->ov_rmagic = RMAGIC;
-  	*(unsigned short *)((char *)(op + 1) + op->ov_size) = RMAGIC;
-#endif
 
   	return rv;
 }
@@ -316,10 +286,6 @@ bmk_memfree(void *cp, enum bmk_memwho who)
 		bmk_platform_halt("bmk_memalloc error");
 	}
 
-#ifdef RCHECK
-	bmk_assert(op->ov_rmagic == RMAGIC);
-	bmk_assert(*(unsigned short *)((char *)(op+1) + op->ov_size) == RMAGIC);
-#endif
   	size = op->ov_index;
 	alignpad = op->ov_alignpad;
 	bmk_assert(size < NBUCKETS);
