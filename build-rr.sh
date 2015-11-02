@@ -29,6 +29,7 @@ set -eu
 die ()
 {
 
+	echo '>> ERROR:'
 	echo '>>' $*
 	exit 1
 }
