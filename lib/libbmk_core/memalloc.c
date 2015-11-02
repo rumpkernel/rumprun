@@ -44,22 +44,6 @@
  *  + use ANSI C (hey, there's no rush!)
  */
 
-#ifdef MEMALLOC_TESTING
-#define PAGE_SIZE getpagesize()
-
-#include <sys/cdefs.h>
-
-#include <sys/types.h>
-#if defined(RCHECK)
-#include <sys/uio.h>
-#endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-
-#else
-
 #include <bmk-core/core.h>
 #include <bmk-core/null.h>
 #include <bmk-core/string.h>
@@ -69,9 +53,6 @@
 #include <bmk-core/printf.h>
 
 #include <bmk-pcpu/pcpu.h>
-
-#endif
-
 
 /*
  * The overhead on a block is at least 4 bytes.  When free, this space
@@ -143,45 +124,6 @@ static unsigned nmalloc[NBUCKETS];
 #define malloc_unlock()
 
 static void morecore(int);
-
-#if defined(RCHECK) || defined(MEMALLOC_TESTING)
-#define	bmk_assert(p)   if (!(p)) botch(__STRING(p))
-#include <sys/uio.h>
-
-static void botch(const char *);
-
-/*
- * NOTE: since this may be called while malloc_mutex is locked, stdio must not
- *       be used in this function.
- */
-static void
-botch(const char *s)
-{
-	struct iovec iov[3];
-
-	iov[0].iov_base	= "\nassertion botched: ";
-	iov[0].iov_len	= 20;
-	iov[1].iov_base	= (void *)s;
-	iov[1].iov_len	= strlen(s);
-	iov[2].iov_base	= "\n";
-	iov[2].iov_len	= 1;
-
-	/*
-	 * This place deserves a word of warning: a cancellation point will
-	 * occur when executing writev(), and we might be still owning
-	 * malloc_mutex.  At this point we need to disable cancellation
-	 * until `after' abort() because i) establishing a cancellation handler
-	 * might, depending on the implementation, result in another malloc()
-	 * to be executed, and ii) it is really not desirable to let execution
-	 * continue.  `Fix me.'
-	 * 
-	 * Note that holding mutex_lock during abort() is safe.
-	 */
-
-	(void)writev(STDERR_FILENO, iov, 3);
-	abort();
-}
-#endif
 
 void
 bmk_memalloc_init(void)
@@ -264,7 +206,7 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 	alignpad = (unsigned long)rv - (unsigned long)op;
 
 #ifdef MEMALLOC_TESTING
-	memset(op, MAGIC, alignpad);
+	bmk_memset(op, MAGIC, alignpad);
 #endif
 
 	op = ((union overhead *)rv)-1;
@@ -315,20 +257,6 @@ bmk_memcalloc(unsigned long n, unsigned long size, enum bmk_memwho who)
 	return v;
 }
 
-static void *
-corealloc(int shift)
-{
-	void *v;
-
-#ifdef MEMALLOC_TESTING
-	v = malloc((1<<shift) * pagesz);
-#else
-	v = bmk_pgalloc(shift);
-#endif
-
-	return v;
-}
-
 /*
  * Allocate more memory to the indicated bucket.
  */
@@ -350,7 +278,7 @@ morecore(int bucket)
 		sz = 0; /* dummy */
 	}
 
-	op = (void *)corealloc(amt);
+	op = (void *)bmk_pgalloc(amt);
 	/* no more room! */
   	if (op == NULL)
   		return;
@@ -512,48 +440,60 @@ bmk_memalloc_printstats(void)
 #define NALLOC 1024
 #define NRING 16
 
+static unsigned randstate;
+
+static int
+myrand(void)
+{
+
+	return (randstate = randstate * 1103515245 + 12345) % (0x80000000L);
+}
+
 static void *
 testalloc(void)
 {
 	void *v, *nv;
-	size_t size1, size2, align;
+	unsigned long size1, size2, align;
 
 	/* doesn't give an even bucket distribution, but ... */
-	size1 = random() % ((TEST_MAXALLOC-TEST_MINALLOC)+1) + TEST_MINALLOC;
-	align = random() % ((TEST_MAXALIGN-TEST_MINALIGN)+1) + TEST_MINALIGN;
+	size1 = myrand() % ((TEST_MAXALLOC-TEST_MINALLOC)+1) + TEST_MINALLOC;
+	align = myrand() % ((TEST_MAXALIGN-TEST_MINALIGN)+1) + TEST_MINALIGN;
 
 	v = bmk_memalloc(size1, 1<<align, BMK_MEMWHO_USER);
 	if (!v)
 		return NULL;
 	bmk_assert(((uintptr_t)v & (align-1)) == 0);
-	memset(v, UNMAGIC, size1);
+	bmk_memset(v, UNMAGIC, size1);
 
-	size2 = random() % ((TEST_MAXALLOC-TEST_MINALLOC)+1) + TEST_MINALLOC;
-	nv = memrealloc(v, size2);
+	size2 = myrand() % ((TEST_MAXALLOC-TEST_MINALLOC)+1) + TEST_MINALLOC;
+	nv = bmk_memrealloc_user(v, size2);
 	if (nv) {
-		memset(nv, UNMAGIC2, size2);
+		bmk_memset(nv, UNMAGIC2, size2);
 		return nv;
 	}
 
 	return size2 ? v : NULL;
 }
 
-int
-main()
+/* XXX: no prototype */
+void bmk_memalloc_test(void);
+void
+bmk_memalloc_test(void)
 {
 	void **rings; /* yay! */
 	void **ring_alloc, **ring_free; /* yay! */
 	int i, n;
 
-	srandom(time(NULL));
+	randstate = (unsigned)bmk_platform_cpu_clock_epochoffset();
 
-	rings = malloc(NALLOC * NRING * sizeof(void *));
+	rings = bmk_memalloc(NALLOC * NRING * sizeof(void *),
+	    0, BMK_MEMWHO_USER);
 	/* so we can free() immediately without stress */
-	memset(rings, 0, NALLOC * NRING * sizeof(void *));
+	bmk_memset(rings, 0, NALLOC * NRING * sizeof(void *));
 
 	for (n = 0;; n = (n+1) % NRING) {
 		if (n == 0)
-			mstats("");
+			bmk_memalloc_printstats();
 
 		ring_alloc = &rings[n * NALLOC];
 		ring_free = &rings[((n + NRING/2) % NRING) * NALLOC];
@@ -563,4 +503,4 @@ main()
 		}
 	}
 }
-#endif
+#endif /* MEMALLOC_TESTING */
