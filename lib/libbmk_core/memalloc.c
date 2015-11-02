@@ -65,14 +65,14 @@ union	overhead {
 	union	overhead *ov_next;	/* when free */
 	struct {
 		unsigned long	ovu_alignpad;	/* padding for alignment */
-		unsigned char	ovu_magic;	/* magic number */
-		unsigned char	ovu_index;	/* bucket # */
+		uint8_t		ovu_magic;	/* magic number */
+		uint8_t		ovu_index;	/* bucket # */
 
 		/* this will be put under RCHECK later */
-		unsigned short	ovu_who;	/* who allocated */
+		uint16_t	ovu_who;	/* who allocated */
 
 #ifdef RCHECK
-		unsigned short	ovu_rmagic;	/* range magic number */
+		uint16_t	ovu_rmagic;	/* range magic number */
 		unsigned long	ovu_size;	/* actual block size */
 #endif
 	} ovu;
