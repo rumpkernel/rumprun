@@ -34,32 +34,30 @@
 #include <bmk-rumpuser/core_types.h>
 #include <bmk-rumpuser/rumpuser.h>
 
+static int
+len2order(unsigned long len)
+{
+	int v;
+
+	v = 8*sizeof(len) - __builtin_clzl(len);
+	if ((len & (len-1)) == 0)
+		v--;
+
+	return v - BMK_PCPU_PAGE_SHIFT;
+}
+
 int
 rumpuser_malloc(size_t len, int alignment, void **retval)
 {
 
 	/*
-	 * If we are allocating precisely a page-sized chunk
-	 * (the common case), use the underlying page allocator directly.
-	 * This avoids the malloc header overhead for this very
-	 * common allocation, leading to 50% better memory use.
-	 * We can't easily use the page allocator for larger chucks
-	 * of memory, since those allocations might have stricter
-	 * alignment restrictions, and therefore it's just
-	 * easier to use memalloc() in those rare cases; it's not
-	 * as wasteful for larger chunks anyway.
-	 *
-	 * XXX: how to make sure that rump kernel's and our
-	 * page sizes are the same?  Could be problematic especially
-	 * for architectures which support multiple page sizes.
-	 * Note that the code will continue to work, but the optimization
-	 * will not trigger for the common case.
+	 * Allocate large chunks with the page allocator to avoid
+	 * malloc overhead.
 	 */
-	if (len == BMK_PCPU_PAGE_SIZE) {
-		bmk_assert((unsigned long)alignment <= BMK_PCPU_PAGE_SIZE);
-		*retval = bmk_pgalloc_one();
-	} else {
+	if (len < BMK_PCPU_PAGE_SIZE) {
 		*retval = bmk_memalloc(len, alignment, BMK_MEMWHO_RUMPKERN);
+	} else {
+		*retval = bmk_pgalloc_align(len2order(len), alignment);
 	}
 	if (*retval)
 		return 0;
@@ -71,8 +69,9 @@ void
 rumpuser_free(void *buf, size_t buflen)
 {
 
-	if (buflen == BMK_PCPU_PAGE_SIZE)
-		bmk_pgfree_one(buf);
-	else
+	if (buflen < BMK_PCPU_PAGE_SIZE) {
 		bmk_memfree(buf, BMK_MEMWHO_RUMPKERN);
+	} else {
+		bmk_pgfree(buf, len2order(buflen));
+	}
 }
