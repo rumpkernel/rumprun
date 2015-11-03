@@ -272,6 +272,31 @@ bmk_pgalloc_dumpstats(void)
 	}
 }
 
+static void
+carverange(unsigned long addr, unsigned long range)
+{
+	struct chunk *ch;
+	unsigned i;
+
+	while (range) {
+		/*
+		 * Next chunk is limited by alignment of addr, but also
+		 * must not be bigger than remaining range.
+		 */
+		for (i = 0; order2size(i+1) <= range; i++)
+			if (addr & order2size(i))
+				break;
+
+		ch = addr2chunk(addr, 0);
+		carveandlink_freechunk(ch, i);
+		addr += order2size(i);
+		range -= order2size(i);
+
+		DPRINTF(("bmk_pgalloc: carverange chunk 0x%lx at %p\n",
+		    order2size(i), ch));
+	}
+}
+
 /*
  * Load [min,max] as available addresses.
  */
@@ -280,8 +305,6 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 {
 	static int called;
 	unsigned long range, bitmap_size;
-	unsigned long cur;
-	struct chunk *ch;
 	unsigned int i;
 
 	if (called)
@@ -318,60 +341,71 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	/* Free up the memory we've been given to play with. */
 	map_free((void *)min, range>>BMK_PCPU_PAGE_SHIFT);
 
-	for (cur = min; range > 0; ) {
-		/*
-		 * Next chunk is limited by alignment of cur, but also
-		 * must not be bigger than remaining range.
-		 */
-		for (i = 0; order2size(i+1) <= range; i++)
-			if (cur & order2size(i))
-				break;
+	carverange(min, range);
+}
 
-		ch = addr2chunk(cur, 0);
-		carveandlink_freechunk(ch, i);
-		cur += order2size(i);
-		range -= order2size(i);
+/* can we allocate len w/ align from freelist index i? */
+static struct chunk *
+satisfies_p(int i, unsigned long align)
+{
+	struct chunk *ch;
+	unsigned long p;
 
-		DPRINTF(("bmk_pgalloc_loadmem: byte chunk 0x%lx at %p\n",
-		    order2size(i), ch));
+	LIST_FOREACH(ch, &freelist[i], entries) {
+		p = (unsigned long)ch;
+		if ((p & (align-1)) == 0)
+			return ch;
 	}
+
+	return NULL;
 }
 
 void *
 bmk_pgalloc(int order)
 {
-	unsigned int i;
-	struct chunk *alloc_ch, *spare_ch;
 
-	/* Find smallest order which can satisfy the request. */
-	for (i = order; i < FREELIST_LEVELS; i++) {
-		if (!LIST_EMPTY(&freelist[i]))
+	return bmk_pgalloc_align(order, 1);
+}
+
+void *
+bmk_pgalloc_align(int order, unsigned long align)
+{
+	struct chunk *alloc_ch;
+	unsigned long p, len;
+	unsigned int bucket;
+
+	bmk_assert((align & (align-1)) == 0);
+	bmk_assert((unsigned)order < FREELIST_LEVELS);
+
+	for (bucket = order; bucket < FREELIST_LEVELS; bucket++) {
+		if ((alloc_ch = satisfies_p(bucket, align)) != NULL)
 			break;
 	}
-	if (i == FREELIST_LEVELS) {
-		bmk_printf("cannot handle page request order %d!\n", order);
+	if (!alloc_ch) {
+		bmk_printf("cannot handle page request order %d/0x%lx!\n",
+		    order, align);
 		return 0;
 	}
-
-	/* Unlink a chunk. */
-	alloc_ch = LIST_FIRST(&freelist[i]);
+	/* Unlink the chunk. */
 	LIST_REMOVE(alloc_ch, entries);
 
 	bmk_assert(alloc_ch->magic == CHUNKMAGIC);
 	alloc_ch->magic = 0;
 
-	/* We may have to break the chunk a number of times. */
-	while (i != (unsigned)order) {
-		/* Split into two equal parts. */
-		i--;
-		spare_ch = addr2chunk(alloc_ch, order2size(i));
-		carveandlink_freechunk(spare_ch, i);
-	}
+	/*
+	 * TODO: figure out if we can cheaply carve the block without
+	 * using the best alignment.
+	 */
+	len = order2size(order);
+	p = (unsigned long)alloc_ch;
+
+	/* carve up leftovers (if any) */
+	carverange(p+len, order2size(bucket) - len);
 
 	map_alloc(alloc_ch, 1UL<<order);
 	DPRINTF(("bmk_pgalloc: allocated 0x%lx bytes at %p\n",
 	    order2size(order), alloc_ch));
-	pgalloc_usedkb += order2size(order)>>10;
+	pgalloc_usedkb += len>>10;
 
 #ifdef BMK_PGALLOC_DEBUG
 	{
@@ -386,6 +420,7 @@ bmk_pgalloc(int order)
 
 	SANITY_CHECK();
 
+	bmk_assert(((unsigned long)alloc_ch & (align-1)) == 0);
 	return alloc_ch;
 }
 
