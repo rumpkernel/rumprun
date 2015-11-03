@@ -276,16 +276,19 @@ static void
 carverange(unsigned long addr, unsigned long range)
 {
 	struct chunk *ch;
-	unsigned i;
+	unsigned i, r;
 
 	while (range) {
 		/*
 		 * Next chunk is limited by alignment of addr, but also
 		 * must not be bigger than remaining range.
 		 */
-		for (i = 0; order2size(i+1) <= range; i++)
-			if (addr & order2size(i))
-				break;
+		i = __builtin_ctzl(addr);
+		r = 8*sizeof(range) - (__builtin_clzl(range)+1);
+		if (i > r) {
+			i = r;
+		}
+		i -= BMK_PCPU_PAGE_SHIFT;
 
 		ch = addr2chunk(addr, 0);
 		carveandlink_freechunk(ch, i);
