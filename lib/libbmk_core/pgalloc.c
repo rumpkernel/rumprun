@@ -347,7 +347,7 @@ bmk_pgalloc_loadmem(unsigned long min, unsigned long max)
 	carverange(min, range);
 }
 
-/* can we allocate len w/ align from freelist index i? */
+/* can we allocate for given align from freelist index i? */
 static struct chunk *
 satisfies_p(int i, unsigned long align)
 {
