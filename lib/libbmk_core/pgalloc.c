@@ -202,7 +202,7 @@ chunklevel(struct chunk *ch)
 static LIST_HEAD(, chunk) freelist[FREELIST_LEVELS];
 
 static void
-carveandlink_freechunk(void *addr, int order)
+freechunk_link(void *addr, int order)
 {
 	struct chunk *ch = addr;
 
@@ -291,7 +291,7 @@ carverange(unsigned long addr, unsigned long range)
 		i -= BMK_PCPU_PAGE_SHIFT;
 
 		ch = addr2chunk(addr, 0);
-		carveandlink_freechunk(ch, i);
+		freechunk_link(ch, i);
 		addr += order2size(i);
 		range -= order2size(i);
 
@@ -481,7 +481,7 @@ bmk_pgfree(void *pointer, int order)
 		order++;
 	}
 
-	carveandlink_freechunk(freed_ch, order);
+	freechunk_link(freed_ch, order);
 
 	SANITY_CHECK();
 }
