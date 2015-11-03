@@ -73,15 +73,15 @@ LIST_HEAD(freebucket, memalloc_freeblk);
 #define UNMAGIC2	0x24		/* magic # != MAGIC/UNMAGIC */
 
 #define MINSHIFT 5
-#define	NBUCKETS (BMK_PCPU_PAGE_SHIFT - MINSHIFT)
+#define	LOCALBUCKETS (BMK_PCPU_PAGE_SHIFT - MINSHIFT)
 #define MINALIGN 16
-static struct freebucket freebuckets[NBUCKETS];
+static struct freebucket freebuckets[LOCALBUCKETS];
 
 /*
  * nmalloc[i] is the difference between the number of mallocs and frees
  * for a given block size.
  */
-static unsigned nmalloc[NBUCKETS];
+static unsigned nmalloc[LOCALBUCKETS];
 
 /* not multicore */
 #define malloc_lock()
@@ -122,7 +122,7 @@ bmk_memalloc_init(void)
 	unsigned i;
 
 	bmk_assert(BMK_PCPU_PAGE_SIZE > 0);
-	for (i = 0; i < NBUCKETS; i++) {
+	for (i = 0; i < LOCALBUCKETS; i++) {
 		LIST_INIT(&freebuckets[i]);
 	}
 }
@@ -186,7 +186,7 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 	}
 
 	/* handle with page allocator? */
-	if (bucket >= NBUCKETS) {
+	if (bucket >= LOCALBUCKETS) {
 		hdr = bmk_pgalloc((bucket+MINSHIFT) - BMK_PCPU_PAGE_SHIFT);
 	} else {
 		hdr = bucketalloc(bucket);
@@ -281,7 +281,7 @@ bmk_memfree(void *cp, enum bmk_memwho who)
 	}
 #endif
 
-	if (index >= NBUCKETS) {
+	if (index >= LOCALBUCKETS) {
 		bmk_pgfree(origp, (index+MINSHIFT) - BMK_PCPU_PAGE_SHIFT);
 	} else {
 		malloc_lock();
@@ -350,7 +350,7 @@ bmk_memalloc_printstats(void)
 	unsigned int i, j;
 
 	bmk_printf("Memory allocation statistics\nfree:\t");
-	for (i = 0; i < NBUCKETS; i++) {
+	for (i = 0; i < LOCALBUCKETS; i++) {
 		j = 0;
 		LIST_FOREACH(frb, &freebuckets[i], entries) {
 			j++;
@@ -359,7 +359,7 @@ bmk_memalloc_printstats(void)
 		totfree += j * (1 << (i + MINSHIFT));
   	}
 	bmk_printf("\nused:\t");
-	for (i = 0; i < NBUCKETS; i++) {
+	for (i = 0; i < LOCALBUCKETS; i++) {
 		bmk_printf(" %d", nmalloc[i]);
 		totused += nmalloc[i] * (1 << (i + MINSHIFT));
   	}
