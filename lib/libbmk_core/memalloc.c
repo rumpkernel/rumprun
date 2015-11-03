@@ -89,7 +89,38 @@ static unsigned nmalloc[NBUCKETS];
 #define malloc_lock()
 #define malloc_unlock()
 
-static void morecore(int);
+static struct memalloc_freeblk *
+morecore(int bucket)
+{
+	struct memalloc_freeblk *frb;
+	unsigned long sz;		/* size of desired block */
+	unsigned long amt;		/* amount to allocate */
+	unsigned long nblks;		/* how many blocks we get */
+
+	if (bucket < pagebucket) {
+		amt = 0;
+		nblks = BMK_PCPU_PAGE_SIZE / (1<<(bucket + MINSHIFT));
+		sz = BMK_PCPU_PAGE_SIZE / nblks;
+	} else {
+		amt = bucket - pagebucket;
+		nblks = 1;
+		sz = 0; /* dummy */
+	}
+
+	if ((frb = bmk_pgalloc(amt)) == NULL)
+		return NULL;
+
+	/*
+	 * Add new memory allocated to that on
+	 * free list for this hash bucket.  Return one block.
+	 */
+	while (--nblks) {
+		LIST_INSERT_HEAD(&freebuckets[bucket], frb, entries);
+		frb = (struct memalloc_freeblk *)
+		    (void *)((char *)frb+(unsigned long)sz);
+	}
+	return frb;
+}
 
 void
 bmk_memalloc_init(void)
@@ -157,13 +188,13 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 	 * request more memory from the system.
 	 */
 	if ((frb = LIST_FIRST(&freebuckets[bucket])) == NULL) {
-  		morecore(bucket);
-		if ((frb = LIST_FIRST(&freebuckets[bucket])) == NULL) {
+		if ((frb = morecore(bucket)) == NULL) {
 			malloc_unlock();
   			return (NULL);
 		}
+	} else {
+		LIST_REMOVE(frb, entries);
 	}
-	LIST_REMOVE(frb, entries);
 	hdr = (void *)frb;
 
 	/* align op before returned memory */
@@ -211,42 +242,6 @@ bmk_memcalloc(unsigned long n, unsigned long size, enum bmk_memwho who)
 		bmk_memset(v, 0, tot);
 	}
 	return v;
-}
-
-/*
- * Allocate more memory to the indicated bucket.
- */
-static void
-morecore(int bucket)
-{
-	struct memalloc_freeblk *frb;
-	unsigned long sz;		/* size of desired block */
-	unsigned long amt;		/* amount to allocate */
-	unsigned long nblks;		/* how many blocks we get */
-
-	if (bucket < pagebucket) {
-		amt = 0;
-		nblks = BMK_PCPU_PAGE_SIZE / (1<<(bucket + MINSHIFT));
-		sz = BMK_PCPU_PAGE_SIZE / nblks;
-	} else {
-		amt = bucket - pagebucket;
-		nblks = 1;
-		sz = 0; /* dummy */
-	}
-
-	if ((frb = bmk_pgalloc(amt)) == NULL)
-  		return;
-
-	/*
-	 * Add new memory allocated to that on
-	 * free list for this hash bucket.
-	 */
-
-	do {
-		LIST_INSERT_HEAD(&freebuckets[bucket], frb, entries);
-		frb = (struct memalloc_freeblk *)
-		    (void *)((char *)frb+(unsigned long)sz);
-	} while (--nblks);
 }
 
 void
