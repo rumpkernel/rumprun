@@ -48,48 +48,34 @@
 #include <bmk-core/platform.h>
 #include <bmk-core/pgalloc.h>
 #include <bmk-core/printf.h>
+#include <bmk-core/queue.h>
 
 #include <bmk-pcpu/pcpu.h>
 
 /*
- * The overhead on a block is at least 4 bytes.  When free, this space
- * contains a pointer to the next free block, and the bottom two bits must
- * be zero.  When in use, the first byte is set to MAGIC, and the second
- * byte is the size index.  The remaining bytes are for alignment.
- * If range checking is enabled then a second word holds the size of the
- * requested block, less 1, rounded up to a multiple of sizeof(RMAGIC).
- * The order of elements is critical: ov_magic must overlay the low order
- * bits of ov_next, and ov_magic can not be a valid ov_next bit pattern.
+ * Header goes right before the allocated space and holds
+ * information about the allocation.
  */
-union	overhead {
-	union	overhead *ov_next;	/* when free */
-	struct {
-		unsigned long	ovu_alignpad;	/* padding for alignment */
-		uint8_t		ovu_magic;	/* magic number */
-		uint8_t		ovu_index;	/* bucket # */
-		uint8_t		ovu_who;	/* who allocated */
-	} ovu;
-#define	ov_alignpad	ovu.ovu_alignpad
-#define	ov_magic	ovu.ovu_magic
-#define	ov_index	ovu.ovu_index
-#define	ov_rmagic	ovu.ovu_rmagic
-#define	ov_size		ovu.ovu_size
-#define	ov_who		ovu.ovu_who
+struct memalloc_hdr {
+	unsigned long	mh_alignpad;	/* padding for alignment */
+	uint8_t		mh_magic;	/* magic number */
+	uint8_t		mh_index;	/* bucket # */
+	uint8_t		mh_who;		/* who allocated */
 };
+
+struct memalloc_freeblk {
+	LIST_ENTRY(memalloc_freeblk) entries;
+};
+LIST_HEAD(freebucket, memalloc_freeblk);
 
 #define	MAGIC		0xef		/* magic # on accounting info */
 #define UNMAGIC		0x12		/* magic # != MAGIC */
 #define UNMAGIC2	0x24		/* magic # != MAGIC/UNMAGIC */
 
-/*
- * nextf[i] is the pointer to the next free block of size 2^(i+MINSHIFT).  The
- * smallest allocatable block is 1<<MINSHIFT bytes.  The overhead information
- * precedes the data area returned to the user.
- */
 #define MINSHIFT 5
 #define	NBUCKETS 30
 #define MINALIGN 16
-static	union overhead *nextf[NBUCKETS];
+static struct freebucket freebuckets[NBUCKETS];
 
 static	int pagebucket;			/* page size bucket */
 
@@ -108,7 +94,7 @@ static void morecore(int);
 void
 bmk_memalloc_init(void)
 {
-	unsigned amt;
+	unsigned amt, i;
 	int bucket;
 
 	bmk_assert(BMK_PCPU_PAGE_SIZE > 0);
@@ -120,12 +106,17 @@ bmk_memalloc_init(void)
 		bucket++;
 	}
 	pagebucket = bucket;
+
+	for (i = 0; i < NBUCKETS; i++) {
+		LIST_INIT(&freebuckets[i]);
+	}
 }
 
 void *
 bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 {
-  	union overhead *op;
+	struct memalloc_hdr *hdr;
+	struct memalloc_freeblk *frb;
 	void *rv;
 	unsigned long allocbytes;
 	int bucket;
@@ -136,9 +127,9 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 		return NULL;
 	if (align < MINALIGN)
 		align = MINALIGN;
-	
+
 	/* need at least this many bytes plus header to satisfy alignment */
-	allocbytes = nbytes + ((sizeof(*op) + (align-1)) & ~(align-1));
+	allocbytes = nbytes + ((sizeof(*hdr) + (align-1)) & ~(align-1));
 
 	/*
 	 * Convert amount of memory requested into closest block size
@@ -165,29 +156,29 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 	 * If nothing in hash bucket right now,
 	 * request more memory from the system.
 	 */
-  	if ((op = nextf[bucket]) == NULL) {
+	if ((frb = LIST_FIRST(&freebuckets[bucket])) == NULL) {
   		morecore(bucket);
-  		if ((op = nextf[bucket]) == NULL) {
+		if ((frb = LIST_FIRST(&freebuckets[bucket])) == NULL) {
 			malloc_unlock();
   			return (NULL);
 		}
 	}
-	/* remove from linked list */
-  	nextf[bucket] = op->ov_next;
+	LIST_REMOVE(frb, entries);
+	hdr = (void *)frb;
 
 	/* align op before returned memory */
-	rv = (void *)(((unsigned long)(op+1) + align - 1) & ~(align - 1));
-	alignpad = (unsigned long)rv - (unsigned long)op;
+	rv = (void *)(((unsigned long)(hdr+1) + align - 1) & ~(align - 1));
+	alignpad = (unsigned long)rv - (unsigned long)hdr;
 
 #ifdef MEMALLOC_TESTING
-	bmk_memset(op, MAGIC, alignpad);
+	bmk_memset(hdr, MAGIC, alignpad);
 #endif
 
-	op = ((union overhead *)rv)-1;
-	op->ov_magic = MAGIC;
-	op->ov_index = bucket;
-	op->ov_alignpad = alignpad;
-	op->ov_who = who;
+	hdr = ((struct memalloc_hdr *)rv)-1;
+	hdr->mh_magic = MAGIC;
+	hdr->mh_index = bucket;
+	hdr->mh_alignpad = alignpad;
+	hdr->mh_who = who;
 
   	nmalloc[bucket]++;
 
@@ -228,10 +219,10 @@ bmk_memcalloc(unsigned long n, unsigned long size, enum bmk_memwho who)
 static void
 morecore(int bucket)
 {
-  	union overhead *op;
-	long sz;		/* size of desired block */
-  	long amt;			/* amount to allocate */
-  	long nblks;			/* how many blocks we get */
+	struct memalloc_freeblk *frb;
+	unsigned long sz;		/* size of desired block */
+	unsigned long amt;		/* amount to allocate */
+	unsigned long nblks;		/* how many blocks we get */
 
 	if (bucket < pagebucket) {
 		amt = 0;
@@ -243,36 +234,34 @@ morecore(int bucket)
 		sz = 0; /* dummy */
 	}
 
-	op = (void *)bmk_pgalloc(amt);
-	/* no more room! */
-  	if (op == NULL)
+	if ((frb = bmk_pgalloc(amt)) == NULL)
   		return;
 
 	/*
 	 * Add new memory allocated to that on
 	 * free list for this hash bucket.
 	 */
-  	nextf[bucket] = op;
-  	while (--nblks > 0) {
-		op->ov_next = (union overhead *)
-		    (void *)((char *)(void *)op+(unsigned long)sz);
-		op = op->ov_next;
-  	}
-	op->ov_next = NULL;
+
+	do {
+		LIST_INSERT_HEAD(&freebuckets[bucket], frb, entries);
+		frb = (struct memalloc_freeblk *)
+		    (void *)((char *)frb+(unsigned long)sz);
+	} while (--nblks);
 }
 
 void
 bmk_memfree(void *cp, enum bmk_memwho who)
 {   
+	struct memalloc_hdr *hdr;
+	struct memalloc_freeblk *frb;
 	long size;
-	union overhead *op;
 	unsigned long alignpad;
 	void *origp;
 
   	if (cp == NULL)
   		return;
-	op = ((union overhead *)cp)-1;
-	if (op->ov_magic != MAGIC) {
+	hdr = ((struct memalloc_hdr *)cp)-1;
+	if (hdr->mh_magic != MAGIC) {
 #ifdef MEMALLOC_TESTING
 		bmk_assert(0);
 #else
@@ -280,14 +269,14 @@ bmk_memfree(void *cp, enum bmk_memwho who)
 		return;
 #endif
 	}
-	if (op->ov_who != who) {
+	if (hdr->mh_who != who) {
 		bmk_printf("bmk_memfree: mismatch %d vs. %d for %p",
-		    op->ov_who, who, cp);
+		    hdr->mh_who, who, cp);
 		bmk_platform_halt("bmk_memalloc error");
 	}
 
-  	size = op->ov_index;
-	alignpad = op->ov_alignpad;
+	size = hdr->mh_index;
+	alignpad = hdr->mh_alignpad;
 	bmk_assert(size < NBUCKETS);
 
 	malloc_lock();
@@ -298,17 +287,16 @@ bmk_memfree(void *cp, enum bmk_memwho who)
 		unsigned long i;
 
 		for (i = 0;
-		    (unsigned char *)origp + i < (unsigned char *)op;
+		    (unsigned char *)origp + i < (unsigned char *)hdr;
 		    i++) {
 			bmk_assert(*((unsigned char *)origp + i) == MAGIC);
-				
+
 		}
 	}
 #endif
 
-	op = (void *)origp;
-	op->ov_next = nextf[(unsigned int)size];/* also clobbers ov_magic */
-  	nextf[(unsigned int)size] = op;
+	frb = origp;
+	LIST_INSERT_HEAD(&freebuckets[size], frb, entries);
 
   	nmalloc[(unsigned long)size]--;
 
@@ -327,7 +315,7 @@ bmk_memfree(void *cp, enum bmk_memwho who)
 void *
 bmk_memrealloc_user(void *cp, unsigned long nbytes)
 {   
-	union overhead *op;
+	struct memalloc_hdr *hdr;
   	unsigned long size;
 	unsigned long alignpad;
 	void *np;
@@ -340,9 +328,9 @@ bmk_memrealloc_user(void *cp, unsigned long nbytes)
 		return NULL;
 	}
 
-	op = ((union overhead *)cp)-1;
-  	size = op->ov_index;
-	alignpad = op->ov_alignpad;
+	hdr = ((struct memalloc_hdr *)cp)-1;
+	size = hdr->mh_index;
+	alignpad = hdr->mh_alignpad;
 
 	/* don't bother "compacting".  don't like it?  don't use realloc! */
 	if (((1<<(size+MINSHIFT)) - alignpad) >= nbytes)
@@ -368,14 +356,16 @@ bmk_memrealloc_user(void *cp, unsigned long nbytes)
 void
 bmk_memalloc_printstats(void)
 {
-	union overhead *p;
+	struct memalloc_freeblk *frb;
 	unsigned long totfree = 0, totused = 0;
 	int i, j;
 
 	bmk_printf("Memory allocation statistics\nfree:\t");
 	for (i = 0; i < NBUCKETS; i++) {
-		for (j = 0, p = nextf[i]; p; p = p->ov_next, j++)
-  			;
+		j = 0;
+		LIST_FOREACH(frb, &freebuckets[i], entries) {
+			j++;
+		}
 		bmk_printf(" %d", j);
 		totfree += j * (1 << (i + 3));
   	}
