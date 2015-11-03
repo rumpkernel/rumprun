@@ -73,11 +73,9 @@ LIST_HEAD(freebucket, memalloc_freeblk);
 #define UNMAGIC2	0x24		/* magic # != MAGIC/UNMAGIC */
 
 #define MINSHIFT 5
-#define	NBUCKETS 30
+#define	NBUCKETS (BMK_PCPU_PAGE_SHIFT - MINSHIFT)
 #define MINALIGN 16
 static struct freebucket freebuckets[NBUCKETS];
-
-static	int pagebucket;			/* page size bucket */
 
 /*
  * nmalloc[i] is the difference between the number of mallocs and frees
@@ -89,25 +87,19 @@ static unsigned nmalloc[NBUCKETS];
 #define malloc_lock()
 #define malloc_unlock()
 
-static struct memalloc_freeblk *
+static void *
 morecore(int bucket)
 {
-	struct memalloc_freeblk *frb;
+	void *rv;
+	uint8_t *p;
 	unsigned long sz;		/* size of desired block */
-	unsigned long amt;		/* amount to allocate */
 	unsigned long nblks;		/* how many blocks we get */
 
-	if (bucket < pagebucket) {
-		amt = 0;
-		nblks = BMK_PCPU_PAGE_SIZE / (1<<(bucket + MINSHIFT));
-		sz = BMK_PCPU_PAGE_SIZE / nblks;
-	} else {
-		amt = bucket - pagebucket;
-		nblks = 1;
-		sz = 0; /* dummy */
-	}
+	sz = 1<<(bucket+MINSHIFT);
+	nblks = BMK_PCPU_PAGE_SIZE / sz;
+	bmk_assert(nblks > 1);
 
-	if ((frb = bmk_pgalloc(amt)) == NULL)
+	if ((p = rv = bmk_pgalloc_one()) == NULL)
 		return NULL;
 
 	/*
@@ -115,42 +107,59 @@ morecore(int bucket)
 	 * free list for this hash bucket.  Return one block.
 	 */
 	while (--nblks) {
+		struct memalloc_freeblk *frb;
+
+		p += sz;
+		frb = (void *)p;
 		LIST_INSERT_HEAD(&freebuckets[bucket], frb, entries);
-		frb = (struct memalloc_freeblk *)
-		    (void *)((char *)frb+(unsigned long)sz);
 	}
-	return frb;
+	return rv;
 }
 
 void
 bmk_memalloc_init(void)
 {
-	unsigned amt, i;
-	int bucket;
+	unsigned i;
 
 	bmk_assert(BMK_PCPU_PAGE_SIZE > 0);
-
-	bucket = 0;
-	amt = 1<<MINSHIFT;
-	while (BMK_PCPU_PAGE_SIZE > amt) {
-		amt <<= 1;
-		bucket++;
-	}
-	pagebucket = bucket;
-
 	for (i = 0; i < NBUCKETS; i++) {
 		LIST_INIT(&freebuckets[i]);
 	}
+}
+
+static void *
+bucketalloc(unsigned bucket)
+{
+	struct memalloc_freeblk *frb;
+
+	malloc_lock();
+
+	/*
+	 * If nothing in hash bucket right now,
+	 * request more memory from the system.
+	 */
+	if ((frb = LIST_FIRST(&freebuckets[bucket])) == NULL) {
+		if ((frb = morecore(bucket)) == NULL) {
+			malloc_unlock();
+			return NULL;
+		}
+	} else {
+		LIST_REMOVE(frb, entries);
+	}
+
+	nmalloc[bucket]++;
+	malloc_unlock();
+
+	return frb;
 }
 
 void *
 bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 {
 	struct memalloc_hdr *hdr;
-	struct memalloc_freeblk *frb;
 	void *rv;
 	unsigned long allocbytes;
-	int bucket;
+	unsigned bucket;
 	unsigned amt;
 	unsigned long alignpad;
 
@@ -167,13 +176,8 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 	 * stored in hash buckets which satisfies request.
 	 * Account for space used per block for accounting.
 	 */
-	if (allocbytes <= BMK_PCPU_PAGE_SIZE) {
-		amt = 1<<MINSHIFT;	/* size of first bucket */
-		bucket = 0;
-	} else {
-		amt = (unsigned)BMK_PCPU_PAGE_SIZE;
-		bucket = pagebucket;
-	}
+	amt = 1<<MINSHIFT;	/* size of first bucket */
+	bucket = 0;
 	while (allocbytes > amt) {
 		amt <<= 1;
 		if (amt == 0)
@@ -181,21 +185,14 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 		bucket++;
 	}
 
-	malloc_lock();
-
-	/*
-	 * If nothing in hash bucket right now,
-	 * request more memory from the system.
-	 */
-	if ((frb = LIST_FIRST(&freebuckets[bucket])) == NULL) {
-		if ((frb = morecore(bucket)) == NULL) {
-			malloc_unlock();
-  			return (NULL);
-		}
+	/* handle with page allocator? */
+	if (bucket >= NBUCKETS) {
+		hdr = bmk_pgalloc((bucket+MINSHIFT) - BMK_PCPU_PAGE_SHIFT);
 	} else {
-		LIST_REMOVE(frb, entries);
+		hdr = bucketalloc(bucket);
 	}
-	hdr = (void *)frb;
+	if (hdr == NULL)
+		return NULL;
 
 	/* align op before returned memory */
 	rv = (void *)(((unsigned long)(hdr+1) + align - 1) & ~(align - 1));
@@ -210,10 +207,6 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 	hdr->mh_index = bucket;
 	hdr->mh_alignpad = alignpad;
 	hdr->mh_who = who;
-
-  	nmalloc[bucket]++;
-
-	malloc_unlock();
 
   	return rv;
 }
@@ -249,8 +242,8 @@ bmk_memfree(void *cp, enum bmk_memwho who)
 {   
 	struct memalloc_hdr *hdr;
 	struct memalloc_freeblk *frb;
-	long size;
 	unsigned long alignpad;
+	unsigned int index;
 	void *origp;
 
   	if (cp == NULL)
@@ -270,11 +263,9 @@ bmk_memfree(void *cp, enum bmk_memwho who)
 		bmk_platform_halt("bmk_memalloc error");
 	}
 
-	size = hdr->mh_index;
+	index = hdr->mh_index;
 	alignpad = hdr->mh_alignpad;
-	bmk_assert(size < NBUCKETS);
 
-	malloc_lock();
 	origp = (unsigned char *)cp - alignpad;
 
 #ifdef MEMALLOC_TESTING
@@ -290,12 +281,15 @@ bmk_memfree(void *cp, enum bmk_memwho who)
 	}
 #endif
 
-	frb = origp;
-	LIST_INSERT_HEAD(&freebuckets[size], frb, entries);
-
-  	nmalloc[(unsigned long)size]--;
-
-	malloc_unlock();
+	if (index >= NBUCKETS) {
+		bmk_pgfree(origp, (index+MINSHIFT) - BMK_PCPU_PAGE_SHIFT);
+	} else {
+		malloc_lock();
+		frb = origp;
+		LIST_INSERT_HEAD(&freebuckets[index], frb, entries);
+		nmalloc[index]--;
+		malloc_unlock();
+	}
 }
 
 /*
@@ -353,7 +347,7 @@ bmk_memalloc_printstats(void)
 {
 	struct memalloc_freeblk *frb;
 	unsigned long totfree = 0, totused = 0;
-	int i, j;
+	unsigned int i, j;
 
 	bmk_printf("Memory allocation statistics\nfree:\t");
 	for (i = 0; i < NBUCKETS; i++) {
@@ -362,12 +356,12 @@ bmk_memalloc_printstats(void)
 			j++;
 		}
 		bmk_printf(" %d", j);
-		totfree += j * (1 << (i + 3));
+		totfree += j * (1 << (i + MINSHIFT));
   	}
 	bmk_printf("\nused:\t");
 	for (i = 0; i < NBUCKETS; i++) {
 		bmk_printf(" %d", nmalloc[i]);
-  		totused += nmalloc[i] * (1 << (i + 3));
+		totused += nmalloc[i] * (1 << (i + MINSHIFT));
   	}
 	bmk_printf("\n\tTotal in use: %lukB, total free in buckets: %lukB\n",
 	    totused/1024, totfree/1024);
@@ -380,8 +374,11 @@ bmk_memalloc_printstats(void)
 
 #ifdef MEMALLOC_TESTING
 
-#define TEST_MINALLOC 0
-#define TEST_MAXALLOC 64*1024
+#define TEST_SMALL_MINALLOC 0
+#define TEST_SMALL_MAXALLOC (128)
+
+#define TEST_LARGE_MINALLOC 0
+#define TEST_LARGE_MAXALLOC (64*1024)
 
 #define TEST_MINALIGN 1
 #define TEST_MAXALIGN 16
@@ -391,7 +388,7 @@ bmk_memalloc_printstats(void)
 
 static unsigned randstate;
 
-static int
+static unsigned
 myrand(void)
 {
 
@@ -399,13 +396,13 @@ myrand(void)
 }
 
 static void *
-testalloc(void)
+testalloc(unsigned long min, unsigned long max)
 {
 	void *v, *nv;
-	unsigned long size1, size2, align;
+	unsigned int size1, size2, align;
 
 	/* doesn't give an even bucket distribution, but ... */
-	size1 = myrand() % ((TEST_MAXALLOC-TEST_MINALLOC)+1) + TEST_MINALLOC;
+	size1 = myrand() % ((max-min)+1) + min;
 	align = myrand() % ((TEST_MAXALIGN-TEST_MINALIGN)+1) + TEST_MINALIGN;
 
 	v = bmk_memalloc(size1, 1<<align, BMK_MEMWHO_USER);
@@ -414,7 +411,7 @@ testalloc(void)
 	bmk_assert(((uintptr_t)v & (align-1)) == 0);
 	bmk_memset(v, UNMAGIC, size1);
 
-	size2 = myrand() % ((TEST_MAXALLOC-TEST_MINALLOC)+1) + TEST_MINALLOC;
+	size2 = myrand() % ((max-min)+1) + min;
 	nv = bmk_memrealloc_user(v, size2);
 	if (nv) {
 		bmk_memset(nv, UNMAGIC2, size2);
@@ -429,6 +426,8 @@ void bmk_memalloc_test(void);
 void
 bmk_memalloc_test(void)
 {
+	unsigned long min = TEST_LARGE_MINALLOC;
+	unsigned long max = TEST_LARGE_MAXALLOC;
 	void **rings; /* yay! */
 	void **ring_alloc, **ring_free; /* yay! */
 	int i, n;
@@ -441,13 +440,21 @@ bmk_memalloc_test(void)
 	bmk_memset(rings, 0, NALLOC * NRING * sizeof(void *));
 
 	for (n = 0;; n = (n+1) % NRING) {
-		if (n == 0)
+		if (n == 0) {
 			bmk_memalloc_printstats();
+			if (max == TEST_SMALL_MAXALLOC) {
+				min = TEST_LARGE_MINALLOC;
+				max = TEST_LARGE_MAXALLOC;
+			} else {
+				min = TEST_SMALL_MINALLOC;
+				max = TEST_SMALL_MAXALLOC;
+			}
+		}
 
 		ring_alloc = &rings[n * NALLOC];
 		ring_free = &rings[((n + NRING/2) % NRING) * NALLOC];
 		for (i = 0; i < NALLOC; i++) {
-			ring_alloc[i] = testalloc();
+			ring_alloc[i] = testalloc(min, max);
 			bmk_memfree(ring_free[i], BMK_MEMWHO_USER);
 		}
 	}
