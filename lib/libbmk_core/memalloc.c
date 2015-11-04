@@ -352,18 +352,23 @@ bmk_memalloc_printstats(void)
 	unsigned long totfree = 0, totused = 0;
 	unsigned int i, j;
 
-	bmk_printf("Memory allocation statistics\nfree:\t");
+	bmk_printf("Memory allocation statistics\n");
+	bmk_printf("size:\t");
+	for (i = 0; i < LOCALBUCKETS; i++) {
+		bmk_printf("%8d", 1<<(i+MINSHIFT));
+	}
+	bmk_printf("\nfree:\t");
 	for (i = 0; i < LOCALBUCKETS; i++) {
 		j = 0;
 		LIST_FOREACH(frb, &freebuckets[i], entries) {
 			j++;
 		}
-		bmk_printf(" %d", j);
+		bmk_printf("%8d", j);
 		totfree += j * (1 << (i + MINSHIFT));
   	}
 	bmk_printf("\nused:\t");
 	for (i = 0; i < LOCALBUCKETS; i++) {
-		bmk_printf(" %d", nmalloc[i]);
+		bmk_printf("%8d", nmalloc[i]);
 		totused += nmalloc[i] * (1 << (i + MINSHIFT));
   	}
 	bmk_printf("\n\tTotal in use: %lukB, total free in buckets: %lukB\n",
