@@ -64,6 +64,7 @@ struct memalloc_hdr {
 	uint8_t		mh_index;	/* bucket # */
 	uint8_t		mh_who;		/* who allocated */
 };
+bmk_ctassert(sizeof(struct memalloc_hdr) == 8);
 
 struct memalloc_freeblk {
 	LIST_ENTRY(memalloc_freeblk) entries;
