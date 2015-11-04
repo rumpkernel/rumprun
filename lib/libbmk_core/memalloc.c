@@ -160,7 +160,6 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 	void *rv;
 	unsigned long allocbytes;
 	unsigned bucket;
-	unsigned amt;
 	unsigned long alignpad;
 
 	if (align & (align-1))
@@ -176,18 +175,18 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 	 * stored in hash buckets which satisfies request.
 	 * Account for space used per block for accounting.
 	 */
-	amt = 1<<MINSHIFT;	/* size of first bucket */
-	bucket = 0;
-	while (allocbytes > amt) {
-		amt <<= 1;
-		if (amt == 0)
-			return (NULL);
-		bucket++;
+	if (allocbytes < 1<<MINSHIFT) {
+		bucket = 0;
+	} else {
+		bucket = 8*sizeof(allocbytes)
+		    - __builtin_clzl(allocbytes>>MINSHIFT);
+		if ((allocbytes & (allocbytes-1)) == 0)
+			bucket--;
 	}
 
 	/* handle with page allocator? */
 	if (bucket >= LOCALBUCKETS) {
-		hdr = bmk_pgalloc((bucket+MINSHIFT) - BMK_PCPU_PAGE_SHIFT);
+		hdr = bmk_pgalloc(bucket+MINSHIFT - BMK_PCPU_PAGE_SHIFT);
 	} else {
 		hdr = bucketalloc(bucket);
 	}
@@ -369,7 +368,7 @@ bmk_memalloc_printstats(void)
 
 
 /*
- * The rest of this file contains unit tests which run in userspace.
+ * The rest of this file contains unit tests.
  */
 
 #ifdef MEMALLOC_TESTING
