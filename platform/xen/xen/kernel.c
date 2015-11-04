@@ -44,7 +44,6 @@
 #include <xen/version.h>
 
 #include <bmk-core/core.h>
-#include <bmk-core/pgalloc.h>
 #include <bmk-core/printf.h>
 
 uint8_t _minios_xen_features[XENFEAT_NR_SUBMAPS * 32];
