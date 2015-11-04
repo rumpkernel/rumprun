@@ -80,13 +80,6 @@ struct tss {
 
 static struct gate_descriptor idt[256];
 
-/* actual interrupt service routines */
-void cpu_isr_9(void);
-void cpu_isr_10(void);
-void cpu_isr_11(void);
-void cpu_isr_14(void);
-void cpu_isr_15(void);
-
 extern unsigned long cpu_gdt64[];
 
 void
