@@ -29,12 +29,14 @@
 # rumprun: "driver" script for running rumprun application stacks
 #
 
+set -eu
+
 : ${READELF:=readelf}
 
 # default values
 MEM_DEFAULT=64
 
-if [ "${RUMPRUN_WARNING_STFU}" != 'please' ]; then
+if [ "${RUMPRUN_WARNING_STFU:-}" != 'please' ]; then
 	exec 3>&1 1>&2
 	echo
 	echo !!!
@@ -58,8 +60,8 @@ guestopts='b:dD:e:g:iI:M:n:N:pW:'
 DUMPCMD=
 CANSUDO=false
 PRESERVETMPDIR=false
-unset TMPDIR
-unset NETSTYLE
+TMPDIR=
+NETSTYLE=
 
 usage ()
 {
@@ -306,7 +308,7 @@ parse_netspec ()
 			ifmask=${3#*/}
 			[ -n "${ifaddr}" ] || usage
 			[ -n "${ifmask}" ] || usage
-			ifgw=$4
+			ifgw=${4:-}
 			;;
 		*)
 			return 1
@@ -592,6 +594,7 @@ run_qemu ()
 	opt_drivespec=
 	opt_debug=
 	opt_pause=
+	opt_name=
 	opt_netif=
 	opt_guestargs=
 	opt_mem=${MEM_DEFAULT}
@@ -703,12 +706,10 @@ bake_iso ()
 	store_blkspec=json_store_iso_blkspec
 	store_netspec=json_store_netspec
 
-	opt_interactive=
 	opt_drivespec=
 	opt_debug=
 	opt_pause=
-	opt_netif=
-	opt_mem=${MEM_DEFAULT}
+	opt_name=
 
 	ISODIR="${TMPDIR}/iso"
 	IMGSDIR="${ISODIR}/images"
@@ -783,12 +784,10 @@ make_ec2 ()
 	store_blkspec=json_store_iso_blkspec
 	store_netspec=json_store_netspec
 
-	opt_interactive=
 	opt_drivespec=
 	opt_debug=
 	opt_pause=
-	opt_netif=
-	opt_mem=${MEM_DEFAULT}
+	opt_name=
 
 	EC2DIR="${TMPDIR}/ec2"
 	mkdir -p "${EC2DIR}" || die cannot create ${EC2DIR}
