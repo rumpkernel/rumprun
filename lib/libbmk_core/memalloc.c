@@ -1,4 +1,4 @@
-/*
+/*-
  * Copyright (c) 2013, 2015 Antti Kantee.  All rights reserved.
  * Copyright (c) 1983, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -54,11 +54,13 @@
 
 /*
  * Header goes right before the allocated space and holds
- * information about the allocation.
+ * information about the allocation.  Notably, we support
+ * max 4gig alignment.  If you need more, use some other
+ * allocator than malloc.
  */
 struct memalloc_hdr {
-	unsigned long	mh_alignpad;	/* padding for alignment */
-	uint8_t		mh_magic;	/* magic number */
+	uint32_t	mh_alignpad;	/* padding for alignment */
+	uint16_t	mh_magic;	/* magic number */
 	uint8_t		mh_index;	/* bucket # */
 	uint8_t		mh_who;		/* who allocated */
 };
@@ -69,8 +71,8 @@ struct memalloc_freeblk {
 LIST_HEAD(freebucket, memalloc_freeblk);
 
 #define	MAGIC		0xef		/* magic # on accounting info */
-#define UNMAGIC		0x12		/* magic # != MAGIC */
-#define UNMAGIC2	0x24		/* magic # != MAGIC/UNMAGIC */
+#define UNMAGIC		0x1221		/* magic # != MAGIC */
+#define UNMAGIC2	0x2442		/* magic # != MAGIC/UNMAGIC */
 
 #define MINSHIFT 5
 #define	LOCALBUCKETS (BMK_PCPU_PAGE_SHIFT - MINSHIFT)
@@ -166,6 +168,7 @@ bmk_memalloc(unsigned long nbytes, unsigned long align, enum bmk_memwho who)
 		return NULL;
 	if (align < MINALIGN)
 		align = MINALIGN;
+	bmk_assert(align <= (1UL<<31));
 
 	/* need at least this many bytes plus header to satisfy alignment */
 	allocbytes = nbytes + ((sizeof(*hdr) + (align-1)) & ~(align-1));
