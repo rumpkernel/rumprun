@@ -273,7 +273,7 @@ json_store_netspec ()
 	json_append_ln	'"type":	"'${iftype}'"'
 	json_append_ln	'"method":	"'${ifmethod}'"'
 
-	[ -n "${ifaddr}" ] || { json_finalize_block ; return ; }
+	[ -n "${ifaddr:-}" ] || { json_finalize_block ; return ; }
 
 	json_append_ln	'"addr":	"'${ifaddr}'"'
 	json_append_ln	'"mask":	"'${ifmask}'"'
