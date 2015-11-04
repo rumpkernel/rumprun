@@ -801,29 +801,29 @@ make_ec2 ()
 			parse_blkspec "${OPTARG}" || usage
 			;;
 		d)
-			die -d not supported on iso
+			die -d not supported on ec2
 			;;
 		D)
-			die -D not supported on iso
+			die -D not supported on ec2
 			;;
 		e)
 			json_append_ln "\"env\": \"${OPTARG}\""
 			;;
 		i)
-			die -i not supported on iso
+			die -i not supported on ec2
 			;;
 		I)
 			createif_ec2 "${OPTARG}" || usage
 			nindex=$(expr $nindex + 1)
 			;;
 		M)
-			die -M not supported on iso
+			die -M not supported on ec2
 			;;
 		N)
 			opt_name=${OPTARG}
 			;;
 		p)
-			die -p not supported on iso
+			die -p not supported on ec2
 			;;
 		W)
 			parse_newnetspec "${OPTARG}" || usage
