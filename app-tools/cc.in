@@ -33,8 +33,10 @@ die()
 	exit 1
 }
 
+PROGNAME=${0##*/}
+
 # Determine if we're being run as C or C++.
-case $0 in
+case ${PROGNAME} in
 *-gcc|*-clang)
 	CC="!LIBEXEC_CC!"
 	CFLAGS="!CFLAGS!"
@@ -46,7 +48,7 @@ case $0 in
 	EXTRALIBS="-lc++ -lunwind"
 	;;
 *)
-	echo "$0: internal error, unknown invocation"
+	echo "${PROGNAME}: internal error, unknown invocation"
 	exit 1
 	;;
 esac
@@ -109,7 +111,7 @@ ferment)
 	    ${OUTFILE} -o /dev/null
 	if [ $? -ne 0 ]; then
 		if [ "${RUMPRUN_STUBLINK}" = "succeed" ]; then
-			echo "$0: warning: stub link failed, ignoring" 1>&2
+			echo "${PROGNAME}: warning: stub link failed" 1>&2
 		else
 			[ -f "${OUTFILE}" ] && rm -f ${OUTFILE}
 			die
@@ -120,7 +122,7 @@ ferment)
 	chmod +x ${OUTFILE}
 	;;
 *)
-	echo "$0: internal error, unknown mode"
+	echo "${PROGNAME}: internal error, unknown mode"
 	exit 1
 	;;
 esac
