@@ -289,6 +289,10 @@ buildrump ()
 
 	makeconfig ${RROBJ}/config.mk ''
 	makeconfig ${RROBJ}/config.sh \"
+	cat > ${RROBJ}/config << EOF
+export RUMPRUN_MKCONF="${RROBJ}/config.mk"
+export RUMPRUN_SHCONF="${RROBJ}/config.sh"
+EOF
 	export RUMPRUN_MKCONF="${RROBJ}/config.mk"
 
 	cat >> ${RUMPTOOLS}/mk.conf << EOF
@@ -477,8 +481,7 @@ echo '>>'
 echo ">> Finished $0 for ${PLATFORM}"
 echo '>>'
 echo ">> For Rumprun developers (if you're not sure, you don't need it):"
-echo "export RUMPRUN_MKCONF=\"${RROBJ}/config.mk\""
-echo "export RUMPRUN_SHCONF=\"${RROBJ}/config.sh\""
+echo ". \"${RROBJ}/config\""
 echo '>>'
 if ${DObuild}; then
 	printf ">> toolchain tuple: ${TOOLTUPLE}\n"
