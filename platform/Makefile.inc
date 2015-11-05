@@ -35,6 +35,7 @@ define BUILDLIB_target
 $${RROBJLIB}/${1}/${1}.a:
 	( cd $${LIBDIR}/${1} \
 	    && ${RUMPMAKE} MAKEOBJDIR=${RROBJLIB}/${1} ${2} obj \
+	    && ${RUMPMAKE} MAKEOBJDIR=${RROBJLIB}/${1} ${2} includes \
 	    && ${RUMPMAKE} BMKHEADERS=$${RROBJ}/include \
 		MAKEOBJDIR=${RROBJLIB}/${1} ${2} dependall )
 
