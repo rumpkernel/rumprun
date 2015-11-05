@@ -86,6 +86,12 @@ FATTRAP(14, "page fault")
  * convenient inservice routine
  */
 ENTRY(cpu_insr)
+	cli
+	pushq %rax
+	movb $0x20, %al
+	outb %al, $0x20
+	popq %rax
+	sti
 	iretq
 END(cpu_insr)
 

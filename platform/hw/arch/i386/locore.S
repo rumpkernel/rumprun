@@ -151,6 +151,12 @@ SYSTRAP(17, "#AC")
  * convenient inservice routine
  */
 ENTRY(cpu_insr)
+	cli
+	pushl %eax
+	movb $0x20, %al
+	outb %al, $0x20
+	popl %eax
+	sti
 	iret
 END(cpu_insr)
 
