@@ -67,6 +67,11 @@ for arg in "$@"; do
 	[ "${arg}" = "-E" ] && MODE=compile
 	[ "${arg}" = "-o" ] && WANTARG=yes && continue
 	[ -n "${WANTARG}" ] && OUTFILE=${arg} && WANTARG=
+
+	# even if the backing compiler supports multiarch, we do not
+	[ "${arg}" = "-print-multiarch" ] && \
+	    { echo "${PROGNAME}: unrecognized option '-print-multiarch'" 2>&1;
+	      exit 1; }
 done
 
 case ${MODE} in
