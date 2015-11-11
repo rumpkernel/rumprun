@@ -700,6 +700,8 @@ run_qemu ()
 bake_iso ()
 {
 
+	[ -z "${DUMPCMD}" ] || die -D not supported by iso.  Use -T.
+
 	type xorriso >/dev/null || die bake_iso needs xorriso
 	type grub-mkrescue >/dev/null || die bake_iso needs grub-mkrescue
 
