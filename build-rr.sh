@@ -236,8 +236,9 @@ checkprevbuilds ()
 setvars ()
 {
 
-	# probe us some vars
-	eval $(${BUILDRUMP}/buildrump.sh "$@" probe)
+	# probe us some vars (_tmp-dance catches possible error for -e)
+	_tmp="$(${BUILDRUMP}/buildrump.sh "$@" probe)"
+	eval "${_tmp}"
 	MACHINE="${BUILDRUMP_MACHINE}"
 	MACHINE_GNU_ARCH="${BUILDRUMP_MACHINE_GNU_ARCH}"
 
