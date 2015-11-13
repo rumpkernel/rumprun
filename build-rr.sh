@@ -394,8 +394,6 @@ makeconfig ()
 dobuild ()
 {
 
-	setvars "$@"
-
 	checksubmodules
 
 	. ${BUILDRUMP}/subr.sh
@@ -431,7 +429,6 @@ doinstall ()
 	    || die 'No objdir. No build or build with different params?'
 
 	. "${RROBJ}/config.sh"
-	STAGING="${RROBJ}/dest.stage"
 
 	# default used to be a symlink, so this is for "compat".
 	# remove in a few months.
@@ -472,6 +469,7 @@ doinstall ()
 parseargs "$@"
 shift ${ARGSSHIFT}
 
+setvars "$@"
 ${DObuild} && dobuild "$@"
 ${DOinstall} && doinstall
 
