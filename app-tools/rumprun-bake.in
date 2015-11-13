@@ -210,7 +210,7 @@ rumprun-bake version: ${_RUMPBAKE_VERSION}
 usage: rumprun-bake [-c conffile] config output input [input ...]
        rumprun-bake list
 
-When invoked the single argument "list", lists supported target boards.
+When invoked with the single argument "list", describes available configs.
 
 Else, creates a rumprunnable unikernel:
 	config	: rumprun board configuration to use.
