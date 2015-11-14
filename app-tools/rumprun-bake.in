@@ -198,6 +198,7 @@ debugdump ()
 
 	_haveconf ${confname}
 
+	_uniq CONFIG_${confname}
 	eval echo \${CONFIG_${confname}}
 }
 
@@ -246,16 +247,8 @@ _readconfig ()
 	unset CURCONF
 
 	# Publish configs which are not private
-	# Note: technically we need to _uniq configs only when they are
-	# used, but this is easier and less error-prone.  Consider
-	# just-in-time an ace up our sleeve for when config processing
-	# really gets too slow.
 	for x in ${ALLCONFIGS}; do
-		if [ "${x#_}" = "${x}" ]; then
-			_uniq CONFIG_${x}
-		else
-			_filter ${x} ALLCONFIGS
-		fi
+		[ "${x#_}" = "${x}" ] || _filter ${x} ALLCONFIGS
 	done
 }
 
@@ -352,6 +345,8 @@ if [ "$c" != "$config" ]; then
 	echo "rumprun-bake: error: unsupported config \"$config\""
 	exit 1
 fi
+
+_uniq CONFIG_${config}
 
 PLATFORM=${config%%_*}
 eval LIBS="\${CONFIG_${config}}"
