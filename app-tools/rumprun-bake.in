@@ -252,7 +252,7 @@ _readconfig ()
 	# really gets too slow.
 	for x in ${ALLCONFIGS}; do
 		if [ "${x#_}" = "${x}" ]; then
-			_uniq ${x}
+			_uniq CONFIG_${x}
 		else
 			_filter ${x} ALLCONFIGS
 		fi
