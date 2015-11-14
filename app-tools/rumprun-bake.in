@@ -92,9 +92,10 @@ _nothaveconf ()
 	done
 }
 
-# implement "sort | uniq" ourselves so that we don't completely
+# Implement "sort | uniq" ourselves so that we don't completely
 # screw up the order of the arguments.  not 100% sure it matters, but it's
-# easy enough
+# easy enough.  Also, notably, doing it locally is ~50% faster (which
+# starts to matter when you have enough configs).
 _uniq ()
 {
 	local listname newlist
@@ -151,7 +152,6 @@ assimilate ()
 		_haveconf ${from}
 		eval CONFIG_${to}=\"\${CONFIG_${to}} \${CONFIG_${from}}\"
 	done
-	_uniq CONFIG_${to}
 }
 
 nuke ()
@@ -171,7 +171,6 @@ add ()
 
 	_haveconf ${confname}
 	eval CONFIG_${confname}=\"\${CONFIG_${confname}} $@\"
-	_uniq CONFIG_${confname}
 }
 
 remove ()
@@ -246,9 +245,17 @@ _readconfig ()
 
 	unset CURCONF
 
-	# limit visibility of _configs
+	# Publish configs which are not private
+	# Note: technically we need to _uniq configs only when they are
+	# used, but this is easier and less error-prone.  Consider
+	# just-in-time an ace up our sleeve for when config processing
+	# really gets too slow.
 	for x in ${ALLCONFIGS}; do
-		[ "${x#_}" = "${x}" ] || _filter ${x} ALLCONFIGS
+		if [ "${x#_}" = "${x}" ]; then
+			_uniq ${x}
+		else
+			_filter ${x} ALLCONFIGS
+		fi
 	done
 }
 
