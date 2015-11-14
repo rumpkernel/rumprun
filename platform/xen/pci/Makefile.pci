@@ -1,4 +1,4 @@
-PCIDIR!=	cd ${.PARSEDIR} ; pwd -P
+PCIDIR:= ${.PARSEDIR}
 
 .include "${RUMPRUN_MKCONF}"
 .include "${BUILDRUMP_TOOLFLAGS}"
