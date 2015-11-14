@@ -140,6 +140,7 @@ parseargs ()
 	PLATFORM=$1
 	export PLATFORMDIR=platform/${PLATFORM}
 	[ -d ${PLATFORMDIR} ] || die Platform \"$PLATFORM\" not supported!
+	abspath PLATFORMDIR
 	shift
 
 	dodefault=true
