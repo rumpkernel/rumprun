@@ -209,6 +209,7 @@ rumprun-bake version: ${_RUMPBAKE_VERSION}
 
 usage: rumprun-bake [-c conffile] config output input [input ...]
        rumprun-bake list
+       rumprun-bake dumpconfig config
 
 When invoked with the single argument "list", describes available configs.
 
@@ -301,7 +302,8 @@ done
 shift $((${OPTIND}-1))
 
 TARGET="${1}"
-if [ "${TARGET}" = "list" ]; then
+case ${TARGET} in
+list)
 	for x in ${ALLCONFIGS}; do
 		eval mydesc="\${CONFDESCR_${x}}"
 		printf '%-16s' "${x}"
@@ -309,7 +311,12 @@ if [ "${TARGET}" = "list" ]; then
 		printf '\n'
 	done
 	exit 0
-fi
+	;;
+dumpconfig)
+	debugdump $2
+	exit 0
+	;;
+esac
 
 OUTPUT="${2}"
 [ $# -gt 2 ] || _usage
