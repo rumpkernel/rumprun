@@ -209,14 +209,15 @@ _usage ()
 	cat <<EOM
 rumprun-bake version: ${_RUMPBAKE_VERSION}
 
-usage: rumprun-bake [-c conffile] config output input [input ...]
-       rumprun-bake list
-       rumprun-bake dumpconfig config
+usage:	rumprun-bake list
+	rumprun-bake dumpconfig config
+	rumprun-bake [-c conffile] config output input [input ...]
 
-When invoked with the single argument "list", describes available configs.
-When invoked with the single argument "list", describes available configs.
+"list" outputs available configs.
 
-Else, creates a rumprunnable unikernel:
+"dumpconfig" outputs details for the given config.
+
+Final usage creates a unikernel image:
 	config	: rumprun board configuration to use.
 	output	: output file name for the unikernel image.
 	input	: executable(s) to bake.
