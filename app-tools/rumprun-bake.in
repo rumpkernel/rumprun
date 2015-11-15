@@ -37,7 +37,9 @@ unset runcmd
 if [ "$(basename $0)" = "rumpbake" ]; then
 	echo '>>'
 	echo '>> name "rumpbake" is deprecated.  use rumprun-bake instead'
+	echo '>> (waiting 5s for you to see this)'
 	echo '>>'
+	sleep 5
 fi
 
 if [ "${RUMPRUN_WARNING_STFU}" != 'please' ]; then
@@ -211,6 +213,7 @@ usage: rumprun-bake [-c conffile] config output input [input ...]
        rumprun-bake list
        rumprun-bake dumpconfig config
 
+When invoked with the single argument "list", describes available configs.
 When invoked with the single argument "list", describes available configs.
 
 Else, creates a rumprunnable unikernel:
