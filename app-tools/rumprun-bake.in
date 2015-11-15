@@ -317,6 +317,7 @@ list)
 	exit 0
 	;;
 describe)
+	[ $# -eq 2 ] || _die \"describe\" needs exactly one config.
 	debugdump $2
 	exit 0
 	;;
