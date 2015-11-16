@@ -209,9 +209,9 @@ _usage ()
 	cat <<EOM
 rumprun-bake version: ${_RUMPBAKE_VERSION}
 
-usage:	rumprun-bake list
-	rumprun-bake describe config
-	rumprun-bake [-c conffile] config output input [input ...]
+usage:	rumprun-bake [-c conffile ...] list
+	rumprun-bake [-c conffile ...] describe config
+	rumprun-bake [-c conffile ...] config output input [input ...]
 
 "list" outputs available configs.
 
