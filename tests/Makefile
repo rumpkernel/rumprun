@@ -1,5 +1,3 @@
-include ${RUMPRUN_MKCONF}
-
 .PHONY: all-tests
 all-tests:
 	$(MAKE) -C hello
