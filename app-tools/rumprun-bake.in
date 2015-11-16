@@ -237,15 +237,24 @@ _readconfig ()
 {
 	local x
 
-	CURCONF="${1}"
-
+	CURCONF="$1"
 	if [ ! -f "${CURCONF}" ]; then
 		echo "rumprun-bake: error: Configuration file ${CURCONF} not found"
 		exit 1
 	fi
 
 	_VERSOK=false
-	. "${CURCONF}"
+
+	# ". foo" doesn't work everywhere/always, so do a dance here.
+	# Note: CURCONF needs to remain as what the user gave.
+	case "$1" in
+	/*)
+		. "${CURCONF}"
+		;;
+	*)
+		. "$(pwd)/${CURCONF}"
+		;;
+	esac
 	${_VERSOK} || _die "config version not specified (${CURCONF})"
 
 	unset CURCONF
