@@ -28,8 +28,11 @@ while getopts 'kqh' opt; do
 done
 shift $((${OPTIND} - 1))
 
+# XXX: sourcing the file while aiming to use app-tools is plain wrong
 [ -n "${RUMPRUN_SHCONF}" ] || { echo '>> need RUMPRUN_SHCONF'; exit 1; }
 . "${RUMPRUN_SHCONF}"
+unset CC
+unset CXX
 
 cd "$(dirname $0)"
 
