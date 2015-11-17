@@ -57,6 +57,9 @@ rumpuser_malloc(size_t len, int alignment, void **retval)
 	if (len < BMK_PCPU_PAGE_SIZE) {
 		*retval = bmk_memalloc(len, alignment, BMK_MEMWHO_RUMPKERN);
 	} else {
+		bmk_assert((alignment & (alignment-1)) == 0);
+		if (alignment < BMK_PCPU_PAGE_SIZE)
+			alignment = BMK_PCPU_PAGE_SIZE;
 		*retval = bmk_pgalloc_align(len2order(len), alignment);
 	}
 	if (*retval)

@@ -367,7 +367,7 @@ void *
 bmk_pgalloc(int order)
 {
 
-	return bmk_pgalloc_align(order, 1);
+	return bmk_pgalloc_align(order, BMK_PCPU_PAGE_SIZE);
 }
 
 void *
@@ -377,7 +377,7 @@ bmk_pgalloc_align(int order, unsigned long align)
 	unsigned long p, len;
 	unsigned int bucket;
 
-	bmk_assert((align & (align-1)) == 0);
+	bmk_assert(align >= BMK_PCPU_PAGE_SIZE && (align & (align-1)) == 0);
 	bmk_assert((unsigned)order < FREELIST_LEVELS);
 
 	for (bucket = order; bucket < FREELIST_LEVELS; bucket++) {
