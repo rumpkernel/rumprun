@@ -777,7 +777,7 @@ bake_iso ()
 	    $(basename $1) >> "${ISODIR}/boot/grub/grub.cfg"
 	cp ${bootimage} "${ISODIR}/boot"
 	cp "${TMPDIR}/json.cfg" "${ISODIR}"
-	grub-mkrescue "${ISODIR}" -o ${opt_name}
+	grub-mkrescue -o ${opt_name} "${ISODIR}"
 }
 
 make_ec2 ()
