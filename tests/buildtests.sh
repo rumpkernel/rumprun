@@ -49,9 +49,6 @@ test_apptools()
 	esac
 
 	export PATH="${PATH}:${RRDEST}/bin"
-	export CC="${RRDEST}/bin/${TOOLTUPLE}-gcc"
-	export CXX="${RRDEST}/bin/${TOOLTUPLE}-g++"
-	export CONFIG_CXX
 	export RUMPBAKE
 
 	make
