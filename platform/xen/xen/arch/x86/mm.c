@@ -134,61 +134,6 @@ static void new_pt_frame(unsigned long *pt_pfn, unsigned long prev_l_mfn,
 }
 
 /*
- * Checks if a pagetable frame is needed at 'level' to map a given
- * address. Note, this function is specific to the initial page table
- * building.
- */
-static int need_pt_frame(unsigned long va, int level)
-{
-    unsigned long hyp_virt_start = HYPERVISOR_VIRT_START;
-#if defined(__x86_64__)
-    unsigned long hyp_virt_end = HYPERVISOR_VIRT_END;
-#else
-    unsigned long hyp_virt_end = 0xffffffff;
-#endif
-
-    /* In general frames will _not_ be needed if they were already
-       allocated to map the hypervisor into our VA space */
-#if defined(__x86_64__)
-    if ( level == L3_FRAME )
-    {
-        if ( l4_table_offset(va) >= 
-             l4_table_offset(hyp_virt_start) &&
-             l4_table_offset(va) <= 
-             l4_table_offset(hyp_virt_end))
-            return 0;
-        return 1;
-    } 
-    else
-#endif
-
-    if ( level == L2_FRAME )
-    {
-#if defined(__x86_64__)
-        if ( l4_table_offset(va) >= 
-             l4_table_offset(hyp_virt_start) &&
-             l4_table_offset(va) <= 
-             l4_table_offset(hyp_virt_end))
-#endif
-            if ( l3_table_offset(va) >= 
-                 l3_table_offset(hyp_virt_start) &&
-                 l3_table_offset(va) <= 
-                 l3_table_offset(hyp_virt_end))
-                return 0;
-
-        return 1;
-    } 
-    else 
-        /* Always need l1 frames */
-        if ( level == L1_FRAME )
-            return 1;
-
-    minios_printk("ERROR: Unknown frame level %d, hypervisor %llx,%llx\n", 
-           level, hyp_virt_start, hyp_virt_end);
-    return -1;
-}
-
-/*
  * Build the initial pagetable.
  */
 static void build_pagetable(unsigned long *start_pfn, unsigned long *max_pfn)
@@ -202,8 +147,9 @@ static void build_pagetable(unsigned long *start_pfn, unsigned long *max_pfn)
     int count = 0;
     int rc;
 
-    pfn_to_map = 
-        (start_info.nr_pt_frames - NOT_L1_FRAMES) * L1_PAGETABLE_ENTRIES;
+    /* Be conservative: even if we know there will be more pages already
+       mapped, start the loop at the very beginning. */
+    pfn_to_map = *start_pfn;
 
     if ( *max_pfn >= virt_to_pfn(HYPERVISOR_VIRT_START) )
     {
@@ -231,9 +177,8 @@ static void build_pagetable(unsigned long *start_pfn, unsigned long *max_pfn)
 #if defined(__x86_64__)
         offset = l4_table_offset(start_address);
         /* Need new L3 pt frame */
-        if ( !(start_address & L3_MASK) )
-            if ( need_pt_frame(start_address, L3_FRAME) ) 
-                new_pt_frame(&pt_pfn, pt_mfn, offset, L3_FRAME);
+        if ( !(tab[offset] & _PAGE_PRESENT) )
+            new_pt_frame(&pt_pfn, pt_mfn, offset, L3_FRAME);
 
         page = tab[offset];
         pt_mfn = pte_to_mfn(page);
@@ -241,29 +186,33 @@ static void build_pagetable(unsigned long *start_pfn, unsigned long *max_pfn)
 #endif
         offset = l3_table_offset(start_address);
         /* Need new L2 pt frame */
-        if ( !(start_address & L2_MASK) )
-            if ( need_pt_frame(start_address, L2_FRAME) )
-                new_pt_frame(&pt_pfn, pt_mfn, offset, L2_FRAME);
+        if ( !(tab[offset] & _PAGE_PRESENT) )
+            new_pt_frame(&pt_pfn, pt_mfn, offset, L2_FRAME);
 
         page = tab[offset];
         pt_mfn = pte_to_mfn(page);
         tab = to_virt(mfn_to_pfn(pt_mfn) << PAGE_SHIFT);
         offset = l2_table_offset(start_address);        
         /* Need new L1 pt frame */
-        if ( !(start_address & L1_MASK) )
-            if ( need_pt_frame(start_address, L1_FRAME) )
-                new_pt_frame(&pt_pfn, pt_mfn, offset, L1_FRAME);
+        if ( !(tab[offset] & _PAGE_PRESENT) )
+            new_pt_frame(&pt_pfn, pt_mfn, offset, L1_FRAME);
 
         page = tab[offset];
         pt_mfn = pte_to_mfn(page);
+        tab = to_virt(mfn_to_pfn(pt_mfn) << PAGE_SHIFT);
         offset = l1_table_offset(start_address);
 
-        mmu_updates[count].ptr =
-            ((pgentry_t)pt_mfn << PAGE_SHIFT) + sizeof(pgentry_t) * offset;
-        mmu_updates[count].val = 
-            (pgentry_t)pfn_to_mfn(pfn_to_map++) << PAGE_SHIFT | L1_PROT;
-        count++;
-        if ( count == L1_PAGETABLE_ENTRIES || pfn_to_map == *max_pfn )
+        if ( !(tab[offset] & _PAGE_PRESENT) )
+        {
+            mmu_updates[count].ptr =
+                ((pgentry_t)pt_mfn << PAGE_SHIFT) + sizeof(pgentry_t) * offset;
+            mmu_updates[count].val =
+                (pgentry_t)pfn_to_mfn(pfn_to_map) << PAGE_SHIFT | L1_PROT;
+            count++;
+        }
+        pfn_to_map++;
+        if ( count == L1_PAGETABLE_ENTRIES ||
+             (count && pfn_to_map == *max_pfn) )
         {
             rc = HYPERVISOR_mmu_update(mmu_updates, count, NULL, DOMID_SELF);
             if ( rc < 0 )

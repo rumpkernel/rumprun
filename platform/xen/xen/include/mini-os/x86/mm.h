@@ -58,12 +58,6 @@
 
 #define L2_MASK  ((1UL << L3_PAGETABLE_SHIFT) - 1)
 
-/*
- * If starting from virtual address greater than 0xc0000000,
- * this value will be 2 to account for final mid-level page
- * directory which is always mapped in at this location.
- */
-#define NOT_L1_FRAMES           3
 #define PRIpte "016llx"
 #ifndef __ASSEMBLY__
 typedef uint64_t pgentry_t;
@@ -89,7 +83,6 @@ typedef uint64_t pgentry_t;
 #define L2_MASK  ((1UL << L3_PAGETABLE_SHIFT) - 1)
 #define L3_MASK  ((1UL << L4_PAGETABLE_SHIFT) - 1)
 
-#define NOT_L1_FRAMES           3
 #define PRIpte "016lx"
 #ifndef __ASSEMBLY__
 typedef unsigned long pgentry_t;
