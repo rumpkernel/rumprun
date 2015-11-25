@@ -49,7 +49,8 @@ mainlike_fn rumpbake_main8;
 		break;							\
 	rumprun(rre->rre_flags, rumpbake_main##i,			\
 	    rre->rre_argc, rre->rre_argv);				\
-	rre = TAILQ_NEXT(rre, rre_entries);				\
+	if ((rre->rre_flags & RUMPRUN_EXEC_CMDLINE) == 0)		\
+		rre = TAILQ_NEXT(rre, rre_entries);			\
 	if (rre == NULL) {						\
 		bmk_printf("out of argv entries\n");			\
 		break;							\

@@ -109,7 +109,7 @@ makeargv(char *argvstr)
 
 	rumprun_parseargs(argvstr, &nargs, rre->rre_argv);
 	rre->rre_argv[nargs] = NULL;
-	rre->rre_flags = 0;
+	rre->rre_flags = RUMPRUN_EXEC_CMDLINE;
 	rre->rre_argc = nargs;
 
 	TAILQ_INSERT_TAIL(&rumprun_execs, rre, rre_entries);

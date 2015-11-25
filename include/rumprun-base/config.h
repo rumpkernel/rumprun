@@ -35,6 +35,7 @@ void	rumprun_config(char *);
 
 #define RUMPRUN_EXEC_BACKGROUND 0x01
 #define RUMPRUN_EXEC_PIPE	0x02
+#define RUMPRUN_EXEC_CMDLINE	0x04
 struct rumprun_exec {
 	int rre_flags;
 
