@@ -31,23 +31,22 @@
 
 /*
  * for baking multiple executables into a single binary
- * XXX: should not depend on explicit symbol names with hardcoded
- * limits
+ * TODO: remove hardcoded limit
  */
 mainlike_fn rumprun_notmain;
-mainlike_fn rumpbake_main1;
-mainlike_fn rumpbake_main2;
-mainlike_fn rumpbake_main3;
-mainlike_fn rumpbake_main4;
-mainlike_fn rumpbake_main5;
-mainlike_fn rumpbake_main6;
-mainlike_fn rumpbake_main7;
-mainlike_fn rumpbake_main8;
+mainlike_fn rumprun_main1;
+mainlike_fn rumprun_main2;
+mainlike_fn rumprun_main3;
+mainlike_fn rumprun_main4;
+mainlike_fn rumprun_main5;
+mainlike_fn rumprun_main6;
+mainlike_fn rumprun_main7;
+mainlike_fn rumprun_main8;
 
 #define RUNMAIN(i)							\
-	if (rumpbake_main##i == rumprun_notmain)			\
+	if (rumprun_main##i == rumprun_notmain)				\
 		break;							\
-	rumprun(rre->rre_flags, rumpbake_main##i,			\
+	rumprun(rre->rre_flags, rumprun_main##i,			\
 	    rre->rre_argc, rre->rre_argv);				\
 	if ((rre->rre_flags & RUMPRUN_EXEC_CMDLINE) == 0)		\
 		rre = TAILQ_NEXT(rre, rre_entries);			\

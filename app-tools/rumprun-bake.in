@@ -378,7 +378,7 @@ for f in "$@"; do
 	_getbininfo ${f}
 
 	${runcmd} ${RUMPBAKE_TOOLDIR}/bin/${RUMPBAKE_TUPLE}-objcopy	\
-	    --redefine-sym main=rumpbake_main${objnum}			\
+	    --redefine-sym main=rumprun_main${objnum}			\
 	    ${f} ${TMPDIR}/tmp${objnum}.obj
 	allobjs="${allobjs} ${TMPDIR}/tmp${objnum}.obj"
 	objnum=$((${objnum}+1))

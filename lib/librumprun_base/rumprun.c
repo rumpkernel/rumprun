@@ -63,14 +63,14 @@ rumprun_enosys(void)
 	return ENOSYS;
 }
 __strong_alias(rumprun_notmain,rumprun_enosys);
-__weak_alias(rumpbake_main1,rumprun_notmain);
-__weak_alias(rumpbake_main2,rumprun_notmain);
-__weak_alias(rumpbake_main3,rumprun_notmain);
-__weak_alias(rumpbake_main4,rumprun_notmain);
-__weak_alias(rumpbake_main5,rumprun_notmain);
-__weak_alias(rumpbake_main6,rumprun_notmain);
-__weak_alias(rumpbake_main7,rumprun_notmain);
-__weak_alias(rumpbake_main8,rumprun_notmain);
+__weak_alias(rumprun_main1,rumprun_notmain);
+__weak_alias(rumprun_main2,rumprun_notmain);
+__weak_alias(rumprun_main3,rumprun_notmain);
+__weak_alias(rumprun_main4,rumprun_notmain);
+__weak_alias(rumprun_main5,rumprun_notmain);
+__weak_alias(rumprun_main6,rumprun_notmain);
+__weak_alias(rumprun_main7,rumprun_notmain);
+__weak_alias(rumprun_main8,rumprun_notmain);
 
 __weak_alias(rump_init_server,rumprun_enosys);
 
