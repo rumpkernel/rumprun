@@ -86,7 +86,7 @@ rumprun_boot(char *cmdline)
 	};
 	int tmpfserrno;
 	char *sysproxy;
-	int rv;
+	int rv, x;
 
 	rump_boot_setsigmodel(RUMP_SIGMODEL_IGNORE);
 	rump_init();
@@ -121,15 +121,8 @@ rumprun_boot(char *cmdline)
 	 * (note: we don't check for errors since net.inet.ip.dad_count
 	 * is not present if the networking stack isn't present)
 	 */
-#if 0
-	/* XXXX: cpp macro lossage in the src-netbsd, cannot fix easily now */
-	int x = 0;
+	x = 0;
 	sysctlbyname("net.inet.ip.dad_count", NULL, NULL, &x, sizeof(x));
-#else
-	extern int rumpns_ip_dad_count;
-	rumpns_ip_dad_count = 0;
-#endif
-
 
 	rumprun_config(cmdline);
 
