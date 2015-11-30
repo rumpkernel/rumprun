@@ -85,9 +85,9 @@ _hostname_: The kernel hostname.
     }
     ...
 
-_if_: The kernel name of the network interface. (eg. `vioif0`, `xenif0`)
-_cloner_: Create the interface? (boolean, Xen only)
-_type_, _method_: Network interface type and configuration method.
+* _if_: The kernel name of the network interface. (eg. `vioif0`, `xenif0`)
+* _cloner_: Create the interface? (boolean, Xen only)
+* _type_, _method_: Network interface type and configuration method.
 
 _TODO_: Document methods.
 
@@ -104,10 +104,10 @@ Should be change to use an array instead.
     }
     ...
 
-_source_: `dev`, `vnd` or `etfs`
-_path_: The path to the block device/etfs key. 
-_fstype_: `blk` or `kernfs`
-_mountpoint_: The filesystem mount point.
+* _source_: `dev`, `vnd` or `etfs`
+* _path_: The path to the block device/etfs key. 
+* _fstype_: `blk` or `kernfs`
+* _mountpoint_: The filesystem mount point.
 
 _TODO_: Incomplete. Document semantics of various sources, and differences
 between Xen and hw.
