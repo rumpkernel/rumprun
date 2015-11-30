@@ -74,12 +74,39 @@ void
 multiboot(struct multiboot_info *mbi)
 {
 	unsigned long cmdlinelen;
-	char *cmdline;
+	char *cmdline = NULL,
+	     *mbm_name;
+	struct multiboot_mod_list *mbm;
 
 	bmk_core_init(BMK_THREAD_STACK_PAGE_ORDER);
 
-	/* save the command line before something overwrites it */
-	if (mbi->flags & MULTIBOOT_INFO_CMDLINE) {
+	/*
+	 * First (and for now, only) multiboot module loaded is used as a
+	 * preferred source for configuration (currently overloaded to
+	 * `cmdline').
+	 * TODO: Split concept of `cmdline' and `config'.
+	 */
+	if (mbi->flags & MULTIBOOT_INFO_MODS &&
+			mbi->mods_count >= 1 &&
+			mbi->mods_addr != 0) {
+		mbm = (struct multiboot_mod_list *)(uintptr_t)mbi->mods_addr;
+		mbm_name = (char *)(uintptr_t)mbm[0].cmdline;
+		cmdline = (char *)(uintptr_t)mbm[0].mod_start;
+		cmdlinelen =
+			mbm[0].mod_end - mbm[0].mod_start;
+		if (cmdlinelen >= (BMK_MULTIBOOT_CMDLINE_SIZE - 1))
+			bmk_platform_halt("command line too long, "
+			    "increase BMK_MULTIBOOT_CMDLINE_SIZE");
+
+		bmk_printf("multiboot: Using configuration from %s\n",
+			mbm_name ? mbm_name : "(unnamed module)");
+		bmk_memcpy(multiboot_cmdline, cmdline, cmdlinelen);
+		multiboot_cmdline[cmdlinelen] = 0;
+	}
+
+	/* If not using multiboot module for config, save the command line
+	 * before something overwrites it */
+	if (cmdline == NULL && mbi->flags & MULTIBOOT_INFO_CMDLINE) {
 		cmdline = (char *)(uintptr_t)mbi->cmdline;
 		cmdlinelen = bmk_strlen(cmdline);
 		if (cmdlinelen >= BMK_MULTIBOOT_CMDLINE_SIZE)
@@ -87,7 +114,9 @@ multiboot(struct multiboot_info *mbi)
 			    "increase BMK_MULTIBOOT_CMDLINE_SIZE");
 		bmk_strcpy(multiboot_cmdline, cmdline);
 	}
-	else
+
+	/* No configuration/cmdline found */
+	if (cmdline == NULL)
 		multiboot_cmdline[0] = 0;
 
 	if ((mbi->flags & MULTIBOOT_INFO_MEMORY) == 0)
