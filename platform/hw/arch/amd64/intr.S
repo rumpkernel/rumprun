@@ -66,11 +66,14 @@ fattrapstr##num:							;\
 ENTRY(x86_trap_##num)							 \
 	movq $fattrapstr##num, %rdi					;\
 	movq %cr2, %rdx							;\
-	mov $##num, %rcx						;\
-	test $14, %rcx							;\
+	movq $##num, %rcx						;\
+	cmpq $13, %rcx							;\
 	je 1f								;\
-	addq $8, %rsp							;\
+	cmpq $14, %rcx							;\
+	jne 2f								;\
 1:									;\
+	addq $8, %rsp							;\
+2:									;\
 	movq 0(%rsp), %rsi						;\
 	call cpu_fattrap						;\
 	hlt								;\
