@@ -25,7 +25,8 @@ printf 'int _want_main(void); int _want_main(void) {return main(0, 0);}\n' \
 printf 'int _stubnosys(void); int _stubnosys(void) {return -1;}\n' \
     >> ${OUTPUT}
 
-# special case
+# special cases
+printf "__strong_alias(rump_syscall,_stubnosys);\n" >> ${OUTPUT}
 printf "__strong_alias(_start,_stubnosys);\n\n" >> ${OUTPUT}
 
 # symbols not convered by libc
