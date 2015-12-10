@@ -158,42 +158,45 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 	void *v;
 	ssize_t nn;
 	size_t roundedlen, nnu;
-	int error;
+	int error = 0;
+
+	MMAP_PRINTF(("-> mmap: %p %zu, 0x%x, 0x%x, %d, %" PRId64 "\n",
+	    addr, len, prot, flags, fd, off));
 
 	if (fd != -1 && prot != PROT_READ) {
 		MMAP_PRINTF(("mmap: trying to r/w map a file. failing!\n"));
-		errno = ENOTSUP;
-		return MAP_FAILED;
+		error = ENOTSUP;
+		goto out;
 	}
 
 	/* we're not going to even try */
 	if (flags & MAP_FIXED) {
-		errno = ENOMEM;
-		return MAP_FAILED;
+		error = ENOMEM;
+		goto out;
 	}
 
 	/* offset should be aligned to page size */
 	if ((off & (pagesize()-1)) != 0) {
-		errno = EINVAL;
-		return MAP_FAILED;
+		error = EINVAL;
+		goto out;
 	}
 
 	/* allocate full whatever-we-lie-to-be-pages */
 	roundedlen = roundup2(len, pagesize());
 	if ((v = mmapmem_alloc(roundedlen)) == NULL) {
-		errno = ENOMEM;
-		return MAP_FAILED;
+		error = ENOMEM;
+		goto out;
 	}
 
 	if (flags & MAP_ANON)
-		return v;
+		goto out;
 
 	if ((nn = pread(fd, v, roundedlen, off)) == -1) {
 		MMAP_PRINTF(("mmap: failed to populate r/o file mapping!\n"));
 		error = errno;
+		assert(error != 0);
 		mmapmem_free(v, roundedlen);
-		errno = error;
-		return MAP_FAILED;
+		goto out;
 	}
 	nnu = (size_t)nn;
 
@@ -208,6 +211,12 @@ mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
 		memset((uint8_t *)v+nnu, 0, roundedlen-nnu);
 	}
 
+ out:
+	if (error) {
+		errno = error;
+		v = MAP_FAILED;
+	}
+	MMAP_PRINTF(("<- mmap: %p %d\n", v, error));
 	return v;
 }
 #undef mmap
@@ -231,12 +240,21 @@ _sys___msync13(void *addr, size_t len, int flags)
 int
 munmap(void *addr, size_t len)
 {
+	int rv;
+
+	MMAP_PRINTF(("-> munmap: %p, %zu\n", addr, len));
 
 	/* addr must be page-aligned */
-	if (((uintptr_t)addr & (pagesize()-1)) != 0)
-		return EINVAL;
+	if (((uintptr_t)addr & (pagesize()-1)) != 0) {
+		rv = EINVAL;
+		goto out;
+	}
 
-	return mmapmem_free(addr, roundup2(len, pagesize()));
+	rv =  mmapmem_free(addr, roundup2(len, pagesize()));
+
+ out:
+	MMAP_PRINTF(("<- munmap: %d\n", rv));
+	return rv;
 }
 
 int
