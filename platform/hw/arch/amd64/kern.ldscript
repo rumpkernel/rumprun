@@ -75,6 +75,13 @@ SECTIONS
 		*(.bss.*)
 		*(COMMON)
 	}
+	.lbss :
+	AT (LOADADDR(.text) + (ADDR(.lbss) - ADDR(.text)))
+	{
+		*(.lbss)
+		*(.lbss.*)
+		*(LARGE_COMMON)
+	}
 	_ebss = . ;
 	_end = . ;
 }

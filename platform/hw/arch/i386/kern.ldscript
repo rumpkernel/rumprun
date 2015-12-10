@@ -71,6 +71,13 @@ SECTIONS
 		*(COMMON)
 		*(.bootstack)
 	}
+	.lbss :
+	AT (LOADADDR(.text) + (ADDR(.lbss) - ADDR(.text)))
+	{
+		*(.lbss)
+		*(.lbss.*)
+		*(LARGE_COMMON)
+	}
 	_end = . ;
 	PROVIDE (end = .) ;
 }
