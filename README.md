@@ -9,6 +9,10 @@ The former allows existing, unmodified POSIX applications to run
 out-of-the-box, while the latter allows building highly customized
 solutions with minimal footprints.
 
+The Rumprun unikernel supports applications written in, for example
+but not limited to: C, C++, Erlang, Go, Javascript (node.js), Python,
+Ruby and Rust.
+
 See the [wiki](http://wiki.rumpkernel.org/Repo:-rumprun) for more
 information and instructions.
 
