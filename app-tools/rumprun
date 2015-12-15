@@ -228,6 +228,8 @@ createif_xen ()
 }
 
 json_depth=0
+json_curline=
+json_opening=
 json_indent ()
 {
 
@@ -239,14 +241,38 @@ json_indent ()
 json_append_ln ()
 {
 
-	json_indent
-	echo "$*, " >> ${TMPDIR}/json.cfg
+	if [ -z "${json_curline}" ]; then
+		if [ $# -gt 1 ]; then
+			if [ "$1" = "-b" ]; then
+				json_opening=1
+				shift
+			fi
+		fi
+		json_curline="$*"
+		return
+	else
+		json_indent
+		if [ -n "${json_opening}" ]; then
+			json_opening=
+			comma=
+		else
+			comma=", "
+		fi
+		echo "${json_curline}${comma}" >> ${TMPDIR}/json.cfg
+		if [ $# -gt 1 ]; then
+			if [ "$1" = "-b" ]; then
+				json_opening=1
+				shift
+			fi
+		fi
+		json_curline="$*"
+	fi
 }
 
 json_open_block ()
 {
 
-	json_append_ln "${1:+\"$1\" : }" {
+	json_append_ln -b "${1:+\"$1\" : }" {
 	json_depth=$((${json_depth}+1))
 }
 
@@ -255,7 +281,13 @@ json_finalize_block ()
 
 	[ ${json_depth} -ne 0 ] || die internal json error
 	json_depth=$((${json_depth}-1))
-	json_append_ln }
+	json_append_ln -b }
+}
+
+json_finish ()
+{
+
+	json_append_ln -b ""
 }
 
 json_store_netspec ()
@@ -627,7 +659,6 @@ run_qemu ()
 		I)
 			[ "${NETSTYLE:=n}" = "n" ] || die -n/-I are incompatible
 			createif_qemu "${OPTARG}" || usage
-			nindex=$(expr $nindex + 1)
 			;;
 		M)
 			opt_mem=${OPTARG}
@@ -677,6 +708,7 @@ run_qemu ()
 	json_append_ln "\"cmdline\": \""$@"\""
 	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
 	json_finalize_block
+	json_finish
 
 	# internal check
 	[ ${json_depth} -eq 0 ] || die internal error, final depth ${json_depth}
@@ -738,7 +770,6 @@ bake_iso ()
 			;;
 		I)
 			createif_iso "${OPTARG}" || usage
-			nindex=$(expr $nindex + 1)
 			;;
 		M)
 			die -M not supported on iso
@@ -767,6 +798,7 @@ bake_iso ()
 	json_append_ln "\"cmdline\": \""$@"\""
 	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
 	json_finalize_block
+	json_finish
 	[ ${json_depth} -eq 0 ] || die internal error, final depth ${json_depth}
 
 	# create the iso directory structure
@@ -816,7 +848,6 @@ make_ec2 ()
 			;;
 		I)
 			createif_ec2 "${OPTARG}" || usage
-			nindex=$(expr $nindex + 1)
 			;;
 		M)
 			die -M not supported on ec2
@@ -846,6 +877,7 @@ make_ec2 ()
 	json_append_ln "\"cmdline\": \""$@"\""
 	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
 	json_finalize_block
+	json_finish
 	[ ${json_depth} -eq 0 ] || die internal error, final depth ${json_depth}
 
 	# create the directory structure

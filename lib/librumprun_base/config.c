@@ -52,48 +52,34 @@
 #include <rump/netconfig.h>
 
 #include <rumprun-base/config.h>
+#include <rumprun-base/json.h>
 #include <rumprun-base/parseargs.h>
 
-#include <bmk-core/jsmn.h>
+struct rumprun_execs rumprun_execs = TAILQ_HEAD_INITIALIZER(rumprun_execs);
 
-/* helper macros */
-#define T_SIZE(t) ((t)->end - (t)->start)
-#define T_STR(t,d) ((t)->start + d)
-#define T_PRINTFSTAR(t,d) T_SIZE(t), T_STR(t,d)
-#define T_STREQ(t, d, str) (strncmp(T_STR(t,d), str, T_SIZE(t)) == 0)
-
-#define T_STRCPY(dest, destsize, t, d)					\
-  do {									\
-	unsigned long strsize = MIN(destsize-1,T_SIZE(t));		\
-	strncpy(dest, T_STR(t, d), strsize);				\
-	dest[strsize] = '\0';						\
-  } while (/*CONSTCOND*/0)
-
-#define T_CHECKTYPE(t, data, exp, fun)					\
-  do {									\
-	if (t->type != exp) {						\
-		errx(1, "unexpected type for token \"%.*s\" "		\
-		    "in \"%s\"", T_PRINTFSTAR(t,data), fun);		\
-	}								\
-  } while (/*CONSTCOND*/0)
-
-#define T_CHECKSIZE(t, data, exp, fun)					\
-  do {									\
-	if (t->size != exp) {						\
-		errx(1, "unexpected size for token \"%.*s\" "		\
-		    "in \"%s\"", T_PRINTFSTAR(t,data), fun);		\
-	}								\
-  } while (/*CONSTCOND*/0)
-
-static char *
-token2cstr(jsmntok_t *t, char *data)
+static const char *
+jtypestr(enum jtypes t)
 {
 
-	*(T_STR(t, data) + T_SIZE(t)) = '\0';
-	return T_STR(t, data);
+	switch (t) {
+	case jnull:	return "NULL";
+	case jtrue:	return "BOOLEAN";
+	case jfalse:	return "BOOLEAN";
+	case jstring:	return "STRING";
+	case jarray:	return "ARRAY";
+	case jobject:	return "OBJECT";
+	default:	return "UNKNOWN";
+	}
 }
 
-struct rumprun_execs rumprun_execs = TAILQ_HEAD_INITIALIZER(rumprun_execs);
+static void
+jexpect(enum jtypes t, jvalue *v, const char *loc)
+{
+
+	if (v->d != t)
+		warnx("%s: expected %s, got %s", loc, jtypestr(t),
+			jtypestr(v->d));
+}
 
 static void
 makeargv(char *argvstr)
@@ -115,15 +101,12 @@ makeargv(char *argvstr)
 	TAILQ_INSERT_TAIL(&rumprun_execs, rre, rre_entries);
 }
 
-static int
-handle_cmdline(jsmntok_t *t, int left, char *data)
+static void
+handle_cmdline(jvalue *v, const char *loc)
 {
 
-	T_CHECKTYPE(t, data, JSMN_STRING, __func__);
-
-	makeargv(token2cstr(t, data));
-
-	return 1;
+	jexpect(jstring, v, __func__);
+	makeargv(strdup(v->u.s));
 }
 
 /*
@@ -135,139 +118,102 @@ handle_cmdline(jsmntok_t *t, int left, char *data)
  *      ....
  * ]
  */
-static int
-addbin(jsmntok_t *t, char *data)
+static void
+addbin(jvalue *v, const char *loc)
 {
-	jsmntok_t *t_bin, *t_argv, *t_runmode;
 	struct rumprun_exec *rre;
-	jsmntok_t *key, *value;
 	char *binname;
-	int binsize = 1;
-	int objleft = t->size;
-	int rreflags, i;
+	jvalue *v_bin, *v_argv, *v_runmode;
+	int rreflags;
+	size_t nargv;
 
-	T_CHECKTYPE(t, data, JSMN_OBJECT, __func__);
-	t++;
+	jexpect(jobject, v, __func__);
 
 	/* process and validate data */
-	t_bin = t_argv = t_runmode = NULL;
-	while (objleft--) {
-		int mysize;
+	v_bin = v_argv = v_runmode = NULL;
+	for (jvalue **i = v->u.v; *i; ++i) {
 
-		key = t;
-		value = t+1;
-
-		T_CHECKTYPE(key, data, JSMN_STRING, __func__);
-
-		if (T_STREQ(key, data, "bin")) {
-			t_bin = value;
-
-			T_CHECKSIZE(key, data, 1, __func__);
-			T_CHECKTYPE(value, data, JSMN_STRING, __func__);
-			T_CHECKSIZE(value, data, 0, __func__);
-
-			mysize = 1 + 1;
-		} else if (T_STREQ(key, data, "argv")) {
-			T_CHECKTYPE(value, data, JSMN_ARRAY, __func__);
-
-			t_argv = value;
-
-			/* key + array + array contents */
-			mysize = 1 + 1 + value->size;
-		} else if (T_STREQ(key, data, "runmode")) {
-			t_runmode = value;
-
-			T_CHECKSIZE(key, data, 1, __func__);
-			T_CHECKTYPE(value, data, JSMN_STRING, __func__);
-			T_CHECKSIZE(value, data, 0, __func__);
-
-			mysize = 1 + 1;
+		if (strcmp((*i)->n, "bin") == 0) {
+			jexpect(jstring, *i, __func__);
+			v_bin = *i;
+		} else if (strcmp((*i)->n, "argv") == 0) {
+			jexpect(jarray, *i, __func__);
+			v_argv = *i;
+		} else if (strcmp((*i)->n, "runmode") == 0) {
+			jexpect(jstring, *i, __func__);
+			v_runmode = *i;
 		} else {
-			errx(1, "unexpected key \"%.*s\" in \"%s\"",
-			    T_PRINTFSTAR(key, data), __func__);
+			errx(1, "unexpected key \"%s\" in \"%s\"", (*i)->n,
+				__func__);
 		}
-
-		t += mysize;
-		binsize += mysize;
 	}
 
-	if (!t_bin)
+	if (!v_bin)
 		errx(1, "missing \"bin\" for rc entry");
-	binname = token2cstr(t_bin, data);
+	binname = strdup(v_bin->u.s);
 
-	if (t_runmode) {
-		bool sizeok = T_SIZE(t_runmode) == 1;
-
-		if (sizeok && *T_STR(t_runmode,data) == '&') {
+	if (v_runmode) {
+		if (strcmp(v_runmode->u.s, "&") == 0) {
 			rreflags = RUMPRUN_EXEC_BACKGROUND;
-		} else if (sizeok && *T_STR(t_runmode,data) == '|') {
+		} else if (strcmp(v_runmode->u.s, "|") == 0) {
 			rreflags = RUMPRUN_EXEC_PIPE;
 		} else {
-			errx(1, "invalid runmode \"%.*s\" for bin \"%.*s\"",
-			    T_PRINTFSTAR(t_runmode, data),
-			    T_PRINTFSTAR(t_bin, data));
+			errx(1, "invalid runmode \"%s\" for bin \"%s\"",
+				v_runmode->u.s, v_bin->u.s);
 		}
 	} else {
 		rreflags = 0;
 	}
 
+	nargv = 0;
+	if (v_argv) {
+		for (jvalue **i = v_argv->u.v; *i; ++i) {
+			jexpect(jstring, *i, __func__);
+			nargv++;
+		}
+	}
+
 	/* ok, we got everything.  save into rumprun_exec structure */
-	rre = malloc(sizeof(*rre) + (2+t_argv->size) * sizeof(char *));
+	rre = malloc(sizeof(*rre) + (2+nargv) * sizeof(char *));
 	if (rre == NULL)
 		err(1, "allocate rumprun_exec");
 	rre->rre_flags = rreflags;
-	rre->rre_argc = 1+t_argv->size;
+	rre->rre_argc = 1+nargv;
 	rre->rre_argv[0] = binname;
-	for (i = 1, t = t_argv+1; i <= t_argv->size; i++, t++) {
-		T_CHECKTYPE(t, data, JSMN_STRING, __func__);
-		rre->rre_argv[i] = token2cstr(t, data);
+	int j; jvalue **arg; /* XXX decl? */
+	for (j = 1, arg = v_argv->u.v; *arg; ++arg, ++j) {
+		rre->rre_argv[j] = strdup((*arg)->u.s);
 	}
 	rre->rre_argv[rre->rre_argc] = NULL;
 
 	TAILQ_INSERT_TAIL(&rumprun_execs, rre, rre_entries);
-
-	return binsize;
 }
 
-static int
-handle_rc(jsmntok_t *t, int left, char *data)
+static void
+handle_rc(jvalue *v, const char *loc)
 {
-	int onesize, totsize, rem;
 
-	T_CHECKTYPE(t, data, JSMN_ARRAY, __func__);
-
-	rem = t->size;
-	for (t++, totsize = 1; rem; rem--) {
-		onesize = addbin(t, data);
-		totsize += onesize;
-		t += onesize;
-	}
-
-	return totsize;
+	jexpect(jarray, v, __func__);
+	for (jvalue **i = v->u.v; *i; ++i)
+		addbin(v, __func__);
 }
 
-static int
-handle_env(jsmntok_t *t, int left, char *data)
+static void
+handle_env(jvalue *v, const char *loc)
 {
 
-	T_CHECKTYPE(t, data, JSMN_STRING, __func__);
-
-	if (putenv(token2cstr(t, data)) == -1)
+	jexpect(jstring, v, __func__);
+	if (putenv(v->u.s) == -1)
 		err(1, "putenv");
-
-	return 1;
 }
 
-static int
-handle_hostname(jsmntok_t *t, int left, char *data)
+static void
+handle_hostname(jvalue *v, const char *loc)
 {
 
-	T_CHECKTYPE(t, data, JSMN_STRING, __func__);
-
-	if (sethostname(token2cstr(t, data), T_SIZE(t)) == -1)
+	jexpect(jstring, v, __func__);
+	if (sethostname(v->u.s, strlen(v->u.s)) == -1)
 		err(1, "sethostname");
-
-	return 1;
 }
 
 static void
@@ -332,67 +278,44 @@ config_ipv6(const char *ifname, const char *method,
 	}
 }
 
-static int
-handle_net(jsmntok_t *t, int left, char *data)
+static void
+handle_net(jvalue *v, const char *loc)
 {
 	const char *ifname, *cloner, *type, *method;
 	const char *addr, *mask, *gw;
-	jsmntok_t *key, *value;
-	int i, objsize;
 	int rv;
-	static int configured;
 
-	T_CHECKTYPE(t, data, JSMN_OBJECT, __func__);
-
-	/* we expect straight key-value pairs (at least for now) */
-	objsize = t->size;
-	if (left < 2*objsize + 1) {
-		return -1;
-	}
-	t++;
-
-	if (configured) {
-		errx(1, "currently only 1 \"net\" configuration is supported");
-	}
+	jexpect(jobject, v, __func__);
 
 	ifname = cloner = type = method = NULL;
 	addr = mask = gw = NULL;
 
-	for (i = 0; i < objsize; i++, t+=2) {
-		const char *valuestr;
-		key = t;
-		value = t+1;
-
-		T_CHECKTYPE(key, data, JSMN_STRING, __func__);
-		T_CHECKSIZE(key, data, 1, __func__);
-
-		T_CHECKTYPE(value, data, JSMN_STRING, __func__);
-		T_CHECKSIZE(value, data, 0, __func__);
+	for (jvalue **i = v->u.v; *i; ++i) {
+		jexpect(jstring, *i, __func__);
 
 		/*
 		 * XXX: this mimics the structure from Xen.  We probably
 		 * want a richer structure, but let's be happy to not
 		 * diverge for now.
 		 */
-		valuestr = token2cstr(value, data);
-		if (T_STREQ(key, data, "if")) {
-			ifname = valuestr;
-		} else if (T_STREQ(key, data, "cloner")) {
-			cloner = valuestr;
-		} else if (T_STREQ(key, data, "type")) {
-			type = valuestr;
-		} else if (T_STREQ(key, data, "method")) {
-			method = valuestr;
-		} else if (T_STREQ(key, data, "addr")) {
-			addr = valuestr;
-		} else if (T_STREQ(key, data, "mask")) {
+		if (strcmp((*i)->n, "if") == 0) {
+			ifname = (*i)->u.s;
+		} else if (strcmp((*i)->n, "cloner") == 0) {
+			cloner = (*i)->u.s;
+		} else if (strcmp((*i)->n, "type") == 0) {
+			type = (*i)->u.s;
+		} else if (strcmp((*i)->n, "method") == 0) {
+			method = (*i)->u.s;
+		} else if (strcmp((*i)->n, "addr") == 0) {
+			addr = (*i)->u.s;
+		} else if (strcmp((*i)->n, "mask") == 0) {
 			/* XXX: we could also pass mask as a number ... */
-			mask = valuestr;
-		} else if (T_STREQ(key, data, "gw")) {
-			gw = valuestr;
+			mask = (*i)->u.s;
+		} else if (strcmp((*i)->n, "gw") == 0) {
+			gw = (*i)->u.s;
 		} else {
-			errx(1, "unexpected key \"%.*s\" in \"%s\"",
-			    T_PRINTFSTAR(key, data), __func__);
+			errx(1, "unexpected key \"%s\" in \"%s\"", (*i)->n,
+				__func__);
 		}
 	}
 
@@ -414,8 +337,6 @@ handle_net(jsmntok_t *t, int left, char *data)
 	} else {
 		errx(1, "network type \"%s\" not supported", type);
 	}
-
-	return 2*objsize + 1;
 }
 
 static void
@@ -541,48 +462,30 @@ struct {
 	{ "kernfs",	mount_kernfs },
 };
 
-static int
-handle_blk(jsmntok_t *t, int left, char *data)
+static void
+handle_blk(jvalue *v, const char *loc)
 {
 	const char *source, *origpath, *fstype;
 	char *mp, *path;
-	jsmntok_t *key, *value;
-	int i, objsize;
 
-	T_CHECKTYPE(t, data, JSMN_OBJECT, __func__);
-
-	/* we expect straight key-value pairs */
-	objsize = t->size;
-	if (left < 2*objsize + 1) {
-		return -1;
-	}
-	t++;
+	jexpect(jobject, v, __func__);
 
 	fstype = source = origpath = mp = path = NULL;
 
-	for (i = 0; i < objsize; i++, t+=2) {
-		char *valuestr;
-		key = t;
-		value = t+1;
+	for (jvalue **i = v->u.v; *i; ++i) {
+		jexpect(jstring, *i, __func__);
 
-		T_CHECKTYPE(key, data, JSMN_STRING, __func__);
-		T_CHECKSIZE(key, data, 1, __func__);
-
-		T_CHECKTYPE(value, data, JSMN_STRING, __func__);
-		T_CHECKSIZE(value, data, 0, __func__);
-
-		valuestr = token2cstr(value, data);
-		if (T_STREQ(key, data, "source")) {
-			source = valuestr;
-		} else if (T_STREQ(key, data, "path")) {
-			origpath = path = valuestr;
-		} else if (T_STREQ(key, data, "fstype")) {
-			fstype = valuestr;
-		} else if (T_STREQ(key, data, "mountpoint")) {
-			mp = valuestr;
+		if (strcmp((*i)->n, "source") == 0) {
+			source = (*i)->u.s;
+		} else if (strcmp((*i)->n, "path") == 0) {
+			origpath = path = (*i)->u.s;
+		} else if (strcmp((*i)->n, "fstype") == 0) {
+			fstype = (*i)->u.s;
+		} else if (strcmp((*i)->n, "mountpoint") == 0) {
+			mp = (*i)->u.s;
 		} else {
-			errx(1, "unexpected key \"%.*s\" in \"%s\"",
-			    T_PRINTFSTAR(key, data), __func__);
+			errx(1, "unexpected key \"%s\" in \"%s\"", (*i)->n,
+				__func__);
 		}
 	}
 
@@ -646,16 +549,14 @@ handle_blk(jsmntok_t *t, int left, char *data)
 
 	if (path != origpath)
 		free(path);
-
-	return 2*objsize + 1;
 }
 
 struct {
 	const char *name;
-	int (*handler)(jsmntok_t *, int, char *);
+	void (*handler)(jvalue *, const char *);
 } parsers[] = {
 	{ "cmdline", handle_cmdline },
-	{ "rc_TESTING", handle_rc },
+	{ "rc", handle_rc },
 	{ "env", handle_env },
 	{ "hostname", handle_hostname },
 	{ "blk", handle_blk },
@@ -747,12 +648,7 @@ rumprun_config(char *cmdline)
 {
 	char *cfg;
 	struct rumprun_exec *rre;
-	jsmn_parser p;
-	jsmntok_t *tokens = NULL;
-	jsmntok_t *t;
-	size_t cmdline_len;
-	unsigned int i;
-	int ntok;
+	jvalue *root;
 
 	/* is the config file on rootfs?  if so, mount & dig it out */
 	cfg = rumprun_config_path(cmdline);
@@ -771,47 +667,22 @@ rumprun_config(char *cmdline)
 		cmdline++;
 	}
 
-	cmdline_len = strlen(cmdline);
-	jsmn_init(&p);
-	ntok = jsmn_parse(&p, cmdline, cmdline_len, NULL, 0);
+	root = jparse(cmdline);
+	if (!root)
+		errx(1, "jparse failed");
+	jexpect(jobject, root, __func__);
 
-	if (ntok <= 0) {
-		errx(1, "json parse failed 1");
-	}
+	for (jvalue **i = root->u.v; *i; ++i) {
 
-	tokens = malloc(ntok * sizeof(*t));
-	if (!tokens) {
-		errx(1, "failed to allocate jsmn tokens");
-	}
-
-	jsmn_init(&p);
-	if ((ntok = jsmn_parse(&p, cmdline, cmdline_len, tokens, ntok)) < 1) {
-		errx(1, "json parse failed 2");
-	}
-
-	T_CHECKTYPE(tokens, cmdline, JSMN_OBJECT, __func__);
-
-	for (t = &tokens[0]; t < &tokens[ntok]; ) {
-		/* allow multiple levels of object nesting */
-		if (t->type == JSMN_OBJECT) {
-			t++;
-			continue;
-		}
-
-		T_CHECKTYPE(t, cmdline, JSMN_STRING, __func__);
-		for (i = 0; i < __arraycount(parsers); i++) {
-			if (T_STREQ(t, cmdline, parsers[i].name)) {
-				int left;
-
-				t++;
-				left = &tokens[ntok] - t;
-				t += parsers[i].handler(t, left, cmdline);
+		size_t j;
+		for (j = 0; j < __arraycount(parsers); j++) {
+			if (strcmp((*i)->n, parsers[j].name) == 0) {
+				parsers[j].handler(*i, __func__);
 				break;
 			}
 		}
-		if (i == __arraycount(parsers))
-			errx(1, "no match for key \"%.*s\"",
-			    T_PRINTFSTAR(t, cmdline));
+		if (j == __arraycount(parsers))
+			errx(1, "no match for key \"%s\"", (*i)->n);
 	}
 
 	/*
@@ -825,5 +696,5 @@ rumprun_config(char *cmdline)
 		errx(1, "rumprun_config: last bin may not output to pipe");
 	}
 
-	free(tokens);
+	jdel(root);
 }
