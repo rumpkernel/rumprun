@@ -77,7 +77,7 @@ jexpect(enum jtypes t, jvalue *v, const char *loc)
 {
 
 	if (v->d != t)
-		warnx("%s: expected %s, got %s", loc, jtypestr(t),
+		errx(1, "%s: expected %s, got %s", loc, jtypestr(t),
 			jtypestr(v->d));
 }
 
