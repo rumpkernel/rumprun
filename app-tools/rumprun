@@ -312,8 +312,8 @@ json_store_rc ()
 	local line
 	bin=$1
 	shift
-	read line <<EOM >>${TMPDIR}/json.cfg
-"rc": [ { "bin": "${bin}", "argv": $(json_array "$@") } ],
+	read line <<EOM
+"rc": [ { "bin": "${bin}", "argv": $(json_array "$@") } ]
 EOM
 	json_append_ln $line
 }
