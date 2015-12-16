@@ -89,7 +89,7 @@ script args are:
    -T same as -t, except do not remove temporary directory
 
 guest args are:
-	[-dip] [-b blkspec] [-D port] [-e VAR[=VALUE]] [-g args]
+	[-dip] [-b blkspec] [-D port] [-e VAR=VALUE] [-g args]
 	[-I iftag,ifopts] [-M mem] [-N name] [-W iftag,netspec]
 
    -b configures a block device.  The format of "blkspec" is:
@@ -318,6 +318,21 @@ EOM
 	json_append_ln $line
 }
 
+json_store_env ()
+{
+	local key
+	local value
+	local line
+	# XXX: not terribly robust, but setenv() will catch offenders
+	key=${1%=*}
+	value=${1#*=}
+	[ -z "${key}" -o -z "${value}" ] && die -e must be NAME=VALUE
+	read line <<EOM
+"env": { "${key}": "${value}" }
+EOM
+	json_append_ln $line
+}
+
 json_store_netspec ()
 {
 
@@ -535,7 +550,7 @@ run_xen ()
 			;;
 		# -e: Set guest environment variable.
 		e)
-			json_append_ln "\"env\": \"${OPTARG}\""
+			json_store_env "${OPTARG}"
 			;;
 		# -p: Leave the domain paused after creation.
 		p)
@@ -676,7 +691,7 @@ run_qemu ()
 			opt_debug="-gdb tcp::${OPTARG}"
 			;;
 		e)
-			json_append_ln "\"env\": \"${OPTARG}\""
+			json_store_env "${OPTARG}"
 			;;
 		g)
 			# toimii ku gunan vessa
@@ -792,7 +807,7 @@ bake_iso ()
 			die -D not supported on iso
 			;;
 		e)
-			json_append_ln "\"env\": \"${OPTARG}\""
+			json_store_env "${OPTARG}"
 			;;
 		i)
 			die -i not supported on iso
@@ -870,7 +885,7 @@ make_ec2 ()
 			die -D not supported on ec2
 			;;
 		e)
-			json_append_ln "\"env\": \"${OPTARG}\""
+			json_store_env "${OPTARG}"
 			;;
 		i)
 			die -i not supported on ec2

@@ -172,9 +172,12 @@ static void
 handle_env(jvalue *v, const char *loc)
 {
 
-	jexpect(jstring, v, __func__);
-	if (putenv(v->u.s) == -1)
-		err(1, "putenv");
+	jexpect(jobject, v, __func__);
+	for (jvalue **i = v->u.v; *i; ++i) {
+		jexpect(jstring, *i, __func__);
+		if (setenv((*i)->n, (*i)->u.s, 1) == -1)
+			err(1, "setenv");
+	}
 }
 
 static void

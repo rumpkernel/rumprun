@@ -54,22 +54,13 @@ are baked into the unikernel image.
 
 ## env: Environment variables
 
-    "env": <string>
-    ...
-
-* _env_: A string formatted as `NAME=VALUE`. Sets the environment variable
-  `NAME` to `VALUE`.
-
-_FIXME_: Relies on specifying multiple `env` keys, which is not valid JSON.
-Proposed specification as an array follows:
-
-    "env": [
-        <string>,
+    "env": {
+        <key>: <value>,
         ...
     ]
 
-* _env[]_: Each element is a string formatted as `NAME=VALUE`. Sets the
-  environment variable `NAME` to `VALUE`.
+* _env_: Each _key_/_value_ pair of strings sets the environment variable
+  `<key>` to `<value>`.
 
 ## hostname: Kernel hostname
 
