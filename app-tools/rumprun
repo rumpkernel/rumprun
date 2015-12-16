@@ -290,6 +290,34 @@ json_finish ()
 	json_append_ln -b ""
 }
 
+json_array ()
+{
+	local a
+	local sep
+	local i
+	a="["
+	sep=""
+	for i in "$@"; do
+		i=$(printf '%s' "$i" | sed -e 's/"/\\\"/g')
+		a=$(printf '%s%s"%s"' "$a" "$sep" "$i")
+		sep=,
+	done
+	a="$a]"
+	echo $a
+}
+
+json_store_rc ()
+{
+	local bin
+	local line
+	bin=$1
+	shift
+	read line <<EOM >>${TMPDIR}/json.cfg
+"rc": [ { "bin": "${bin}", "argv": $(json_array "$@") } ],
+EOM
+	json_append_ln $line
+}
+
 json_store_netspec ()
 {
 
@@ -559,7 +587,7 @@ run_xen ()
 	# kernfs is always present on Xen
 	json_store_kernfs
 
-	json_append_ln "\"cmdline\": \""$@"\""
+	json_store_rc "$@"
 	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
 	json_finalize_block
 	json_finish
@@ -706,7 +734,7 @@ run_qemu ()
 		fi
 	fi
 
-	json_append_ln "\"cmdline\": \""$@"\""
+	json_store_rc "$@"
 	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
 	json_finalize_block
 	json_finish
@@ -796,7 +824,7 @@ bake_iso ()
 
 	[ ! -f ${opt_name} ] || die target ${opt_name} already exists
 
-	json_append_ln "\"cmdline\": \""$@"\""
+	json_store_rc "$@"
 	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
 	json_finalize_block
 	json_finish
@@ -875,7 +903,7 @@ make_ec2 ()
 
 	[ ! -f ${finaldir} ] || die target ${finaldir} already exists
 
-	json_append_ln "\"cmdline\": \""$@"\""
+	json_store_rc "$@"
 	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
 	json_finalize_block
 	json_finish

@@ -81,43 +81,13 @@ jexpect(enum jtypes t, jvalue *v, const char *loc)
 			jtypestr(v->d));
 }
 
-static void
-makeargv(char *argvstr)
-{
-	struct rumprun_exec *rre;
-	char **argv;
-	int nargs;
+static struct rumprun_exec
+rre_dummy = {
+	.rre_flags = RUMPRUN_EXEC_CMDLINE,
+	.rre_argc = 1,
+	.rre_argv = { NULL, NULL }
+};
 
-	rumprun_parseargs(argvstr, &nargs, 0);
-	rre = malloc(sizeof(*rre) + (nargs+1) * sizeof(*argv));
-	if (rre == NULL)
-		err(1, "could not allocate rre");
-
-	rumprun_parseargs(argvstr, &nargs, rre->rre_argv);
-	rre->rre_argv[nargs] = NULL;
-	rre->rre_flags = RUMPRUN_EXEC_CMDLINE;
-	rre->rre_argc = nargs;
-
-	TAILQ_INSERT_TAIL(&rumprun_execs, rre, rre_entries);
-}
-
-static void
-handle_cmdline(jvalue *v, const char *loc)
-{
-
-	jexpect(jstring, v, __func__);
-	makeargv(strdup(v->u.s));
-}
-
-/*
- * "rc": [
- *	{ "bin" : "binname",
- *	  "argv" : [ "arg1", "arg2", ... ], (optional)
- *	  "runmode" : "& OR |" (optional)
- *	},
- *      ....
- * ]
- */
 static void
 addbin(jvalue *v, const char *loc)
 {
@@ -555,7 +525,6 @@ struct {
 	const char *name;
 	void (*handler)(jvalue *, const char *);
 } parsers[] = {
-	{ "cmdline", handle_cmdline },
 	{ "rc", handle_rc },
 	{ "env", handle_env },
 	{ "hostname", handle_hostname },
@@ -661,7 +630,9 @@ rumprun_config(char *cmdline)
 	while (*cmdline != '{') {
 		if (*cmdline == '\0') {
 			warnx("could not find start of json.  no config?");
-			makeargv(strdup("rumprun"));
+			rre_dummy.rre_argv[0] = strdup("rumprun");
+			TAILQ_INSERT_TAIL(&rumprun_execs, &rre_dummy,
+				rre_entries);
 			return;
 		}
 		cmdline++;

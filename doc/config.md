@@ -30,20 +30,7 @@ When configuration is passed directly on the kernel command line (see
 platform-specific methods below), everything up to the first `{` character is
 not considered to be part of the configuration.
 
-## cmdline, rc: Program invocation
-
-The `cmdline` key specifies the command line for unikernels containing a single
-program:
-
-    "cmdline": <string>
-
-* _cmdline_: Whitespace-delimited string of arguments passed to the program as
-  `argv[]`, including `argv[0]`.
-
-_TODO_: Is `cmdline` deprecated entirely in favour of `rc`?
-
-Unikernels which contain more than one program (using multibake) MUST use
-the `rc` key to specify command lines for each baked-in program:
+## rc: Program invocation
 
     "rc": [
          {
