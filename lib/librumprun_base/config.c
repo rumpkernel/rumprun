@@ -195,7 +195,7 @@ handle_rc(jvalue *v, const char *loc)
 
 	jexpect(jarray, v, __func__);
 	for (jvalue **i = v->u.v; *i; ++i)
-		addbin(v, __func__);
+		addbin(*i, __func__);
 }
 
 static void
