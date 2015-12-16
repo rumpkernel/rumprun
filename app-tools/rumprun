@@ -562,6 +562,7 @@ run_xen ()
 	json_append_ln "\"cmdline\": \""$@"\""
 	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
 	json_finalize_block
+	json_finish
 
 	name=${opt_name:-rumprun-$(basename "$1")}
 	app="$1"
