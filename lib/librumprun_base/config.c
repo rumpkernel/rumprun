@@ -81,6 +81,31 @@ jexpect(enum jtypes t, jvalue *v, const char *loc)
 			jtypestr(v->d));
 }
 
+typedef struct {
+	const char *name;
+	void (*handler)(jvalue *, const char *);
+} jhandler;
+
+static void
+handle_object(jvalue *v, jhandler h[], const char *loc)
+{
+
+	jexpect(jobject, v, loc);
+	for (jvalue **i = v->u.v; *i; ++i) {
+
+		size_t j;
+		for (j = 0; h[j].handler; j++) {
+			if (strcmp((*i)->n, h[j].name) == 0) {
+				h[j].handler(*i, loc);
+				break;
+			}
+		}
+		if (!h[j].handler)
+			warnx("%s: no match for key \"%s\", ignored", loc,
+				(*i)->n);
+	}
+}
+
 static struct rumprun_exec
 rre_dummy = {
 	.rre_flags = RUMPRUN_EXEC_CMDLINE,
@@ -524,15 +549,13 @@ handle_blk(jvalue *v, const char *loc)
 		free(path);
 }
 
-struct {
-	const char *name;
-	void (*handler)(jvalue *, const char *);
-} parsers[] = {
+static jhandler handlers_root[] = {
 	{ "rc", handle_rc },
 	{ "env", handle_env },
 	{ "hostname", handle_hostname },
 	{ "blk", handle_blk },
 	{ "net", handle_net },
+	{ 0 }
 };
 
 /* don't believe we can have a >64k config */
@@ -644,20 +667,7 @@ rumprun_config(char *cmdline)
 	root = jparse(cmdline);
 	if (!root)
 		errx(1, "jparse failed");
-	jexpect(jobject, root, __func__);
-
-	for (jvalue **i = root->u.v; *i; ++i) {
-
-		size_t j;
-		for (j = 0; j < __arraycount(parsers); j++) {
-			if (strcmp((*i)->n, parsers[j].name) == 0) {
-				parsers[j].handler(*i, __func__);
-				break;
-			}
-		}
-		if (j == __arraycount(parsers))
-			errx(1, "no match for key \"%s\"", (*i)->n);
-	}
+	handle_object(root, handlers_root, __func__);
 
 	/*
 	 * Before we start running things, perform some sanity checks
