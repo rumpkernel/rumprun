@@ -68,50 +68,88 @@ are baked into the unikernel image.
 
 * _hostname_: Sets the hostname returned by the `gethostname()` call.
 
-## net: Network interfaces
-
-Each `net` key defines a network interface to configure:
+## net: Network configuration
 
     "net": {
-        "if": <string>,
-        "cloner": <boolean>,
-        "type": <string>,
-        <type-specific keys>
+        "interfaces": {
+            "<name>": {
+                "create": <boolean>,
+                "addrs": [
+                    <address>,
+                    ...
+                ]
+            },
+            ...
+        },
+        "gateways": [
+            <gateway>,
+            ...
+        ]
     }
-    ...
 
-* _if_: The name of the network interface, as seen by the rump kernel. (eg.
-  `vioif0`, `xenif0`)
-* _cloner_: If true, the rump kernel interface is created at boot time. Required
-  for Xen netback interfaces.
-* _type_: Network interface type. Supported values are `inet` or `inet6`.
+* _interfaces_: Each key configures a single network interface:
+  * _name_: The name of the network interface, as seen by the rump kernel. (eg.
+    `vioif0`, `xenif0`)
+  * _create_: If true, the rump kernel interface is created at boot time.
+    Required for Xen netback interfaces, otherwise _optional_.
+  * _address_: Configures a network address to be assigned to the interface.
+    Refer to protocol families below for supported `<address>` syntax.
+    _Optional_
+* _gateways_: Configures default gateways. Refer to protocol families below for
+  supported `<gateway>` syntax. At most one `<gateway>` may be configured for
+  each supported network protocol. _Optional_
 
-_FIXME_: Relies on specifying multiple `net` keys, which is not valid JSON.
-Should be change to use an array instead.
+### IPv4 configuration
 
-### inet: IPv4 configuration
+Interface addresses to be configured using IPv4 are specified as follows:
 
-A `type` of `inet` indicates that this key defines an interface to be configured
-using IPv4. The `method` key must be set to one of the following:
+    {
+        "type": "inet",
+        "method": <string>,
+        <method-specific configuration>
+    }
+
+The `method` key must be set to one of the following:
 
 * `dhcp`: Configure the interface using DHCPv4.
 * `static`: Configure the interface statically. The following additional keys
   must be present:
-  * `addr`: IPv4 interface address.
-  * `mask`: IPv4 interface netmask in CIDR format.
-  * `gw`: IPv4 address of default gateway. _Optional._
+  * `addr`: IPv4 interface address, in CIDR `address/mask` format.
 
-### inet6: IPv6 configuration
+Gateways to be configured using IPv4 are specified as follows:
 
-A `type` of `inet6` indicates that this key defines an interface to be
-configured using IPv6. The `method` key must be set to one of the following:
+    {
+        "type": "inet",
+        "addr": <string>
+    }
+
+* _addr_: The IPv4 address of the default gateway.
+
+### IPv6 configuration
+
+Interface addresses to be configured using IPv6 are specified as follows:
+
+    {
+        "type": "inet6",
+        "method": <string>,
+        <method-specific configuration>
+    }
+
+The `method` key must be set to one of the following:
 
 * `auto`: Configure the interface using IPv6 stateless autoconfiguration.
 * `static`: Configure the interface statically. The following additional keys
   must be present:
-  * `addr`: IPv6 interface address.
-  * `mask`: IPv6 interface netmask in CIDR format.
-  * `gw`: IPv6 address of default gateway. _Optional._
+  * `addr`: IPv6 interface address, in `address/mask` format.
+
+Gateways to be configured using IPv6 are specified as follows:
+
+    {
+        "type": "inet",
+        "addr": <string>
+    }
+
+* _addr_: The IPv6 address of the default gateway.
 
 ## blk: Block devices and filesystems
 

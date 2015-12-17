@@ -335,27 +335,38 @@ EOM
 
 json_store_netspec ()
 {
-
+	local line
 	json_open_block net
 
+	json_open_block interfaces
 	# XXX: should not assume vioif or -net user
-	json_append_ln	'"if":		"'$(eval echo \${${iftag}2ifname})'"'
+	json_open_block "$(eval echo \${${iftag}2ifname})"
 
 	if $(eval \${${iftag}2cloner}); then
-		json_append_ln	'"cloner":	"'true'"'
+		json_append_ln	'"create":	"'true'"'
 	fi
 
-	json_append_ln	'"type":	"'${iftype}'"'
-	json_append_ln	'"method":	"'${ifmethod}'"'
+	if [ -z "${ifaddr}" ]; then
+		read line <<EOM
+"addrs": [ { "type": "${iftype}", "method": "${ifmethod}" } ]
+EOM
+	else
+		read line <<EOM
+"addrs": [ { "type": "${iftype}", "method": "${ifmethod}", \
+	"addr": "${ifaddr}/${ifmask}" } ]
+EOM
+	fi
+	json_append_ln $line
 
-	[ -n "${ifaddr:-}" ] || { json_finalize_block ; return ; }
+	json_finalize_block
+	json_finalize_block
 
-	json_append_ln	'"addr":	"'${ifaddr}'"'
-	json_append_ln	'"mask":	"'${ifmask}'"'
-
-	[ -n "${ifgw}" ] || { json_finalize_block ; return ; }
-
-	json_append_ln	'"gw":		"'${ifgw}'"'
+	if [ -n "${ifgw}" ]; then
+		read line <<EOM
+"gateways": [ { "type": "${iftype}", "addr": "${ifgw}" } ]
+EOM
+		json_append_ln $line
+	fi
 
 	json_finalize_block
 }

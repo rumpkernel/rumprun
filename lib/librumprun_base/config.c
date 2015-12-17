@@ -89,20 +89,35 @@ typedef struct {
 static void
 handle_object(jvalue *v, jhandler h[], const char *loc)
 {
+	size_t j;
 
 	jexpect(jobject, v, loc);
-	for (jvalue **i = v->u.v; *i; ++i) {
 
-		size_t j;
+	/*
+	 * Pass 1: Check for unknown keys in object.
+	 */
+	for (jvalue **i = v->u.v; *i; ++i) {
 		for (j = 0; h[j].handler; j++) {
 			if (strcmp((*i)->n, h[j].name) == 0) {
-				h[j].handler(*i, loc);
 				break;
 			}
 		}
 		if (!h[j].handler)
 			warnx("%s: no match for key \"%s\", ignored", loc,
 				(*i)->n);
+	}
+
+	/*
+	 * Pass 2: Call handlers in the order they are defined. Given that JSON
+	 * objects are unordered, this ensures * that configuration is done in
+	 * a deterministic order.
+	 */
+	for (j = 0; h[j].handler; j++) {
+		for (jvalue **i = v->u.v; *i; ++i) {
+			if (strcmp((*i)->n, h[j].name) == 0) {
+				h[j].handler(*i, loc);
+			}
+		}
 	}
 }
 
@@ -216,125 +231,219 @@ handle_hostname(jvalue *v, const char *loc)
 
 static void
 config_ipv4(const char *ifname, const char *method,
-	const char *addr, const char *mask, const char *gw)
+	const char *cidr)
 {
 	int rv;
 
 	if (strcmp(method, "dhcp") == 0) {
 		if ((rv = rump_pub_netconfig_dhcp_ipv4_oneshot(ifname)) != 0)
-			errx(1, "configuring dhcp for %s failed: %d",
-			    ifname, rv);
+			errx(1, "%s: %s: configuring dhcp failed: %s",
+			    __func__, ifname, strerror(rv));
 	} else {
+		char *addr = strdup(cidr);
+		char *mask = strchr(addr, '/');
+
 		if (strcmp(method, "static") != 0) {
-			errx(1, "method \"static\" or \"dhcp\" expected, "
-			    "got \"%s\"", method);
+			errx(1, "%s: %s: "
+			    "method \"static\" or \"dhcp\" expected, "
+			    "got \"%s\"", __func__, ifname, method);
 		}
 
 		if (!addr || !mask) {
-			errx(1, "static net cfg missing addr or mask");
+			errx(1, "%s: %s: invalid addr specified", __func__,
+				ifname);
 		}
+		*mask = 0;
+		mask += 1;
 
 		if ((rv = rump_pub_netconfig_ipv4_ifaddr_cidr(ifname,
 		    addr, atoi(mask))) != 0) {
-			errx(1, "ifconfig \"%s\" for \"%s/%s\" failed",
-			    ifname, addr, mask);
+			errx(1, "%s: %s: ifconfig \"%s/%s\" failed: %s",
+			    __func__, ifname, addr, mask, strerror(rv));
 		}
-		if (gw && (rv = rump_pub_netconfig_ipv4_gw(gw)) != 0) {
-			errx(1, "gw \"%s\" addition failed", gw);
-		}
+
+		free(addr);
 	}
 }
 
 static void
 config_ipv6(const char *ifname, const char *method,
-	const char *addr, const char *mask, const char *gw)
+	const char *cidr)
 {
 	int rv;
 
-	if (strcmp(method, "auto") == 0) {
-		if ((rv = rump_pub_netconfig_auto_ipv6(ifname)) != 0) {
-			errx(1, "ipv6 autoconfig failed");
-		}
+	if (strcmp(method, "dhcp") == 0) {
+		if ((rv = rump_pub_netconfig_auto_ipv6(ifname)) != 0)
+			errx(1, "%s: %s: ipv6 autoconfig failed: %s",
+			    __func__, ifname, strerror(rv));
 	} else {
+		char *addr = strdup(cidr);
+		char *mask = strchr(addr, '/');
+
 		if (strcmp(method, "static") != 0) {
-			errx(1, "method \"static\" or \"dhcp\" expected, "
-			    "got \"%s\"", method);
+			errx(1, "%s: %s: "
+			    "method \"static\" or \"auto\" expected, "
+			    "got \"%s\"", __func__, ifname, method);
 		}
 
 		if (!addr || !mask) {
-			errx(1, "static net cfg missing addr or mask");
+			errx(1, "%s: %s: invalid addr specified", __func__,
+				ifname);
 		}
+		*mask = 0;
+		mask += 1;
 
 		if ((rv = rump_pub_netconfig_ipv6_ifaddr(ifname,
 		    addr, atoi(mask))) != 0) {
-			errx(1, "ifconfig \"%s\" for \"%s/%s\" failed",
-			    ifname, addr, mask);
+			errx(1, "%s: %s: ifconfig \"%s/%s\" failed: %s",
+			    __func__, ifname, addr, mask, strerror(rv));
 		}
-		if (gw && (rv = rump_pub_netconfig_ipv6_gw(gw)) != 0) {
-			errx(1, "gw \"%s\" addition failed", gw);
+
+		free(addr);
+	}
+}
+
+static void
+handle_interface(jvalue *v, const char *loc)
+{
+	jvalue *addrs, *create;
+	const char *ifname, *type, *method, *addr;
+	int rv;
+
+	jexpect(jobject, v, __func__);
+
+	ifname = v->n;
+	addrs = create = NULL;
+	for (jvalue **i = v->u.v; *i; ++i) {
+		if (strcmp((*i)->n, "create") == 0) {
+			if ((*i)->d != jtrue && (*i)->d != jfalse) {
+				errx(1, "%s: expected BOOLEAN for key"
+					"\"create\" in \"%s\"", __func__,
+					ifname);
+			}
+			create = *i;
+		} else if (strcmp((*i)->n, "addrs") == 0) {
+			jexpect(jarray, *i, __func__);
+			addrs = *i;
+		} else {
+			warnx("%s: unexpected key \"%s\" in \"%s\", ignored",
+				__func__, (*i)->n, ifname);
+		}
+	}
+
+	if (create && create->d == jtrue) {
+		if ((rv = rump_pub_netconfig_ifcreate(ifname)) != 0) {
+			errx(1, "%s: ifcreate(%s) failed: %s", __func__, ifname,
+				strerror(rv));
+		}
+	}
+
+	if (!addrs) {
+		warnx("%s: no addresses configured for interface \"%s\"",
+			__func__, ifname);
+		return;
+	}
+
+	for (jvalue **a = addrs->u.v; *a; ++a) {
+		jexpect(jobject, *a, __func__);
+
+		type = method = addr = NULL;
+		for (jvalue **i = (*a)->u.v; *i; ++i) {
+			if (strcmp((*i)->n, "type") == 0) {
+				type = (*i)->u.s;
+			} else if (strcmp((*i)->n, "method") == 0) {
+				method = (*i)->u.s;
+			} else if (strcmp((*i)->n, "addr") == 0) {
+				addr = (*i)->u.s;
+			} else {
+				warnx("%s: unexpected key \"%s\""
+					" in \"%s.addrs[]\"",
+					__func__, (*i)->n, ifname);
+			}
+		}
+
+		if (!type || !method) {
+			errx(1, "%s: missing type/method in \"%s.addrs[]\"",
+				__func__, ifname);
+		}
+		if (strcmp(type, "inet") == 0) {
+			config_ipv4(ifname, method, addr);
+		} else if (strcmp(type, "inet6") == 0) {
+			config_ipv6(ifname, method, addr);
+		} else {
+			errx(1, "%s: address type \"%s\" not supported "
+				"in \"%s.addrs[]\"", __func__, type, ifname);
 		}
 	}
 }
 
 static void
-handle_net(jvalue *v, const char *loc)
+handle_interfaces(jvalue *v, const char *loc)
 {
-	const char *ifname, *cloner, *type, *method;
-	const char *addr, *mask, *gw;
-	int rv;
 
 	jexpect(jobject, v, __func__);
 
-	ifname = cloner = type = method = NULL;
-	addr = mask = gw = NULL;
-
 	for (jvalue **i = v->u.v; *i; ++i) {
-		jexpect(jstring, *i, __func__);
+		handle_interface(*i, __func__);
+	}
+}
 
-		/*
-		 * XXX: this mimics the structure from Xen.  We probably
-		 * want a richer structure, but let's be happy to not
-		 * diverge for now.
-		 */
-		if (strcmp((*i)->n, "if") == 0) {
-			ifname = (*i)->u.s;
-		} else if (strcmp((*i)->n, "cloner") == 0) {
-			cloner = (*i)->u.s;
-		} else if (strcmp((*i)->n, "type") == 0) {
-			type = (*i)->u.s;
-		} else if (strcmp((*i)->n, "method") == 0) {
-			method = (*i)->u.s;
-		} else if (strcmp((*i)->n, "addr") == 0) {
-			addr = (*i)->u.s;
-		} else if (strcmp((*i)->n, "mask") == 0) {
-			/* XXX: we could also pass mask as a number ... */
-			mask = (*i)->u.s;
-		} else if (strcmp((*i)->n, "gw") == 0) {
-			gw = (*i)->u.s;
-		} else {
-			errx(1, "unexpected key \"%s\" in \"%s\"", (*i)->n,
+static void
+handle_gateways(jvalue *v, const char *loc)
+{
+	const char *type, *addr;
+	int rv;
+
+	jexpect(jarray, v, __func__);
+
+	for (jvalue **a = v->u.v; *a; ++a) {
+		jexpect(jobject, *a, __func__);
+
+		type = addr = NULL;
+		for (jvalue **i = (*a)->u.v; *i; ++i) {
+			if (strcmp((*i)->n, "type") == 0) {
+				type = (*i)->u.s;
+			} else if (strcmp((*i)->n, "addr") == 0) {
+				addr = (*i)->u.s;
+			} else {
+				warnx("%s: unexpected key \"%s\""
+					" in gateways[], ignored",
+					__func__, (*i)->n);
+			}
+		}
+
+		if (!type || !addr) {
+			errx(1, "%s: missing type/addr in gateways[]",
 				__func__);
 		}
-	}
-
-	if (!ifname || !type || !method) {
-		errx(1, "net cfg missing vital data, not configuring");
-	}
-
-	if (cloner) {
-		if ((rv = rump_pub_netconfig_ifcreate(ifname)) != 0) {
-			errx(1, "rumprun_config: ifcreate %s failed: %d",
-			    ifname, rv);
+		if (strcmp(type, "inet") == 0) {
+			if ((rv = rump_pub_netconfig_ipv4_gw(addr)) != 0) {
+				errx(1, "%s: gw \"%s\" addition failed: %s",
+					__func__, addr, strerror(rv));
+			}
+		} else if (strcmp(type, "inet6") == 0) {
+			if ((rv = rump_pub_netconfig_ipv6_gw(addr)) != 0) {
+				errx(1, "%s: gw \"%s\" addition failed: %s",
+					__func__, addr, strerror(rv));
+			}
+		} else {
+			errx(1, "%s: gateway type \"%s\" not supported "
+				"in gateways[]", __func__, type);
 		}
 	}
+}
 
-	if (strcmp(type, "inet") == 0) {
-		config_ipv4(ifname, method, addr, mask, gw);
-	} else if (strcmp(type, "inet6") == 0) {
-		config_ipv6(ifname, method, addr, mask, gw);
-	} else {
-		errx(1, "network type \"%s\" not supported", type);
-	}
+static jhandler handlers_net[] = {
+	{ "interfaces", handle_interfaces },
+	{ "gateways", handle_gateways },
+	{ 0 }
+};
+
+static void
+handle_net(jvalue *v, const char *loc)
+{
+
+	handle_object(v, handlers_net, __func__);
 }
 
 static void
