@@ -86,6 +86,19 @@ typedef struct {
 	void (*handler)(jvalue *, const char *);
 } jhandler;
 
+/*
+ * Given an object with key/value pairs, v, and an array of handlers, h,
+ * execute those handlers which match keys in v, *in priority order*. I.e.
+ * earlier handlers in h are executed before later handlers.
+ *
+ * This works around the fact that a JSON object is unordered by definition,
+ * but we need to do some operations in a deterministic order.
+ *
+ * TODO: This function is only efficient for small numbers of (handlers x keys).
+ * While we still have the rumprun script as a client there's not a lot we can
+ * do about it, since the script generates object with duplicate keys. To be
+ * revisited if the rumprun script is removed.
+ */
 static void
 handle_object(jvalue *v, jhandler h[], const char *loc)
 {
