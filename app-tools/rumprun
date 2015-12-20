@@ -429,7 +429,7 @@ json_store_xen_blkspec ()
 	json_finalize_block
 
 	# if the image does not need to be mounted, we're done
-	[ -n "${mountpoint}" ] || { json_finalize_block ; return ; }
+	[ -n "${mountpoint}" ] || return
 
 	json_open_block mount
 	json_open_block "${mountpoint}"
