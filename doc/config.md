@@ -151,64 +151,71 @@ Gateways to be configured using IPv6 are specified as follows:
 
 * _addr_: The IPv6 address of the default gateway.
 
-## blk: Block devices and filesystems
-
-Each `blk` key defines a block device and filesystem to mount:
+## blk: Block devices
 
     "blk": {
-        "source": <string>,
-        <source-specific keys>
-        "path": "/dev/ld0a",
-        "fstype": "blk",
-        "mountpoint": "/etc",
+        "<name>": {
+            "type": <string>,
+            "path": <string>
+        },
+        ...
     }
     ...
 
-* _source_: One of `dev`, `vnd` or `etfs`.
+Configures a block device:
 
-_FIXME_: Relies on specifying multiple `blk` keys, which is not valid JSON.
-Should be change to use an array instead.
+* _name_: The name of the block device to be configured in `/dev`.
+* _type_: One of `etfs` or `vnd`.
+* _path_: Type-specific, see below.
 
-_FIXME_: Unclear from the code when a `blk` key can be used to configure, but
-not mount, a block device.
+### etfs: Block device backed by rump_etfs host device
 
-### dev: Mount filesystem backed by block device
+A _type_ of `etfs` registers the block device `/dev/<name>` as a `rump_etfs(3)`
+device, with the host path _path_. 
 
-A `source` of `dev` indicates that this key defines a filesystem backed by a
-rump kernel block device. Block devices are usually used by the rumprun
-unikernel to access directly-attached storage on bare metal, or `virtio` devices
-on QEMU/KVM.
+ETFS devices are usually used by the rumprun unikernel to access storage on the
+Xen platform. In this case, _path_ must be specified as `XENBLK_<device>`.
+_device_ is the Xen block device to access, for example: `xvda1`.
 
-The following additional keys are required:
+### vnd: Loop-back block device
 
-* _mountpoint_: The mountpoint for the filesystem.
-* _fstype_: If set to `kern`, a `kernfs` will be mounted on `mountpoint` and all
-  other keys will be ignored. If set to `blk`, rumprun will attempt to mount a
-  filesystem of type `ffs`, `ext2fs` or `cd9660` from the local block device
-  specified by `path`.
-* _path_: The pathname of the block device to mount, as seen by the rump kernel.
+A _type_ of `vnd` configures the block device `/dev/<name>` as a loop-back
+device backed by the file specified by _path_, using the vnode disk driver. 
 
-_TODO_: Specify example _paths_ for block devices (`/dev/ld0X`, `/dev/sd0X`).
+_name_ must be specified as `vnd<unit>`, for example: `vnd0`.
 
-### etfs: Mount filesystem backed by rump_etfs "host" device
+## mount: Mount filesystems
 
-A `source` of `etfs` indicates that this key defines a filesystem backed by a
-`rump_etfs(3)` device. ETFS devices are usually used by the rumprun unikernel to
-access storage on the Xen platform.
+    "mount": {
+        "<mountpoint>": {
+            "source": <string>,
+            "path": <string>,
+            "options": <reserved>
+         },
+         ...
+    }
 
-The following additional keys are required:
+Mounts a filesystem:
 
-* _mountpoint_: The mountpoint for the filesystem.
-* _fstype_: Must be set to `blk`. Rumprun will attempt to mount a
-  filesystem of type `ffs`, `ext2fs` or `cd9660` from the etfs device specified
-  by `path`.
-* _path_: The platform-specific `key` passed to `rump_pub_etfs_register()`.
+* _mountpoint_: The path to mount the filesystem at. The directory hierarchy for
+  _mountpoint_ will be created if it does not exist.
+* _source_: The source for the filesystem. One of `kernfs` or `blk`.
+* _path_: For `blk`, the path to the block device to mount.
+* _options_: Reserved for future use by filesystem mount options.
 
-_TODO_: Specify example _paths_ for block devices used on Xen.
+### blk: Filesystem backed by block device
 
-### vnd: Mount filesystem backed by a vnode disk device
+With a _source_ of `blk`, rumprun will mount the filesystem from the rump kernel
+block device specified by _path_, on _mountpoint_.
 
-_TODO_: Complete this section.
+The following filesystem types will be tried in succession: `ffs`, `ext2fs` and
+`cd9660`. If the filesystem is not one of the supported types, configuration
+will fail.
+
+### kernfs: Virtual kernel filesystem
+
+With a _source_ of `kernfs`, rumprun will mount the virtual `kernfs` filesystem
+on _mountpoint_. The value of _path_ is ignored and need not be specified.
 
 # Passing configuration to the unikernel
 

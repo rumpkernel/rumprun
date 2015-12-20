@@ -479,16 +479,19 @@ getvndmajor(int israw)
 	return major(sb.st_rdev);
 }
 
-static char *
-configvnd(const char *path)
+static void
+configvnd(const char *dev, const char *path)
 {
-	static int nextvnd;
+	int unit;
 	struct vnd_ioctl vndio;
 	char bbuf[32], rbuf[32];
 	int fd;
 
-	makevnddev(0, nextvnd, RAW_PART, bbuf, sizeof(bbuf));
-	makevnddev(1, nextvnd, RAW_PART, rbuf, sizeof(rbuf));
+	if(sscanf(dev, "vnd%d", &unit) != 1)
+		errx(1, "%s: invalid vnd name \"%s\"", __func__, dev);
+
+	makevnddev(0, unit, RAW_PART, bbuf, sizeof(bbuf));
+	makevnddev(1, unit, RAW_PART, rbuf, sizeof(rbuf));
 
 	memset(&vndio, 0, sizeof(vndio));
 	vndio.vnd_file = __UNCONST(path);
@@ -505,53 +508,93 @@ configvnd(const char *path)
 			const devmajor_t rmaj = getvndmajor(1);
 
 			if (mknod(bbuf, 0666 | S_IFBLK,
-			    MAKEDISKDEV(bmaj, nextvnd, RAW_PART)) == -1)
-				err(1, "mknod %s", bbuf);
+			    MAKEDISKDEV(bmaj, unit, RAW_PART)) == -1)
+				err(1, "%s: mknod %s", __func__, bbuf);
 			if (mknod(rbuf, 0666 | S_IFBLK,
-			    MAKEDISKDEV(rmaj, nextvnd, RAW_PART)) == -1)
-				err(1, "mknod %s", rbuf);
+			    MAKEDISKDEV(rmaj, unit, RAW_PART)) == -1)
+				err(1, "%s: mknod %s", __func__, rbuf);
 
 			fd = open(rbuf, O_RDWR);
 		}
 		if (fd == -1)
-			err(1, "cannot open %s", rbuf);
+			err(1, "%s: open(%s)", __func__, rbuf);
 	}
 
 	if (ioctl(fd, VNDIOCSET, &vndio) == -1)
-		err(1, "vndset failed");
+		err(1, "%s: VNDIOCSET on %s failed", __func__, rbuf);
 	close(fd);
-
-	nextvnd++;
-	return strdup(bbuf);
 }
 
-static char *
-configetfs(const char *path, int hard)
+static void
+configetfs(const char *dev, const char *path, int hard)
 {
 	char buf[32];
-	char epath[32];
-	char *p;
 	int rv;
 
-	snprintf(epath, sizeof(epath), "XENBLK_%s", path);
 	snprintf(buf, sizeof(buf), "/dev/%s", path);
-	rv = rump_pub_etfs_register(buf, epath, RUMP_ETFS_BLK);
-	if (rv != 0) {
-		if (!hard)
-			return NULL;
-		errx(1, "etfs register for \"%s\" failed: %d", path, rv);
+	rv = rump_pub_etfs_register(buf, path, RUMP_ETFS_BLK);
+	if (rv != 0 && hard) {
+		errx(1, "etfs register for \"%s\" failed: %s", path,
+			strerror(rv));
+	}
+}
+
+static void
+handle_blk(jvalue *v, const char *loc)
+{
+	const char *dev, *type, *path;
+
+	jexpect(jobject, v, __func__);
+	dev = v->n;
+	type = path = NULL;
+
+	for (jvalue **i = v->u.v; *i; ++i) {
+		if (strcmp((*i)->n, "type") == 0) {
+			jexpect(jstring, *i, __func__);
+			type = (*i)->u.s;
+		} else if (strcmp((*i)->n, "path") == 0) {
+			jexpect(jstring, *i, __func__);
+			path = (*i)->u.s;
+		} else {
+			errx(1, "%s: unexpected key \"%s\" in \"%s\"",
+				__func__, (*i)->n, dev);
+		}
 	}
 
-	if ((p = strdup(buf)) == NULL)
-		err(1, "failed to allocate pathbuf");
-	return p;
+	if (!type || !path) {
+		errx(1, "%s: missing \"path\"/\"type\" in \"%s\"", __func__,
+			dev);
+	}
+
+	if (strcmp(type, "etfs") == 0) {
+		configetfs(dev, path, 1);
+	} else if (strcmp(type, "vnd") == 0) {
+		configvnd(dev, path);
+	} else {
+		errx(1, "%s: unsupported type \"%s\" in \"%s\"", __func__,
+			type, dev);
+	}
+}
+
+static void
+handle_blks(jvalue *v, const char *loc)
+{
+
+	jexpect(jobject, v, __func__);
+
+	for (jvalue **i = v->u.v; *i; ++i) {
+		handle_blk(*i, __func__);
+	}
 }
 
 static bool
-mount_blk(const char *dev, const char *mp)
+mount_blk(const char *dev, const char *mp, jvalue *options)
 {
 	struct ufs_args mntargs_ufs = { .fspec = __UNCONST(dev) };
 	struct iso_args mntargs_iso = { .fspec = dev };
+
+	if (!dev)
+		return false;
 
 	if (mount(MOUNT_FFS, mp, 0, &mntargs_ufs, sizeof(mntargs_ufs)) == 0)
 		return true;
@@ -565,7 +608,7 @@ mount_blk(const char *dev, const char *mp)
 }
 
 static bool
-mount_kernfs(const char *dev, const char *mp)
+mount_kernfs(const char *dev, const char *mp, jvalue *options)
 {
 
 	if (mount(MOUNT_KERNFS, mp, 0, NULL, 0) == 0)
@@ -575,107 +618,116 @@ mount_kernfs(const char *dev, const char *mp)
 }
 
 struct {
-	const char *mt_fstype;
-	bool (*mt_mount)(const char *, const char *);
+	const char *mt_source;
+	bool (*mt_mount)(const char *, const char *, jvalue *);
 } mounters[] = {
 	{ "blk",	mount_blk },
 	{ "kernfs",	mount_kernfs },
 };
 
 static void
-handle_blk(jvalue *v, const char *loc)
+mkdirhier(const char *path)
 {
-	const char *source, *origpath, *fstype;
-	char *mp, *path;
+	char *pathbuf, *chunk;
+
+	pathbuf = strdup(path);
+	if (!path)
+		err(1, "strdup");
+
+	for (chunk = pathbuf;;) {
+		bool end;
+
+		/* find & terminate the next chunk */
+		chunk += strspn(chunk, "/");
+		chunk += strcspn(chunk, "/");
+		end = (*chunk == '\0');
+		*chunk = '\0';
+
+		if (mkdir(pathbuf, 0755) == -1) {
+			if (errno != EEXIST)
+				err(1, "%s: mkdir(\"%s\") failed", __func__,
+				    pathbuf);
+		}
+
+		/* restore path */
+		if (!end)
+			*chunk = '/';
+		else
+			break;
+	}
+
+	free (pathbuf);
+}
+
+static void
+handle_mount(jvalue *v, const char *loc)
+{
+	jvalue *options;
+	const char *source, *path, *mp;
+	size_t mi;
 
 	jexpect(jobject, v, __func__);
 
-	fstype = source = origpath = mp = path = NULL;
+	mp = v->n;
+	source = path = NULL;
+	options = NULL;
 
 	for (jvalue **i = v->u.v; *i; ++i) {
-		jexpect(jstring, *i, __func__);
 
 		if (strcmp((*i)->n, "source") == 0) {
+			jexpect(jstring, *i, __func__);
 			source = (*i)->u.s;
 		} else if (strcmp((*i)->n, "path") == 0) {
-			origpath = path = (*i)->u.s;
-		} else if (strcmp((*i)->n, "fstype") == 0) {
-			fstype = (*i)->u.s;
-		} else if (strcmp((*i)->n, "mountpoint") == 0) {
-			mp = (*i)->u.s;
+			jexpect(jstring, *i, __func__);
+			path = (*i)->u.s;
+		} else if (strcmp((*i)->n, "options") == 0) {
+			jexpect(jobject, *i, __func__);
+			options = *i;
 		} else {
-			errx(1, "unexpected key \"%s\" in \"%s\"", (*i)->n,
-				__func__);
+			errx(1, "%s: unexpected key \"%s\" in \"%s\"", __func__,
+				(*i)->n, mp);
 		}
 	}
 
-	if (!source || !path) {
-		errx(1, "blk cfg missing vital data");
+	if (!source) {
+		errx(1, "%s: missing \"source\" in \"%s\"", __func__, v->n);
 	}
 
-	if (strcmp(source, "dev") == 0) {
-		/* nothing to do here */
-	} else if (strcmp(source, "vnd") == 0) {
-		path = configvnd(path);
-	} else if (strcmp(source, "etfs") == 0) {
-		path = configetfs(path, 1);
-	} else {
-		errx(1, "unsupported blk source \"%s\"", source);
+	mkdirhier(mp);
+
+	for (mi = 0; mi < __arraycount(mounters); mi++) {
+		if (strcmp(source, mounters[mi].mt_source) == 0) {
+			if (!mounters[mi].mt_mount(path, mp, options))
+				err(1, "%s: mount \"%s\" on \"%s\" "
+				    "type \"%s\" failed",
+				    __func__, path ? path : "(none)", mp,
+				    source);
+			break;
+		}
 	}
-
-	/* we only need to do something only if a mountpoint is specified */
-	if (mp) {
-		char *chunk;
-		unsigned mi;
-
-		if (!fstype) {
-			errx(1, "no fstype for mountpoint \"%s\"\n", mp);
-		}
-
-		for (chunk = mp;;) {
-			bool end;
-
-			/* find & terminate the next chunk */
-			chunk += strspn(chunk, "/");
-			chunk += strcspn(chunk, "/");
-			end = (*chunk == '\0');
-			*chunk = '\0';
-
-			if (mkdir(mp, 0755) == -1) {
-				if (errno != EEXIST)
-					err(1, "failed to create mp dir \"%s\"",
-					    chunk);
-			}
-
-			/* restore path */
-			if (!end)
-				*chunk = '/';
-			else
-				break;
-		}
-
-		for (mi = 0; mi < __arraycount(mounters); mi++) {
-			if (strcmp(fstype, mounters[mi].mt_fstype) == 0) {
-				if (!mounters[mi].mt_mount(path, mp))
-					errx(1, "failed to mount fs type "
-					    "\"%s\" from \"%s\" to \"%s\"",
-					    fstype, path, mp);
-				break;
-			}
-		}
-		if (mi == __arraycount(mounters))
-			errx(1, "unknown fstype \"%s\"", fstype);
+	if (mi == __arraycount(mounters)) {
+		errx(1, "%s: unknown source \"%s\" in \"%s\"", __func__,
+			source, mp);
 	}
+}
 
-	if (path != origpath)
-		free(path);
+static void
+handle_mounts(jvalue *v, const char *loc)
+{
+
+	jexpect(jobject, v, __func__);
+
+	for (jvalue **i = v->u.v; *i; ++i) {
+		handle_mount(*i, __func__);
+	}
 }
 
 static jhandler handlers_root[] = {
 	{ "rc", handle_rc },
 	{ "env", handle_env },
 	{ "hostname", handle_hostname },
-	{ "blk", handle_blk },
+	{ "blk", handle_blks },
+	{ "mount", handle_mounts },
 	{ "net", handle_net },
 	{ 0 }
 };
@@ -702,19 +754,15 @@ getcmdlinefromroot(const char *cfgname)
 	 * Maybe use mountroot() here somehow?
 	 */
 	for (i = 0; i < __arraycount(tryroot); i++) {
-		if (mount_blk(tryroot[i], "/rootfs"))
+		if (mount_blk(tryroot[i], "/rootfs", NULL))
 			break;
 	}
 
 	/* didn't find it that way.  one more try: etfs for sda1 (EC2) */
 	if (i == __arraycount(tryroot)) {
-		char *devpath;
+		configetfs("sda1", "XENBLK_sda1", 0);
 
-		devpath = configetfs("sda1", 0);
-		if (!devpath)
-			errx(1, "failed to mount rootfs from image");
-
-		if (!mount_blk(devpath, "/rootfs"))
+		if (!mount_blk("/dev/sda1", "/rootfs", NULL))
 			errx(1, "failed to mount /rootfs");
 	}
 
