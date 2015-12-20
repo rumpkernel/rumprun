@@ -526,15 +526,15 @@ configvnd(const char *dev, const char *path)
 }
 
 static void
-configetfs(const char *dev, const char *path, int hard)
+configetfs(const char *dev, const char *hostpath, int hard)
 {
-	char buf[32];
+	char key[32];
 	int rv;
 
-	snprintf(buf, sizeof(buf), "/dev/%s", path);
-	rv = rump_pub_etfs_register(buf, path, RUMP_ETFS_BLK);
+	snprintf(key, sizeof(key), "/dev/%s", dev);
+	rv = rump_pub_etfs_register(key, hostpath, RUMP_ETFS_BLK);
 	if (rv != 0 && hard) {
-		errx(1, "etfs register for \"%s\" failed: %s", path,
+		errx(1, "etfs register for \"%s\" failed: %s", hostpath,
 			strerror(rv));
 	}
 }
