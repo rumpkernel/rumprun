@@ -420,7 +420,7 @@ json_store_xen_blkspec ()
 	conf_disk="${conf_disk}'file:$image,$vdev,w',"
 
 	json_open_block blk
-	json_open_block xenblk${bindex}
+	json_open_block xbd${bindex}
 
 	json_append_ln	'"type":	"'etfs'"'
 	json_append_ln	'"path":	"'XENBLK_${vdev}'"'
@@ -435,7 +435,7 @@ json_store_xen_blkspec ()
 	json_open_block "${mountpoint}"
 
 	json_append_ln	'"source":	"'blk'"'
-	json_append_ln	'"path":	"'/dev/xenblk${bindex}'"'
+	json_append_ln	'"path":	"'/dev/xbd${bindex}'"'
 
 	json_finalize_block
 	json_finalize_block
