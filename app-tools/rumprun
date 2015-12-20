@@ -343,7 +343,7 @@ json_store_netspec ()
 	json_open_block "$(eval echo \${${iftag}2ifname})"
 
 	if $(eval \${${iftag}2cloner}); then
-		json_append_ln	'"create":	"'true'"'
+		json_append_ln	'"create":	true'
 	fi
 
 	if [ -z "${ifaddr}" ]; then
