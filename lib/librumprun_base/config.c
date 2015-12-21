@@ -258,6 +258,8 @@ config_ipv4(const char *ifname, const char *method,
 			    __func__, ifname, strerror(rv));
 	} else {
 		char *addr = strdup(cidr);
+		if (!addr)
+			err(1, "%s: strdup", __func__);
 		char *mask = strchr(addr, '/');
 
 		if (strcmp(method, "static") != 0) {
@@ -294,8 +296,12 @@ config_ipv6(const char *ifname, const char *method,
 			errx(1, "%s: %s: ipv6 autoconfig failed: %s",
 			    __func__, ifname, strerror(rv));
 	} else {
-		char *addr = strdup(cidr);
-		char *mask = strchr(addr, '/');
+		char *addr, *mask;
+
+		addr = strdup(cidr);
+		if (!addr)
+			err(1, "%s: strdup", __func__);
+		mask = strchr(addr, '/');
 
 		if (strcmp(method, "static") != 0) {
 			errx(1, "%s: %s: "
@@ -874,6 +880,8 @@ rumprun_config(char *cmdline)
 		if (*cmdline == '\0') {
 			warnx("could not find start of json.  no config?");
 			rre_dummy.rre_argv[0] = strdup("rumprun");
+			if (!rre_dummy.rre_argv[0])
+				err(1, "%s: strdup", __func__);
 			TAILQ_INSERT_TAIL(&rumprun_execs, &rre_dummy,
 				rre_entries);
 			return;
