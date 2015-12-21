@@ -804,9 +804,9 @@ getcmdlinefromroot(const char *cfgname)
 
 	/* didn't find it that way.  one more try: etfs for sda1 (EC2) */
 	if (i == __arraycount(tryroot)) {
-		configetfs("sda1", "XENBLK_sda1", 0);
+		configetfs("rootfs", "blkfront:sda1", 0);
 
-		if (!mount_blk("/dev/sda1", "/rootfs", NULL))
+		if (!mount_blk("/dev/rootfs", "/rootfs", NULL))
 			errx(1, "failed to mount /rootfs");
 	}
 
