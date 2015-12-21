@@ -508,6 +508,18 @@ json_store_kernfs ()
 	json_finalize_block
 }
 
+json_store_tmpfs ()
+{
+
+	json_open_block mount
+	json_open_block /tmp
+
+	json_append_ln	'"source":	"tmpfs"'
+
+	json_finalize_block
+	json_finalize_block
+}
+
 parse_blkspec ()
 {
 	spec=$1
@@ -629,6 +641,7 @@ run_xen ()
 	# kernfs is always present on Xen
 	json_store_kernfs
 
+        json_store_tmpfs
 	json_store_rc "$@"
 	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
 	json_finalize_block
@@ -776,6 +789,7 @@ run_qemu ()
 		fi
 	fi
 
+        json_store_tmpfs
 	json_store_rc "$@"
 	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
 	json_finalize_block
@@ -866,6 +880,7 @@ bake_iso ()
 
 	[ ! -f ${opt_name} ] || die target ${opt_name} already exists
 
+        json_store_tmpfs
 	json_store_rc "$@"
 	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
 	json_finalize_block
@@ -945,6 +960,7 @@ make_ec2 ()
 
 	[ ! -f ${finaldir} ] || die target ${finaldir} already exists
 
+        json_store_tmpfs
 	json_store_rc "$@"
 	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
 	json_finalize_block

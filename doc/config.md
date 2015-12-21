@@ -197,8 +197,7 @@ _name_ must be specified as `vnd<unit>`, for example: `vnd0`.
     "mount": {
         "<mountpoint>": {
             "source": <string>,
-            "path": <string>,
-            "options": <reserved>
+            <source-specific keys>
          },
          ...
     }
@@ -207,14 +206,14 @@ Mounts a filesystem:
 
 * _mountpoint_: The path to mount the filesystem at. The directory hierarchy for
   _mountpoint_ will be created if it does not exist.
-* _source_: The source for the filesystem. One of `kernfs` or `blk`.
-* _path_: For `blk`, the path to the block device to mount.
-* _options_: Reserved for future use by filesystem mount options.
+* _source_: The source for the filesystem. One of `blk`, `kernfs` or `tmpfs`.
 
 ### blk: Filesystem backed by block device
 
-With a _source_ of `blk`, rumprun will mount the filesystem from the rump kernel
-block device specified by _path_, on _mountpoint_.
+    "path": <string>
+
+A _source_ of `blk` mounts a filesystem from the block device specified by
+_path_ on _mountpoint_.
 
 The following filesystem types will be tried in succession: `ffs`, `ext2fs` and
 `cd9660`. If the filesystem is not one of the supported types, configuration
@@ -222,8 +221,18 @@ will fail.
 
 ### kernfs: Virtual kernel filesystem
 
-With a _source_ of `kernfs`, rumprun will mount the virtual `kernfs` filesystem
-on _mountpoint_. The value of _path_ is ignored and need not be specified.
+A _source_ of `kernfs` mounts the virtual `kernfs` filesystem on _mountpoint_.
+
+### tmpfs: In-memory filesystem
+
+    "options": {
+        "size": <string>
+    }
+
+A _source_ of `tmpfs` mounts an in-memory `tmpfs` filesystem on _mountpoint_.
+
+* _size_: The maximum size of the filesystem, specified as `<size>k|M|G`.
+  Defaults to 1 MB.
 
 # Passing configuration to the unikernel
 

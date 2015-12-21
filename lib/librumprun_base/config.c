@@ -36,6 +36,7 @@
 
 #include <ufs/ufs/ufsmount.h>
 #include <isofs/cd9660/cd9660_mount.h>
+#include <fs/tmpfs/tmpfs_args.h>
 
 #include <dev/vndvar.h>
 
@@ -617,12 +618,55 @@ mount_kernfs(const char *dev, const char *mp, jvalue *options)
 	return false;
 }
 
+static bool
+mount_tmpfs(const char *dev, const char *mp, jvalue *options)
+{
+	struct tmpfs_args ta;
+	const char *opt_size = NULL;
+	int64_t size;
+
+	if (options) {
+		jexpect(jobject, options, __func__);
+
+		for (jvalue **i = options->u.v; *i; ++i) {
+			if (strcmp((*i)->n, "size") == 0) {
+				jexpect(jstring, *i, __func__);
+				opt_size = (*i)->u.s;
+			}
+			else {
+				errx(1, "%s: unexpected key \"%s\" in \"%s\"",
+					__func__, (*i)->n, "options");
+			}
+		}
+	}
+	if (!opt_size) {
+		/*
+		 * TODO: We should have a more sensible default size, e.g. 10%
+		 * of core, but we don't have that information here.
+		 */
+		opt_size = "1M";
+	}
+	if (dehumanize_number(opt_size, &size) != 0) {
+		errx(1, "%s: bad size for %s", __func__, mp);
+	}
+
+	ta.ta_version = TMPFS_ARGS_VERSION,
+	ta.ta_size_max = size;
+	ta.ta_root_mode = 01777;
+
+	if (mount(MOUNT_TMPFS, mp, 0, &ta, sizeof (ta)) == 0)
+		return true;
+
+	return false;
+}
+
 struct {
 	const char *mt_source;
 	bool (*mt_mount)(const char *, const char *, jvalue *);
 } mounters[] = {
 	{ "blk",	mount_blk },
 	{ "kernfs",	mount_kernfs },
+	{ "tmpfs",      mount_tmpfs },
 };
 
 static void
