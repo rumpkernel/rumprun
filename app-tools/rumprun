@@ -423,7 +423,7 @@ json_store_xen_blkspec ()
 	json_open_block xbd${bindex}
 
 	json_append_ln	'"type":	"'etfs'"'
-	json_append_ln	'"path":	"'XENBLK_${vdev}'"'
+	json_append_ln	'"path":	"'blkfront:${vdev}'"'
 
 	json_finalize_block
 	json_finalize_block

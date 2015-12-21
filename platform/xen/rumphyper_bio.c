@@ -102,7 +102,7 @@ devopen(int num)
  * (Feel free to improve)
  */
 enum devtype { DEV_SD, DEV_HD, DEV_XVD };
-#define XENBLK_MAGIC "XENBLK_"
+#define XENBLK_MAGIC "blkfront:"
 static int
 devname2vbd(const char *name)
 {

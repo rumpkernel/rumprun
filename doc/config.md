@@ -173,9 +173,17 @@ Configures a block device:
 A _type_ of `etfs` registers the block device `/dev/<name>` as a `rump_etfs(3)`
 device, with the host path _path_. 
 
-ETFS devices are usually used by the rumprun unikernel to access storage on the
-Xen platform. In this case, _path_ must be specified as `XENBLK_<device>`.
-_device_ is the Xen block device to access, for example: `xvda1`.
+ETFS devices are used by the rumprun unikernel to access storage on the Xen
+platform. _path_ is specified as `blkfront:<device>`, where _device_ is the Xen
+disk/partition to attach to.  Rumprun supports the following values for
+_device_:
+
+* `xvd[a-z][0-9]`: Xen virtual disk (PV guests)
+* `sd[a-z][0-9]`: SCSI (HVM guests)
+* `hd[a-z][0-9]`: IDE or AHCI (HVM guests)
+
+For details refer to the [Xen Guest Disk (VBD)
+specification](http://xenbits.xen.org/docs/unstable/misc/vbd-interface.txt).
 
 ### vnd: Loop-back block device
 
