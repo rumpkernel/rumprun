@@ -34,19 +34,19 @@ not considered to be part of the configuration.
 
     "rc": [
          {
-             "bin" : <string>,
-             "argv" : [ <string>, ... ],
-             "runmode" : "& OR |" (optional)
+             "bin": <string>,
+             "args": [ <string>, ... ],
+             "runmode": "& OR |"
          },
          ...
     ]
 
-Each element of `rc` describes a single program, in the order in which they
-are baked into the unikernel image.
+Each element of `rc` describes a single program, **in the order in which they
+are baked into the unikernel image**.
 
-* _bin_: Passed to the corresponding program as `argv[0]`.
-* _argv[]_: Passed to the corresponding program as `argv[1..N]`.
-* _runmode_: Defines how the corresponding program will be invoked. _Optional_
+* _bin_: The name of the program. Passed to the program as `argv[0]`.
+* _args[]_: Arguments for the program. Passed to the program as `argv[1..N]`.
+* _runmode_: Defines how the program will be invoked. _Optional_
   * `&`: run program in background.
   * `|`: pipe output of program to next defined program.
   * _default_: run program in foreground and wait for it to exit successfully

@@ -147,22 +147,22 @@ handle_bin(jvalue *v, const char *loc)
 {
 	struct rumprun_exec *rre;
 	char *binname;
-	jvalue *v_bin, *v_argv, *v_runmode, **v_arg;
+	jvalue *v_bin, *v_args, *v_runmode, **v_arg;
 	int rreflags;
-	size_t nargv;
+	size_t nargs;
 
 	jexpect(jobject, v, __func__);
 
 	/* process and validate data */
-	v_bin = v_argv = v_runmode = NULL;
+	v_bin = v_args = v_runmode = NULL;
 	for (jvalue **i = v->u.v; *i; ++i) {
 
 		if (strcmp((*i)->n, "bin") == 0) {
 			jexpect(jstring, *i, __func__);
 			v_bin = *i;
-		} else if (strcmp((*i)->n, "argv") == 0) {
+		} else if (strcmp((*i)->n, "args") == 0) {
 			jexpect(jarray, *i, __func__);
-			v_argv = *i;
+			v_args = *i;
 		} else if (strcmp((*i)->n, "runmode") == 0) {
 			jexpect(jstring, *i, __func__);
 			v_runmode = *i;
@@ -191,24 +191,24 @@ handle_bin(jvalue *v, const char *loc)
 		rreflags = 0;
 	}
 
-	nargv = 0;
-	if (v_argv) {
-		for (jvalue **i = v_argv->u.v; *i; ++i) {
+	nargs = 0;
+	if (v_args) {
+		for (jvalue **i = v_args->u.v; *i; ++i) {
 			jexpect(jstring, *i, __func__);
-			nargv++;
+			nargs++;
 		}
 	}
 
 	/* ok, we got everything.  save into rumprun_exec structure */
-	rre = malloc(sizeof(*rre) + (2 + nargv) * sizeof(char *));
+	rre = malloc(sizeof(*rre) + (2 + nargs) * sizeof(char *));
 	if (rre == NULL)
 		err(1, "%s: malloc(rumprun_exec)", __func__);
 	rre->rre_flags = rreflags;
-	rre->rre_argc = 1 + nargv;
+	rre->rre_argc = 1 + nargs;
 	rre->rre_argv[0] = binname;
-	for (v_arg = v_argv->u.v, nargv = 1; *v_arg; ++v_arg, ++nargv) {
-		rre->rre_argv[nargv] = strdup((*v_arg)->u.s);
-		if (!rre->rre_argv[nargv])
+	for (v_arg = v_args->u.v, nargs = 1; *v_arg; ++v_arg, ++nargs) {
+		rre->rre_argv[nargs] = strdup((*v_arg)->u.s);
+		if (!rre->rre_argv[nargs])
 			err(1, "%s: strdup", __func__);
 	}
 	rre->rre_argv[rre->rre_argc] = NULL;

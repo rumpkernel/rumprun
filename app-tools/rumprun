@@ -313,7 +313,7 @@ json_store_rc ()
 	bin=$1
 	shift
 	read line <<EOM
-"rc": [ { "bin": "${bin}", "argv": $(json_array "$@") } ]
+"rc": [ { "bin": "${bin}", "args": $(json_array "$@") } ]
 EOM
 	json_append_ln $line
 }
