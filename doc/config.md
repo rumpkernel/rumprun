@@ -16,19 +16,30 @@ further notice.*
 Configuration interfaces and/or behaviours not documented here are considered
 unofficial and experimental, and may be removed without warning.
 
-A rumprun unikernel does not _require_ any configuration to be passed for it to
-boot. However, if the `rc` key is not specified, only the first multibaked
-program in the unikernel will be invoked.
-
 # Configuration format
 
-The configuration format is defined using JSON:
+Rumprun unikernel configuration is defined using JSON:
 
     { <JSON expression> }
 
-When configuration is passed directly on the kernel command line (see
-platform-specific methods below), everything up to the first `{` character is
-not considered to be part of the configuration.
+Configuration data must be encoded in UTF-8. Platform-specific methods (see
+"Platform notes" below) are used to pass configuration data to the unikernel.
+Configuration data which does not start with `{` will be ignored.
+
+Given that a JSON object is by definition unordered, configuration keys will be
+processed by rumprun in the following order:
+
+1. _rc_: Program invocation
+2. _env_: Environment variables
+3. _hostname_: Kernel hostname
+4. _blk_: Block device configuration
+5. _mount_: Filesystem mounts
+6. _net_: Network configuration
+  1. _interfaces_: Interfaces
+  2. _gateways_: Default gateways
+
+A rumprun unikernel does not _require_ any configuration to be passed for it to
+boot.
 
 ## rc: Program invocation
 
@@ -43,6 +54,9 @@ not considered to be part of the configuration.
 
 Each element of `rc` describes a single program, **in the order in which they
 are baked into the unikernel image**.
+
+If the `rc` key is not specified in the configuration, only the first
+multibaked program in the unikernel will be invoked.
 
 * _bin_: The name of the program. Passed to the program as `argv[0]`.
 * _args[]_: Arguments for the program. Passed to the program as `argv[1..N]`.
@@ -234,33 +248,106 @@ A _source_ of `tmpfs` mounts an in-memory `tmpfs` filesystem on _mountpoint_.
 * _size_: The maximum size of the filesystem, specified as `<size>k|M|G`.
   Defaults to 1 MB.
 
-# Passing configuration to the unikernel
+# Platform notes
 
-## hw platform on x86
+## hw/x86: Bare metal, KVM and other HVM hypervisors on x86
 
-On x86 bare metal (this includes QEMU, KVM or other hypervisors using HVM)
-rumprun uses the multiboot protocol.
+When targetting the _hw_ platform on x86, rumprun uses the multiboot protocol.
 
-Configuration may be passed either directly on the kernel command line, or
-loaded as a multiboot module. If a multiboot module containing configuration is
-found, it is used in preference to the kernel command line.
+Configuration data is passed to the unikernel as the _first_ multiboot module.
 
-_TODO_: Provide examples. Also, can the `ROOTFSCFG=` hack go away now that we
-can load configuration using multiboot.
+### Example configuration
 
-_TODO_: Make it explicit what a "multiboot module containing configuration"
-means. Ignore modules which we don't understand (e.g. does not start with `{`).
+The following is an example configuration for a rumprun unikernel running
+`mathopd`:
 
-## xen platform on x86
+    {
+      "net": {
+         "interfaces": {
+           "vioif0": {
+             "addrs": [ 
+               { "type": "inet", "method": "static", "addr": "10.0.120.10/24" }
+             ]
+           }
+         },
+         gateways": [
+           { "type": "inet", "addr": "10.0.120.1" }
+         ]
+      },
+      "mount": {
+        "/etc": {
+          "source": "blk",
+          "path": "/dev/ld0a"
+        },
+        "/data": {
+          "source": "blk",
+          "path": "/dev/ld1a"
+        },
+        "/tmp": {
+          "source": "tmpfs",
+          "options": { "size": "1M" }
+        }
+      },
+      "rc": [
+        {
+          "bin": "mathopd",
+          "args": [ "-n", "-t", "-f", "/data/mathopd.conf" ]
+        }
+      ],
+      "env": {
+        "FOO": "BAR",
+        "BAZ": "QUUX"
+      }
+    }
 
-On x86 paravirtualized Xen, the rumprun configuration must be written to the
-domain-specific Xenstore key `rumprun/cfg` before the domU is started.
+The following example command could be used to launch the unikernel using KVM:
 
-_TODO_: Examples. Do we officially want to support passing config on Xen via
-cmdline (I think not).
+    qemu-system-x86_64 -net nic,model=virtio -net bridge,br=rrbr0 \
+        -enable-kvm -cpu host \
+        -drive if=virtio,file=stubetc.iso \
+        -drive if=virtio,file=data.iso \
+        -m 64 \
+        -vga none -nographic \
+        -kernel mathopd.bin -initrd mathopd.json 
 
-_TODO_: Explain what "domain-specific Xenstore key" means.
+## xen/x86: Paravirtualized Xen on x86
 
-## hw platform on ARM
+Configuration data must be written to the domain-specific `rumprun/cfg` key in
+Xenstore. In practice, due to the way the Xen toolstack works, this means:
 
-TBD.
+1. Creating the domain in a paused state, in order to obtain the _domid_.
+2. Writing configuration data to `/local/domain/<domid>/rumprun/cfg`.
+3. Unpausing the domain.
+
+### Example configuration
+
+The following is an example configuration for a rumprun unikernel on Xen:
+
+    {
+      "net": {
+        "interfaces": {
+          "xenif0": {
+            "create": true,
+            "addrs": [
+              { "type": "inet", "method": "static", "addr": "10.0.120.10/24" }
+            ], 
+          }
+        }
+      },
+      "blk": {
+        "xbd0": {
+          "type": "etfs", 
+          "path": "blkfront:xvda"
+        },
+      },
+      "mount": {
+        "/test": {
+          "source": "blk", 
+          "path": "/dev/xbd0",
+        },
+        "/kern": {
+          "source": "kernfs"
+        }
+      }
+      "rc": [ { "bin": "./wopr.bin" } ]
+    }

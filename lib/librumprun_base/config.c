@@ -25,8 +25,9 @@
  */
 
 /*
- * NOTE: this implementation is currently a sketch of what things
- * should looks like.
+ * The public interface for rumprun unikernel configuration is documented in
+ * doc/config.md. Refer there before making any changes to the JSON format
+ * defined in this module.
  */
 
 #include <sys/param.h>
