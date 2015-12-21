@@ -143,11 +143,11 @@ rre_dummy = {
 };
 
 static void
-addbin(jvalue *v, const char *loc)
+handle_bin(jvalue *v, const char *loc)
 {
 	struct rumprun_exec *rre;
 	char *binname;
-	jvalue *v_bin, *v_argv, *v_runmode;
+	jvalue *v_bin, *v_argv, *v_runmode, **v_arg;
 	int rreflags;
 	size_t nargv;
 
@@ -175,6 +175,8 @@ addbin(jvalue *v, const char *loc)
 	if (!v_bin)
 		errx(1, "missing \"bin\" for rc entry");
 	binname = strdup(v_bin->u.s);
+	if (!binname)
+		err(1, "%s: strdup", __func__);
 
 	if (v_runmode) {
 		if (strcmp(v_runmode->u.s, "&") == 0) {
@@ -198,15 +200,16 @@ addbin(jvalue *v, const char *loc)
 	}
 
 	/* ok, we got everything.  save into rumprun_exec structure */
-	rre = malloc(sizeof(*rre) + (2+nargv) * sizeof(char *));
+	rre = malloc(sizeof(*rre) + (2 + nargv) * sizeof(char *));
 	if (rre == NULL)
-		err(1, "allocate rumprun_exec");
+		err(1, "%s: malloc(rumprun_exec)", __func__);
 	rre->rre_flags = rreflags;
-	rre->rre_argc = 1+nargv;
+	rre->rre_argc = 1 + nargv;
 	rre->rre_argv[0] = binname;
-	int j; jvalue **arg; /* XXX decl? */
-	for (j = 1, arg = v_argv->u.v; *arg; ++arg, ++j) {
-		rre->rre_argv[j] = strdup((*arg)->u.s);
+	for (v_arg = v_argv->u.v, nargv = 1; *v_arg; ++v_arg, ++nargv) {
+		rre->rre_argv[nargv] = strdup((*v_arg)->u.s);
+		if (!rre->rre_argv[nargv])
+			err(1, "%s: strdup", __func__);
 	}
 	rre->rre_argv[rre->rre_argc] = NULL;
 
@@ -219,7 +222,7 @@ handle_rc(jvalue *v, const char *loc)
 
 	jexpect(jarray, v, __func__);
 	for (jvalue **i = v->u.v; *i; ++i)
-		addbin(*i, __func__);
+		handle_bin(*i, __func__);
 }
 
 static void
