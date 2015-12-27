@@ -28,6 +28,7 @@
 #include <hw/clock_subr.h>
 
 #include <arch/x86/hypervisor.h>
+#include <arch/x86/var.h>
 
 #include <bmk-core/core.h>
 #include <bmk-core/platform.h>
@@ -432,10 +433,10 @@ x86_initclocks(void)
 
 	/*
 	 * Map i8254 interrupt vector and enable it in the PIC.
-	 * XXX: We don't really want to enable IRQ2 here, but ...
 	 */
 	x86_fillgate(32, cpu_isr_clock, 0);
-	outb(PIC1_DATA, 0xff & ~(1<<2|1<<0));
+	pic1mask &= ~(1<<0);
+	outb(PIC1_DATA, pic1mask);
 }
 
 /*

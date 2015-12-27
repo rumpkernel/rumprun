@@ -24,4 +24,6 @@ void x86_trap_14(void);
 void x86_trap_17(void);
 
 void x86_cpuid(uint32_t, uint32_t *, uint32_t *, uint32_t *, uint32_t *);
+
+extern uint8_t pic1mask, pic2mask;
 #endif

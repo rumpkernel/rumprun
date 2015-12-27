@@ -24,6 +24,7 @@
  */
 
 #include <hw/kernel.h>
+#include <arch/x86/var.h>
 
 void
 x86_initpic(void)
@@ -32,18 +33,20 @@ x86_initpic(void)
 	/*
 	 * init pic1: cycle is write to cmd followed by 3 writes to data
 	 */
+	pic1mask = 0xff & ~(1<<2);
 	outb(PIC1_CMD, ICW1_INIT | ICW1_IC4);
 	outb(PIC1_DATA, 32);	/* interrupts start from 32 in IDT */
 	outb(PIC1_DATA, 1<<2);	/* slave is at IRQ2 */
 	outb(PIC1_DATA, ICW4_8086);
-	outb(PIC1_DATA, 0xff & ~(1<<2));	/* unmask slave IRQ */
+	outb(PIC1_DATA, pic1mask);
 
 	/* do the slave PIC */
+	pic2mask = 0xff;
 	outb(PIC2_CMD, ICW1_INIT | ICW1_IC4);
 	outb(PIC2_DATA, 32+8);	/* interrupts start from 40 in IDT */
 	outb(PIC2_DATA, 2);	/* interrupt at irq 2 */
 	outb(PIC2_DATA, ICW4_8086);
-	outb(PIC2_DATA, 0xff);	/* all masked */
+	outb(PIC2_DATA, pic2mask);
 }
 
 /* interrupt-not-service-routine */

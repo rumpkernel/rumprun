@@ -24,6 +24,7 @@
  */
 
 #include <hw/kernel.h>
+#include <arch/x86/var.h>
 
 void x86_isr_9(void);
 void x86_isr_10(void);
@@ -31,14 +32,13 @@ void x86_isr_11(void);
 void x86_isr_14(void);
 void x86_isr_15(void);
 
-int pic2mask = 0xff;
+uint8_t pic1mask, pic2mask;
 
 int
 cpu_intr_init(int intr)
 {
 
-	/* XXX: too lazy to keep PIC1 state */
-	if (intr < 8)
+	if (intr > 15)
 		return BMK_EGENERIC;
 
 #define FILLGATE(n) case n: x86_fillgate(32+n, x86_isr_##n, 0); break
@@ -54,8 +54,13 @@ cpu_intr_init(int intr)
 #undef FILLGATE
 
 	/* unmask interrupt in PIC */
-	pic2mask &= ~(1<<(intr-8));
-	outb(PIC2_DATA, pic2mask);
+	if (intr < 8) {
+		pic1mask &= ~(1<<intr);
+		outb(PIC1_DATA, pic1mask);
+	} else {
+		pic2mask &= ~(1<<(intr-8));
+		outb(PIC2_DATA, pic2mask);
+	}
 
 	return 0;
 }
