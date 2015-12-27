@@ -81,6 +81,8 @@ void
 bmk_printf_init(void (*putc)(int), void (*flush)(void))
 {
 
+	if (putc == NULL)
+		putc = (void *)nullfun;
 	v_putc = putc;
 	if (flush == NULL)
 		flush = nullfun;
