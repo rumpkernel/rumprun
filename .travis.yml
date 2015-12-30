@@ -11,16 +11,17 @@ before_script:
   - sudo apt-get install g++-4.8 -y
 
 env:
-  - PLATFORM=xen MACHINE=x86_64 TESTS=none EXTRAFLAGS=
-  - PLATFORM=xen MACHINE=i486 ELF=elf TESTS=none EXTRAFLAGS='-- -F ACLFLAGS=-m32'
-  - PLATFORM=hw MACHINE=x86_64 TESTS=qemu EXTRAFLAGS=
-  - PLATFORM=hw MACHINE=i486 ELF=elf TESTS=qemu EXTRAFLAGS='-- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686'
-  - PLATFORM=hw MACHINE=x86_64 TESTS=none KERNONLY=-k EXTRAFLAGS=
-  - PLATFORM=xen MACHINE=x86_64 TESTS=none KERNONLY=-k EXTRAFLAGS=
+  - PLATFORM=xen MACHINE=x86_64 TESTS=none EXTRAFLAGS= MYCXX='g++-4.8'
+  - PLATFORM=xen MACHINE=i486 ELF=elf TESTS=none EXTRAFLAGS='-- -F ACLFLAGS=-m32' MYCXX='g++-4.8'
+  - PLATFORM=hw MACHINE=x86_64 TESTS=qemu EXTRAFLAGS= MYCXX='g++-4.8'
+  - PLATFORM=hw MACHINE=i486 ELF=elf TESTS=qemu EXTRAFLAGS='-- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686' MYCXX='g++-4.8'
+  - PLATFORM=hw MACHINE=x86_64 TESTS=none KERNONLY=-k EXTRAFLAGS= MYCXX='g++-4.8'
+  - PLATFORM=xen MACHINE=x86_64 TESTS=none KERNONLY=-k EXTRAFLAGS= MYCXX='g++-4.8'
+  - PLATFORM=hw MACHINE=x86_64 TESTS=qemu EXTRAFLAGS= MYCXX='false'
 
 script:
   - export CC=gcc-4.8
-  - export CXX=g++-4.8
+  - export CXX=${MYCXX}
   - git submodule update --init
   - ./build-rr.sh -o myobj -j16 -qq ${KERNONLY} ${PLATFORM} ${EXTRAFLAGS}
   - RUMPRUN_SHCONF=./myobj/config.sh RUMPRUN_MKCONF=$(pwd)/myobj/config.mk ./tests/buildtests.sh ${KERNONLY}
