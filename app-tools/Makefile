@@ -22,7 +22,12 @@ SPECS:= ${SPECS_ARCH} ${SPECS_MACH}
 
 _BIN_G=	ar as cpp ld nm objcopy objdump ranlib readelf size strings strip
 BIN_G=	$(_BIN_G:%=$(TOOLTUPLE)-%)
-BIN_G+=	$(TOOLTUPLE)-$(_CCVARIANT) $(TOOLTUPLE)-$(_CXXVARIANT)
+BIN_G+=	$(TOOLTUPLE)-$(_CCVARIANT)
+CCWRP=	${CC}
+ifeq (${CONFIG_CXX},yes)
+BIN_G+=	$(TOOLTUPLE)-$(_CXXVARIANT)
+CCWRP+=	${CXX}
+endif
 BIN_G+=	rumprun-bake
 STATICBIN= rumprun rumpstop
 
@@ -100,7 +105,7 @@ ${INSTALLDIR_ARCH}/share:
 	mkdir -p $@
 
 install-buildrumpwrappers: ${BRLIBEXECINST} ${BRTOOLS}
-	install -m 0755 ${BRTOOLS} ${CC} ${CXX} ${BRLIBEXECINST}
+	install -m 0755 ${BRTOOLS} ${CCWRP} ${BRLIBEXECINST}
 	install -m 0755 ${BRSOURCEDIR}/brprintmetainfo ${BRLIBEXECINST}
 
 install-bins: ${GENS.bin} ${STATICBIN}
