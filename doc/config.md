@@ -98,7 +98,17 @@ multibaked program in the unikernel will be invoked.
         "gateways": [
             <gateway>,
             ...
-        ]
+        ],
+        "dns": {
+            "nameservers": [
+                <ip-address>,
+                ...
+            ],
+            "search": [
+                <domain-suffix>,
+                ...
+            ]
+        }
     }
 
 * _interfaces_: Each key configures a single network interface:
@@ -112,6 +122,11 @@ multibaked program in the unikernel will be invoked.
 * _gateways_: Configures default gateways. Refer to protocol families below for
   supported `<gateway>` syntax. At most one `<gateway>` may be configured for
   each supported network protocol. _Optional_
+* _dns_: Configures the DNS resolver used by the unikernel:
+  * _nameservers_: A list of IPv4/IPv6 addresses of nameservers to use for
+    name resolution. (Maximum 3 strings, _Optional_)
+  * _search_: A list of domain suffixes to search when resolving unqualified
+    names. (Maximum 6 strings, _Optional_)
 
 ### IPv4 configuration
 

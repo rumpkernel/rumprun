@@ -457,9 +457,105 @@ handle_gateways(jvalue *v, const char *loc)
 	}
 }
 
+static void
+handle_dns(jvalue *v, const char *loc)
+{
+	jvalue *nameservers, *search;
+	int fd, rv, len, maxlen, n;
+	char *buf, *p;
+
+	jexpect(jobject, v, __func__);
+
+	nameservers = search = NULL;
+	for (jvalue **i = v->u.v; *i; ++i) {
+		if (strcmp((*i)->n, "nameservers") == 0) {
+			jexpect(jarray, *i, __func__);
+			nameservers = *i;
+		} else if (strcmp((*i)->n, "search") == 0) {
+			jexpect(jarray, *i, __func__);
+			search = *i;
+		} else {
+			warnx("%s: unexpected key \"%s\", ignored", __func__,
+				(*i)->n);
+		}
+	}
+
+	if (!nameservers && !search)
+		return;
+
+	/*
+	 * Create /etc if it does not exist, and truncate /etc/resolv.conf.
+	 */
+	rv = mkdir("/etc", 0755);
+	if (rv == -1 && errno != EEXIST)
+		err(1, "%s: mkdir(\"/etc\")", __func__);
+	fd = open("/etc/resolv.conf", O_WRONLY | O_CREAT, 0644);
+	if (fd == -1)
+		err(1, "%s: open(\"/etc/resolv.conf\")", __func__);
+
+	/*
+	 * Longest required string is "search " + 1024 characters + "\n\0".
+	 * See limits in resolv.conf(5).
+	 */
+	maxlen = strlen("search ") + 1024 + 2;
+	buf = malloc(maxlen);
+	if (buf == NULL)
+		err(1, "%s: malloc", __func__);
+
+	/*
+	 * Write out a "nameserver <address>" line for each nameserver.
+	 */
+	n = 0;
+	for (jvalue **i = nameservers->u.v; *i; ++i) {
+		jexpect(jstring, *i, __func__);
+		n++;
+		if (n > 3)
+			errx(1, "%s: too many nameservers (max 3)", __func__);
+
+		len = snprintf(buf, maxlen, "nameserver %s\n", (*i)->u.s);
+		if (len >= maxlen)
+			errx(1, "%s: nameserver \"%s\" too long", __func__,
+				(*i)->u.s);
+		rv = write(fd, buf, len);
+		if (rv == -1)
+			err(1, "%s: write", __func__);
+	}
+
+	/*
+	 * Write out search list, checking for limits.
+	 */
+	n = 0;
+	p = buf;
+	for (jvalue **i = search->u.v; *i; ++i) {
+		jexpect(jstring, *i, __func__);
+		n++;
+		if (n > 6)
+			errx(1, "%s: too many search domains (max 6)",
+				__func__);
+
+		len = snprintf(p, maxlen, "%s %s%s",
+			(n == 1) ? "search" : "",
+			(*i)->u.s,
+			(*(i+1) == NULL) ? "\n" : "");
+		if (len >= maxlen)
+			errx(1, "%s: search list too long", __func__);
+		maxlen -= len;
+		p += len;
+	}
+	if (n > 0) {
+		rv = write(fd, buf, p - buf);
+		if (rv == -1)
+			err(1, "%s: write", __func__);
+	}
+
+	close(fd);
+	free(buf);
+}
+
 static jhandler handlers_net[] = {
 	{ "interfaces", handle_interfaces },
 	{ "gateways", handle_gateways },
+	{ "dns", handle_dns },
 	{ 0 }
 };
 
