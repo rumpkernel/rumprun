@@ -505,47 +505,53 @@ handle_dns(jvalue *v, const char *loc)
 	/*
 	 * Write out a "nameserver <address>" line for each nameserver.
 	 */
-	n = 0;
-	for (jvalue **i = nameservers->u.v; *i; ++i) {
-		jexpect(jstring, *i, __func__);
-		n++;
-		if (n > 3)
-			errx(1, "%s: too many nameservers (max 3)", __func__);
+	if (nameservers) {
+		n = 0;
+		for (jvalue **i = nameservers->u.v; *i; ++i) {
+			jexpect(jstring, *i, __func__);
+			n++;
+			if (n > 3)
+				errx(1, "%s: too many nameservers (max 3)",
+					__func__);
 
-		len = snprintf(buf, maxlen, "nameserver %s\n", (*i)->u.s);
-		if (len >= maxlen)
-			errx(1, "%s: nameserver \"%s\" too long", __func__,
+			len = snprintf(buf, maxlen, "nameserver %s\n",
 				(*i)->u.s);
-		rv = write(fd, buf, len);
-		if (rv == -1)
-			err(1, "%s: write", __func__);
+			if (len >= maxlen)
+				errx(1, "%s: nameserver \"%s\" too long",
+					__func__, (*i)->u.s);
+			rv = write(fd, buf, len);
+			if (rv == -1)
+				err(1, "%s: write", __func__);
+		}
 	}
 
 	/*
 	 * Write out search list, checking for limits.
 	 */
-	n = 0;
-	p = buf;
-	for (jvalue **i = search->u.v; *i; ++i) {
-		jexpect(jstring, *i, __func__);
-		n++;
-		if (n > 6)
-			errx(1, "%s: too many search domains (max 6)",
-				__func__);
+	if (search) {
+		n = 0;
+		p = buf;
+		for (jvalue **i = search->u.v; *i; ++i) {
+			jexpect(jstring, *i, __func__);
+			n++;
+			if (n > 6)
+				errx(1, "%s: too many search domains (max 6)",
+					__func__);
 
-		len = snprintf(p, maxlen, "%s %s%s",
-			(n == 1) ? "search" : "",
-			(*i)->u.s,
-			(*(i+1) == NULL) ? "\n" : "");
-		if (len >= maxlen)
-			errx(1, "%s: search list too long", __func__);
-		maxlen -= len;
-		p += len;
-	}
-	if (n > 0) {
-		rv = write(fd, buf, p - buf);
-		if (rv == -1)
-			err(1, "%s: write", __func__);
+			len = snprintf(p, maxlen, "%s %s%s",
+				(n == 1) ? "search" : "",
+				(*i)->u.s,
+				(*(i+1) == NULL) ? "\n" : "");
+			if (len >= maxlen)
+				errx(1, "%s: search list too long", __func__);
+			maxlen -= len;
+			p += len;
+		}
+		if (n > 0) {
+			rv = write(fd, buf, p - buf);
+			if (rv == -1)
+				err(1, "%s: write", __func__);
+		}
 	}
 
 	close(fd);
