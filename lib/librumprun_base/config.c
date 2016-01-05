@@ -733,7 +733,7 @@ mount_kernfs(const char *dev, const char *mp, jvalue *options)
 static bool
 mount_tmpfs(const char *dev, const char *mp, jvalue *options)
 {
-	struct tmpfs_args ta;
+	struct tmpfs_args ta = { 0 };
 	const char *opt_size = NULL;
 	int64_t size;
 
