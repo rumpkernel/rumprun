@@ -180,9 +180,11 @@ handle_bin(jvalue *v, const char *loc)
 		err(1, "%s: strdup", __func__);
 
 	if (v_runmode) {
-		if (strcmp(v_runmode->u.s, "&") == 0) {
+		if (strcmp(v_runmode->u.s, "fg") == 0) {
+			rreflags = 0;
+		} else if (strcmp(v_runmode->u.s, "bg") == 0) {
 			rreflags = RUMPRUN_EXEC_BACKGROUND;
-		} else if (strcmp(v_runmode->u.s, "|") == 0) {
+		} else if (strcmp(v_runmode->u.s, "pipe") == 0) {
 			rreflags = RUMPRUN_EXEC_PIPE;
 		} else {
 			errx(1, "invalid runmode \"%s\" for bin \"%s\"",

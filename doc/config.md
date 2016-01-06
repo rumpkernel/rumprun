@@ -47,7 +47,7 @@ boot.
          {
              "bin": <string>,
              "args": [ <string>, ... ],
-             "runmode": "& OR |"
+             "runmode": "fg" | "bg" | "pipe"
          },
          ...
     ]
@@ -56,15 +56,15 @@ Each element of `rc` describes a single program, **in the order in which they
 are baked into the unikernel image**.
 
 If the `rc` key is not specified in the configuration, only the first
-multibaked program in the unikernel will be invoked.
+multibaked program in the unikernel will be invoked, with no arguments.
 
 * _bin_: The name of the program. Passed to the program as `argv[0]`.
 * _args[]_: Arguments for the program. Passed to the program as `argv[1..N]`.
 * _runmode_: Defines how the program will be invoked. _Optional_
-  * `&`: run program in background.
-  * `|`: pipe output of program to next defined program.
-  * _default_: run program in foreground and wait for it to exit successfully
-    before running any further programs.
+  * `fg`: (_default_) run program in foreground and wait for it to exit
+    successfully before running any further programs.
+  * `bg`: run program in background.
+  * `pipe`: pipe output of program to next defined program.
 
 ## env: Environment variables
 
