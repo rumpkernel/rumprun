@@ -7,6 +7,7 @@ TARGETS=	rumpkernlibs
 # but building it always makes testing kernonly easier
 TARGETS+=	compiler_rt
 INSTALLTGTS=	librumpkern_bmktc_install
+INSTALLTGTS+=	librumpkern_mman_install
 
 ifneq (${KERNONLY},true)
 TARGETS+=	userlibs
@@ -60,6 +61,7 @@ endef
 $(eval $(call BUILDLIB_target,libbmk_core))
 $(eval $(call BUILDLIB_target,libbmk_rumpuser))
 $(eval $(call BUILDLIB_target,librumpkern_bmktc))
+$(eval $(call BUILDLIB_target,librumpkern_mman))
 $(eval $(call BUILDLIB_target,librumprun_base))
 $(eval $(call BUILDLIB_target,librumprun_tester))
 $(eval $(call BUILDLIB_target,libcompiler_rt,RUMPSRC=${RUMPSRC}))
@@ -79,7 +81,7 @@ ${RROBJ}/bmk.ldscript: ${LDSCRIPT}
 commonlibs: platformlibs userlibs
 userlibs: ${PSEUDOSTUBS}.o ${RROBJLIB}/librumprun_base/librumprun_base.a ${RROBJLIB}/librumprun_tester/librumprun_tester.a ${LIBUNWIND}
 platformlibs: ${RROBJLIB}/libbmk_core/libbmk_core.a ${RROBJLIB}/libbmk_rumpuser/libbmk_rumpuser.a ${RROBJ}/bmk.ldscript
-rumpkernlibs: ${RROBJLIB}/librumpkern_bmktc/librumpkern_bmktc.a
+rumpkernlibs: ${RROBJLIB}/librumpkern_bmktc/librumpkern_bmktc.a ${RROBJLIB}/librumpkern_mman/librumpkern_mman.a
 compiler_rt: ${RROBJLIB}/libcompiler_rt/libcompiler_rt.a
 
 .PHONY: buildtest

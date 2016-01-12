@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2013, 2015 Antti Kantee.  All Rights Reserved.
+ * Copyright (c) 2016 Antti Kantee.  All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -24,238 +24,122 @@
  */
 
 /*
- * Emulate a bit of memory management syscalls.  Most are nops due
- * to the fact that there is virtual memory.  Things like mprotect()
- * don't work 100% correctly, but we can't really do anything about it,
- * so we lie to the caller and cross our fingers.
+ * Syscall wrappers for memory management routines (not provided by
+ * standard rump kernels).  These are handwritten libc-level wrappers.
+ * We should maybe try to autogenerate them some fine day ...
  */
 
-/* for libc namespace */
 #define mmap _mmap
 
 #include <sys/cdefs.h>
 
 #include <sys/param.h>
 #include <sys/mman.h>
-#include <sys/queue.h>
+#include <sys/syscall.h>
+#include <sys/syscallargs.h>
 
-#include <assert.h>
 #include <errno.h>
-#include <inttypes.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 
-#include <bmk-core/pgalloc.h>
+/* XXX */
+int	rump_syscall(int, void *, size_t, register_t *);
 
-#ifdef RUMPRUN_MMAP_DEBUG
-#define MMAP_PRINTF(x) printf x
-#else
-#define MMAP_PRINTF(x)
+#if     BYTE_ORDER == BIG_ENDIAN
+#define SPARG(p,k)      ((p)->k.be.datum)
+#else /* LITTLE_ENDIAN, I hope dearly */
+#define SPARG(p,k)      ((p)->k.le.datum)
 #endif
 
-struct mmapchunk {
-	void *mm_start;
-	size_t mm_size;
-	size_t mm_pgsleft;
-
-	LIST_ENTRY(mmapchunk) mm_chunks;
-};
-/*
- * XXX: use a tree?  we don't know how many entries we get,
- * someone might mmap page individually ...
- */
-static LIST_HEAD(, mmapchunk) mmc_list = LIST_HEAD_INITIALIZER(&mmc_list);
-
-/* XXX: need actual const macro */
-static inline long __constfunc
-pagesize(void)
-{
-
-	return sysconf(_SC_PAGESIZE);
-}
-
-/*
- * calculate the order we need for pgalloc()
- */
-static int
-size2order(size_t wantedsize)
-{
-	int npgs = wantedsize / pagesize();
-	int powtwo;
-
-	powtwo = 8*sizeof(npgs) - __builtin_clz(npgs);
-	if ((npgs & (npgs-1)) == 0)
-		powtwo--;
-
-	return powtwo;
-}
-
-static void *
-mmapmem_alloc(size_t roundedlen)
-{
-	struct mmapchunk *mc;
-	void *v;
-	int order;
-
-	mc = malloc(sizeof(*mc));
-	if (mc == NULL)
-		return NULL;
-
-	order = size2order(roundedlen);
-	v = bmk_pgalloc(order);
-	if (v == NULL) {
-		free(mc);
-		return NULL;
-	}
-	memset(v, 0, (1UL<<order) * pagesize());
-
-	mc->mm_start = v;
-	mc->mm_size = roundedlen;
-	mc->mm_pgsleft = roundedlen / pagesize();
-
-	LIST_INSERT_HEAD(&mmc_list, mc, mm_chunks);
-
-	return v;
-}
-
-static int
-mmapmem_free(void *addr, size_t roundedlen)
-{
-	struct mmapchunk *mc;
-	size_t npgs;
-	int order;
-
-	LIST_FOREACH(mc, &mmc_list, mm_chunks) {
-		if (mc->mm_start <= addr &&
-		    ((uint8_t *)mc->mm_start + mc->mm_size
-		      >= (uint8_t *)addr + roundedlen))
-			break;
-	}
-	if (!mc) {
-		return EINVAL;
-	}
-
-	npgs = roundedlen / pagesize();
-	assert(npgs <= mc->mm_pgsleft);
-	mc->mm_pgsleft -= npgs;
-	if (mc->mm_pgsleft)
-		return 0;
-
-	/* no pages left => free bookkeeping chunk */
-	LIST_REMOVE(mc, mm_chunks);
-	order = size2order(mc->mm_size);
-	bmk_pgfree(mc->mm_start, order);
-	free(mc);
-
-	return 0;
-}
-
 void *
-mmap(void *addr, size_t len, int prot, int flags, int fd, off_t off)
+mmap(void *addr, size_t len, int prot, int flags, int fd, off_t pos)
 {
-	void *v;
-	ssize_t nn;
-	size_t roundedlen, nnu;
-	int error = 0;
+	struct sys_mmap_args callarg;
+	register_t retval[2];
+	int error;
 
-	MMAP_PRINTF(("-> mmap: %p %zu, 0x%x, 0x%x, %d, %" PRId64 "\n",
-	    addr, len, prot, flags, fd, off));
+	memset(&callarg, 0, sizeof(callarg));
+	SPARG(&callarg, addr) = addr;
+	SPARG(&callarg, len) = len;
+	SPARG(&callarg, prot) = prot;
+	SPARG(&callarg, flags) = flags;
+	SPARG(&callarg, fd) = fd;
+	SPARG(&callarg, pos) = pos;
 
-	if (fd != -1 && prot != PROT_READ) {
-		MMAP_PRINTF(("mmap: trying to r/w map a file. failing!\n"));
-		error = ENOTSUP;
-		goto out;
+	error = rump_syscall(SYS_mmap, &callarg, sizeof(callarg), retval);
+	errno = error;
+	if (error == 0) {
+		return (void *)retval[0];
 	}
-
-	/* we're not going to even try */
-	if (flags & MAP_FIXED) {
-		error = ENOMEM;
-		goto out;
-	}
-
-	/* offset should be aligned to page size */
-	if ((off & (pagesize()-1)) != 0) {
-		error = EINVAL;
-		goto out;
-	}
-
-	/* allocate full whatever-we-lie-to-be-pages */
-	roundedlen = roundup2(len, pagesize());
-	if ((v = mmapmem_alloc(roundedlen)) == NULL) {
-		error = ENOMEM;
-		goto out;
-	}
-
-	if (flags & MAP_ANON)
-		goto out;
-
-	if ((nn = pread(fd, v, roundedlen, off)) == -1) {
-		MMAP_PRINTF(("mmap: failed to populate r/o file mapping!\n"));
-		error = errno;
-		assert(error != 0);
-		mmapmem_free(v, roundedlen);
-		goto out;
-	}
-	nnu = (size_t)nn;
-
-	/*
-	 * Memory after the end of the object until the end of the page
-	 * should be 0-filled.  We don't really know when the object
-	 * stops (we could do a fstat(), but that's racy), so just assume
-	 * that the caller knows what her or she is doing.
-	 */
-	if (nnu != roundedlen) {
-		assert(nnu < roundedlen);
-		memset((uint8_t *)v+nnu, 0, roundedlen-nnu);
-	}
-
- out:
-	if (error) {
-		errno = error;
-		v = MAP_FAILED;
-	}
-	MMAP_PRINTF(("<- mmap: %p %d\n", v, error));
-	return v;
+	return MAP_FAILED;
 }
 #undef mmap
 __weak_alias(mmap,_mmap);
+
+int
+munmap(void *addr, size_t len)
+{
+	struct sys_munmap_args callarg;
+	register_t retval[2];
+	int error;
+
+	memset(&callarg, 0, sizeof(callarg));
+	SPARG(&callarg, addr) = addr;
+	SPARG(&callarg, len) = len;
+
+	error = rump_syscall(SYS_munmap, &callarg, sizeof(callarg), retval);
+	errno = error;
+	if (error == 0) {
+		return (int)retval[0];
+	}
+	return -1;
+}
 
 int _sys___msync13(void *, size_t, int);
 int
 _sys___msync13(void *addr, size_t len, int flags)
 {
+	struct sys___msync13_args callarg;
+	register_t retval[2];
+	int error;
 
-	/* catch a few easy errors */
-	if (((uintptr_t)addr & (pagesize()-1)) != 0)
-		return EINVAL;
-	if ((flags & (MS_SYNC|MS_ASYNC)) == (MS_SYNC|MS_ASYNC))
-		return EINVAL;
+	memset(&callarg, 0, sizeof(callarg));
+	SPARG(&callarg, addr) = addr;
+	SPARG(&callarg, len) = len;
 
-	/* otherwise just pretend that we are the champions my friend */
-	return 0;
+	error = rump_syscall(SYS___msync13, &callarg, sizeof(callarg), retval);
+	errno = error;
+	if (error == 0) {
+		return 0;
+	}
+	return -1;
 }
+__weak_alias(___msync13,_sys___msync13);
+__weak_alias(__msync13,_sys___msync13);
 
 int
-munmap(void *addr, size_t len)
+mincore(void *addr, size_t len, char *vec)
 {
-	int rv;
+	struct sys_mincore_args callarg;
+	register_t retval[2];
+	int error;
 
-	MMAP_PRINTF(("-> munmap: %p, %zu\n", addr, len));
+	memset(&callarg, 0, sizeof(callarg));
+	SPARG(&callarg, addr) = addr;
+	SPARG(&callarg, len) = len;
+	SPARG(&callarg, vec) = vec;
 
-	/* addr must be page-aligned */
-	if (((uintptr_t)addr & (pagesize()-1)) != 0) {
-		rv = EINVAL;
-		goto out;
+	error = rump_syscall(SYS_mincore, &callarg, sizeof(callarg), retval);
+	errno = error;
+	if (error == 0) {
+		return 0;
 	}
-
-	rv =  mmapmem_free(addr, roundup2(len, pagesize()));
-
- out:
-	MMAP_PRINTF(("<- munmap: %d\n", rv));
-	return rv;
+	return -1;
 }
+
+/*
+ * We "know" that the following are stubs also in the kernel.  Risk of
+ * them going out-of-sync is quite minimal ...
+ */
 
 int
 madvise(void *addr, size_t len, int adv)
@@ -263,54 +147,9 @@ madvise(void *addr, size_t len, int adv)
 
 	return 0;
 }
-
-int
-mprotect(void *addr, size_t len, int prot)
-{
-
-	return 0;
-}
-
-int
-minherit(void *addr, size_t len, int inherit)
-{
-
-	return 0;
-}
-
-int
-mlockall(int flags)
-{
-
-	return 0;
-}
-
-int
-munlockall(void)
-{
-
-	return 0;
-}
-
-int
-mlock(const void *addr, size_t len)
-{
-
-	return 0;
-}
-
-int
-munlock(const void *addr, size_t len)
-{
-
-	return 0;
-}
-
-int
-mincore(void *addr, size_t length, char *vec)
-{
-	long page_size = sysconf(_SC_PAGESIZE);
-
-	memset(vec, 0x01, (length + page_size - 1) / page_size);
-	return 0;
-}
+__strong_alias(mprotect,madvise);
+__strong_alias(minherit,madvise);
+__strong_alias(mlock,madvise);
+__strong_alias(mlockall,madvise);
+__strong_alias(munlock,madvise);
+__strong_alias(munlockall,madvise);
