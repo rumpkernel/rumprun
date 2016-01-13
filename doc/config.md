@@ -47,7 +47,7 @@ boot.
          {
              "bin": <string>,
              "args": [ <string>, ... ],
-             "runmode": "fg" | "bg" | "pipe"
+             "runmode": "" | "&" | "|"
          },
          ...
     ]
@@ -61,10 +61,10 @@ multibaked program in the unikernel will be invoked, with no arguments.
 * _bin_: The name of the program. Passed to the program as `argv[0]`.
 * _args[]_: Arguments for the program. Passed to the program as `argv[1..N]`.
 * _runmode_: Defines how the program will be invoked. _Optional_
-  * `fg`: (_default_) run program in foreground and wait for it to exit
+  * `<empty>`: (_default_) run program in foreground and wait for it to exit
     successfully before running any further programs.
-  * `bg`: run program in background.
-  * `pipe`: pipe output of program to next defined program.
+  * `&`: run program in background.
+  * `|`: pipe output of program to next defined program.
 
 ## env: Environment variables
 
