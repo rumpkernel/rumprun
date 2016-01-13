@@ -351,7 +351,7 @@ json_store_qemu_blkspec ()
 {
 
 	# XXX: should not generate the interface here
-	opt_drivespec="${opt_drivespec} -drive if=virtio,file=${image}"
+	opt_drivespec="${opt_drivespec} -drive if=virtio,file=${image},format=raw"
 
 	# if the image does not need to be mounted, we're done
 	[ -n "${mountpoint}" ] || return
