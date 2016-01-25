@@ -11,5 +11,6 @@ SRCS+=		sysproxy.c
 WARNS=		5
 
 CPPFLAGS+=	-I${.CURDIR}/../../include
+CPPFLAGS+=	-D_KERNTYPES
 
 .include <bsd.lib.mk>
