@@ -211,7 +211,8 @@ checksubmodules ()
 probeprereqs ()
 {
 
-	if [ "${PLATFORM}" = "xen" ]; then
+	if [ "${PLATFORM}" = "xen" ]; then (
+		. "${RROBJ}/config.sh"
 		# probe location of Xen headers
 		found=false
 		for loc in /usr/pkg/include/xen /usr/include/xen; do
@@ -231,7 +232,7 @@ probeprereqs ()
 			echo '>> The exactly source depends on your system'
 			echo '>> (e.g. libxen-dev package on some systems)'
 			die Xen headers not found
-		fi
+		fi )
 	fi
 }
 
@@ -324,8 +325,6 @@ export RUMPRUN_MKCONF="${RROBJ}/config.mk"
 export RUMPRUN_SHCONF="${RROBJ}/config.sh"
 EOF
 	export RUMPRUN_MKCONF="${RROBJ}/config.mk"
-
-	. "${RROBJ}/config.sh"
 
 	probeprereqs
 
