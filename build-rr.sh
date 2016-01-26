@@ -207,6 +207,34 @@ checksubmodules ()
 	fi
 }
 
+# check that the necessary things are available on the build system
+probeprereqs ()
+{
+
+	if [ "${PLATFORM}" = "xen" ]; then
+		# probe location of Xen headers
+		found=false
+		for loc in /usr/pkg/include/xen /usr/include/xen; do
+			if printf '#include <stdint.h>\n#include <xen.h>\n'\
+			    | ${CC} -I${loc} -x c - -c -o /dev/null \
+			    >/dev/null 2>&1 ; then
+				found=true
+				break
+			fi
+		done
+
+		if ${found}; then
+			echo "XEN_HEADERS=${loc}" >> ${RROBJ}/config.mk
+			echo "XEN_HEADERS=\"${loc}\"" >> ${RROBJ}/config.sh
+		else
+			echo '>> You need to provide Xen headers.'
+			echo '>> The exactly source depends on your system'
+			echo '>> (e.g. libxen-dev package on some systems)'
+			die Xen headers not found
+		fi
+	fi
+}
+
 checkprevbuilds ()
 {
 
@@ -296,6 +324,10 @@ export RUMPRUN_MKCONF="${RROBJ}/config.mk"
 export RUMPRUN_SHCONF="${RROBJ}/config.sh"
 EOF
 	export RUMPRUN_MKCONF="${RROBJ}/config.mk"
+
+	. "${RROBJ}/config.sh"
+
+	probeprereqs
 
 	cat >> ${RUMPTOOLS}/mk.conf << EOF
 .if defined(LIB) && \${LIB} == "pthread"
