@@ -33,19 +33,32 @@
 
 void	rumprun_config(char *);
 
+typedef int rre_mainfn(int, char *[]);
+
 #define RUMPRUN_EXEC_BACKGROUND 0x01
 #define RUMPRUN_EXEC_PIPE	0x02
-#define RUMPRUN_EXEC_CMDLINE	0x04
 struct rumprun_exec {
 	int rre_flags;
 
 	TAILQ_ENTRY(rumprun_exec) rre_entries;
 
 	int rre_argc;
+	rre_mainfn *rre_main;
 	char *rre_argv[];
 };
 
 TAILQ_HEAD(rumprun_execs, rumprun_exec);
 extern struct rumprun_execs rumprun_execs;
+
+/*
+ * XXX: The definition of this structure needs to be kept in sync with that in
+ * rumprun-bake, which generates rumprun_bins[] during baking.
+ */
+struct rumprun_bin {
+	const char *binname;
+	rre_mainfn *main;
+};
+
+extern struct rumprun_bin *rumprun_bins[];
 
 #endif /* _BMKCOMMON_RUMPRUN_CONFIG_H_ */

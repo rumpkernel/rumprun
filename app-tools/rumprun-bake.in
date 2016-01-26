@@ -363,8 +363,6 @@ unset RUMPBAKE_CFLAGS
 # XXX: TOOLDIR is just dirname $0, so can simplify that bit
 unset RUMPBAKE_TOOLDIR
 
-[ $# -le 8 ] || { echo '>> max 8 binaries supported currently' ; exit 1; }
-
 # Santize the config argument passed in to remove shell
 # metacharacters
 config="$(echo ${TARGET} | sed -e 's/-/_/g' -e 's/[^A-Za-z0-9_]//g')"
@@ -395,7 +393,48 @@ for f in "$@"; do
 	objnum=$((${objnum}+1))
 done
 
+# Generate list of binaries baked into the unikernel image.
+# XXX This definition needs to be kept in sync with that in
+# include/rumprun-base/config.h. Also, no checks are made to ensure binname is
+# unique, feel free to improve.
+cat >${TMPDIR}/tmpbins.c <<EOM
+#include <stddef.h>
+typedef int mainlike_fn(int, char *[]);
+EOM
+objnum=1
+for f in "$@"; do
+	cat >>${TMPDIR}/tmpbins.c <<EOM
+extern mainlike_fn rumprun_main${objnum};
+EOM
+	objnum=$((${objnum}+1))
+done
+cat >>${TMPDIR}/tmpbins.c <<EOM
+struct rumprun_bin {
+	const char *binname;
+	mainlike_fn *main;
+} *rumprun_bins[] = {
+EOM
+objnum=1
+for f in "$@"; do
+	f=$(basename ${f})
+	cat >>${TMPDIR}/tmpbins.c <<EOM
+	&(struct rumprun_bin){ "${f}", rumprun_main${objnum} },
+EOM
+	objnum=$((${objnum}+1))
+done
+cat >>${TMPDIR}/tmpbins.c <<EOM
+	NULL
+};
+EOM
+
 MACHINE_GNU_ARCH=${RUMPBAKE_TUPLE%%-*}
+
+# Compile the generated code. Use of funky initializers requires -std=c99.
+${runcmd} ${RUMPBAKE_BACKINGCC} ${RUMPBAKE_CFLAGS}			\
+    --sysroot ${RUMPBAKE_TOOLDIR}/rumprun-${MACHINE_GNU_ARCH}		\
+    -specs=${RUMPBAKE_TOOLDIR}/rumprun-${MACHINE_GNU_ARCH}/lib/specs-compile_or_ferment \
+    -std=c99 -o ${TMPDIR}/tmpbins.obj -c ${TMPDIR}/tmpbins.c || exit 1
+allobjs="${allobjs} ${TMPDIR}/tmpbins.obj"
 
 # Final link using cc to produce the unikernel image.
 ${runcmd} ${RUMPBAKE_BACKINGCC} ${RUMPBAKE_CFLAGS}			\

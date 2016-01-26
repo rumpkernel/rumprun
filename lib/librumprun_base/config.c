@@ -56,6 +56,7 @@
 #include <rumprun-base/config.h>
 #include <rumprun-base/json.h>
 #include <rumprun-base/parseargs.h>
+#include <rumprun-base/rumprun.h>
 
 struct rumprun_execs rumprun_execs = TAILQ_HEAD_INITIALIZER(rumprun_execs);
 
@@ -136,34 +137,57 @@ handle_object(jvalue *v, jhandler h[], const char *loc)
 	}
 }
 
+extern rre_mainfn rumprun_main1;
+
 static struct rumprun_exec
 rre_dummy = {
-	.rre_flags = RUMPRUN_EXEC_CMDLINE,
+	.rre_flags = 0,
 	.rre_argc = 1,
+	.rre_main = rumprun_main1,
 	.rre_argv = { NULL, NULL }
 };
+
+static rre_mainfn *
+getmain(const char *binname)
+{
+	/*
+	 * Special undocumented case for backward compatibility with the
+	 * existing rumprun launcher script which does not understand
+	 * multibake.
+	 */
+	if (strcmp("*", binname) == 0)
+		return rumprun_main1;
+
+	for (int i = 0; rumprun_bins[i]; i++)
+	{
+		if (strcmp(rumprun_bins[i]->binname, binname) == 0)
+			return rumprun_bins[i]->main;
+	}
+	return NULL;
+}
 
 static void
 handle_bin(jvalue *v, const char *loc)
 {
 	struct rumprun_exec *rre;
 	char *binname;
-	jvalue *v_bin, *v_args, *v_runmode, **v_arg;
+	rre_mainfn *binmain;
+	jvalue *v_bin, *v_argv, *v_runmode, **v_arg;
 	int rreflags;
-	size_t nargs;
+	size_t nargv;
 
 	jexpect(jobject, v, __func__);
 
 	/* process and validate data */
-	v_bin = v_args = v_runmode = NULL;
+	v_bin = v_argv = v_runmode = NULL;
 	for (jvalue **i = v->u.v; *i; ++i) {
 
 		if (strcmp((*i)->n, "bin") == 0) {
 			jexpect(jstring, *i, __func__);
 			v_bin = *i;
-		} else if (strcmp((*i)->n, "args") == 0) {
+		} else if (strcmp((*i)->n, "argv") == 0) {
 			jexpect(jarray, *i, __func__);
-			v_args = *i;
+			v_argv = *i;
 		} else if (strcmp((*i)->n, "runmode") == 0) {
 			jexpect(jstring, *i, __func__);
 			v_runmode = *i;
@@ -175,9 +199,22 @@ handle_bin(jvalue *v, const char *loc)
 
 	if (!v_bin)
 		errx(1, "missing \"bin\" for rc entry");
+	binmain = getmain(v_bin->u.s);
+	if (!binmain)
+		errx(1, "unknown binname \"%s\" in rc entry", v_bin->u.s);
 	binname = strdup(v_bin->u.s);
 	if (!binname)
 		err(1, "%s: strdup", __func__);
+
+	if (!v_argv)
+		errx(1, "missing \"argv\" in rc entry for \"%s\"", v_bin->u.s);
+	nargv = 0;
+	for (jvalue **i = v_argv->u.v; *i; ++i) {
+		jexpect(jstring, *i, __func__);
+		nargv++;
+	}
+	if (nargv == 0)
+		errx(1, "missing argv[0] in rc entry for \"%s\"", v_bin->u.s);
 
 	if (v_runmode) {
 		if (strcmp(v_runmode->u.s, "") == 0) {
@@ -194,27 +231,19 @@ handle_bin(jvalue *v, const char *loc)
 		rreflags = 0;
 	}
 
-	nargs = 0;
-	if (v_args) {
-		for (jvalue **i = v_args->u.v; *i; ++i) {
-			jexpect(jstring, *i, __func__);
-			nargs++;
-		}
-	}
-
 	/* ok, we got everything.  save into rumprun_exec structure */
-	rre = malloc(sizeof(*rre) + (2 + nargs) * sizeof(char *));
+	rre = malloc(sizeof(*rre) + (2 + nargv) * sizeof(char *));
 	if (rre == NULL)
 		err(1, "%s: malloc(rumprun_exec)", __func__);
 	rre->rre_flags = rreflags;
-	rre->rre_argc = 1 + nargs;
-	rre->rre_argv[0] = binname;
-	for (v_arg = v_args->u.v, nargs = 1; *v_arg; ++v_arg, ++nargs) {
-		rre->rre_argv[nargs] = strdup((*v_arg)->u.s);
-		if (!rre->rre_argv[nargs])
+	rre->rre_argc = nargv;
+	for (v_arg = v_argv->u.v, nargv = 0; *v_arg; ++v_arg, ++nargv) {
+		rre->rre_argv[nargv] = strdup((*v_arg)->u.s);
+		if (!rre->rre_argv[nargv])
 			err(1, "%s: strdup", __func__);
 	}
 	rre->rre_argv[rre->rre_argc] = NULL;
+	rre->rre_main = binmain;
 
 	TAILQ_INSERT_TAIL(&rumprun_execs, rre, rre_entries);
 }

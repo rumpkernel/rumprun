@@ -46,20 +46,22 @@ boot.
     "rc": [
          {
              "bin": <string>,
-             "args": [ <string>, ... ],
+             "argv": [ <string>, ... ],
              "runmode": "" | "&" | "|"
          },
          ...
     ]
 
-Each element of `rc` describes a single program, **in the order in which they
-are baked into the unikernel image**.
+Each element of _rc[]_ describes a single program invocation. Programs are
+invoked in the order in which they are defined in _rc[]_.
 
-If the `rc` key is not specified in the configuration, only the first
-multibaked program in the unikernel will be invoked, with no arguments.
+If no _rc_ key is specified in the configuration, only the first binary
+baked into the unikernel will be invoked, with _argv[]_ set to `[ "rumprun" ]`.
 
-* _bin_: The name of the program. Passed to the program as `argv[0]`.
-* _args[]_: Arguments for the program. Passed to the program as `argv[1..N]`.
+* _bin_: Determines the name of the binary baked into the unikernel to
+  invoke.
+* _argv[]_: Argument list passed to program. At a minimum, a single string
+  is required, which will be passed to the program as _argv[0]_.
 * _runmode_: Defines how the program will be invoked. _Optional_
   * `<empty>`: (_default_) run program in foreground and wait for it to exit
     successfully before running any further programs.
