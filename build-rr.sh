@@ -61,6 +61,8 @@ BUILDRUMP=$(pwd)/buildrump.sh
 # overriden by script if true
 HAVECXX=false
 
+: ${GIT:=git}
+
 # figure out where gmake lies
 if [ -z "${MAKE:-}" ]; then
 	MAKE=make
@@ -131,7 +133,19 @@ parseargs ()
 	done
 	shift $((${OPTIND} - 1))
 
-	[ -n "${RRDEST}" ] || RRDEST=./rumprun${EXTSRC}
+	# are we on a git branch which is not master?
+	if type ${GIT} >/dev/null; then
+		GITBRANCH=$(${GIT} rev-parse --abbrev-ref HEAD 2>/dev/null)
+		if [ ${GITBRANCH} = "master" -o ${GITBRANCH} = "HEAD" ]; then
+			GITBRANCH=
+		else
+			GITBRANCH=-${GITBRANCH}
+		fi
+	else
+		GITBRANCH=
+	fi
+
+	[ -n "${RRDEST}" ] || RRDEST=./rumprun${GITBRANCH}${EXTSRC}
 
 	: ${BUILD_QUIET:=}
 
@@ -273,7 +287,7 @@ setvars ()
 	MACHINE_GNU_ARCH="${BUILDRUMP_MACHINE_GNU_ARCH}"
 
 	if [ -z "${RROBJ}" ]; then
-		RROBJ="./obj-${MACHINE}-${PLATFORM}${EXTSRC}"
+		RROBJ="./obj-${MACHINE}-${PLATFORM}${GITBRANCH}${EXTSRC}"
 		${KERNONLY} && RROBJ="${RROBJ}-kernonly"
 	fi
 	STAGING="${RROBJ}/dest.stage"
