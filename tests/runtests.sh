@@ -105,7 +105,7 @@ runguest ()
 			sleep 1
 		done
 
-		rumpstop ${OPT_SUDO} ${cookie}
+		${RUMPSTOP} ${OPT_SUDO} ${cookie}
 	fi
 
 	echo ">> Result: ${TEST_RESULT} (${TEST_ECODE})"

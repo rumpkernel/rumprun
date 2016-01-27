@@ -339,6 +339,7 @@ export RUMPRUN_MKCONF="${RROBJ}/config.mk"
 export RUMPRUN_SHCONF="${RROBJ}/config.sh"
 export RUMPRUN_BAKE="${RRDEST}/bin/rumprun-bake"
 export RUMPRUN="${RRDEST}/bin/rumprun"
+export RUMPSTOP="${RRDEST}/bin/rumpstop"
 EOF
 	export RUMPRUN_MKCONF="${RROBJ}/config.mk"
 
