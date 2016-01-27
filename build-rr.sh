@@ -323,6 +323,8 @@ buildrump ()
 	cat > ${RROBJ}/config << EOF
 export RUMPRUN_MKCONF="${RROBJ}/config.mk"
 export RUMPRUN_SHCONF="${RROBJ}/config.sh"
+export RUMPRUN_BAKE="${RRDEST}/bin/rumprun-bake"
+export RUMPRUN="${RRDEST}/bin/rumprun"
 EOF
 	export RUMPRUN_MKCONF="${RROBJ}/config.mk"
 
