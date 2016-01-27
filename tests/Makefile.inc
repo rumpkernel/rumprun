@@ -13,4 +13,4 @@ LDLIBS= -lrumprun_tester
 	$(CXX) $(CXXFLAGS) $< -o $@ $(LDLIBS)
 
 %.bin: %
-	$(RUMPBAKE) $@ $<
+	$(RUMPRUN_BAKE) $(RUMPBAKE_PLATFORM) $@ $<
