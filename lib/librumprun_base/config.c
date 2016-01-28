@@ -137,15 +137,31 @@ handle_object(jvalue *v, jhandler h[], const char *loc)
 	}
 }
 
-extern rre_mainfn rumprun_main1;
+static int
+handle_rc_dummy(void)
+{
+	int i;
 
-static struct rumprun_exec
-rre_dummy = {
-	.rre_flags = 0,
-	.rre_argc = 1,
-	.rre_main = rumprun_main1,
-	.rre_argv = { NULL, NULL }
-};
+	for (i = 0; rumprun_bins[i]; i++)
+	{
+		struct rumprun_exec *rre;
+
+		rre = malloc(sizeof (*rre) + 2 * sizeof (char *));
+		if (rre == NULL)
+			errx(1, "malloc");
+		rre->rre_flags = 0;
+		rre->rre_main = rumprun_bins[i]->main;
+		rre->rre_argc = 1;
+		rre->rre_argv[0] = strdup(rumprun_bins[i]->binname);
+		if (rre->rre_argv[0] == NULL)
+			errx(1, "strdup");
+		rre->rre_argv[rre->rre_argc] = NULL;
+
+		TAILQ_INSERT_TAIL(&rumprun_execs, rre, rre_entries);
+	}
+
+	return i;
+}
 
 static rre_mainfn *
 getmain(const char *binname)
@@ -156,7 +172,7 @@ getmain(const char *binname)
 	 * multibake.
 	 */
 	if (strcmp("*", binname) == 0)
-		return rumprun_main1;
+		return rumprun_bins[0]->main;
 
 	for (int i = 0; rumprun_bins[i]; i++)
 	{
@@ -1001,6 +1017,7 @@ rumprun_config(char *cmdline)
 	char *cfg;
 	struct rumprun_exec *rre;
 	jvalue *root;
+	bool have_config = true;
 
 	/* is the config file on rootfs?  if so, mount & dig it out */
 	cfg = rumprun_config_path(cmdline);
@@ -1013,31 +1030,38 @@ rumprun_config(char *cmdline)
 	while (*cmdline != '{') {
 		if (*cmdline == '\0') {
 			warnx("could not find start of json.  no config?");
-			rre_dummy.rre_argv[0] = strdup("rumprun");
-			if (!rre_dummy.rre_argv[0])
-				err(1, "%s: strdup", __func__);
-			TAILQ_INSERT_TAIL(&rumprun_execs, &rre_dummy,
-				rre_entries);
-			return;
+			have_config = false;
+			break;
 		}
 		cmdline++;
 	}
 
-	root = jparse(cmdline);
-	if (!root)
-		errx(1, "jparse failed");
-	handle_object(root, handlers_root, __func__);
+	if (have_config) {
+		root = jparse(cmdline);
+		if (!root) {
+			errx(1, "jparse failed");
+		}
+		handle_object(root, handlers_root, __func__);
+		jdel(root);
+	}
+
+	/*
+	 * If no configuration or rc[] is passed, we populate rumprun_execs[]
+	 * using the information in rumprun_bins[].
+	 */
+	rre = TAILQ_LAST(&rumprun_execs, rumprun_execs);
+	if (rre == NULL) {
+		int nbins = handle_rc_dummy();
+		if (nbins == 0) {
+			errx(1, "internal error: no rumprun_execs[]");
+		}
+		rre = TAILQ_LAST(&rumprun_execs, rumprun_execs);
+	}
 
 	/*
 	 * Before we start running things, perform some sanity checks
 	 */
-	rre = TAILQ_LAST(&rumprun_execs, rumprun_execs);
-	if (rre == NULL) {
-		errx(1, "rumprun_config: no bins");
-	}
 	if (rre->rre_flags & RUMPRUN_EXEC_PIPE) {
-		errx(1, "rumprun_config: last bin may not output to pipe");
+		errx(1, "rumprun_config: last rc entry may not output to pipe");
 	}
-
-	jdel(root);
 }

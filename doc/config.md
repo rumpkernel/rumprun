@@ -55,9 +55,6 @@ boot.
 Each element of _rc[]_ describes a single program invocation. Programs are
 invoked in the order in which they are defined in _rc[]_.
 
-If no _rc_ key is specified in the configuration, only the first binary
-baked into the unikernel will be invoked, with _argv[]_ set to `[ "rumprun" ]`.
-
 * _bin_: Determines the name of the binary baked into the unikernel to
   invoke.
 * _argv[]_: Argument list passed to program. At a minimum, a single string
@@ -67,6 +64,11 @@ baked into the unikernel will be invoked, with _argv[]_ set to `[ "rumprun" ]`.
     successfully before running any further programs.
   * `&`: run program in background.
   * `|`: pipe output of program to next defined program.
+
+If no _rc_ key is specified in the configuration, rumprun will invoke all
+binaries baked into the unikernel _in the order they were specified at bake
+time_, with _argv[0]_ set to the name of the binary specified at bake time and
+_runmode_ set to the default value (run in foreground).
 
 ## env: Environment variables
 
