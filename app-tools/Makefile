@@ -12,6 +12,8 @@ TOOLOBJ:= ${RROBJ}/app-tools
 
 _CCVARIANT:=$(shell ${RUMPMAKE} -f bsd.own.mk -V '$${HAVE_LLVM:Dclang:Ugcc}')
 _CXXVARIANT:=$(shell ${RUMPMAKE} -f bsd.own.mk -V '$${HAVE_LLVM:Dclang++:Ug++}')
+MACHINE_GNU_PLATFORM:=\
+    $(shell ${RUMPMAKE} -f bsd.own.mk -V '$${MACHINE_GNU_PLATFORM}')
 
 _FILES=	toolchain.cmake recipe.s
 FILES=	$(_FILES:%=$(TOOLTUPLE)-%)
@@ -29,6 +31,7 @@ BIN_G+=	$(TOOLTUPLE)-$(_CXXVARIANT)
 CCWRP+=	${CXX}
 endif
 BIN_G+=	rumprun-bake
+BIN_G+= $(TOOLTUPLE)-genfs
 STATICBIN= rumprun rumpstop
 
 GENS.bin=	${BIN_G:%=${TOOLOBJ}/%}
@@ -54,6 +57,7 @@ MACHDIR:= rumprun-${MACHINE_GNU_ARCH}-${PLATFORM}
 
 LIBEXEC_CC:= $(subst ${BRSOURCEDIR},${BRLIBEXECDEST},${CC})
 LIBEXEC_CXX:= $(subst ${BRSOURCEDIR},${BRLIBEXECDEST},${CXX})
+LIBEXEC_OBJCOPY:= ${BRLIBEXECDEST}/${MACHINE_GNU_PLATFORM}-objcopy
 
 TOOLS_CC := ${RRDEST}/bin/$(TOOLTUPLE)-${_CCVARIANT}
 TOOLS_CXX := ${RRDEST}/bin/$(TOOLTUPLE)-${_CXXVARIANT}
@@ -66,6 +70,7 @@ ${TOOLOBJ}/${2}: ${1} Makefile ${TOOLOBJ}
 	sed <$$< > $$@							\
 		-e 's#!LIBEXEC_CC!#$(LIBEXEC_CC)#g;'			\
 		-e 's#!LIBEXEC_CXX!#$(LIBEXEC_CXX)#g;'			\
+		-e 's#!LIBEXEC_OBJCOPY!#$(LIBEXEC_OBJCOPY)#g;'		\
 		-e 's#!TOOLS_CC!#$(TOOLS_CC)#g;'			\
 		-e 's#!TOOLS_CXX!#$(TOOLS_CXX)#g;'			\
 		-e 's#!MACHINE_GNU_ARCH!#$(MACHINE_GNU_ARCH)#g;'	\
@@ -83,6 +88,7 @@ $(eval $(call templ,cc.in,$(TOOLTUPLE)-${_CCVARIANT}))
 $(eval $(call templ,cc.in,$(TOOLTUPLE)-${_CXXVARIANT}))
 $(eval $(call templ,specs-bake.in,specs-bake-$(TOOLTUPLE)-$(PLATFORM)))
 $(eval $(call templ,rumprun-bake.in,rumprun-bake))
+$(eval $(call templ,genfs.in,$(TOOLTUPLE)-genfs))
 
 define binwrapper
 uptool_$1=$(shell echo $1 | tr '[:lower:]' '[:upper:]')

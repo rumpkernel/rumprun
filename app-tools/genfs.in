@@ -1,0 +1,148 @@
+#!/usr/bin/env sh
+
+#
+# Copyright (c) 2016 Antti Kantee <pooka@fixup.fi>
+# All Rights Reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS
+# OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+
+#
+# Include given files as binary and generate constructor code
+# which loads said files to rumpfs.
+#
+
+set -eu
+
+: ${RUMPRUN_GENFS_CC:=!LIBEXEC_CC!}
+: ${RUMPRUN_GENFS_OBJCOPY:=!LIBEXEC_OBJCOPY!}
+: ${RUMPRUN_GENFS_CFLAGS:=!CFLAGS!}
+: ${RUMPRUN_GENFS_INCDIR:=!DESTDIR!/rumprun-!MACHINE_GNU_ARCH!/include}
+
+nuketmpdir ()
+{
+
+	nukeme="${TMPDIR}"
+	TMPDIR=''
+	rm -rf ${nukeme}
+}
+
+TMPDIR=$(mktemp -d /tmp/rumprun-genfs.XXXXXX)
+trap nuketmpdir 0 INT TERM
+
+[ $# -ge 2 ] || { echo "usage: $0 outfile directory ..."; exit 1; }
+OUTFILE="$1"
+shift
+
+FILES=
+for sd in "$@"; do
+	FILES="${FILES} $(find ${sd} -type f)"
+done
+
+makedirlist ()
+{
+	DIRS=
+	for x in ${FILES}; do
+		d=$(dirname $x)
+		[ $d != . ] || continue
+		DIRS="${DIRS} /${d}"
+	done
+	DIRS=$(echo ${DIRS} | xargs -n1 | sort | uniq)
+
+	printf 'static const char *dirlist[] = {\n'
+	for d in ${DIRS}; do
+		printf '\t"%s",\n' $d
+	done
+	printf '};\n\n'
+}
+
+setfilevars ()
+{
+
+	fn=$((${fn}+1))
+	f_und=$(echo ${1} | sed 's,/,_,g;s/\./_/g')
+	bin=_binary_${f_und}
+	rf=_rumpfs_f${fn}
+}
+
+makeelfdata ()
+{
+
+	fn=0
+	DSRCS=
+	for f in ${FILES}; do
+		setfilevars ${f}
+		${RUMPRUN_GENFS_CC} -Wl,-r,-b,binary -nostdlib		\
+		    -o ${TMPDIR}/d${fn}.elf ${f} -nostdlib
+		${RUMPRUN_GENFS_OBJCOPY}				\
+		    --redefine-sym ${bin}_start=${rf}_start		\
+		    --redefine-sym ${bin}_size=${rf}_size		\
+		    --strip-symbol ${bin}_end				\
+		${TMPDIR}/d${fn}.elf
+		DSRCS="${DSRCS} ${TMPDIR}/d${fn}.elf"
+
+		printf 'extern uint8_t %s_start, %s_size;\n' ${rf} ${rf}
+	done
+
+	printf '\n'
+	printf 'struct rumprun_extfile files[] = {\n'
+
+	fn=0
+	for f in ${FILES}; do
+		setfilevars %{f}
+		printf '\t{ "/%s",\n' ${f}
+		printf '\t    { (void *)&%s_start,\n' ${rf}
+		printf '\t      (size_t)(uintptr_t)&%s_size} },\n' ${rf}
+	done
+
+	printf '};\n'
+}
+
+printhead ()
+{
+
+	printf '#include <sys/types.h>\n\n'
+	printf '#include <rumprun/genfs.h>\n\n'
+}
+
+printtail ()
+{
+
+	printf 'static void __attribute__((constructor))\n'
+	printf 'rumpfs_externatilize(void)\n'
+	printf '{\n\n'
+	printf '\trumprun_genfs(dirlist, __arraycount(dirlist),\n'
+	printf '\t    files, __arraycount(files));\n'
+	printf '}\n'
+}
+
+exec 3>&1 1>${TMPDIR}/constr.c
+printhead
+makedirlist
+makeelfdata
+printtail
+exec 1>&3 3>&-
+
+${RUMPRUN_GENFS_CC} -nostdlib -Wl,-r -I${RUMPRUN_GENFS_INCDIR} \
+    -o ${OUTFILE} ${DSRCS} ${TMPDIR}/constr.c
+
+exit 0
