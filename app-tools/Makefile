@@ -81,6 +81,7 @@ ${TOOLOBJ}/${2}: ${1} Makefile ${TOOLOBJ}
 		-e 's#!CFLAGS!#$(BUILDRUMP_TOOL_CFLAGS)#g;'		\
 		-e 's#!CXXFLAGS!#$(BUILDRUMP_TOOL_CXXFLAGS)#g;'		\
 		-e 's#!LDFLAGS_BAKE!#$(LDFLAGS_BAKE)#g;'
+	chmod 755 $$@
 endef
 $(foreach file,${_FILES},$(eval $(call templ,${file}.in,${TOOLTUPLE}-${file})))
 $(foreach spec,${SPECS},$(eval $(call templ,${spec}.in,${spec})))
@@ -96,6 +97,7 @@ toolval_$1=$${$${uptool_$1}}
 ${TOOLOBJ}/$(TOOLTUPLE)-$1: ${TOOLOBJ}
 	printf '#!/bin/sh\n\nexec %s "$$$${@}"\n' \
 	    $$(subst ${BRSOURCEDIR},${BRLIBEXECDEST},$${toolval_${1}}) > $$@
+	chmod 755 $$@
 
 BRTOOLS+= $${toolval_${1}}
 endef
