@@ -35,7 +35,6 @@ set -eu
 
 : ${RUMPRUN_GENFS_CC:=!LIBEXEC_CC!}
 : ${RUMPRUN_GENFS_OBJCOPY:=!LIBEXEC_OBJCOPY!}
-: ${RUMPRUN_GENFS_CFLAGS:=!CFLAGS!}
 : ${RUMPRUN_GENFS_INCDIR:=!DESTDIR!/rumprun-!MACHINE_GNU_ARCH!/include}
 
 nuketmpdir ()
@@ -91,7 +90,7 @@ makeelfdata ()
 	DSRCS=
 	for f in ${FILES}; do
 		setfilevars ${f}
-		${RUMPRUN_GENFS_CC} ${RUMPRUN_GENFS_CFLAGS} -nostdlib	\
+		${RUMPRUN_GENFS_CC} !CFLAGS! !CPPFLAGS! -nostdlib	\
 		    -Wl,-r,-b,binary -o ${TMPDIR}/d${fn}.elf ${f}
 		${RUMPRUN_GENFS_OBJCOPY}				\
 		    --redefine-sym ${bin}_start=${rf}_start		\
@@ -142,7 +141,7 @@ makeelfdata
 printtail
 exec 1>&3 3>&-
 
-${RUMPRUN_GENFS_CC} ${RUMPRUN_GENFS_CFLAGS} -I${RUMPRUN_GENFS_INCDIR} \
+${RUMPRUN_GENFS_CC} !CFLAGS! !CPPFLAGS! -I${RUMPRUN_GENFS_INCDIR}	\
     -nostdlib -Wl,-r -o ${OUTFILE} ${DSRCS} ${TMPDIR}/constr.c
 
 exit 0
