@@ -4,6 +4,7 @@
 
 #include <errno.h>
 #include <pthread.h>
+#include <pwd.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -114,6 +115,17 @@ test_mmap_anon(void)
 	return rv;
 }
 
+static int
+test_etcpasswd(void)
+{
+	int rv;
+
+	printf("testing that root is found in passwd ... ");
+	rv = getpwnam("root") == NULL;
+	prfres(rv);
+	return rv;
+}
+
 int
 rumprun_test(int argc, char *argv[])
 {
@@ -122,6 +134,7 @@ rumprun_test(int argc, char *argv[])
 	rv += test_times();
 	rv += test_pthread_in_ctor();
 	rv += test_mmap_anon();
+	rv += test_etcpasswd();
 
 	return rv;
 }
