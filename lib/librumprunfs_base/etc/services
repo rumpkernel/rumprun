@@ -1,0 +1,393 @@
+#
+# NOTE: this is last revision of /etc/services in NetBSD which isn't
+# the full IANA list (which is megabytes in size)
+#
+
+#	$NetBSD: services,v 1.85 2007/04/20 16:18:02 pooka Exp $
+#
+# Network services, Internet style
+#
+# Note that it is presently the policy of IANA to assign a single well-known
+# port number for both TCP and UDP; hence, most entries here have two entries
+# even if the protocol doesn't support UDP operations.
+# Updated from RFC 1340, ``Assigned Numbers'' (July 1992).  Not all ports
+# are included, only the more common ones.
+# The latest IANA list is available from:
+#	http://www.iana.org/assignments/port-numbers
+#
+#	from: @(#)services	8.2 (Berkeley) 3/26/95
+#
+tcpmux		1/tcp		# TCP port multiplexer (RFC1078)
+echo		7/tcp
+echo		7/udp
+discard		9/tcp		sink null
+discard		9/udp		sink null
+systat		11/tcp		users
+daytime		13/tcp
+daytime		13/udp
+netstat		15/tcp
+qotd		17/tcp		quote
+msp		18/tcp		# message send protocol
+msp		18/udp
+chargen		19/tcp		ttytst source
+chargen		19/udp		ttytst source
+ftp-data	20/tcp		# default ftp data port
+ftp		21/tcp		# File Transfer Protocol
+ssh		22/tcp		# Secure Shell
+ssh		22/udp
+telnet		23/tcp
+# 24 - private
+smtp		25/tcp		mail
+# 26 - unassigned
+time		37/tcp		timserver
+time		37/udp		timserver
+rlp		39/udp		resource	# resource location
+nameserver	42/tcp		name		# IEN 116
+whois		43/tcp		nicname
+tacacs		49/tcp		# Login Host Protocol (TACACS)
+tacacs		49/udp		# Login Host Protocol (TACACS)
+domain		53/tcp		# name-domain server
+domain		53/udp
+mtp		57/tcp				# deprecated
+bootps		67/tcp		# BOOTP server
+bootps		67/udp
+bootpc		68/tcp		# BOOTP client
+bootpc		68/udp
+tftp		69/udp		# Trivial File Transfer Protocol
+gopher		70/tcp		# Internet Gopher
+gopher		70/udp
+rje		77/tcp		netrjs
+finger		79/tcp
+http		80/tcp		www www-http	# WorldWideWeb HTTP
+http		80/udp		www www-http	# HyperText Transfer Protocol
+link		87/tcp		ttylink
+kerberos	88/tcp		krb5	# Kerberos v5
+kerberos	88/udp
+supdup		95/tcp
+# 100 - reserved
+hostnames	101/tcp		hostname	# usually from sri-nic
+iso-tsap	102/tcp		tsap		# part of ISODE.
+csnet-ns	105/tcp		cso-ns	# also used by CSO name server
+csnet-ns	105/udp		cso-ns
+poppass		106/tcp		poppassd
+rtelnet		107/tcp		# Remote Telnet
+rtelnet		107/udp
+pop2		109/tcp		postoffice	# POP version 2
+pop2		109/udp
+pop3		110/tcp		# POP version 3
+pop3		110/udp
+sunrpc		111/tcp		rpcbind		# Remote Procedure Call
+sunrpc		111/udp		rpcbind
+auth		113/tcp		authentication tap ident
+sftp		115/tcp
+uucp-path	117/tcp
+sqlserv		118/tcp				# SQL Services
+nntp		119/tcp		readnews untp	# USENET News Transfer Protocol
+erpc		121/udp			# Encore Expedited Remote Pro.Call
+ntp		123/tcp
+ntp		123/udp				# Network Time Protocol
+netbios-ns	137/tcp				# NETBIOS Name Service
+netbios-ns	137/udp
+netbios-dgm	138/tcp				# NETBIOS Datagram Service
+netbios-dgm	138/udp
+netbios-ssn	139/tcp				# NETBIOS session service
+netbios-ssn	139/udp
+imap	143/tcp		imap2 imap4	# Internet Message Access Protocol
+imap	143/udp		imap2 imap4
+snmp		161/udp				# Simple Net Mgmt Proto
+snmp-trap	162/udp		snmptrap	# Traps for SNMP
+cmip-man	163/tcp				# ISO mgmt over IP (CMOT)
+cmip-man	163/udp
+cmip-agent	164/tcp
+cmip-agent	164/udp
+mailq		174/tcp				# zmailer MTA
+xdmcp		177/tcp				# X Display Mgr. Control Proto
+xdmcp		177/udp
+nextstep	178/tcp		NeXTStep NextStep	# NeXTStep window
+nextstep	178/udp		NeXTStep NextStep	# server
+bgp		179/tcp				# Border Gateway Proto.
+bgp		179/udp
+prospero	191/tcp				# Cliff Neuman's Prospero
+prospero	191/udp
+irc		194/tcp				# Internet Relay Chat
+irc		194/udp
+smux		199/tcp				# SNMP Unix Multiplexer
+smux		199/udp
+at-rtmp		201/tcp				# AppleTalk routing
+at-rtmp		201/udp
+at-nbp		202/tcp				# AppleTalk name binding
+at-nbp		202/udp
+at-echo		204/tcp				# AppleTalk echo
+at-echo		204/udp
+at-zis		206/tcp				# AppleTalk zone information
+at-zis		206/udp
+z3950		210/tcp		wais		# NISO Z39.50 database
+z3950		210/udp		wais
+ipx		213/tcp				# IPX
+ipx		213/udp
+imap3		220/tcp				# Interactive Mail Access
+imap3		220/udp				# Protocol v3
+rsh-spx		222/tcp				# Berkeley rshd with SPX auth
+ulistserv	372/tcp				# UNIX Listserv
+ulistserv	372/udp
+nip		376/tcp				# Amiga Envoy Net Inquiry Prot.
+nip		376/udp				# Amiga Envoy Net Inquiry Prot.
+ldap		389/tcp			# Lightweight Directory Access Protocol
+ldap		389/udp			# Lightweight Directory Access Protocol
+imsp		406/tcp			# Interactive Mail Support Protocol
+imsp		406/udp			# Interactive Mail Support Protocol
+microsoft-ds	445/tcp			# Microsoft-DS
+microsoft-ds	445/udp			# Microsoft-DS
+isakmp		500/tcp			# IPsec Key Management (ISAKMP/Oakley)
+isakmp		500/udp			# IPsec Key Management (ISAKMP/Oakley)
+ripng		521/tcp			# RIP for IPv6
+ripng		521/udp			# RIP for IPv6
+submission	587/tcp			# Message Submission
+submission	587/udp			# Message Submission
+acap		674/tcp		# Application Configuration Access Protocol
+acap		674/udp		# Application Configuration Access Protocol
+silc		706/tcp			# Secure Internet Live Conferencing
+silc		706/udp			# Secure Internet Live Conferencing
+iscsi-rfc	860/tcp			# RFC port used by iSCSI targets
+
+#
+# UNIX specific services
+#
+exec		512/tcp				# Remote execution
+biff		512/udp		comsat		# Biff the dog
+login		513/tcp				# Remote login
+who		513/udp		whod		# Remote who
+shell		514/tcp		cmd		# Remote command shell
+syslog		514/udp				# System logger
+printer		515/tcp		spooler		# line printer spooler
+talk		517/udp				# Talk protocols
+ntalk		518/udp
+route		520/udp		router routed	# RIP
+timed		525/udp		timeserver
+tempo		526/tcp		newdate
+courier		530/tcp		rpc
+conference	531/tcp		chat
+netnews		532/tcp
+netwall		533/udp				# -for emergency broadcasts
+uucp		540/tcp		uucpd		# uucp daemon
+rdist		541/tcp		rdistd		# rdist daemon
+afpovertcp	548/tcp				# AppleshareIP protocol
+afpovertcp	548/udp				# AppleshareIP protocol
+remotefs	556/tcp		rfs_server rfs	# Brunhoff remote filesystem
+#
+webster		765/tcp				# Network dictionary
+webster		765/udp
+rsync		873/tcp				# rsync
+rsync		873/udp				# rsync
+
+#
+# Various SSL services
+#
+https		443/tcp			# http protocol over TLS/SSL
+https		443/udp			# http protocol over TLS/SSL
+smtps		465/tcp			# smtp protocol over TLS/SSL
+smtps		465/udp			# smtp protocol over TLS/SSL
+nntps		563/tcp			# nntp protocol over TLS/SSL (was snntp)
+nntps		563/udp			# nntp protocol over TLS/SSL (was snntp)
+ldaps		636/tcp			# ldap protocol over TLS/SSL (was sldap)
+ldaps		636/udp			# ldap protocol over TLS/SSL (was sldap)
+ftps-data	989/tcp			# ftp protocol, data, over TLS/SSL
+ftps-data	989/udp			# ftp protocol, data, over TLS/SSL
+ftps		990/tcp			# ftp protocol, control, over TLS/SSL
+ftps		990/udp			# ftp protocol, control, over TLS/SSL
+telnets		992/tcp			# telnet protocol over TLS/SSL
+telnets		992/udp			# telnet protocol over TLS/SSL
+imaps		993/tcp			# imap4 protocol over TLS/SSL
+imaps		993/udp			# imap4 protocol over TLS/SSL
+ircs		994/tcp			# irc protocol over TLS/SSL
+ircs		994/udp			# irc protocol over TLS/SSL
+pop3s		995/tcp			# pop3 protocol over TLS/SSL (was spop3)
+pop3s		995/udp			# pop3 protocol over TLS/SSL (was spop3)
+
+#
+# From ``Assigned Numbers'':
+#
+#> The Registered Ports are not controlled by the IANA and on most systems
+#> can be used by ordinary user processes or programs executed by ordinary
+#> users.
+#
+#> Ports are used in the TCP [45,106] to name the ends of logical
+#> connections which carry long term conversations.  For the purpose of
+#> providing services to unknown callers, a service contact port is
+#> defined.  This list specifies the port used by the server process as its
+#> contact port.  While the IANA can not control uses of these ports it
+#> does register or list uses of these ports as a convenience to the
+#> community.
+#
+ingreslock	1524/tcp
+ingreslock	1524/udp
+prospero-np	1525/tcp		# Prospero non-privileged
+prospero-np	1525/udp
+radius		1812/tcp
+radius		1812/udp
+radius-acct	1813/tcp		radacct
+radius-acct	1813/udp		radacct
+cvspserver	2401/tcp
+cvspserver	2401/udp
+isns		3205/tcp		# iSNS server port
+isns		3205/udp		# iSNS server port
+iscsi		3260/tcp		# Draft port used by iSCSI targets
+					# Will be moved to 860 after RFC
+					# is published
+iscsi-target	3260/tcp		# Draft port used by iSCSI targets
+mysql		3306/tcp		# MySQL
+mysql		3306/udp		# MySQL
+svn		3690/tcp		# Subversion
+svn		3690/udp		# Subversion
+rfe		5002/tcp		# Radio Free Ethernet
+rfe		5002/udp		# Actually uses UDP only
+sip		5060/tcp		# SIP
+sip		5060/udp		# SIP
+postgresql	5432/tcp		# PostgreSQL Database
+postgresql	5432/udp		# PostgreSQL Database
+
+#
+# Kerberos (Project Athena/MIT) services
+# (note that kerberos @ port 88 is sorted in the list above)
+#
+kpasswd		464/udp			# Kerberos password changing protocol
+kpasswd		464/tcp			# Kerberos password changing protocol
+klogin		543/tcp			# Kerberos `rlogin'
+kshell		544/tcp		krcmd	# Kerberos `rsh'
+ekshell		545/tcp			# Encrypted kshell
+kerberos-adm	749/tcp			# Kerberos `kadmin' (v5)
+kerberos-iv	750/udp		kdc kerberos4	# Kerberos (server) udp
+kerberos-iv	750/tcp		kdc kerberos4	# Kerberos (server) tcp
+kerberos-master	751/udp			# Kerberos admin server udp
+kerberos-master	751/tcp			# Kerberos admin server tcp
+hprop		754/tcp			# Heimdal KDC database propagation
+krbupdate	760/tcp		kreg	# BSD Kerberos registration
+kpwd		761/tcp			# old BSD Kerberos `passwd'
+					# (formerly `kpasswd')
+kpop		1109/tcp		# Kerberos POP server
+eklogin		2105/tcp		# Kerberos encrypted `rlogin'
+ekshell2	2106/tcp		# Encrypted kshell - UColorado, Boulder
+krb524		4444/udp		# krb5 -> krb4 ticket conversion
+
+#
+# AFS services
+#
+# IANA has these registered as both UDP and TCP, but only the UDP
+# ports are used by the protocol
+#
+afs3-fileserver 7000/tcp		# file server itself
+afs3-fileserver 7000/udp		# file server itself
+afs3-callback	7001/tcp		# callbacks to cache managers
+afs3-callback	7001/udp		# callbacks to cache managers
+afs3-prserver	7002/tcp		# users & groups database
+afs3-prserver	7002/udp		# users & groups database
+afs3-vlserver	7003/tcp		# volume location database
+afs3-vlserver	7003/udp		# volume location database
+afs3-kaserver	7004/tcp		# AFS/Kerberos authentication service
+afs3-kaserver	7004/udp		# AFS/Kerberos authentication service
+afs3-volser	7005/tcp		# volume management server
+afs3-volser	7005/udp		# volume management server
+afs3-errors	7006/tcp		# error interpretation service
+afs3-errors	7006/udp		# error interpretation service
+afs3-bos	7007/tcp		# basic overseer process
+afs3-bos	7007/udp		# basic overseer process
+afs3-update	7008/tcp		# server-to-server updater
+afs3-update	7008/udp		# server-to-server updater
+afs3-rmtsys	7009/tcp		# remote cache manager service
+afs3-rmtsys	7009/udp		# remote cache manager service
+afs3-resserver	7010/tcp		# MR-AFS residence server
+afs3-resserver	7010/udp		# MR-AFS residence server
+afs3-remio	7011/tcp		# MR-AFS remote IO server
+afs3-remio	7011/udp		# MR-AFS remote IO server
+
+#
+# Unofficial but necessary (for NetBSD) services
+#
+supfilesrv	871/tcp			# SUP server
+supfiledbg	1127/tcp		# SUP debugging
+
+#
+# other common ports
+#
+swat		901/tcp			# Samba Web Administration Tool
+sieve		2000/tcp		# RFC3028
+lmtp		2003/tcp		# Local Mail Transfer Protocol
+nfs		2049/udp	nfsd	# Sun NFS
+nfs		2049/tcp	nfsd	# Sun NFS
+suucp		4031/tcp		# UUCP over SSL
+suucp		4031/udp		# UUCP over SSL
+fud		4201/udp		# Cyrus IMAP finger-like service
+X11		6000/tcp		# X Window System
+ircd		6667/tcp		# Often used IRC port (also see 194)
+sstp-2		9801/tcp		# Sakura Script Transfer Protocol-2
+sstp-2		9801/udp		# Sakura Script Transfer Protocol-2
+amanda		10080/udp		# Amanda
+kamanda		10081/udp		# Amanda with Kerberos
+amandaidx	10082/tcp		# Amanda index server
+amidxtape	10083/tcp		# Amanda dump image server
+italk		12345/tcp		# Italk Chat System
+italk		12345/udp		# Italk Chat System
+hunt		26740/udp		# multi-player/multi-host maze-wars
+
+#
+# Netatalk (in-kernel Appletalk) services
+# Note: The running kernel must be configured with "options NETATALK"
+# and software not included in NetBSD, such as Netatalk version 1.4b2
+# or later, must be used to take advantage of these services.
+#
+rtmp		1/ddp			# Routing Table Maintenance Protocol
+nbp		2/ddp			# Name Binding Protocol
+echo		4/ddp			# AppleTalk Echo Protocol
+zip		6/ddp			# Zone Information Protocol
+
+# Iana registered Coda filesystem port numbers
+rpc2portmap	369/tcp
+rpc2portmap	369/udp			# Coda portmapper
+codaauth2	370/tcp
+codaauth2	370/udp			# Coda authentication server
+
+# Iana registered dict port numbers
+dict		2628/tcp		# DICT
+dict		2628/udp
+
+venus		2430/tcp		# codacon port
+venus		2430/udp		# Venus callback/wbc interface
+venus-se	2431/tcp		# tcp side effects
+venus-se	2431/udp		# udp sftp side effect
+codasrv		2432/tcp		# not used
+codasrv		2432/udp		# server port
+codasrv-se	2433/tcp		# tcp side effects
+codasrv-se	2433/udp		# udp sftp side effect
+
+# 9P file and resource sharing protocol
+9pfs		564/tcp
+9pfs		564/udp
+
+# Iana registered ports commonly found in security logs
+epmap		135/tcp			# DCE endpoint resolution
+epmap		135/udp			# DCE endpoint resolution
+rtsp		554/tcp			# Real Time Stream Control Protocol
+rtsp		554/udp			# Real Time Stream Control Protocol
+socks		1080/tcp		# Socks
+socks		1080/udp		# Socks
+kazaa		1214/tcp		# KAZAA
+kazaa		1214/udp		# KAZAA
+ms-sql-s	1433/tcp		# Microsoft-SQL-Server
+ms-sql-s	1433/udp		# Microsoft-SQL-Server
+ms-sql-m	1434/tcp		# Microsoft-SQL-Monitor
+ms-sql-m	1434/udp		# Microsoft-SQL-Monitor
+ms-wbt-server	3389/tcp		# MS WBT Server
+ms-wbt-server	3389/udp		# MS WBT Server
+terabase	4000/tcp	icq	# used for both Terabase and ICQ
+terabase	4000/udp	icq	# used for both Terabase and ICQ
+radmin-port	4899/tcp		# RAdmin Port
+radmin-port	4899/udp		# RAdmin Port
+mdns		5353/tcp		# Multicast DNS
+mdns		5353/udp		# Multicast DNS
+http-alt	8080/tcp		# HTTP Alternate (see port 80)
+http-alt	8080/udp		# HTTP Alternate (see port 80)
+
+# Zephyr services
+zephyr-clt      2103/udp                        # Zephyr serv-hm connection
+zephyr-hm       2104/udp                        # Zephyr hostmanager
+zephyr-hm-srv   2105/udp                        # Zephyr hm-serv connection

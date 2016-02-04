@@ -12,6 +12,7 @@ INSTALLTGTS+=	librumpkern_mman_install
 ifneq (${KERNONLY},true)
 TARGETS+=	userlibs
 INSTALLTGTS+=	librumprun_base_install librumprun_tester_install2
+INSTALLTGTS+=	librumprunfs_base_install
 ifeq (${CONFIG_CXX},yes)
 INSTALLTGTS+=	libunwind_install2
 endif
@@ -64,6 +65,7 @@ $(eval $(call BUILDLIB_target,librumpkern_bmktc))
 $(eval $(call BUILDLIB_target,librumpkern_mman))
 $(eval $(call BUILDLIB_target,librumprun_base))
 $(eval $(call BUILDLIB_target,librumprun_tester))
+$(eval $(call BUILDLIB_target,librumprunfs_base))
 $(eval $(call BUILDLIB_target,libcompiler_rt,RUMPSRC=${RUMPSRC}))
 ifeq (${CONFIG_CXX},yes)
 $(eval $(call BUILDLIB_target,libunwind))
@@ -79,7 +81,7 @@ ${RROBJ}/bmk.ldscript: ${LDSCRIPT}
 	ln -sf $< $@
 
 commonlibs: platformlibs userlibs
-userlibs: ${PSEUDOSTUBS}.o ${RROBJLIB}/librumprun_base/librumprun_base.a ${RROBJLIB}/librumprun_tester/librumprun_tester.a ${LIBUNWIND}
+userlibs: ${PSEUDOSTUBS}.o ${RROBJLIB}/librumprun_base/librumprun_base.a ${RROBJLIB}/librumprun_tester/librumprun_tester.a ${LIBUNWIND} ${RROBJLIB}/librumprunfs_base/librumprunfs_base.a
 platformlibs: ${RROBJLIB}/libbmk_core/libbmk_core.a ${RROBJLIB}/libbmk_rumpuser/libbmk_rumpuser.a ${RROBJ}/bmk.ldscript
 rumpkernlibs: ${RROBJLIB}/librumpkern_bmktc/librumpkern_bmktc.a ${RROBJLIB}/librumpkern_mman/librumpkern_mman.a
 compiler_rt: ${RROBJLIB}/libcompiler_rt/libcompiler_rt.a
