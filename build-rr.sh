@@ -370,10 +370,15 @@ EOF
 	echo '>>'
 }
 
-builduserspace ()
+buildapptools ()
 {
+
 	${MAKE} -C app-tools BUILDRR=true
 	${MAKE} -C app-tools BUILDRR=true install
+}
+
+builduserspace ()
+{
 
 	usermtree ${STAGING}
 
@@ -457,8 +462,8 @@ dobuild ()
 	mkdir -p ${STAGING}/rumprun-${MACHINE_GNU_ARCH}/lib/rumprun-${PLATFORM}\
 	    || die cannot create libdir
 
+	${KERNONLY} || buildapptools
 	${MAKE} -C ${PLATFORMDIR} links
-
 	${KERNONLY} || builduserspace
 
 	buildpci
