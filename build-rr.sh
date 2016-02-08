@@ -299,13 +299,51 @@ setvars ()
 	abspath RUMPSRC
 }
 
-buildrump ()
+checktools ()
 {
 
 	# Check that a clang build is not attempted.
 	[ -z "${BUILDRUMP_HAVE_LLVM}" ] \
 	    || die rumprun does not yet support clang ${CC:+(\$CC: $CC)}
 
+	delay=5
+
+	# check that gcc is modern enough
+	vers=$(${CC:-cc} -E -dM - < /dev/null | awk '
+	    /__GNUC__/ {version += 100*$3}
+	    /__GNUC_MINOR__/ {version += $3}
+	    END { print version; if (version) exit 0; exit 1; }')
+	if [ ${vers} -lt 406 ]; then
+		die gcc is too old, need 4.6 or later. ${CC:+(\$CC: $CC)}
+	elif [ ${vers} -lt 408 ]; then
+		echo '>>'
+		echo ">> WARNING: gcc is old. ${CC:+(\$CC: $CC)}"
+		echo '>> Version 4.8 or later is recommended.'
+		echo ">> (continuing in ${delay} seconds)"
+		echo '>>'
+		sleep ${delay}
+	fi
+
+	# check that ld is modern enough
+	vers=$(${CC:-cc} -Wl,--version 2>&1 | awk '
+	    /GNU ld.*Binutils/{version += 100*$NF}
+	    END { print version; if (version) exit 0; exit 1; }')
+	if [ ${vers} -lt 223 ]; then
+		die ld is too old, need 2.23 or later.
+	elif [ ${vers} -lt 225 ]; then
+		echo '>>'
+		echo ">> WARNING: ld is old."
+		echo '>> Version 2.25 or later is recommended.'
+		echo ">> (continuing in ${delay} seconds)"
+		echo '>>'
+		sleep ${delay}
+	fi
+}
+
+buildrump ()
+{
+
+	checktools
 	checkprevbuilds
 
 	extracflags=
