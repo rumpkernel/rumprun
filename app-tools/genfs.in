@@ -47,6 +47,8 @@ nuketmpdir ()
 
 TMPDIR=$(mktemp -d /tmp/rumprun-genfs.XXXXXX)
 trap nuketmpdir 0 INT TERM
+LINKPATH=${TMPDIR}/linkme
+LINKPATH_BIN="_binary_$(echo ${LINKPATH} | tr '/.-' '_')"
 
 [ $# -ge 2 ] || { echo "usage: $0 outfile directory ..."; exit 1; }
 OUTFILE="$1"
@@ -77,9 +79,16 @@ makedirlist ()
 setfilevars ()
 {
 
+	case $1 in
+	/*)
+		fabs="$1"
+		;;
+	*)
+		fabs="$(pwd)/$1"
+		;;
+	esac
+
 	fn=$((${fn}+1))
-	f_und=$(echo ${1} | sed 's,/,_,g;s/\./_/g')
-	bin=_binary_${f_und}
 	rf=_rumpfs_f${fn}
 }
 
@@ -90,12 +99,13 @@ makeelfdata ()
 	DSRCS=
 	for f in ${FILES}; do
 		setfilevars ${f}
+		ln -sf ${fabs} ${LINKPATH}
 		${RUMPRUN_GENFS_CC} !CFLAGS! !CPPFLAGS! -nostdlib	\
-		    -Wl,-r,-b,binary -o ${TMPDIR}/d${fn}.elf ${f}
+		    -Wl,-r,-b,binary -o ${TMPDIR}/d${fn}.elf ${LINKPATH}
 		${RUMPRUN_GENFS_OBJCOPY}				\
-		    --redefine-sym ${bin}_start=${rf}_start		\
-		    --redefine-sym ${bin}_size=${rf}_size		\
-		    --strip-symbol ${bin}_end				\
+		    --redefine-sym ${LINKPATH_BIN}_start=${rf}_start	\
+		    --redefine-sym ${LINKPATH_BIN}_size=${rf}_size	\
+		    --strip-symbol ${LINKPATH_BIN}_end			\
 		${TMPDIR}/d${fn}.elf
 		DSRCS="${DSRCS} ${TMPDIR}/d${fn}.elf"
 
