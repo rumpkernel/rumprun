@@ -329,10 +329,10 @@ checktools ()
 	    /GNU ld.*Binutils/{version += 100*$NF}
 	    END { print version; if (version) exit 0; exit 1; }')
 	if [ ${vers} -lt 223 ]; then
-		die ld is too old, need 2.23 or later.
+		die ld is too old, need 2.23 or later. probed version: ${vers}
 	elif [ ${vers} -lt 225 ]; then
 		echo '>>'
-		echo ">> WARNING: ld is old."
+		echo ">> WARNING: ld is old. probed version: ${vers}"
 		echo '>> Version 2.25 or later is recommended.'
 		echo ">> (continuing in ${delay} seconds)"
 		echo '>>'
