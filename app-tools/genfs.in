@@ -96,18 +96,16 @@ makeelfdata ()
 {
 
 	fn=0
-	DSRCS=
 	for f in ${FILES}; do
 		setfilevars ${f}
 		ln -sf ${fabs} ${LINKPATH}
 		${RUMPRUN_GENFS_CC} !CFLAGS! !CPPFLAGS! -nostdlib	\
-		    -Wl,-r,-b,binary -o ${TMPDIR}/d${fn}.elf ${LINKPATH}
+		    -Wl,-r,-b,binary -o ${TMPDIR}/d${fn}.o ${LINKPATH}
 		${RUMPRUN_GENFS_OBJCOPY}				\
 		    --redefine-sym ${LINKPATH_BIN}_start=${rf}_start	\
 		    --redefine-sym ${LINKPATH_BIN}_size=${rf}_size	\
 		    --strip-symbol ${LINKPATH_BIN}_end			\
-		${TMPDIR}/d${fn}.elf
-		DSRCS="${DSRCS} ${TMPDIR}/d${fn}.elf"
+		${TMPDIR}/d${fn}.o
 
 		printf 'extern uint8_t %s_start, %s_size;\n' ${rf} ${rf}
 	done
@@ -152,6 +150,6 @@ printtail
 exec 1>&3 3>&-
 
 ${RUMPRUN_GENFS_CC} !CFLAGS! !CPPFLAGS! -I${RUMPRUN_GENFS_INCDIR}	\
-    -nostdlib -Wl,-r -o ${OUTFILE} ${DSRCS} ${TMPDIR}/constr.c
+    -nostdlib -Wl,-r -o ${OUTFILE} ${TMPDIR}/d*.o ${TMPDIR}/constr.c
 
 exit 0
