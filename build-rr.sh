@@ -328,8 +328,8 @@ checktools ()
 	vers=$(${CC:-cc} -Wl,--version 2>&1 | awk '
 	    /GNU ld.*Binutils/{version += 100*$NF}
 	    END { print version; if (version) exit 0; exit 1; }')
-	if [ ${vers} -lt 223 ]; then
-		die ld is too old, need 2.23 or later. probed version: ${vers}
+	if [ ${vers} -lt 222 ]; then
+		die ld is too old, need 2.22 or later. probed version: ${vers}
 	elif [ ${vers} -lt 225 ]; then
 		echo '>>'
 		echo ">> WARNING: ld is old. probed version: ${vers}"
