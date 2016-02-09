@@ -206,8 +206,8 @@ _usage ()
 rumprun-bake version: ${_RUMPBAKE_VERSION}
 
 usage:	rumprun-bake [-c conffile ...] list
-	rumprun-bake [-c conffile ...] describe config
-	rumprun-bake [-c conffile ...] config output input [input ...]
+	rumprun-bake [-c conffile ...] [-m cmd ...] describe config
+	rumprun-bake [-c conffile ...] [-m cmd ...] config out in [in ...]
 
 "list" outputs available configs.
 
@@ -226,7 +226,7 @@ _nuketmpdir ()
 
 	nukeme="${TMPDIR}"
 	TMPDIR=''
-	${runcmd} rm -rf ${nukeme}
+	rm -rf ${nukeme}
 }
 
 _readconfig ()
@@ -293,12 +293,20 @@ _getbininfo ()
 	done
 }
 
+# does not respect runcmd.  let's not mope and whine over it
+TMPDIR=$(mktemp -d /tmp/rumprun-bake.XXXXXX)
+trap _nuketmpdir 0 INT TERM
+
 _readconfig "!DESTDIR!/etc/rumprun-bake.conf"
 
-while getopts "c:n" opt; do
+while getopts "c:m:n" opt; do
 	case "${opt}" in
 	c)
 		_readconfig "${OPTARG}"
+		;;
+	m)
+		# save.  we have to process them after configs are processed
+		echo "${OPTARG}" >> ${TMPDIR}/manualcmds
 		;;
 	n)
 		runcmd=echo
@@ -308,11 +316,11 @@ while getopts "c:n" opt; do
 		;;
 	esac
 done
-shift $((${OPTIND}-1))
 
+shift $((${OPTIND}-1))
 TARGET="${1}"
-case ${TARGET} in
-list)
+
+if [ "${TARGET}" = "list" ]; then
 	for x in ${ALLCONFIGS}; do
 		eval mydesc="\${CONFDESCR_${x}}"
 		printf '%-16s' "${x}"
@@ -320,14 +328,29 @@ list)
 		printf '\n'
 	done
 	exit 0
-	;;
-describe)
+fi
+
+if [ "${TARGET}" = "describe" ]; then
+	CONFIG=$2
+else
+	CONFIG=$1
+fi
+
+# process potential manual commands
+if [ -f ${TMPDIR}/manualcmds ]; then
+	printf "version %s\n" ${_RUMPBAKE_VERSION} > ${TMPDIR}/cmdconfig
+	printf "conf %s\n" ${CONFIG} >> ${TMPDIR}/cmdconfig
+	cat ${TMPDIR}/manualcmds >> ${TMPDIR}/cmdconfig
+	printf 'fnoc\n' >> ${TMPDIR}/cmdconfig
+	_readconfig ${TMPDIR}/cmdconfig
+fi
+
+if [ "${TARGET}" = "describe" ]; then
 	[ $# -eq 2 ] || _die \"describe\" needs exactly one config.
 	CONF=$2
 	debugdump
 	exit 0
-	;;
-esac
+fi
 
 OUTPUT="${2}"
 [ $# -gt 2 ] || _usage
@@ -357,11 +380,6 @@ _uniq CONFIG_${config}
 
 PLATFORM=${config%%_*}
 eval LIBS="\${CONFIG_${config}}"
-
-# duh
-TMPDIR=/tmp/rumprun-bake.XXXXXX
-[ -z "${runcmd}" ] && TMPDIR=$(mktemp -d ${TMPDIR})
-trap _nuketmpdir 0 INT TERM
 
 # Check if the file is a relocatable object produced by a rumprun toolchain.
 # Create a temporary object with a unique "main"
