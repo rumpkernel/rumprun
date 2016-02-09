@@ -25,13 +25,15 @@
 # SUCH DAMAGE.
 #
 
-_RUMPBAKE_VERSION=20150930
+_RUMPBAKE_VERSION=20160209
 
 #
 # rumprun-bake: script for final stage linking ("baking") of a unikernel image
 #
 
 unset runcmd
+unset CONF
+unset CFGFILE
 
 if [ "$(basename $0)" = "rumpbake" ]; then
 	echo '>>'
@@ -81,7 +83,7 @@ _haveconf ()
 	for x in ${ALLCONFIGS}; do
 		[ "${x}" != "${1}" ] || return
 	done
-	_die "config ${1} not found (${CURCONF})"
+	_die "config \"${1}\" not found (${CFGFILE})"
 }
 
 _nothaveconf ()
@@ -89,7 +91,7 @@ _nothaveconf ()
 
 	for x in ${ALLCONFIGS}; do
 		[ "${x}" != "${1}" ] \
-		    || _die "config ${1} already exists (${CURCONF})"
+		    || _die "config ${1} already exists (${CFGFILE})"
 	done
 }
 
@@ -119,71 +121,70 @@ version ()
 {
 
 	[ "${1}" = "${_RUMPBAKE_VERSION}" ] \
-	    || _die ${CURCONF} mismatch: expect ${_RUMPBAKE_VERSION}, got \"$1\"
+	    || _die ${CFGFILE} mismatch: expect ${_RUMPBAKE_VERSION}, got \"$1\"
 	_VERSOK=true
+}
+
+conf ()
+{
+
+	if ! echo ${1} | egrep -q '^(xen|hw)?_'; then
+		_die "conf: invalid \"$1\" (${CFGFILE})"
+	fi
+	CONF=$1
+}
+
+fnoc ()
+{
+
+	unset CONF
 }
 
 create ()
 {
-	local confname descr
 
-	confname=$1
-	shift || _die "create: not enough arguments (${CURCONF})"
-	[ -n "$*" ] || _die "create: need description (${CURCONF})"
+	[ -n "$*" ] || _die "create: need description (${CFGFILE})"
 
-	if ! echo ${confname} | egrep -q '^(xen|hw)?_'; then
-		_die "create: invalid conf \"$confname\" (${CURCONF})"
-	fi
+	_nothaveconf ${CONF}
 
-	_nothaveconf ${confname}
-
-	ALLCONFIGS="${ALLCONFIGS} ${confname}"
-	eval CONFDESCR_${confname}=\"${*}\"
+	ALLCONFIGS="${ALLCONFIGS} ${CONF}"
+	eval CONFDESCR_${CONF}=\"${*}\"
 }
 
 assimilate ()
 {
-	local to from
+	local from
 
-	to=$1
-	shift || _die not enough arguments to assimilate
-	_haveconf ${to}
+	_haveconf ${CONF}
 
 	for from; do
 		_haveconf ${from}
-		eval CONFIG_${to}=\"\${CONFIG_${to}} \${CONFIG_${from}}\"
+		eval CONFIG_${CONF}=\"\${CONFIG_${CONF}} \${CONFIG_${from}}\"
 	done
 }
 
 nuke ()
 {
 
-	[ $# -eq 1 ] || _die "nuke: wrong number of args (${CURCONF})"
-	_haveconf ${1}
-	_filter ${1} ALLCONFIGS
+	[ $# -eq 0 ] || _die "nuke: wrong number of args (${CFGFILE})"
+	_haveconf ${CONF}
+	_filter ${CONF} ALLCONFIGS
 }
 
 add ()
 {
-	local confname
 
-	confname=$1
-	shift || _die "not enough args to add (${CURCONF})"
-
-	_haveconf ${confname}
-	eval CONFIG_${confname}=\"\${CONFIG_${confname}} $@\"
+	_haveconf ${CONF}
+	eval CONFIG_${CONF}=\"\${CONFIG_${CONF}} $@\"
 }
 
 remove ()
 {
-	local confname compvar
+	local compvar
 
-	confname=$1
-	shift || _die "not enough args to remove (${CURCONF})"
+	_haveconf ${CONF}
 
-	_haveconf ${confname}
-
-	compvar=CONFIG_${confname}
+	compvar=CONFIG_${CONF}
 	for x; do
 		_filter ${x} ${compvar}
 	done
@@ -192,15 +193,11 @@ remove ()
 # debug routine
 debugdump ()
 {
-	local confname
 
-	confname=$1
-	shift || _die "not enough args to debugdump (${CURCONF})"
+	_haveconf ${CONF}
 
-	_haveconf ${confname}
-
-	_uniq CONFIG_${confname}
-	eval echo \${CONFIG_${confname}}
+	_uniq CONFIG_${CONF}
+	eval echo \${CONFIG_${CONF}}
 }
 
 _usage ()
@@ -236,27 +233,27 @@ _readconfig ()
 {
 	local x
 
-	CURCONF="$1"
-	if [ ! -f "${CURCONF}" ]; then
-		echo "rumprun-bake: error: Configuration file ${CURCONF} not found"
+	CFGFILE="$1"
+	if [ ! -f "${CFGFILE}" ]; then
+		echo "rumprun-bake: error: Configuration file ${CFGFILE} not found"
 		exit 1
 	fi
 
 	_VERSOK=false
 
 	# ". foo" doesn't work everywhere/always, so do a dance here.
-	# Note: CURCONF needs to remain as what the user gave.
+	# Note: CFGFILE needs to remain as what the user gave.
 	case "$1" in
 	/*)
-		. "${CURCONF}"
+		. "${CFGFILE}"
 		;;
 	*)
-		. "$(pwd)/${CURCONF}"
+		. "$(pwd)/${CFGFILE}"
 		;;
 	esac
-	${_VERSOK} || _die "config version not specified (${CURCONF})"
+	${_VERSOK} || _die "config version not specified (${CFGFILE})"
 
-	unset CURCONF
+	unset CFGFILE
 
 	# Publish configs which are not private
 	for x in ${ALLCONFIGS}; do
@@ -326,7 +323,8 @@ list)
 	;;
 describe)
 	[ $# -eq 2 ] || _die \"describe\" needs exactly one config.
-	debugdump $2
+	CONF=$2
+	debugdump
 	exit 0
 	;;
 esac
