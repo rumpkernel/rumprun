@@ -130,6 +130,7 @@ rumprun_boot(char *cmdline)
 	if (sysproxy) {
 		if ((rv = rump_init_server(sysproxy)) != 0)
 			err(1, "failed to init sysproxy at %s", sysproxy);
+		printf("sysproxy listening at: %s\n", sysproxy);
 	}
 
 	/*
