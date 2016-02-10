@@ -37,6 +37,20 @@ set -eu
 : ${RUMPRUN_GENFS_OBJCOPY:=!LIBEXEC_OBJCOPY!}
 : ${RUMPRUN_GENFS_INCDIR:=!DESTDIR!/rumprun-!MACHINE_GNU_ARCH!/include}
 
+usage ()
+{
+
+	echo "usage: $0 [-s count] outfile directory ..."
+	exit 1
+}
+
+die ()
+{
+
+	echo ">> ERROR: $*" 2>&1
+	exit 1
+}
+
 nuketmpdir ()
 {
 
@@ -50,12 +64,69 @@ trap nuketmpdir 0 INT TERM
 LINKPATH=${TMPDIR}/linkme
 LINKPATH_BIN="_binary_$(echo ${LINKPATH} | tr '/.-' '_')"
 
-[ $# -ge 2 ] || { echo "usage: $0 outfile directory ..."; exit 1; }
+STRIPCOUNT=0
+while getopts "s:" opt; do
+        case "${opt}" in
+	s)
+		STRIPCOUNT=${OPTARG}
+		[ -z "$(echo ${STRIPCOUNT} | tr -d '[0-9]')" ] \
+		    || die argument to -s must be a non-negative decimal
+		;;
+	*)
+		usage
+		;;
+	esac
+done
+shift $((${OPTIND}-1))
+
+[ $# -ge 2 ] || usage
 OUTFILE="$1"
 shift
 
+checkpaths ()
+{
+
+	stripcount=${1}
+	shift
+
+	for sd in "$@"; do
+		arg="${sd}"
+		IFS=/
+		set -- ${sd}
+		unset IFS
+		while [ "$1" = '.' ]; do shift ; done
+		[ $# -ge ${stripcount} ] || \
+		    die cannot remove ${STRIPCOUNT} components from \"${arg}\"
+	done
+}
+
+stripleading ()
+{
+
+	n=$1
+	path=$2
+
+	IFS=/
+	set -- ${path}
+	while [ "$1" = '.' ]; do shift ; done
+	while [ ${n} -gt 0 ]; do
+		shift
+		n=$((${n}-1))
+	done
+	unset IFS
+
+	rpath=
+	while [ $# -gt 0 ]; do
+		rpath="${rpath}$1/"
+		shift
+	done
+
+	echo ${rpath%/}
+}
+
 FILES=
 for sd in "$@"; do
+	checkpaths ${STRIPCOUNT} "$@"
 	FILES="${FILES} $(find ${sd} -type f)"
 done
 
@@ -65,13 +136,13 @@ makedirlist ()
 	for x in ${FILES}; do
 		d=$(dirname $x)
 		[ $d != . ] || continue
-		DIRS="${DIRS} /${d}"
+		DIRS="${DIRS} ${d}"
 	done
 	DIRS=$(echo ${DIRS} | xargs -n1 | sort | uniq)
 
 	printf 'static const char *dirlist[] = {\n'
 	for d in ${DIRS}; do
-		printf '\t"%s",\n' $d
+		printf '\t"/%s",\n' $(stripleading ${STRIPCOUNT} $d)
 	done
 	printf '};\n\n'
 }
@@ -118,7 +189,7 @@ makeelfdata ()
 	fn=0
 	for f in ${FILES}; do
 		setfilevars %{f}
-		printf '\t{ "/%s",\n' ${f}
+		printf '\t{ "/%s",\n' $(stripleading ${STRIPCOUNT} "${f}")
 		printf '\t    { (void *)&%s_start,\n' ${rf}
 		printf '\t      (size_t)(uintptr_t)&%s_size} },\n' ${rf}
 	done
