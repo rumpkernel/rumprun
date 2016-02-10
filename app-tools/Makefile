@@ -31,7 +31,7 @@ BIN_G+=	$(TOOLTUPLE)-$(_CXXVARIANT)
 CCWRP+=	${CXX}
 endif
 BIN_G+=	rumprun-bake
-BIN_G+= $(TOOLTUPLE)-genfs
+BIN_G+= $(TOOLTUPLE)-cookfs
 STATICBIN= rumprun rumpstop
 
 GENS.bin=	${BIN_G:%=${TOOLOBJ}/%}
@@ -91,7 +91,7 @@ $(eval $(call templ,cc.in,$(TOOLTUPLE)-${_CCVARIANT}))
 $(eval $(call templ,cc.in,$(TOOLTUPLE)-${_CXXVARIANT}))
 $(eval $(call templ,specs-bake.in,specs-bake-$(TOOLTUPLE)-$(PLATFORM)))
 $(eval $(call templ,rumprun-bake.in,rumprun-bake))
-$(eval $(call templ,genfs.in,$(TOOLTUPLE)-genfs))
+$(eval $(call templ,cookfs.in,$(TOOLTUPLE)-cookfs))
 
 define binwrapper
 uptool_$1=$(shell echo $1 | tr '[:lower:]' '[:upper:]')
