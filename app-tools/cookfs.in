@@ -59,7 +59,7 @@ nuketmpdir ()
 	rm -rf ${nukeme}
 }
 
-TMPDIR=$(mktemp -d /tmp/rumprun-genfs.XXXXXX)
+TMPDIR=$(mktemp -d /tmp/rumprun-cookfs.XXXXXX)
 trap nuketmpdir 0 INT TERM
 LINKPATH=${TMPDIR}/linkme
 LINKPATH_BIN="_binary_$(echo ${LINKPATH} | tr '/.-' '_')"
@@ -199,7 +199,7 @@ printhead ()
 	printf 'static struct rumprun_extfile files[] = {\n' 1>&4
 
 	printf '#include <sys/types.h>\n\n'
-	printf '#include <rumprun/genfs.h>\n\n'
+	printf '#include <rumprun/platefs.h>\n\n'
 }
 
 printtail ()
@@ -211,7 +211,7 @@ printtail ()
 	printf 'static void __attribute__((constructor))\n'
 	printf 'rumpfs_externatilize(void)\n'
 	printf '{\n\n'
-	printf '\trumprun_genfs(dirlist, __arraycount(dirlist),\n'
+	printf '\trumprun_platefs(dirlist, __arraycount(dirlist),\n'
 	printf '\t    files, __arraycount(files));\n'
 	printf '}\n'
 }

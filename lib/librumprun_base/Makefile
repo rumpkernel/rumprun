@@ -10,9 +10,9 @@ SRCS+=		sysproxy.c
 
 # doesn't really belong here, but at the moment we don't have
 # a rumpkernel-only "userspace" lib
-SRCS+=		genfs.c
+SRCS+=		platefs.c
 
-INCS=		genfs.h
+INCS=		platefs.h
 INCSDIR=	/usr/include/rumprun
 
 WARNS=		5

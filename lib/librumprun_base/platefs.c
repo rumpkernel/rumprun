@@ -33,10 +33,10 @@
 #include <rump/rumpfs.h>
 #include <rump/rump_syscalls.h>
 
-#include <rumprun/genfs.h>
+#include <rumprun/platefs.h>
 
 void
-rumprun_genfs(const char **dirs, size_t ndirs,
+rumprun_platefs(const char **dirs, size_t ndirs,
 	struct rumprun_extfile *refs, size_t nrefs)
 {
 	unsigned i;
@@ -45,7 +45,7 @@ rumprun_genfs(const char **dirs, size_t ndirs,
 	for (i = 0; i < ndirs; i++) {
 		if (rump_sys_mkdir(dirs[i], 0777) == -1) {
 			if (*bmk_sched_geterrno() != RUMP_EEXIST)
-				bmk_platform_halt("genfs: mkdir");
+				bmk_platform_halt("platefs: mkdir");
 		}
 	}
 
@@ -53,10 +53,10 @@ rumprun_genfs(const char **dirs, size_t ndirs,
 	for (i = 0; i < nrefs; i++) {
 		if ((fd = rump_sys_open(refs[i].ref_fname,
 		    RUMP_O_CREAT | RUMP_O_RDWR | RUMP_O_EXCL, 0777)) == -1)
-			bmk_platform_halt("genfs: open");
+			bmk_platform_halt("platefs: open");
 		if (rump_sys_fcntl(fd, RUMPFS_FCNTL_EXTSTORAGE_ADD,
 		    &refs[i].ref_es) == -1)
-			bmk_platform_halt("genfs: fcntl");
+			bmk_platform_halt("platefs: fcntl");
 		rump_sys_close(fd);
 	}
 }

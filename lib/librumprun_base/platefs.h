@@ -34,6 +34,7 @@ struct rumprun_extfile {
         struct rumpfs_extstorage ref_es;
 };
 
-void	rumprun_genfs(const char **, size_t, struct rumprun_extfile *, size_t);
+void	rumprun_platefs(const char **, size_t,
+			struct rumprun_extfile *, size_t);
 
 #endif /* _RUMPRUN_GENFS_H_ */
