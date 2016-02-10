@@ -100,7 +100,7 @@ checkpaths ()
 	done
 }
 
-stripleading ()
+processfspath ()
 {
 
 	n=$1
@@ -121,7 +121,7 @@ stripleading ()
 		shift
 	done
 
-	echo ${rpath%/}
+	echo ${rpath%/} | sed 's/"/\\"/g'
 }
 
 FILES=
@@ -142,7 +142,7 @@ makedirlist ()
 
 	printf 'static const char *dirlist[] = {\n'
 	for d in ${DIRS}; do
-		printf '\t"/%s",\n' $(stripleading ${STRIPCOUNT} $d)
+		printf '\t"/%s",\n' $(processfspath ${STRIPCOUNT} $d)
 	done
 	printf '};\n\n'
 }
@@ -189,7 +189,7 @@ makeelfdata ()
 	fn=0
 	for f in ${FILES}; do
 		setfilevars %{f}
-		printf '\t{ "/%s",\n' $(stripleading ${STRIPCOUNT} "${f}")
+		printf '\t{ "/%s",\n' $(processfspath ${STRIPCOUNT} "${f}")
 		printf '\t    { (void *)&%s_start,\n' ${rf}
 		printf '\t      (size_t)(uintptr_t)&%s_size} },\n' ${rf}
 	done
