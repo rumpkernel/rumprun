@@ -31,7 +31,6 @@ _RUMPBAKE_VERSION=20150930
 # rumprun-bake: script for final stage linking ("baking") of a unikernel image
 #
 
-: ${READELF:=readelf}
 unset runcmd
 
 if [ "$(basename $0)" = "rumpbake" ]; then
@@ -273,7 +272,7 @@ _getoneinfo ()
 	unset tmp
 
 	notesect=.note.rumprun.bakerecipe
-	tmp="$(${READELF} -p ${notesect} ${bin} 2>/dev/null \
+	tmp="$(!LIBEXEC_READELF! -p ${notesect} ${bin} 2>/dev/null \
 	    | sed -n '/.*rumprun_'"${var}"': /p')"
 	[ -n "${tmp}" ] \
 	    || _die "Could not extract \"${var}\" from ${bin}. Not rumprun bin?"
@@ -336,10 +335,6 @@ OUTPUT="${2}"
 [ $# -gt 2 ] || _usage
 shift 2
 
-# We need readelf to extract the ELF note with the baking recipe.
-# Just any readelf will do, but we need one.
-type ${READELF} >/dev/null 2>&1 \
-    || _die 'Cannot find ${READELF}. Set $READELF env variable'
 unset RUMPBAKE_BACKINGCC
 unset RUMPBAKE_TUPLE
 unset RUMPBAKE_CFLAGS
