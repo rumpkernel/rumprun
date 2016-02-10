@@ -91,9 +91,10 @@ checkpaths ()
 
 	for sd in "$@"; do
 		arg="${sd}"
+		oIFS="$IFS"
 		IFS=/
 		set -- ${sd}
-		unset IFS
+		IFS="$oIFS"
 		while [ "$1" = '.' ]; do shift ; done
 		[ $# -ge ${stripcount} ] || \
 		    die cannot remove ${STRIPCOUNT} components from \"${arg}\"
@@ -106,6 +107,7 @@ processfspath ()
 	n=$1
 	path=$2
 
+	oIFS="$IFS"
 	IFS=/
 	set -- ${path}
 	while [ "$1" = '.' ]; do shift ; done
@@ -113,7 +115,7 @@ processfspath ()
 		shift
 		n=$((${n}-1))
 	done
-	unset IFS
+	IFS="$oIFS"
 
 	rpath=
 	while [ $# -gt 0 ]; do
@@ -124,25 +126,14 @@ processfspath ()
 	echo ${rpath%/} | sed 's/"/\\"/g'
 }
 
-FILES=
-for sd in "$@"; do
-	checkpaths ${STRIPCOUNT} "$@"
-	FILES="${FILES} $(find ${sd} -type f)"
-done
-
 makedirlist ()
 {
-	DIRS=
-	for x in ${FILES}; do
-		d=$(dirname $x)
-		[ $d != . ] || continue
-		DIRS="${DIRS} ${d}"
-	done
-	DIRS=$(echo ${DIRS} | xargs -n1 | sort | uniq)
 
 	printf 'static const char *dirlist[] = {\n'
-	for d in ${DIRS}; do
-		printf '\t"/%s",\n' $(processfspath ${STRIPCOUNT} $d)
+	for sd in "$@"; do
+		for d in $(find ${sd} -type d); do
+			printf '\t"/%s",\n' $(processfspath ${STRIPCOUNT} $d)
+		done
 	done
 	printf '};\n\n'
 }
@@ -163,42 +154,49 @@ setfilevars ()
 	rf=_rumpfs_f${fn}
 }
 
+processonefile ()
+{
+
+	f="$1"
+
+	setfilevars "$f"
+	ln -sf -- "${fabs}" ${LINKPATH}
+
+	${RUMPRUN_GENFS_CC} !CFLAGS! !CPPFLAGS! -nostdlib		\
+	    -Wl,-r,-b,binary -o ${TMPDIR}/d${fn}.o ${LINKPATH}
+
+	${RUMPRUN_GENFS_OBJCOPY}					\
+	    --redefine-sym ${LINKPATH_BIN}_start=${rf}_start		\
+	    --redefine-sym ${LINKPATH_BIN}_size=${rf}_size		\
+	    --strip-symbol ${LINKPATH_BIN}_end				\
+	${TMPDIR}/d${fn}.o
+
+	LSYM="${LSYM} -L ${rf}_start -L ${rf}_size"
+	printf 'extern uint8_t %s_start, %s_size;\n' ${rf} ${rf}
+
+	printf '\t{ "/%s",\n' $(processfspath ${STRIPCOUNT} "${f}") 1>&4
+	printf '\t    { (void *)&%s_start,\n' ${rf} 1>&4
+	printf '\t      (size_t)(uintptr_t)&%s_size} },\n' ${rf} 1>&4
+}
+
 makeelfdata ()
 {
 
 	fn=0
 	LSYM=
-	for f in ${FILES}; do
-		setfilevars ${f}
-		ln -sf ${fabs} ${LINKPATH}
-		${RUMPRUN_GENFS_CC} !CFLAGS! !CPPFLAGS! -nostdlib	\
-		    -Wl,-r,-b,binary -o ${TMPDIR}/d${fn}.o ${LINKPATH}
-		${RUMPRUN_GENFS_OBJCOPY}				\
-		    --redefine-sym ${LINKPATH_BIN}_start=${rf}_start	\
-		    --redefine-sym ${LINKPATH_BIN}_size=${rf}_size	\
-		    --strip-symbol ${LINKPATH_BIN}_end			\
-		${TMPDIR}/d${fn}.o
-		LSYM="${LSYM} -L ${rf}_start -L ${rf}_size"
-
-		printf 'extern uint8_t %s_start, %s_size;\n' ${rf} ${rf}
+	for sd in "$@"; do
+		for f in $(find "${sd}" -type f); do
+			processonefile "$f"
+		done
 	done
-
 	printf '\n'
-	printf 'static struct rumprun_extfile files[] = {\n'
 
-	fn=0
-	for f in ${FILES}; do
-		setfilevars %{f}
-		printf '\t{ "/%s",\n' $(processfspath ${STRIPCOUNT} "${f}")
-		printf '\t    { (void *)&%s_start,\n' ${rf}
-		printf '\t      (size_t)(uintptr_t)&%s_size} },\n' ${rf}
-	done
-
-	printf '};\n'
 }
 
 printhead ()
 {
+
+	printf 'static struct rumprun_extfile files[] = {\n' 1>&4
 
 	printf '#include <sys/types.h>\n\n'
 	printf '#include <rumprun/genfs.h>\n\n'
@@ -207,6 +205,9 @@ printhead ()
 printtail ()
 {
 
+	cat ${TMPDIR}/filelist.c
+
+	printf '};\n'
 	printf 'static void __attribute__((constructor))\n'
 	printf 'rumpfs_externatilize(void)\n'
 	printf '{\n\n'
@@ -215,12 +216,20 @@ printtail ()
 	printf '}\n'
 }
 
-exec 3>&1 1>${TMPDIR}/constr.c
+IFS='
+'
+
+checkpaths ${STRIPCOUNT} "$@"
+
+exec 3>&1 1>${TMPDIR}/constr.c 4>${TMPDIR}/filelist.c
 printhead
-makedirlist
-makeelfdata
+makedirlist "$@"
+makeelfdata "$@"
+exec 4>&-
 printtail
 exec 1>&3 3>&-
+
+unset IFS
 
 ${RUMPRUN_GENFS_CC} !CFLAGS! !CPPFLAGS! -I${RUMPRUN_GENFS_INCDIR}	\
     -nostdlib -Wl,-r -o ${TMPDIR}/fin.o ${TMPDIR}/d*.o ${TMPDIR}/constr.c
