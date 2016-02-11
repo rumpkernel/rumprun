@@ -3,8 +3,6 @@ include ${BUILDRUMP_TOOLFLAGS}
 
 default: all
 
-PLATFORM_DEFAULT_TESTER=qemu
-
 CPPFLAGS=	-Iinclude -I../../include -I${RROBJ}/include -nostdinc
 CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
 

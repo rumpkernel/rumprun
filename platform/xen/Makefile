@@ -1,8 +1,6 @@
 .PHONY: all
 all: default
 
-PLATFORM_DEFAULT_TESTER=xen
-
 include ../../global.mk
 include ${BUILDRUMP_TOOLFLAGS}
 
