@@ -506,9 +506,6 @@ dobuild ()
 
 	buildpci
 
-	# run routine specified in platform.conf
-	doextras || die 'platforms extras failed.  tillerman needs tea?'
-
 	# do final build of the platform bits
 	( cd ${PLATFORMDIR} \
 	    && ${MAKE} BUILDRR=true \
