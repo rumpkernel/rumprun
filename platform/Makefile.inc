@@ -2,6 +2,9 @@ ifeq (${PLATFORM},)
 $(error need to specify $$PLATFORM!)
 endif
 
+CPPFLAGS+=	-Iinclude -I../../include -I${RROBJ}/include -nostdinc
+CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
+
 TARGETS=	rumpkernlibs
 # compiler_rt is strictly speaking necessary only in KERNONLY=true,
 # but building it always makes testing kernonly easier

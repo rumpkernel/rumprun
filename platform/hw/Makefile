@@ -3,9 +3,6 @@ include ${BUILDRUMP_TOOLFLAGS}
 
 default: all
 
-CPPFLAGS=	-Iinclude -I../../include -I${RROBJ}/include -nostdinc
-CFLAGS+=	${BUILDRUMP_TOOL_CFLAGS}
-
 # Check if we're building for a supported target.
 supported= false
 # assume we're doing "make clean"

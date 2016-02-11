@@ -19,10 +19,10 @@ include ../Makefile.inc
 .PHONY: default
 default: prepare links mini-os ${MAINOBJ} ${TARGETS}
 
-CPPFLAGS+= -isystem xen/include -I. -I../../include
+CPPFLAGS+= -isystem xen/include
 CPPFLAGS+= -no-integrated-cpp -nostdinc
 
-CFLAGS += -fno-builtin ${BUILDRUMP_TOOL_CFLAGS}
+CFLAGS += -fno-builtin
 
 # This is semi-duplicated from xen/arch/x86/arch.mk, can we avoid that?
 # XXX Which parts of the rumprun source *must* be compiled with these flags?
