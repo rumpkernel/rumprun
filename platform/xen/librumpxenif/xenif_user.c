@@ -40,8 +40,8 @@ struct iovec {
 #include <bmk-rumpuser/core_types.h>
 #include <bmk-rumpuser/rumpuser.h>
 
-#include <rumpxenif/if_virt.h>
-#include <rumpxenif/if_virt_user.h>
+#include "if_virt.h"
+#include "if_virt_user.h"
 
 /*
  * For now, shovel the packets from the interrupt to a

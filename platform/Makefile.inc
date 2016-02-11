@@ -30,7 +30,7 @@ endif
 MAINOBJ:=	${RROBJ}/rumprun.o
 
 RROBJLIB:=	${RROBJ}/lib
-LIBDIR:=	$(abspath ../../lib)
+PLIBDIR:=	$(abspath ../../lib)
 
 COMMONDIR:=	$(abspath ../)
 
@@ -40,11 +40,11 @@ INSTALLDIR_LIBPLAT:=	${INSTALLDIR}/rumprun-${MACHINE_GNU_ARCH}/lib/rumprun-${PLA
 define BUILDLIB_target
 .PHONY: $${RROBJLIB}/${1}/${1}.a
 $${RROBJLIB}/${1}/${1}.a:
-	( cd $${LIBDIR}/${1} \
-	    && ${RUMPMAKE} MAKEOBJDIR=${RROBJLIB}/${1} ${2} obj \
-	    && ${RUMPMAKE} MAKEOBJDIR=${RROBJLIB}/${1} ${2} includes \
+	( cd ${2}/${1} \
+	    && ${RUMPMAKE} MAKEOBJDIR=${RROBJLIB}/${1} ${3} obj \
+	    && ${RUMPMAKE} MAKEOBJDIR=${RROBJLIB}/${1} ${3} includes \
 	    && ${RUMPMAKE} BMKHEADERS=$${RROBJ}/include \
-		MAKEOBJDIR=${RROBJLIB}/${1} ${2} dependall )
+		MAKEOBJDIR=${RROBJLIB}/${1} ${3} dependall )
 
 .PHONY: ${1}_install
 ${1}_install:
@@ -58,20 +58,20 @@ ${1}_install2:
 
 .PHONY: ${1}_clean
 ${1}_clean:
-	( cd $${LIBDIR}/${1} && \
-	    ${RUMPMAKE} MAKEOBJDIR=${RROBJLIB}/${1} ${2} cleandir )
+	( cd ${2}/${1} && \
+	    ${RUMPMAKE} MAKEOBJDIR=${RROBJLIB}/${1} ${3} cleandir )
 endef
 
-$(eval $(call BUILDLIB_target,libbmk_core))
-$(eval $(call BUILDLIB_target,libbmk_rumpuser))
-$(eval $(call BUILDLIB_target,librumpkern_bmktc))
-$(eval $(call BUILDLIB_target,librumpkern_mman))
-$(eval $(call BUILDLIB_target,librumprun_base))
-$(eval $(call BUILDLIB_target,librumprun_tester))
-$(eval $(call BUILDLIB_target,librumprunfs_base))
-$(eval $(call BUILDLIB_target,libcompiler_rt,RUMPSRC=${RUMPSRC}))
+$(eval $(call BUILDLIB_target,libbmk_core,${PLIBDIR}))
+$(eval $(call BUILDLIB_target,libbmk_rumpuser,${PLIBDIR}))
+$(eval $(call BUILDLIB_target,librumpkern_bmktc,${PLIBDIR}))
+$(eval $(call BUILDLIB_target,librumpkern_mman,${PLIBDIR}))
+$(eval $(call BUILDLIB_target,librumprun_base,${PLIBDIR}))
+$(eval $(call BUILDLIB_target,librumprun_tester,${PLIBDIR}))
+$(eval $(call BUILDLIB_target,librumprunfs_base,${PLIBDIR}))
+$(eval $(call BUILDLIB_target,libcompiler_rt,${PLIBDIR},RUMPSRC=${RUMPSRC}))
 ifeq (${CONFIG_CXX},yes)
-$(eval $(call BUILDLIB_target,libunwind))
+$(eval $(call BUILDLIB_target,libunwind,${PLIBDIR}))
 LIBUNWIND= ${RROBJLIB}/libunwind/libunwind.a
 endif
 

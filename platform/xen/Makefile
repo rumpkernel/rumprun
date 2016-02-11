@@ -44,7 +44,12 @@ mini-os:
 links:
 	$(MAKE) -C xen links
 
-$(MAINOBJ): $(RUMP_OBJS) platformlibs
+$(eval $(call BUILDLIB_target,librumpxendev,.))
+$(eval $(call BUILDLIB_target,librumpxenif,.))
+
+xenlibs: ${RROBJLIB}/librumpxenif/librumpxenif.a ${RROBJLIB}/librumpxendev/librumpxendev.a
+
+$(MAINOBJ): $(RUMP_OBJS) platformlibs xenlibs
 	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(RUMP_OBJS) -nostdlib -o $@ \
 	    -L${RROBJLIB}/libbmk_core -L${RROBJLIB}/libbmk_rumpuser \
 	    -Wl,--whole-archive -lbmk_rumpuser -lbmk_core -Wl,--no-whole-archive
