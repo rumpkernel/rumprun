@@ -14,6 +14,8 @@ OBJ_DIR ?= $(CURDIR)/obj
 
 LDSCRIPT:= $(abspath $(OBJ_DIR)/xen/minios.lds)
 
+INSTALLTGTS=	librumpxen_xendev_install librumpnet_xenif_install
+
 include ../Makefile.inc
 
 .PHONY: default
@@ -44,10 +46,10 @@ mini-os:
 links:
 	$(MAKE) -C xen links
 
-$(eval $(call BUILDLIB_target,librumpxendev,.))
-$(eval $(call BUILDLIB_target,librumpxenif,.))
+$(eval $(call BUILDLIB_target,librumpxen_xendev,.))
+$(eval $(call BUILDLIB_target,librumpnet_xenif,.))
 
-xenlibs: ${RROBJLIB}/librumpxenif/librumpxenif.a ${RROBJLIB}/librumpxendev/librumpxendev.a
+xenlibs: ${RROBJLIB}/librumpxen_xendev/librumpxen_xendev.a ${RROBJLIB}/librumpnet_xenif/librumpnet_xenif.a
 
 $(MAINOBJ): $(RUMP_OBJS) platformlibs xenlibs
 	$(CC) -Wl,-r $(CFLAGS) $(LDFLAGS) $(RUMP_OBJS) -nostdlib -o $@ \

@@ -9,7 +9,7 @@ TARGETS=	rumpkernlibs
 # compiler_rt is strictly speaking necessary only in KERNONLY=true,
 # but building it always makes testing kernonly easier
 TARGETS+=	compiler_rt
-INSTALLTGTS=	librumpkern_bmktc_install
+INSTALLTGTS+=	librumpkern_bmktc_install
 INSTALLTGTS+=	librumpkern_mman_install
 
 ifneq (${KERNONLY},true)
