@@ -20,21 +20,11 @@ include ../Makefile.inc
 default: prepare links mini-os ${MAINOBJ} ${TARGETS}
 
 CPPFLAGS+= -isystem xen/include
-CPPFLAGS+= -no-integrated-cpp -nostdinc
+CPPFLAGS+= -no-integrated-cpp
 
 CFLAGS += -fno-builtin
 
-# This is semi-duplicated from xen/arch/x86/arch.mk, can we avoid that?
-# XXX Which parts of the rumprun source *must* be compiled with these flags?
-ifeq ($(MACHINE),i386)
-CFLAGS += -march=i686
-endif
-ifeq ($(MACHINE),x86_64)
-CFLAGS += -mno-red-zone -fno-reorder-blocks -fno-asynchronous-unwind-tables
-endif
-
 rump-src-y += rumphyper_bio.c
-
 rump-src-y += init.c
 
 # Rump kernel middleware objects to build.
