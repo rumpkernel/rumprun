@@ -67,8 +67,4 @@ clean:	commonclean
 	$(MAKE) -C xen OBJ_DIR=$(OBJ_DIR)/xen clean
 	rm -f $(OBJ_DIR)/*.o $(OBJ_DIR)/lib/*.o buildtest $(MAINOBJ)
 
-cleanrump: clean
-	rm -rf rump rumpobj rumptools
-
-distcleanrump: cleanrump
-	$(MAKE) -C ../../tests clean
+cleandir: clean

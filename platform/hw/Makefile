@@ -39,7 +39,7 @@ include arch/${ARCHDIR}/Makefile.inc
 OBJS:=	$(patsubst %.c,${RROBJ}/platform/%.o,${SRCS}) \
 	$(patsubst %.S,${RROBJ}/platform/%.o,${ASMS})
 
-.PHONY:	clean cleandir test all
+.PHONY:	clean cleandir all
 
 all:  links archdirs ${MAINOBJ} ${TARGETS}
 
@@ -69,9 +69,3 @@ clean: commonclean
 	rm -f ${OBJS_BMK} include/hw/machine buildtest ${MAINOBJ}
 
 cleandir: clean
-
-cleanrump: clean
-	rm -rf rump rumpobj rumptools
-
-distcleanrump: cleanrump
-	${MAKE} -C ../../tests clean
