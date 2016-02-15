@@ -33,9 +33,9 @@
 
 set -eu
 
-: ${RUMPRUN_GENFS_CC:=!LIBEXEC_CC!}
-: ${RUMPRUN_GENFS_OBJCOPY:=!LIBEXEC_OBJCOPY!}
-: ${RUMPRUN_GENFS_INCDIR:=!DESTDIR!/rumprun-!MACHINE_GNU_ARCH!/include}
+: ${RUMPRUN_COOKFS_CC:=!LIBEXEC_CC!}
+: ${RUMPRUN_COOKFS_OBJCOPY:=!LIBEXEC_OBJCOPY!}
+: ${RUMPRUN_COOKFS_INCDIR:=!DESTDIR!/rumprun-!MACHINE_GNU_ARCH!/include}
 
 usage ()
 {
@@ -162,10 +162,10 @@ processonefile ()
 	setfilevars "$f"
 	ln -sf -- "${fabs}" ${LINKPATH}
 
-	${RUMPRUN_GENFS_CC} !CFLAGS! !CPPFLAGS! -nostdlib		\
+	${RUMPRUN_COOKFS_CC} !CFLAGS! !CPPFLAGS! -nostdlib		\
 	    -Wl,-r,-b,binary -o ${TMPDIR}/d${fn}.o ${LINKPATH}
 
-	${RUMPRUN_GENFS_OBJCOPY}					\
+	${RUMPRUN_COOKFS_OBJCOPY}					\
 	    --redefine-sym ${LINKPATH_BIN}_start=${rf}_start		\
 	    --redefine-sym ${LINKPATH_BIN}_size=${rf}_size		\
 	    --strip-symbol ${LINKPATH_BIN}_end				\
@@ -231,8 +231,8 @@ exec 1>&3 3>&-
 
 unset IFS
 
-${RUMPRUN_GENFS_CC} !CFLAGS! !CPPFLAGS! -I${RUMPRUN_GENFS_INCDIR}	\
+${RUMPRUN_COOKFS_CC} !CFLAGS! !CPPFLAGS! -I${RUMPRUN_COOKFS_INCDIR}	\
     -nostdlib -Wl,-r -o ${TMPDIR}/fin.o ${TMPDIR}/d*.o ${TMPDIR}/constr.c
-${RUMPRUN_GENFS_OBJCOPY} ${LSYM} ${TMPDIR}/fin.o ${OUTFILE}
+${RUMPRUN_COOKFS_OBJCOPY} ${LSYM} ${TMPDIR}/fin.o ${OUTFILE}
 
 exit 0
