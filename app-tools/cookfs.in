@@ -35,6 +35,7 @@ set -eu
 
 : ${RUMPRUN_COOKFS_CC:=!LIBEXEC_CC!}
 : ${RUMPRUN_COOKFS_OBJCOPY:=!LIBEXEC_OBJCOPY!}
+: ${RUMPRUN_COOKFS_SIZE:=!LIBEXEC_SIZE!}
 : ${RUMPRUN_COOKFS_INCDIR:=!DESTDIR!/rumprun-!MACHINE_GNU_ARCH!/include}
 
 usage ()
@@ -234,5 +235,12 @@ unset IFS
 ${RUMPRUN_COOKFS_CC} !CFLAGS! !CPPFLAGS! -I${RUMPRUN_COOKFS_INCDIR}	\
     -nostdlib -Wl,-r -o ${TMPDIR}/fin.o ${TMPDIR}/d*.o ${TMPDIR}/constr.c
 ${RUMPRUN_COOKFS_OBJCOPY} ${LSYM} ${TMPDIR}/fin.o ${OUTFILE}
+
+totsize=$(${RUMPRUN_COOKFS_SIZE} ${OUTFILE} | awk 'NR == 2{print $4}')
+if [ ${totsize} -gt $((1024*1024)) ]; then
+	echo ">> WARNING: cookfs images will be loaded into memory." 2>&1
+	echo ">> Maximum recommended size is 1024 kB." 2>&1
+	echo ">> Your image memory footprint is $((${totsize}/1024)) kB." 2>&1
+fi
 
 exit 0

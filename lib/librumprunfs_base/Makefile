@@ -10,7 +10,9 @@ includes:
 
 dependall:
 	( cd ${.CURDIR} &&						\
-	  RUMPRUN_COOKFS_CC="${CC}" RUMPRUN_COOKFS_OBJCOPY="${OBJCOPY}"	\
+	  RUMPRUN_COOKFS_CC="${CC}"					\
+	  RUMPRUN_COOKFS_OBJCOPY="${OBJCOPY}"				\
+	  RUMPRUN_COOKFS_SIZE="${SIZE}"					\
 	    RUMPRUN_COOKFS_INCDIR="${RROBJ}/dest.stage/include"		\
 		${RROBJ}/app-tools/${TOOLTUPLE}-cookfs -s 1		\
 		    ${MAKEOBJDIR}/librumprunfs_base.a rootfs )
