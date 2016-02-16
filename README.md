@@ -13,17 +13,20 @@ The Rumprun unikernel supports applications written in, for example
 but not limited to: C, C++, Erlang, Go, Javascript (node.js), Python,
 Ruby and Rust.
 
+You will find ready-made software packages for Rumprun from the
+[rumprun-packages repository](http://repo.rumpkernel.org/rumprun-packages).
+Some examples of software available from there includes LevelDB,
+Memcached, nanomsg, Nginx and Redis.  See the packages repository
+for further details.
+
 See the [wiki](http://wiki.rumpkernel.org/Repo:-rumprun) for more
 information and instructions.
 
-Some of our tools will throw a warning about them
+Note: some of our tools will throw a warning about them
 being experimental.  It does not mean that they
 are not expected to produce a working result.  The wiki
 [explains](http://wiki.rumpkernel.org/Repo%3A-rumprun#experimental-nature)
 further.
-
-You will find software packages for rumprun from the
-[rumprun-packages repository](http://repo.rumpkernel.org/rumprun-packages).
 
 hw
 --
