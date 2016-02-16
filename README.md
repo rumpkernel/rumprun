@@ -24,7 +24,8 @@ information and instructions.
 
 Note: some of our tools will throw a warning about them
 being experimental.  It does not mean that they
-are not expected to produce a working result.  The wiki
+are not expected to produce a working result, just that the usage
+is not necessarily final.  The wiki
 [explains](http://wiki.rumpkernel.org/Repo%3A-rumprun#experimental-nature)
 further.
 
