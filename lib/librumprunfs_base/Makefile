@@ -16,3 +16,9 @@ dependall:
 	    RUMPRUN_COOKFS_INCDIR="${RROBJ}/dest.stage/include"		\
 		${RROBJ}/app-tools/${TOOLTUPLE}-cookfs -s 1		\
 		    ${MAKEOBJDIR}/librumprunfs_base.a rootfs )
+
+install:
+	mkdir -p ${DESTDIR}/share/rumprun/rumprunfs_base
+	( cd ${.CURDIR}/rootfs ; tar -cf - . )				\
+	    | ( cd ${DESTDIR}/share/rumprun/rumprunfs_base ; tar -xf - )
+	install -m 444 ${MAKEOBJDIR}/librumprunfs_base.a ${LIBDIR}

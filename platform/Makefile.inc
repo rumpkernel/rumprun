@@ -15,7 +15,7 @@ INSTALLTGTS+=	librumpkern_mman_install
 ifneq (${KERNONLY},true)
 TARGETS+=	userlibs
 INSTALLTGTS+=	librumprun_base_install librumprun_tester_install2
-INSTALLTGTS+=	librumprunfs_base_install
+INSTALLTGTS+=	librumprunfs_base_install_custom
 ifeq (${CONFIG_CXX},yes)
 INSTALLTGTS+=	libunwind_install2
 endif
@@ -55,6 +55,12 @@ ${1}_install:
 ${1}_install2:
 	( cd $${RROBJLIB}/${1} && \
 	    install -m 0444 ${1}.a $${INSTALLDIR_LIBARCH} )
+
+.PHONY: ${1}_install_custom
+${1}_install_custom:
+	( cd ${2}/${1} && \
+	    ${RUMPMAKE} MAKEOBJDIR=${RROBJLIB}/${1} \
+		LIBDIR=$${INSTALLDIR_LIBPLAT} DESTDIR=$${INSTALLDIR} install )
 
 .PHONY: ${1}_clean
 ${1}_clean:
