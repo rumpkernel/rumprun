@@ -167,7 +167,7 @@ isr(int which)
 	bmk_sched_wake(isr_thread);
 }
 
-int
+void
 intr_init(void)
 {
 	int i;
@@ -178,6 +178,5 @@ intr_init(void)
 
 	isr_thread = bmk_sched_create("isrthr", NULL, 0, doisr, NULL, NULL, 0);
 	if (!isr_thread)
-		return BMK_EGENERIC;
-	return 0;
+		bmk_platform_halt("intr_init");
 }
