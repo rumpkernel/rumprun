@@ -131,25 +131,24 @@ doisr(void *arg)
 	}
 }
 
-int
+void
 bmk_isr_rumpkernel(int (*func)(void *), void *arg, int intr, int flags)
 {
 	struct intrhand *ih;
 	int error;
 
 	if (intr > sizeof(isr_todo)*8 || intr > BMK_MAXINTR)
-		return BMK_EGENERIC;
+		bmk_platform_halt("bmk_isr_rumpkernel: intr");
 
 	if (flags != 0)
-		bmk_platform_halt("bmk_isr_rumpkernel: invalid flags");
+		bmk_platform_halt("bmk_isr_rumpkernel: flags");
 
 	ih = bmk_xmalloc_bmk(sizeof(*ih));
 	if (!ih)
-		return BMK_ENOMEM;
+		bmk_platform_halt("bmk_isr_rumpkernel: xmalloc");
 
 	if ((error = cpu_intr_init(intr)) != 0) {
-		bmk_memfree(ih, BMK_MEMWHO_WIREDBMK);
-		return error;
+		bmk_platform_halt("bmk_isr_rumpkernel: cpu_intr_init");
 	}
 	ih->ih_fun = func;
 	ih->ih_arg = arg;
@@ -157,8 +156,6 @@ bmk_isr_rumpkernel(int (*func)(void *), void *arg, int intr, int flags)
 	SLIST_INSERT_HEAD(&isr_ih[intr % BMK_INTRLEVS], ih, ih_entries);
 	if ((unsigned)intr < isr_lowest)
 		isr_lowest = intr;
-
-	return 0;
 }
 
 void
