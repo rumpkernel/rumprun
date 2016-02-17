@@ -43,6 +43,7 @@
 struct intrhand {
 	int (*ih_fun)(void *);
 	void *ih_arg;
+	int ih_flags;
 
 	SLIST_ENTRY(intrhand) ih_entries;
 };
@@ -131,13 +132,16 @@ doisr(void *arg)
 }
 
 int
-bmk_isr_init(int (*func)(void *), void *arg, int intr)
+bmk_isr_rumpkernel(int (*func)(void *), void *arg, int intr, int flags)
 {
 	struct intrhand *ih;
 	int error;
 
 	if (intr > sizeof(isr_todo)*8 || intr > BMK_MAXINTR)
 		return BMK_EGENERIC;
+
+	if (flags != 0)
+		bmk_platform_halt("bmk_isr_rumpkernel: invalid flags");
 
 	ih = bmk_xmalloc_bmk(sizeof(*ih));
 	if (!ih)
@@ -149,6 +153,7 @@ bmk_isr_init(int (*func)(void *), void *arg, int intr)
 	}
 	ih->ih_fun = func;
 	ih->ih_arg = arg;
+	ih->ih_flags = flags;
 	SLIST_INSERT_HEAD(&isr_ih[intr % BMK_INTRLEVS], ih, ih_entries);
 	if ((unsigned)intr < isr_lowest)
 		isr_lowest = intr;
