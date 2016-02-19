@@ -97,7 +97,7 @@ void *
 rumpcomp_pci_irq_establish(unsigned cookie, int (*handler)(void *), void *data)
 {
 
-	bmk_isr_rumpkernel(handler, data, intrs[cookie], 0);
+	bmk_isr_rumpkernel(handler, data, intrs[cookie], BMK_INTR_ROUTED);
 	return &intrs[cookie];
 }
 

@@ -23,6 +23,8 @@ void isr(int);
 void intr_init(void);
 void bmk_isr_rumpkernel(int (*)(void *), void *, int, int);
 
+#define BMK_INTR_ROUTED 0x01
+
 #define BMK_MULTIBOOT_CMDLINE_SIZE 4096
 extern char multiboot_cmdline[];
 

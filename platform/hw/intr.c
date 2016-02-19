@@ -34,39 +34,49 @@
 #include <bmk-rumpuser/core_types.h>
 #include <bmk-rumpuser/rumpuser.h>
 
-#ifdef BMK_SCREW_INTERRUPT_ROUTING
-#define BMK_INTRLEVS 1
-#else
-#define BMK_INTRLEVS BMK_MAXINTR
-#endif
+#define INTR_LEVELS (BMK_MAXINTR+1)
+#define INTR_ROUTED BMK_MAXINTR
 
 struct intrhand {
 	int (*ih_fun)(void *);
 	void *ih_arg;
-	int ih_flags;
 
 	SLIST_ENTRY(intrhand) ih_entries;
 };
 
 SLIST_HEAD(isr_ihead, intrhand);
-static struct isr_ihead isr_ih[BMK_INTRLEVS];
+static struct isr_ihead isr_ih[INTR_LEVELS];
+static int isr_routed[INTR_LEVELS];
+#define INTR_ROUTED_NOIDEA	0
+#define INTR_ROUTED_YES		1
+#define INTR_ROUTED_NO		2
+
 static volatile unsigned int isr_todo;
 static unsigned int isr_lowest = sizeof(isr_todo)*8;
 
 static struct bmk_thread *isr_thread;
 
+static int
+routeintr(int i)
+{
+
+#ifdef BMK_SCREW_INTERRUPT_ROUTING
+	return INTR_ROUTED;
+#else
+	return i;
+#endif
+}
+
 /* thread context we use to deliver interrupts to the rump kernel */
 static void
 doisr(void *arg)
 {
-	unsigned int didwork, totwork;
-	int i;
+	int i, totwork = 0;
 
         rumpuser__hyp.hyp_schedule();
         rumpuser__hyp.hyp_lwproc_newlwp(0);
         rumpuser__hyp.hyp_unschedule();
 
-	didwork = totwork = 0;
 	splhigh();
 	for (;;) {
 		unsigned int isrcopy;
@@ -82,28 +92,19 @@ doisr(void *arg)
 		for (i = isr_lowest; isrcopy; i++) {
 			struct intrhand *ih;
 
-#if BMK_INTRLEVS == 1
-			isrcopy = 0;
-			i = 0;
-#else
 			bmk_assert(i < sizeof(isrcopy)*8);
 			if ((isrcopy & (1<<i)) == 0)
 				continue;
 			isrcopy &= ~(1<<i);
-#endif
+
+			if (isr_routed[i] == INTR_ROUTED_YES)
+				i = routeintr(i);
 
 			SLIST_FOREACH(ih, &isr_ih[i], ih_entries) {
-				if (ih->ih_fun(ih->ih_arg) != 0) {
-					didwork |= 1<<i;
-				}
+				ih->ih_fun(ih->ih_arg);
 			}
 		}
 		rumpkern_unsched(&nlocks, NULL);
-
-#if BMK_INTRLEVS == 1
-		if (didwork)
-			didwork = totwork;
-#endif
 
 		splhigh();
 		if (isr_todo)
@@ -115,18 +116,9 @@ doisr(void *arg)
 		bmk_sched_blockprepare();
 
 		spl0();
-#if 0
-		/*
-		 * This fires occasionally, should investigate some
-		 * day.  A good way to repeat it is to use sysproxy.
-		 */
-		if (didwork != totwork) {
-			bmk_printf("stray interrupt(s): 0x%x\n",
-			    totwork & ~didwork);
-		}
-#endif
+
 		bmk_sched_block();
-		didwork = totwork = 0;
+		totwork = 0;
 		splhigh();
 	}
 }
@@ -135,25 +127,40 @@ void
 bmk_isr_rumpkernel(int (*func)(void *), void *arg, int intr, int flags)
 {
 	struct intrhand *ih;
-	int error;
+	int error, icheck, routedintr;
 
 	if (intr > sizeof(isr_todo)*8 || intr > BMK_MAXINTR)
 		bmk_platform_halt("bmk_isr_rumpkernel: intr");
 
-	if (flags != 0)
+	if ((flags & ~BMK_INTR_ROUTED) != 0)
 		bmk_platform_halt("bmk_isr_rumpkernel: flags");
 
 	ih = bmk_xmalloc_bmk(sizeof(*ih));
 	if (!ih)
 		bmk_platform_halt("bmk_isr_rumpkernel: xmalloc");
 
+	/* check for conflicts */
+	if (flags & BMK_INTR_ROUTED) {
+		if (isr_routed[intr] == INTR_ROUTED_NOIDEA)
+			isr_routed[intr] = INTR_ROUTED_YES;
+		icheck = INTR_ROUTED_YES;
+		routedintr = routeintr(intr);
+	} else {
+		if (isr_routed[intr] == INTR_ROUTED_NOIDEA)
+			isr_routed[intr] = INTR_ROUTED_NO;
+		icheck = INTR_ROUTED_NO;
+		routedintr = intr;
+	}
+	if (isr_routed[intr] != icheck)
+		bmk_platform_halt("bmk_isr_rumpkernel: routed intr mismatch");
+
 	if ((error = cpu_intr_init(intr)) != 0) {
 		bmk_platform_halt("bmk_isr_rumpkernel: cpu_intr_init");
 	}
 	ih->ih_fun = func;
 	ih->ih_arg = arg;
-	ih->ih_flags = flags;
-	SLIST_INSERT_HEAD(&isr_ih[intr % BMK_INTRLEVS], ih, ih_entries);
+
+	SLIST_INSERT_HEAD(&isr_ih[routedintr], ih, ih_entries);
 	if ((unsigned)intr < isr_lowest)
 		isr_lowest = intr;
 }
@@ -172,7 +179,7 @@ intr_init(void)
 {
 	int i;
 
-	for (i = 0; i < BMK_INTRLEVS; i++) {
+	for (i = 0; i < INTR_LEVELS; i++) {
 		SLIST_INIT(&isr_ih[i]);
 	}
 
