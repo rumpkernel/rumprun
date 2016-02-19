@@ -73,9 +73,9 @@ doisr(void *arg)
 {
 	int i, totwork = 0;
 
-        rumpuser__hyp.hyp_schedule();
-        rumpuser__hyp.hyp_lwproc_newlwp(0);
-        rumpuser__hyp.hyp_unschedule();
+	rumpuser__hyp.hyp_schedule();
+	rumpuser__hyp.hyp_lwproc_newlwp(0);
+	rumpuser__hyp.hyp_unschedule();
 
 	splhigh();
 	for (;;) {
