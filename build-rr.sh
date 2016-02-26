@@ -312,7 +312,8 @@ checktools ()
 	vers=$(${CC:-cc} -E -dM - < /dev/null | awk '
 	    /__GNUC__/ {version += 100*$3}
 	    /__GNUC_MINOR__/ {version += $3}
-	    END { print version; if (version) exit 0; exit 1; }')
+	    END { print version; if (version) exit 0; exit 1; }') \
+		|| unable to probe cc version
 	if [ ${vers} -lt 406 ]; then
 		die gcc is too old, need 4.6 or later. ${CC:+(\$CC: $CC)}
 	elif [ ${vers} -lt 408 ]; then
@@ -327,7 +328,8 @@ checktools ()
 	# check that ld is modern enough
 	vers=$(${CC:-cc} -Wl,--version 2>&1 | awk '
 	    /GNU ld.*Binutils/{version += 100*$NF}
-	    END { print version; if (version) exit 0; exit 1; }')
+	    END { print version; if (version) exit 0; exit 1; }') \
+		|| die unable to probe ld version
 	if [ ${vers} -lt 222 ]; then
 		die ld is too old, need 2.22 or later. probed version: ${vers}
 	elif [ ${vers} -lt 225 ]; then
