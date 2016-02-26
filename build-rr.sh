@@ -327,7 +327,7 @@ checktools ()
 
 	# check that ld is modern enough
 	vers=$(${CC:-cc} -Wl,--version 2>&1 | awk '
-	    /GNU ld.*Binutils/{version += 100*$NF}
+	    /GNU ld/{version += 100*$NF}
 	    END { print version; if (version) exit 0; exit 1; }') \
 		|| die unable to probe ld version
 	if [ ${vers} -lt 222 ]; then
