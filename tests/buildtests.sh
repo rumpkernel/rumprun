@@ -51,6 +51,7 @@ test_apptools()
 		exit 1
 	esac
 
+	export PATH="${PATH}:${RRDEST}/bin"
 	export RUMPBAKE_PLATFORM
 
 	make
