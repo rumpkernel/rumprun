@@ -1,7 +1,7 @@
 include ${RUMPRUN_MKCONF}
 
-CC= ${TOOLTUPLE}-gcc
-CXX= ${TOOLTUPLE}-g++
+CC= ${RUMPRUN_CC}
+CXX= ${RUMPRUN_CXX}
 
 CFLAGS+= -Wall -Werror -Wmissing-prototypes -Wstrict-prototypes -g
 LDLIBS= -lrumprun_tester
