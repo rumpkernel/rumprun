@@ -380,6 +380,7 @@ export RUMPRUN_MKCONF="${RROBJ}/config.mk"
 export RUMPRUN_SHCONF="${RROBJ}/config.sh"
 export RUMPRUN_BAKE="${RRDEST}/bin/rumprun-bake"
 export RUMPRUN_CC="${RRDEST}/bin/${TOOLTUPLE}-gcc"
+export RUMPRUN_CXX="${RRDEST}/bin/${TOOLTUPLE}-g++"
 export RUMPRUN="${RRDEST}/bin/rumprun"
 export RUMPSTOP="${RRDEST}/bin/rumpstop"
 EOF
