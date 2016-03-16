@@ -45,6 +45,7 @@ struct rumprun_exec {
 
 	int rre_argc;
 	rre_mainfn *rre_main;
+	char *rre_workdir;
 	struct rr_sysctl *rre_sc;
 	size_t rre_nsc;
 	char *rre_argv[];

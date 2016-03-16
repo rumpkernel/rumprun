@@ -40,7 +40,8 @@ bmk_mainthread(void *cmdline)
 	rre = TAILQ_FIRST(&rumprun_execs);
 	while (rre) {
 		rumprun(rre->rre_flags, rre->rre_main, rre->rre_argc,
-			rre->rre_argv, rre->rre_sc, rre->rre_nsc);
+			rre->rre_argv, rre->rre_workdir,
+			rre->rre_sc, rre->rre_nsc);
 		rre = TAILQ_NEXT(rre, rre_entries);
 	}
 

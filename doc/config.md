@@ -52,6 +52,7 @@ boot.
              "bin": <string>,
              "argv": [ <string>, ... ],
              "runmode": "" | "&" | "|",
+             "workdir": <string>,
              "netbsd": {
                  "sysctl": {
                      "key": value,
@@ -74,6 +75,8 @@ invoked in the order in which they are defined in _rc[]_.
     successfully before running any further programs.
   * `&`: Run program in background.
   * `|`: Pipe output of program to next defined program.
+* _workdir_ (_optional_, string): Defines the working directory for the
+  program. Defaults to `/` if not specified.
 
 If no _rc_ key is specified in the configuration, rumprun will invoke all
 binaries baked into the unikernel _in the order they were specified at bake

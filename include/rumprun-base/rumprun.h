@@ -38,7 +38,7 @@ struct rr_sysctl {
 
 void	rumprun_boot(char *);
 
-void *	rumprun(int, mainlike_fn, int, char *[], struct rr_sysctl[], size_t);
+void *	rumprun(int, mainlike_fn, int, char *[], char *, struct rr_sysctl[], size_t);
 int	rumprun_wait(void *);
 void *	rumprun_get_finished(void);
 

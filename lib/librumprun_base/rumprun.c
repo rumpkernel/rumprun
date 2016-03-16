@@ -182,7 +182,8 @@ mainbouncer(void *arg)
 }
 
 static void
-setupproc(struct rumprunner *rr, struct rr_sysctl *sc, size_t nsc)
+setupproc(struct rumprunner *rr, char *rr_workdir, struct rr_sysctl *sc,
+	size_t nsc)
 {
 	static int pipein = -1;
 	int pipefd[2], newpipein;
@@ -204,6 +205,11 @@ setupproc(struct rumprunner *rr, struct rr_sysctl *sc, size_t nsc)
 
 	rump_pub_lwproc_rfork(RUMP_RFFDG);
 	rr->rr_lwp = rump_pub_lwproc_curlwp();
+
+	if (rr_workdir != NULL) {
+		if (chdir(rr_workdir) == -1)
+			err(1, "chdir");
+	}
 
 	/* apply per-process sysctl() values */
 	if (sc != NULL) {
@@ -245,7 +251,7 @@ setupproc(struct rumprunner *rr, struct rr_sysctl *sc, size_t nsc)
 
 void *
 rumprun(int flags, int (*mainfun)(int, char *[]), int argc, char *argv[],
-	struct rr_sysctl *sc, size_t nsc)
+	char *workdir, struct rr_sysctl *sc, size_t nsc)
 {
 	struct rumprunner *rr;
 
@@ -257,7 +263,7 @@ rumprun(int flags, int (*mainfun)(int, char *[]), int argc, char *argv[],
 	rr->rr_argv = argv;
 	rr->rr_flags = flags; /* XXX */
 
-	setupproc(rr, sc, nsc);
+	setupproc(rr, workdir, sc, nsc);
 
 	if (pthread_create(&rr->rr_mainthread, NULL, mainbouncer, rr) != 0) {
 		fprintf(stderr, "rumprun: running %s failed\n", argv[0]);

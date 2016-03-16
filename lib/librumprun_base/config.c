@@ -255,14 +255,14 @@ handle_bin(jvalue *v, const char *loc)
 	struct rumprun_exec *rre;
 	bool have_argv;
 	rre_mainfn *binmain;
-	jvalue *v_bin, *v_argv, *v_runmode, *v_sysctl, **v_arg;
+	jvalue *v_bin, *v_argv, *v_runmode, *v_workdir, *v_sysctl, **v_arg;
 	int rreflags;
 	size_t nargv;
 
 	jexpect(jobject, v, __func__);
 
 	/* process and validate data */
-	v_bin = v_argv = v_runmode = v_sysctl = NULL;
+	v_bin = v_argv = v_runmode = v_workdir = v_sysctl = NULL;
 	for (jvalue **i = v->u.v; *i; ++i) {
 
 		if (strcmp((*i)->n, "bin") == 0) {
@@ -274,6 +274,9 @@ handle_bin(jvalue *v, const char *loc)
 		} else if (strcmp((*i)->n, "runmode") == 0) {
 			jexpect(jstring, *i, __func__);
 			v_runmode = *i;
+		} else if (strcmp((*i)->n, "workdir") == 0) {
+			jexpect(jstring, *i, __func__);
+			v_workdir = *i;
 		} else if (strcmp((*i)->n, "netbsd") == 0) {
 			jexpect(jobject, *i, __func__);
 			for (jvalue **j = (*i)->u.v; *j; ++j) {
@@ -347,6 +350,14 @@ handle_bin(jvalue *v, const char *loc)
 	rre->rre_argv[rre->rre_argc] = NULL;
 	rre->rre_flags = rreflags;
 	rre->rre_main = binmain;
+	if (v_workdir) {
+		rre->rre_workdir = strdup(v_workdir->u.s);
+		if (rre->rre_workdir == NULL)
+			err(1, "%s: strdup", __func__);
+	}
+	else {
+		rre->rre_workdir = NULL;
+	}
 	rre->rre_sc = NULL;
 	rre->rre_nsc = 0;
 	if (v_sysctl) {
