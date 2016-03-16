@@ -26,6 +26,7 @@
 #ifndef _BMKCOMMON_RUMPRUN_CONFIG_H_
 #define _BMKCOMMON_RUMPRUN_CONFIG_H_
 
+#include <stddef.h>
 #include <sys/queue.h>
 
 /* yeah, simple */
@@ -44,6 +45,8 @@ struct rumprun_exec {
 
 	int rre_argc;
 	rre_mainfn *rre_main;
+	struct rr_sysctl *rre_sc;
+	size_t rre_nsc;
 	char *rre_argv[];
 };
 

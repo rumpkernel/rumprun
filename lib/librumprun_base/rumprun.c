@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <sys/mount.h>
 #include <sys/queue.h>
+#include <sys/resource.h>
 #include <sys/sysctl.h>
 
 #include <assert.h>
@@ -181,7 +182,7 @@ mainbouncer(void *arg)
 }
 
 static void
-setupproc(struct rumprunner *rr)
+setupproc(struct rumprunner *rr, struct rr_sysctl *sc, size_t nsc)
 {
 	static int pipein = -1;
 	int pipefd[2], newpipein;
@@ -204,6 +205,19 @@ setupproc(struct rumprunner *rr)
 	rump_pub_lwproc_rfork(RUMP_RFFDG);
 	rr->rr_lwp = rump_pub_lwproc_curlwp();
 
+	/* apply per-process sysctl() values */
+	if (sc != NULL) {
+		for (size_t i = 0; i < nsc; i++) {
+			int rc = rumprun_sysctlw(sc[i].key, sc[i].value);
+			if (rc != 0) {
+				errx(1, "error writing sysctl key \"%s\": %s",
+						sc[i].key, strerror(rc));
+			}
+			free(sc[i].key);
+			free(sc[i].value);
+		}
+		free(sc);
+	}
 	/* set output pipe to stdout if piping */
 	if ((rr->rr_flags & RUMPRUN_EXEC_PIPE) && pipefd[1] != STDOUT_FILENO) {
 		if (dup2(pipefd[1], STDOUT_FILENO) == -1)
@@ -230,7 +244,8 @@ setupproc(struct rumprunner *rr)
 }
 
 void *
-rumprun(int flags, int (*mainfun)(int, char *[]), int argc, char *argv[])
+rumprun(int flags, int (*mainfun)(int, char *[]), int argc, char *argv[],
+	struct rr_sysctl *sc, size_t nsc)
 {
 	struct rumprunner *rr;
 
@@ -242,7 +257,7 @@ rumprun(int flags, int (*mainfun)(int, char *[]), int argc, char *argv[])
 	rr->rr_argv = argv;
 	rr->rr_flags = flags; /* XXX */
 
-	setupproc(rr);
+	setupproc(rr, sc, nsc);
 
 	if (pthread_create(&rr->rr_mainthread, NULL, mainbouncer, rr) != 0) {
 		fprintf(stderr, "rumprun: running %s failed\n", argv[0]);
@@ -331,6 +346,111 @@ rumprun_daemon(void)
 	rr->rr_flags |= RUMPRUNNER_DAEMON;
 	pthread_cond_broadcast(&w_cv);
 	pthread_mutex_unlock(&w_mtx);
+}
+
+/*
+ * This is a simplified interface for writing sysctl(7) values, designed for
+ * ease of use on data parsed by rumprun_config(). The 'value' passed will be
+ * converted to the data type of the sysctl variable 'key' obtained from
+ * sysctlgetmibinfo() and set using sysctl() if the conversion is successful.
+ *
+ * Special handling is provided for setting 'proc.curproc.rlimit.*.*' where a
+ * 'value' of "unlimited" is interpreted as RLIM_INFINITY.
+ *
+ * Returns 0 on success, or any of the errno values documented in sysctl(3) on
+ * error, and additionally:
+ *
+ * ERANGE: The specified 'value' is out of range for the data type of 'key'.
+ * EINVAL: The specified 'value' is invalid for the data type of 'key' (e.g.
+ * 'key' is of type CTLTYPE_INT but 'value' is not a number).
+ */
+int
+rumprun_sysctlw(char *key, char *value)
+{
+	int name[CTL_MAXNAME];
+	u_int namelen = CTL_MAXNAME;
+	struct sysctlnode *node = NULL;
+
+	/*
+	 * Check if key is a valid node. We want name and namelen to pass to
+	 * sysctl() later, and node to inspect the node type. Don't care about
+	 * the canonical name.
+	 */
+	if (sysctlgetmibinfo(key, &name[0], &namelen, NULL, NULL, &node,
+			SYSCTL_VERSION) == -1) {
+		return errno;
+	}
+
+	size_t vsz;
+	void *vp;
+	u_quad_t vq;
+	u_int vi;
+	bool vb;
+	char *ep;
+
+	switch (SYSCTL_TYPE(node->sysctl_flags)) {
+	case CTLTYPE_INT:
+	case CTLTYPE_BOOL:
+	case CTLTYPE_QUAD:
+		if ((strncmp(key, "proc.curproc.rlimit.", 20) == 0) &&
+			(strcmp(value, "unlimited") == 0)) {
+			vq = RLIM_INFINITY;
+		}
+		else {
+			errno = 0;
+			vq = strtouq(value, &ep, 0);
+			if (vq == UQUAD_MAX && errno == ERANGE) {
+				free(node);
+				return ERANGE;
+			}
+			if (ep == value || *ep != '\0') {
+				free(node);
+				return EINVAL;
+			}
+		}
+		switch (SYSCTL_TYPE(node->sysctl_flags)) {
+		case CTLTYPE_INT:
+			vi = (u_int)(vq >> 32);
+			if (vi != (u_int)-1 && vi != 0) {
+				free(node);
+				return ERANGE;
+			}
+			vi = (u_int)vq;
+			vp = &vi;
+			vsz = sizeof(vi);
+			break;
+		case CTLTYPE_BOOL:
+			vb = (bool)vq;
+			vp = &vb;
+			vsz = sizeof(vb);
+			break;
+		case CTLTYPE_QUAD:
+			vp = &vq;
+			vsz = sizeof(vq);
+			break;
+		default:
+			assert(false);
+		}
+		break;
+	case CTLTYPE_STRING:
+		vsz = strlen(value) + 1;
+		if (vsz > node->sysctl_size && node->sysctl_size != 0) {
+			free(node);
+			return ERANGE;
+		}
+		vp = value;
+		break;
+	default:
+		free(node);
+		return EINVAL;
+	}
+
+	if (sysctl(name, namelen, NULL, NULL, vp, vsz) == -1) {
+		free(node);
+		return errno;
+	}
+	free(node);
+	return 0;
 }
 
 void __attribute__((noreturn))

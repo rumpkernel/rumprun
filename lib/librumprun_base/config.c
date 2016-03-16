@@ -163,6 +163,73 @@ handle_rc_dummy(void)
 	return i;
 }
 
+/*
+ * Given a JSON object containing sysctl keys and values:
+ *
+ * {
+ *   <key>: <value>,
+ *   ...
+ * }
+ *
+ * Returns a struct rr_sysctl[] (to *osc) and its size (to *onsc). If a prefix
+ * is specified, prepends it to each key, separated from the key by '.'. The
+ * caller is responsible for freeing *osc[] and its members when done.
+ */
+static void
+sysctl_parse(jvalue *v, struct rr_sysctl **osc, size_t *onsc,
+		const char *prefix, const char *loc)
+{
+	int nsc = 0;
+
+	for (jvalue **i = v->u.v; *i; i++) {
+		if ((*i)->d != jtrue &&
+		    (*i)->d != jfalse &&
+		    (*i)->d != jstring &&
+		    (*i)->d != jnumber) {
+			errx(1, "invalid type for key \"%s\" in \"%s\"",
+				(*i)->n, __func__);
+		}
+		nsc += 1;
+	}
+	if (nsc == 0) {
+		*osc = NULL;
+		*onsc = 0;
+		return;
+	}
+
+	struct rr_sysctl *sc = calloc(nsc, sizeof (struct rr_sysctl));
+	if (sc == NULL)
+		err(1, "calloc");
+	*osc = sc;
+	*onsc = nsc;
+	for (jvalue **i = v->u.v; *i; i++, sc++) {
+		if (prefix != NULL) {
+			size_t nsz = strlen(prefix) + strlen((*i)->n) + 2;
+			sc->key = malloc(nsz);
+			if (sc->key == NULL)
+				err(1, "malloc");
+			snprintf(sc->key, nsz, "%s.%s", prefix, (*i)->n);
+		}
+		else {
+			sc->key = strdup((*i)->n);
+			if (sc->key == NULL)
+				err(1, "strdup");
+		}
+		if ((*i)->d == jtrue) {
+			sc->value = strdup("1");
+		}
+		else if ((*i)->d == jfalse) {
+			sc->value = strdup("0");
+		}
+		else {
+			sc->value = strdup((*i)->u.s);
+		}
+		if (sc->value == NULL)
+			err(1, "strdup");
+	}
+	return;
+}
+
 static rre_mainfn *
 getmain(const char *binname)
 {
@@ -188,14 +255,14 @@ handle_bin(jvalue *v, const char *loc)
 	struct rumprun_exec *rre;
 	char *binname;
 	rre_mainfn *binmain;
-	jvalue *v_bin, *v_argv, *v_runmode, **v_arg;
+	jvalue *v_bin, *v_argv, *v_runmode, *v_sysctl, **v_arg;
 	int rreflags;
 	size_t nargv;
 
 	jexpect(jobject, v, __func__);
 
 	/* process and validate data */
-	v_bin = v_argv = v_runmode = NULL;
+	v_bin = v_argv = v_runmode = v_sysctl = NULL;
 	for (jvalue **i = v->u.v; *i; ++i) {
 
 		if (strcmp((*i)->n, "bin") == 0) {
@@ -207,6 +274,17 @@ handle_bin(jvalue *v, const char *loc)
 		} else if (strcmp((*i)->n, "runmode") == 0) {
 			jexpect(jstring, *i, __func__);
 			v_runmode = *i;
+		} else if (strcmp((*i)->n, "netbsd") == 0) {
+			jexpect(jobject, *i, __func__);
+			for (jvalue **j = (*i)->u.v; *j; ++j) {
+				if (strcmp((*j)->n, "sysctl") == 0) {
+					jexpect(jobject, *j, __func__);
+					v_sysctl = *j;
+				} else {
+					errx(1, "unexpected key \"%s\" in \"%s\"",
+						(*j)->n, __func__);
+				}
+			}
 		} else {
 			errx(1, "unexpected key \"%s\" in \"%s\"", (*i)->n,
 				__func__);
@@ -260,6 +338,12 @@ handle_bin(jvalue *v, const char *loc)
 	}
 	rre->rre_argv[rre->rre_argc] = NULL;
 	rre->rre_main = binmain;
+	rre->rre_sc = NULL;
+	rre->rre_nsc = 0;
+	if (v_sysctl) {
+		sysctl_parse(v_sysctl, &rre->rre_sc, &rre->rre_nsc,
+			"proc.curproc", __func__);
+	}
 
 	TAILQ_INSERT_TAIL(&rumprun_execs, rre, rre_entries);
 }
@@ -925,7 +1009,43 @@ handle_mounts(jvalue *v, const char *loc)
 	}
 }
 
+static void
+handle_sysctl(jvalue *v, const char *loc)
+{
+	struct rr_sysctl *sc;
+	size_t nsc;
+
+	jexpect(jobject, v, __func__);
+	sysctl_parse(v, &sc, &nsc, NULL, __func__);
+	if (sc == NULL)
+		return;
+
+	for (size_t i = 0; i < nsc; i++) {
+		int rc = rumprun_sysctlw(sc[i].key, sc[i].value);
+		if (rc != 0) {
+			errx(1, "error writing sysctl key \"%s\": %s",
+					sc[i].key, strerror(rc));
+		}
+		free(sc[i].key);
+		free(sc[i].value);
+	}
+	free(sc);
+}
+
+static jhandler handlers_netbsd[] = {
+	{ "sysctl", handle_sysctl },
+	{ 0 }
+};
+
+static void
+handle_netbsd(jvalue *v, const char *loc)
+{
+
+	handle_object(v, handlers_netbsd, __func__);
+}
+
 static jhandler handlers_root[] = {
+	{ "netbsd", handle_netbsd },
 	{ "rc", handle_rc },
 	{ "env", handle_env },
 	{ "hostname", handle_hostname },

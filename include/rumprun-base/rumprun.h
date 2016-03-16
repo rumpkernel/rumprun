@@ -26,12 +26,19 @@
 #ifndef _RUMPRUN_BASE_RUMPRUN_H_
 #define _RUMPRUN_BASE_RUMPRUN_H_
 
+#include <stddef.h>
+
 typedef int mainlike_fn(int, char *[]);
 mainlike_fn main;
 
+struct rr_sysctl {
+	char *key;
+	char *value;
+};
+
 void	rumprun_boot(char *);
 
-void *	rumprun(int, mainlike_fn, int, char *[]);
+void *	rumprun(int, mainlike_fn, int, char *[], struct rr_sysctl[], size_t);
 int	rumprun_wait(void *);
 void *	rumprun_get_finished(void);
 
@@ -41,5 +48,7 @@ void	rumprun_reboot(void) __attribute__((noreturn));
 void	rumprun_daemon(void);
 
 extern int rumprun_cold;
+
+int	rumprun_sysctlw(char *, char *);
 
 #endif /* _RUMPRUN_BASE_RUMPRUN_H_ */

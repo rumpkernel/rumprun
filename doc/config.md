@@ -30,6 +30,8 @@ Given that a JSON object is by definition unordered, configuration keys will be
 processed by rumprun in the following order:
 
 1. _rc_: Program invocation
+  1. _netbsd_: NetBSD-specific program invocation
+    1. _sysctl_: Set per-process sysctl(7) nodes
 2. _env_: Environment variables
 3. _hostname_: Kernel hostname
 4. _blk_: Block device configuration
@@ -37,6 +39,8 @@ processed by rumprun in the following order:
 6. _net_: Network configuration
   1. _interfaces_: Interfaces
   2. _gateways_: Default gateways
+7. _netbsd_: NetBSD-specific configuration
+  1. _sysctl_: Set global sysctl(7) nodes
 
 A rumprun unikernel does not _require_ any configuration to be passed for it to
 boot.
@@ -47,7 +51,13 @@ boot.
          {
              "bin": <string>,
              "argv": [ <string>, ... ],
-             "runmode": "" | "&" | "|"
+             "runmode": "" | "&" | "|",
+             "netbsd": {
+                 "sysctl": {
+                     "key": value,
+                     ...
+                 }
+             }
          },
          ...
     ]
@@ -69,6 +79,26 @@ If no _rc_ key is specified in the configuration, rumprun will invoke all
 binaries baked into the unikernel _in the order they were specified at bake
 time_, with _argv[0]_ set to the name of the binary specified at bake time and
 _runmode_ set to the default value (run in foreground).
+
+### netbsd: NetBSD-specific program invocation
+
+The _netbsd_ sub-key of each _rc[]_ element is used for NetBSD-specific
+configuration applicable to the program invocation defined by the _rc[]_
+element.
+
+#### sysctl: Set per-process sysctl(7) nodes
+
+    "sysctl": {
+        "key": value,
+        ...
+    }
+
+Sets per-process `sysctl(7)` variables: For each _key_, `proc.curproc.` is
+prepended to _key_. The sysctl node named by the resulting _key_ is set to
+_value_ when the rump kernel process for the parent _rc[]_ element is created.
+
+Refer to "Set global sysctl(7) nodes" for details and supported conversions for
+_value_.
 
 ## env: Environment variables
 
@@ -266,6 +296,27 @@ A _source_ of `tmpfs` mounts an in-memory `tmpfs` filesystem on _mountpoint_.
 
 * _size_: The maximum size of the filesystem, specified as `<size>k|M|G`.
   Defaults to 1 MB.
+
+## netbsd: NetBSD-specific configuration
+
+The _netbsd_ key is used for NetBSD-specific global configuration.
+
+### sysctl: Set global sysctl(7) nodes
+
+    "sysctl": {
+        "key": value,
+        ...
+    }
+
+For each _key_ and _value_, sets the `sysctl(7)` node named by _key_ to
+_value_.
+
+Supported conversions for _value_:
+* For sysctl nodes of type `integer`, `quad` or `bool`: _value_ must be
+  specified as a number, `true` or `false`.
+* For sysctl nodes of type `string`: _value_ must be specified as a string.
+* For sysctl nodes matching `proc.curproc.rlimit.*.*`: _value_ must be
+  specified as a number or the string `unlimited`.
 
 # Platform notes
 
