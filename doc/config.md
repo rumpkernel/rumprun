@@ -65,20 +65,19 @@ boot.
 Each element of _rc[]_ describes a single program invocation. Programs are
 invoked in the order in which they are defined in _rc[]_.
 
-* _bin_: Determines the name of the binary baked into the unikernel to
-  invoke.
-* _argv[]_: Argument list passed to program. At a minimum, a single string
-  is required, which will be passed to the program as _argv[0]_.
-* _runmode_: Defines how the program will be invoked. _Optional_
-  * `<empty>`: (_default_) run program in foreground and wait for it to exit
+* _bin_ (_required_, string): Determines the name of the binary baked into the
+  unikernel to invoke.
+* _argv[]_ (_optional_, array of strings): Argument list passed to program.
+  Defaults to [_bin_] if not specified.
+* _runmode_ (_optional_, string): Defines how the program will be invoked:
+  * `<empty>` (_default_): Run program in foreground and wait for it to exit
     successfully before running any further programs.
-  * `&`: run program in background.
-  * `|`: pipe output of program to next defined program.
+  * `&`: Run program in background.
+  * `|`: Pipe output of program to next defined program.
 
 If no _rc_ key is specified in the configuration, rumprun will invoke all
 binaries baked into the unikernel _in the order they were specified at bake
-time_, with _argv[0]_ set to the name of the binary specified at bake time and
-_runmode_ set to the default value (run in foreground).
+time_, with _argv[]_ set to the name of the binary specified at bake time.
 
 ### netbsd: NetBSD-specific program invocation
 

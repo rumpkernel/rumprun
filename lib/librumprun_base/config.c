@@ -253,7 +253,7 @@ static void
 handle_bin(jvalue *v, const char *loc)
 {
 	struct rumprun_exec *rre;
-	char *binname;
+	bool have_argv;
 	rre_mainfn *binmain;
 	jvalue *v_bin, *v_argv, *v_runmode, *v_sysctl, **v_arg;
 	int rreflags;
@@ -295,20 +295,22 @@ handle_bin(jvalue *v, const char *loc)
 		errx(1, "missing \"bin\" for rc entry");
 	binmain = getmain(v_bin->u.s);
 	if (!binmain)
-		errx(1, "unknown binname \"%s\" in rc entry", v_bin->u.s);
-	binname = strdup(v_bin->u.s);
-	if (!binname)
-		err(1, "%s: strdup", __func__);
+		errx(1, "unknown \"bin\" \"%s\" in rc entry", v_bin->u.s);
 
-	if (!v_argv)
-		errx(1, "missing \"argv\" in rc entry for \"%s\"", v_bin->u.s);
 	nargv = 0;
-	for (jvalue **i = v_argv->u.v; *i; ++i) {
-		jexpect(jstring, *i, __func__);
-		nargv++;
+	if (v_argv) {
+		for (jvalue **i = v_argv->u.v; *i; ++i) {
+			jexpect(jstring, *i, __func__);
+			nargv++;
+		}
 	}
-	if (nargv == 0)
-		errx(1, "missing argv[0] in rc entry for \"%s\"", v_bin->u.s);
+	if (nargv != 0) {
+		have_argv = true;
+	}
+	else {
+		have_argv = false;
+		nargv = 1;
+	}
 
 	if (v_runmode) {
 		if (strcmp(v_runmode->u.s, "") == 0) {
@@ -326,17 +328,24 @@ handle_bin(jvalue *v, const char *loc)
 	}
 
 	/* ok, we got everything.  save into rumprun_exec structure */
-	rre = malloc(sizeof(*rre) + (2 + nargv) * sizeof(char *));
+	rre = malloc(sizeof(*rre) + (1 + nargv) * sizeof(char *));
 	if (rre == NULL)
 		err(1, "%s: malloc(rumprun_exec)", __func__);
-	rre->rre_flags = rreflags;
-	rre->rre_argc = nargv;
-	for (v_arg = v_argv->u.v, nargv = 0; *v_arg; ++v_arg, ++nargv) {
-		rre->rre_argv[nargv] = strdup((*v_arg)->u.s);
-		if (!rre->rre_argv[nargv])
+	if (have_argv) {
+		for (v_arg = v_argv->u.v, nargv = 0; *v_arg; ++v_arg, ++nargv) {
+			rre->rre_argv[nargv] = strdup((*v_arg)->u.s);
+			if (rre->rre_argv[nargv] == NULL)
+				err(1, "%s: strdup", __func__);
+		}
+	}
+	else {
+		rre->rre_argv[0] = strdup(v_bin->u.s);
+		if (rre->rre_argv[0] == NULL)
 			err(1, "%s: strdup", __func__);
 	}
+	rre->rre_argc = nargv;
 	rre->rre_argv[rre->rre_argc] = NULL;
+	rre->rre_flags = rreflags;
 	rre->rre_main = binmain;
 	rre->rre_sc = NULL;
 	rre->rre_nsc = 0;
