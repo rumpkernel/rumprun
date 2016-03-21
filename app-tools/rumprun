@@ -517,6 +517,18 @@ json_store_tmpfs ()
 	json_finalize_block
 }
 
+json_store_hostname ()
+{
+	[ -n "$1" ] || die "hostname requested but not set"
+	json_open_block netbsd
+	json_open_block sysctl
+
+	json_append_ln	'"kern.hostname":	"'"$1"'"'
+
+	json_finalize_block
+	json_finalize_block
+}
+
 parse_blkspec ()
 {
 	spec=$1
@@ -640,7 +652,7 @@ run_xen ()
 
         json_store_tmpfs
 	json_store_rc "$@"
-	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
+	[ -n "${opt_name}" ] && json_store_hostname "${opt_name}"
 	json_finalize_block
 	json_finish
 
@@ -788,7 +800,7 @@ run_qemu ()
 
         json_store_tmpfs
 	json_store_rc "$@"
-	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
+	[ -n "${opt_name}" ] && json_store_hostname "${opt_name}"
 	json_finalize_block
 	json_finish
 
@@ -879,7 +891,7 @@ bake_iso ()
 
         json_store_tmpfs
 	json_store_rc "$@"
-	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
+	[ -n "${opt_name}" ] && json_store_hostname "${opt_name}"
 	json_finalize_block
 	json_finish
 	[ ${json_depth} -eq 0 ] || die internal error, final depth ${json_depth}
@@ -959,7 +971,7 @@ make_ec2 ()
 
         json_store_tmpfs
 	json_store_rc "$@"
-	[ -n "${opt_name}" ] && json_append_ln "\"hostname\": \""${opt_name}"\""
+	[ -n "${opt_name}" ] && json_store_hostname "${opt_name}"
 	json_finalize_block
 	json_finish
 	[ ${json_depth} -eq 0 ] || die internal error, final depth ${json_depth}

@@ -390,15 +390,6 @@ handle_env(jvalue *v, const char *loc)
 }
 
 static void
-handle_hostname(jvalue *v, const char *loc)
-{
-
-	jexpect(jstring, v, __func__);
-	if (sethostname(v->u.s, strlen(v->u.s)) == -1)
-		err(1, "sethostname");
-}
-
-static void
 config_ipv4(const char *ifname, const char *method,
 	const char *cidr)
 {
@@ -1068,7 +1059,6 @@ static jhandler handlers_root[] = {
 	{ "netbsd", handle_netbsd },
 	{ "rc", handle_rc },
 	{ "env", handle_env },
-	{ "hostname", handle_hostname },
 	{ "blk", handle_blks },
 	{ "mount", handle_mounts },
 	{ "net", handle_net },

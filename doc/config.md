@@ -33,7 +33,6 @@ processed by rumprun in the following order:
   1. _netbsd_: NetBSD-specific program invocation
     1. _sysctl_: Set per-process sysctl(7) nodes
 2. _env_: Environment variables
-3. _hostname_: Kernel hostname
 4. _blk_: Block device configuration
 5. _mount_: Filesystem mounts
 6. _net_: Network configuration
@@ -111,12 +110,6 @@ _value_.
 
 * _env_: Each _key_/_value_ pair of strings sets the environment variable
   `<key>` to `<value>`.
-
-## hostname: Kernel hostname
-
-    "hostname": <string>
-
-* _hostname_: Sets the hostname returned by the `gethostname()` call.
 
 ## net: Network configuration
 
