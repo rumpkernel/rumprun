@@ -433,7 +433,7 @@ config_ipv4(const char *ifname, const char *method,
 
 static void
 config_ipv6(const char *ifname, const char *method,
-	const char *cidr)
+	const char *addrmask)
 {
 	int rv;
 
@@ -445,10 +445,10 @@ config_ipv6(const char *ifname, const char *method,
 	else if (strcmp(method, "static") == 0) {
 		char *addr, *mask;
 
-		if (!cidr)
+		if (!addrmask)
 			errx(1, "%s: %s: missing \"addr\"", __func__,
 				ifname);
-		addr = strdup(cidr);
+		addr = strdup(addrmask);
 		if (!addr)
 			err(1, "%s: strdup", __func__);
 		mask = strchr(addr, '/');

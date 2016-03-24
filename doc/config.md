@@ -198,7 +198,7 @@ The `method` key must be set to one of the following:
 * `auto`: Configure the interface using IPv6 stateless autoconfiguration.
 * `static`: Configure the interface statically. The following additional keys
   must be present:
-  * `addr`: IPv6 interface address, in `address/mask` format.
+  * `addr`: IPv6 interface address, in `address/prefixlen` format.
 
 Gateways to be configured using IPv6 are specified as follows:
 
