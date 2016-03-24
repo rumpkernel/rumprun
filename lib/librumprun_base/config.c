@@ -399,20 +399,19 @@ config_ipv4(const char *ifname, const char *method,
 		if ((rv = rump_pub_netconfig_dhcp_ipv4_oneshot(ifname)) != 0)
 			errx(1, "%s: %s: configuring dhcp failed: %s",
 			    __func__, ifname, strerror(rv));
-	} else {
-		char *addr = strdup(cidr);
+	}
+	else if (strcmp(method, "static") == 0) {
+		char *addr, *mask;
+
+		if (!cidr)
+			errx(1, "%s: %s: missing \"addr\"", __func__,
+				ifname);
+		addr = strdup(cidr);
 		if (!addr)
 			err(1, "%s: strdup", __func__);
-		char *mask = strchr(addr, '/');
-
-		if (strcmp(method, "static") != 0) {
-			errx(1, "%s: %s: "
-			    "method \"static\" or \"dhcp\" expected, "
-			    "got \"%s\"", __func__, ifname, method);
-		}
-
+		mask = strchr(addr, '/');
 		if (!addr || !mask) {
-			errx(1, "%s: %s: invalid addr specified", __func__,
+			errx(1, "%s: %s: invalid \"addr\" specified", __func__,
 				ifname);
 		}
 		*mask = 0;
@@ -423,8 +422,12 @@ config_ipv4(const char *ifname, const char *method,
 			errx(1, "%s: %s: ifconfig \"%s/%s\" failed: %s",
 			    __func__, ifname, addr, mask, strerror(rv));
 		}
-
 		free(addr);
+	}
+	else {
+		errx(1, "%s: %s: "
+		    "method \"static\" or \"dhcp\" expected, "
+		    "got \"%s\"", __func__, ifname, method);
 	}
 }
 
@@ -434,26 +437,23 @@ config_ipv6(const char *ifname, const char *method,
 {
 	int rv;
 
-	if (strcmp(method, "dhcp") == 0) {
+	if (strcmp(method, "auto") == 0) {
 		if ((rv = rump_pub_netconfig_auto_ipv6(ifname)) != 0)
 			errx(1, "%s: %s: ipv6 autoconfig failed: %s",
 			    __func__, ifname, strerror(rv));
-	} else {
+	}
+	else if (strcmp(method, "static") == 0) {
 		char *addr, *mask;
 
+		if (!cidr)
+			errx(1, "%s: %s: missing \"addr\"", __func__,
+				ifname);
 		addr = strdup(cidr);
 		if (!addr)
 			err(1, "%s: strdup", __func__);
 		mask = strchr(addr, '/');
-
-		if (strcmp(method, "static") != 0) {
-			errx(1, "%s: %s: "
-			    "method \"static\" or \"auto\" expected, "
-			    "got \"%s\"", __func__, ifname, method);
-		}
-
 		if (!addr || !mask) {
-			errx(1, "%s: %s: invalid addr specified", __func__,
+			errx(1, "%s: %s: invalid \"addr\" specified", __func__,
 				ifname);
 		}
 		*mask = 0;
@@ -466,6 +466,12 @@ config_ipv6(const char *ifname, const char *method,
 		}
 
 		free(addr);
+	}
+	else {
+		errx(1, "%s: %s: "
+		    "method \"static\" or \"auto\" expected, "
+		    "got \"%s\"", __func__, ifname, method);
+
 	}
 }
 
