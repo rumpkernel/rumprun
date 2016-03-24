@@ -203,7 +203,7 @@ The `method` key must be set to one of the following:
 Gateways to be configured using IPv6 are specified as follows:
 
     {
-        "type": "inet",
+        "type": "inet6",
         "addr": <string>
     }
 
