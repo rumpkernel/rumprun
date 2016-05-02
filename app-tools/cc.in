@@ -68,6 +68,12 @@ for arg in "$@"; do
 	[ "${arg}" = "-o" ] && WANTARG=yes && continue
 	[ -n "${WANTARG}" ] && OUTFILE=${arg} && WANTARG=
 
+	# If either of these is present on the command line, the
+	# behaviour of gcc seems to be that they silently override
+	# all other flags
+	[ "${arg}" = "-dumpmachine" ] && { MODE=dumpmachine; break; }
+	[ "${arg}" = "-dumpspecs" ] && { MODE=dumpspecs; break; }
+
 	# even if the backing compiler supports multiarch, we do not
 	[ "${arg}" = "-print-multiarch" ] && \
 	    { echo "${PROGNAME}: unrecognized option '-print-multiarch'" 2>&1;
@@ -126,6 +132,16 @@ ferment)
 	# Some build systems insist that the output looks like an executable.
 	chmod +x ${OUTFILE}
 	;;
+
+dumpmachine)
+	echo !TOOLTUPLE!
+	;;
+
+dumpspecs)
+	${CC} -dumpspecs
+	cat !DESTDIR!/rumprun-!MACHINE_GNU_ARCH!/lib/specs-compile_or_ferment
+	;;
+
 *)
 	echo "${PROGNAME}: internal error, unknown mode"
 	exit 1
