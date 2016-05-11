@@ -384,6 +384,9 @@ export RUMPRUN_CXX="${RRDEST}/bin/${TOOLTUPLE}-g++"
 export RUMPRUN="${RRDEST}/bin/rumprun"
 export RUMPSTOP="${RRDEST}/bin/rumpstop"
 EOF
+	cat > "${RROBJ}/config-PATH.sh" << EOF
+export PATH="${RRDEST}/bin:\${PATH}"
+EOF
 	export RUMPRUN_MKCONF="${RROBJ}/config.mk"
 
 	probeprereqs
@@ -583,6 +586,9 @@ if ${DObuild}; then
 fi
 if ${DOinstall}; then
 	printf ">> installed to \"%s\"\n" ${RRDEST}
+	echo '>>'
+	echo '>> Set tooldir to front of $PATH (bourne-style shells)'
+	echo ". \"${RROBJ}/config-PATH.sh\""
 fi
 echo '>>'
 echo ">> $0 ran successfully"
