@@ -43,8 +43,10 @@ rumpcomp_pci_dmalloc(size_t size, size_t align,
 
         for (i = 0; size >> (i + BMK_PCPU_PAGE_SHIFT); i++)
                 continue;
+	if (align < BMK_PCPU_PAGE_SIZE)
+		align = BMK_PCPU_PAGE_SIZE;
 
-	mem = bmk_pgalloc(i);
+	mem = bmk_pgalloc_align(i, align);
 	if (!mem)
 		return BMK_ENOMEM;
 
