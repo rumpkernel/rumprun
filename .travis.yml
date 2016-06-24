@@ -1,5 +1,5 @@
 language: c
-
+cache: ccache
 compiler:
   - gcc
 
