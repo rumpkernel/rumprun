@@ -6,23 +6,20 @@ compiler:
   - gcc
 
 before_script:
-  - sudo add-apt-repository ppa:ubuntu-toolchain-r/test -y
   - sudo apt-get update -y
-  - sudo apt-get install qemu-kvm libxen-dev g++-4.8 -y
-  - sudo apt-get upgrade binutils -y
+  - sudo apt-get install qemu-kvm libxen-dev -y
+  - sudo apt-get install --only-upgrade binutils gcc -y
 
 env:
-  - PLATFORM=hw MACHINE=x86_64 TESTS=qemu EXTRAFLAGS= MYCXX='g++-4.8'
-  - PLATFORM=hw MACHINE=i486 ELF=elf TESTS=qemu EXTRAFLAGS='-- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686' MYCXX='g++-4.8'
-  - PLATFORM=xen MACHINE=x86_64 TESTS=none EXTRAFLAGS= MYCXX='g++-4.8'
-  - PLATFORM=xen MACHINE=i486 ELF=elf TESTS=none EXTRAFLAGS='-- -F ACLFLAGS=-m32' MYCXX='g++-4.8'
-  - PLATFORM=hw MACHINE=x86_64 TESTS=qemu EXTRAFLAGS= MYCXX='false'
-  - PLATFORM=hw MACHINE=x86_64 TESTS=none KERNONLY=-k EXTRAFLAGS= MYCXX='g++-4.8'
-  - PLATFORM=xen MACHINE=x86_64 TESTS=none KERNONLY=-k EXTRAFLAGS= MYCXX='g++-4.8'
+  - PLATFORM=hw MACHINE=x86_64 TESTS=qemu EXTRAFLAGS=
+  - PLATFORM=hw MACHINE=i486 ELF=elf TESTS=qemu EXTRAFLAGS='-- -F ACLFLAGS=-m32 -F ACLFLAGS=-march=i686'
+  - PLATFORM=xen MACHINE=x86_64 TESTS=none EXTRAFLAGS=
+  - PLATFORM=xen MACHINE=i486 ELF=elf TESTS=none EXTRAFLAGS='-- -F ACLFLAGS=-m32'
+  - PLATFORM=hw MACHINE=x86_64 TESTS=qemu EXTRAFLAGS= CXX='false'
+  - PLATFORM=hw MACHINE=x86_64 TESTS=none KERNONLY=-k EXTRAFLAGS= 
+  - PLATFORM=xen MACHINE=x86_64 TESTS=none KERNONLY=-k EXTRAFLAGS=
 
 script:
-  - export CC=gcc-4.8
-  - export CXX=${MYCXX}
   - git submodule update --init
   - ./build-rr.sh -o myobj -j16 -qq ${KERNONLY} ${PLATFORM} ${EXTRAFLAGS}
   - . ./myobj/config
