@@ -361,6 +361,9 @@ _lwp_getprivate(void)
 void _lwpnullop(void);
 void _lwpnullop(void) { }
 
+int _lwpsuccess(void);
+int _lwpsuccess(void) { return 0; }
+
 void _lwpabort(void);
 void __dead
 _lwpabort(void)
@@ -386,3 +389,9 @@ __strong_alias(_sched_getaffinity,_lwpnullop);
 __strong_alias(_sched_getparam,_lwpnullop);
 __strong_alias(_sched_setaffinity,_lwpnullop);
 __strong_alias(_sched_setparam,_lwpnullop);
+
+/*
+ * Technically, specifying a lower >0 protection level is an error,
+ * but we don't flag that error for now.
+ */
+__strong_alias(_sched_protect,_lwpsuccess);
