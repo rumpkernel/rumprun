@@ -242,7 +242,12 @@ rump_virtif_pktdeliver(struct virtif_sc *sc, struct iovec *iov, size_t iovlen)
 		}
 	}
 
+#if __NetBSD_Prereq__(7,99,31)
+	m_set_rcvif(m, ifp);
+#else
 	m->m_pkthdr.rcvif = ifp;
+#endif
+
 	KERNEL_LOCK(1, NULL);
 	bpf_mtap(ifp, m);
 	ether_input(ifp, m);
