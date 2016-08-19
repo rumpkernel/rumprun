@@ -10,7 +10,7 @@ out-of-the-box, while the latter allows building highly customized
 solutions with minimal footprints.
 
 The Rumprun unikernel supports applications written in, for example
-but not limited to: _C_, _C++_, _Erlang_, _Go_, _Javascript (node.js)_,
+but not limited to: _C_, _C++_, _Erlang_, _Go_, _Java_, _Javascript (node.js)_,
 _Python_, _Ruby_ and _Rust_.
 
 You will find ready-made software packages for Rumprun from the
