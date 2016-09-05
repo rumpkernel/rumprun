@@ -59,7 +59,7 @@ static const struct xen_dev_info {
 	[cmin] = { path, init_fn, component##_dev_open,	\
 		   &component##_dev_fileops }
 	XDEV(0, DEV_XEN "/xenbus", NULL, xenbus),
-//	XDEV(1, "/dev/xenevt", xenevt_dev_init, xenevt),
+//	XDEV(1, "/dev/xenevt", xenevt_dev_init, xenevt),  XXX issue #73
 #undef XDEV
 };
 
@@ -156,7 +156,7 @@ RUMP_COMPONENT(RUMP_COMPONENT_DEV)
 	}
 
 	xenkernfs_init();
-//	xenprivcmd_init();
+//	xenprivcmd_init();  XXX issue #73
 }
 
 /*
