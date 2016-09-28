@@ -39,8 +39,6 @@
 #include <sys/poll.h>
 
 
-//#define RUMP_DEV_XEN_DEBUG 1
-
 #ifdef RUMP_DEV_XEN_DEBUG
 #define DPRINTF(a) (printf a)
 #else
