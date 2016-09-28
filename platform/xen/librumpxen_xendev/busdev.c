@@ -114,7 +114,7 @@ xenbus_dev_write(struct file *fp, off_t *offset, struct uio *uio,
 	struct rumpxenbus_data_common *const dc = &d->dc;
 	int err;
 
-	DPRINTF(("/dev/xen/xenbus: write...\n"));
+	DPRINTF(("/dev/xen/xenbus[%p,dd=%p]: write...\n",dc,d));
 
 	if (uio->uio_offset < 0)
 		return EINVAL;
@@ -200,7 +200,9 @@ xenbus_dev_read(struct file *fp, off_t *offset, struct uio *uio,
 	size_t org_resid = uio->uio_resid;
 	int err;
 
-	DPRINTF(("/dev/xen/xenbus: read...\n"));
+	DPRINTF(("/dev/xen/xenbus[%p,dd=%p:"
+		 " read (nonblock=%d)...\n",
+		 dc,d, !(fp->f_flag & FNONBLOCK)));
 	mutex_enter(&d->lock);
 
 	for (;;) {
@@ -233,7 +235,8 @@ xenbus_dev_read(struct file *fp, off_t *offset, struct uio *uio,
 			d->rmsg = rumpxenbus_next_event_msg(&d->dc,
 						 !err_if_block,
 						 &d->rmsg_free);
-
+			DPRINTF(("/dev/xen/xenbus: read... rmsg=%p (eib=%d)\n",
+				 d->rmsg, err_if_block));
 			if (!d->rmsg) {
 				if (uio->uio_resid != org_resid)
 					/* Done something, claim success. */
@@ -285,9 +288,9 @@ end:
 
 void rumpxenbus_dev_xb_wakeup(struct rumpxenbus_data_common *dc)
 {
-	DPRINTF(("/dev/xen/xenbus: wakeup\n"));
 	struct rumpxenbus_data_dev *d =
 		container_of(dc, struct rumpxenbus_data_dev, dc);
+	DPRINTF(("/dev/xen/xenbus[%p,dd=%p]: wakeup\n",d,dc));
 	selnotify(&d->selinfo, RBITS, NOTE_SUBMIT);
 }
 
@@ -296,7 +299,7 @@ xenbus_dev_restart(file_t *fp)
 {
 	struct rumpxenbus_data_dev *d = fp->f_data;
 
-	DPRINTF(("/dev/xen/xenbus: restart!\n"));
+	DPRINTF(("/dev/xen/xenbus[dd=%p]: restart!\n",d));
 
 	mutex_enter(&d->lock);
 	d->want_restart |= 1;
@@ -311,7 +314,8 @@ xenbus_dev_poll(struct file *fp, int events)
 	struct rumpxenbus_data_common *const dc = &d->dc;
 	int revents = 0;
 
-	DPRINTF(("/dev/xen/xenbus: poll events=0%o...\n", events));
+	DPRINTF(("/dev/xen/xenbus[%p,dd=%p]: poll events=0%o...\n",
+		 dc,d,events));
 
 	mutex_enter(&d->lock);
 
@@ -343,7 +347,7 @@ xenbus_dev_close(struct file *fp)
 {
 	struct rumpxenbus_data_dev *d = fp->f_data;
 
-	DPRINTF(("/dev/xen/xenbus: close...\n"));
+	DPRINTF(("/dev/xen/xenbus[dd=%p]: close...\n",d));
 
 	/* Not neeeded against concurrent access (we assume!)
 	 * but next_event_msg will want to unlock and relock it */
@@ -382,11 +386,15 @@ xenbus_dev_open(struct file *fp, void **fdata_r)
 	struct rumpxenbus_data_dev *d;
 	int err;
 
+	DPRINTF(("/dev/xen/xenbus: open: entry...\n"));
+
 	d = xbd_malloc(sizeof(*d));
 	if (!d)
 		return ENOMEM;
 
 	d->dc.du = 0;
+
+	DPRINTF(("/dev/xen/xenbus[%p,du=%p]: open: alloc...\n",&d->dc,d));
 
 	err = rumpxenbus_dev_user_open(&d->dc);
 	if (err) {
@@ -401,6 +409,10 @@ xenbus_dev_open(struct file *fp, void **fdata_r)
 	selinit(&d->selinfo);
 
 	*fdata_r = d;
+
+	DPRINTF(("/dev/xen/xenbus[%p,dd=%p,du=%p]: opened.\n",
+		 &d->dc, d, d->dc.du));
+
 	return 0;
 }
 

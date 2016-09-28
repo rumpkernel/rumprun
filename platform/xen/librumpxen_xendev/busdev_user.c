@@ -213,8 +213,8 @@ rumpxenbus_process_request(struct rumpxenbus_data_common *d)
 	const char *wpath, *wtoken;
 	int err;
 
-	DPRINTF(("/dev/xen/xenbus: request, type=%d\n",
-		 d->wbuf.msg.type));
+	DPRINTF(("/dev/xen/xenbus[%p,du=%p]: request, type=%d\n",
+		 d,du, d->wbuf.msg.type));
 
 	req = xbd_malloc(sizeof(*req));
 	if (!req) {
@@ -327,8 +327,9 @@ process_watch_event(struct rumpxenbus_data_common *d, struct xenbus_event *event
 	 * one from xenstored (a) isn't visible to us here and (b)
 	 * anyway has the wrong token in it. */
 
-	DPRINTF(("/dev/xen/xenbus: watch event,"
+	DPRINTF(("/dev/xen/xenbus[%p]: watch event,"
 		 " wpath=%s user_token=%s epath=%s xb.token=%s\n",
+                 d,
 		 watch->path, watch->user_token,
 		 event->path, watch->xb.token));
 
@@ -405,8 +406,9 @@ process_response(struct rumpxenbus_data_common *d, struct xenbus_dev_request *re
 	_Bool error = msg->type == XS_ERROR;
 	KASSERT(error || msg->type == req->req_type);
 
-	DPRINTF(("/dev/xen/xenbus: response, req_type=%d msg->type=%d\n",
-		 req->req_type, msg->type));
+	DPRINTF(("/dev/xen/xenbus[%p,du=%p]:"
+                 " response, req_type=%d msg->type=%d\n",
+		 d,du, req->req_type, msg->type));
 
 	switch (req->req_type) {
 
@@ -495,7 +497,7 @@ rumpxenbus_next_event_msg(struct rumpxenbus_data_common *dc,
 		if (!block)
 			goto fail;
 
-		DPRINTF(("/dev/xen/xenbus: about to block\n"));
+		DPRINTF(("/dev/xen/xenbus[%p,du=%p]: about to block\n",dc,d));
 
 		minios_add_waiter(w, d->replies.waitq);
 		spin_unlock(&xenbus_req_lock);
@@ -531,6 +533,7 @@ xenbus_dev_xb_wakeup(struct xenbus_event_queue *queue)
 	/* called with req_lock held */
 	struct rumpxenbus_data_user *d =
 		container_of(queue, struct rumpxenbus_data_user, replies);
+	DPRINTF(("/dev/xen/xenbus[queue=%p,du=%p]: wakeup...\n",queue,d));
 	minios_wake_up(&d->replies.waitq);
 	rumpxenbus_dev_xb_wakeup(d->c);
 }
@@ -549,7 +552,7 @@ rumpxenbus_dev_user_shutdown(struct rumpxenbus_data_common *dc)
 {
 	struct rumpxenbus_data_user *d = dc->du;
 	for (;;) {
-		DPRINTF(("/dev/xen/xenbus: close loop\n"));
+		DPRINTF(("/dev/xen/xenbus[%p,du=%p]: close loop\n",dc,d));
 		/* We need to go round this again and again because
 		 * there might be requests in flight.  Eg if the
 		 * user has an XS_WATCH in flight we have to wait for it
@@ -613,6 +616,8 @@ rumpxenbus_dev_user_open(struct rumpxenbus_data_common *dc)
 	struct rumpxenbus_data_user *d = dc->du = xbd_malloc(sizeof(*dc->du));
 	if (!d)
 		return ENOMEM;
+
+	DPRINTF(("/dev/xen/xenbus[%p,dd=%p]: open: user...\n",dc,d));
 
 	d->c = dc;
 	d->outstanding_requests = 0;
