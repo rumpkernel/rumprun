@@ -485,7 +485,7 @@ rumpxenbus_next_event_msg(struct rumpxenbus_data_common *dc,
  * If !!err_r, will block iff user process read should block:
  * will either return successfully, or set *err_r and return 0.
  *
- * Must be called with d->lock held; may temporarily release it
+ * Must be called with dd->lock held; may temporarily release it
  * by calling rumpxenbus_block_{before,after}. */
 {
 	struct rumpxenbus_data_user *d = dc->du;
