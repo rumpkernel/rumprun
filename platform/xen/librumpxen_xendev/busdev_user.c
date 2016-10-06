@@ -488,18 +488,18 @@ rumpxenbus_next_event_msg(struct rumpxenbus_data_common *dc,
  * Must be called with dd->lock held; may temporarily release it
  * by calling rumpxenbus_block_{before,after}. */
 {
-	struct rumpxenbus_data_user *d = dc->du;
+	struct rumpxenbus_data_user *du = dc->du;
 	int nlocks;
 	DEFINE_WAIT(w);
 	spin_lock(&xenbus_req_lock);
 
-	while (STAILQ_EMPTY(&d->replies.events)) {
+	while (STAILQ_EMPTY(&du->replies.events)) {
 		if (!block)
 			goto fail;
 
-		DPRINTF(("/dev/xen/xenbus[%p,du=%p]: about to block\n",dc,d));
+		DPRINTF(("/dev/xen/xenbus[%p,du=%p]: about to block\n",dc,du));
 
-		minios_add_waiter(w, d->replies.waitq);
+		minios_add_waiter(w, du->replies.waitq);
 		spin_unlock(&xenbus_req_lock);
 		rumpxenbus_block_before(dc);
 		rumpkern_unsched(&nlocks, 0);
@@ -509,10 +509,10 @@ rumpxenbus_next_event_msg(struct rumpxenbus_data_common *dc,
 		rumpkern_sched(nlocks, 0);
 		rumpxenbus_block_after(dc);
 		spin_lock(&xenbus_req_lock);
-		minios_remove_waiter(w, d->replies.waitq);
+		minios_remove_waiter(w, du->replies.waitq);
 	}
-	struct xenbus_event *event = STAILQ_FIRST(&d->replies.events);
-	STAILQ_REMOVE_HEAD(&d->replies.events, entry);
+	struct xenbus_event *event = STAILQ_FIRST(&du->replies.events);
+	STAILQ_REMOVE_HEAD(&du->replies.events, entry);
 
 	spin_unlock(&xenbus_req_lock);
 
@@ -531,35 +531,35 @@ static void
 xenbus_dev_xb_wakeup(struct xenbus_event_queue *queue)
 {
 	/* called with req_lock held */
-	struct rumpxenbus_data_user *d =
+	struct rumpxenbus_data_user *du =
 		container_of(queue, struct rumpxenbus_data_user, replies);
-	DPRINTF(("/dev/xen/xenbus[queue=%p,du=%p]: wakeup...\n",queue,d));
-	minios_wake_up(&d->replies.waitq);
-	rumpxenbus_dev_xb_wakeup(d->c);
+	DPRINTF(("/dev/xen/xenbus[queue=%p,du=%p]: wakeup...\n",queue,du));
+	minios_wake_up(&du->replies.waitq);
+	rumpxenbus_dev_xb_wakeup(du->c);
 }
 
 void
 rumpxenbus_dev_restart_wakeup(struct rumpxenbus_data_common *dc)
 {
-	struct rumpxenbus_data_user *d = dc->du;
+	struct rumpxenbus_data_user *du = dc->du;
 	spin_lock(&xenbus_req_lock);
-	minios_wake_up(&d->replies.waitq);
+	minios_wake_up(&du->replies.waitq);
 	spin_unlock(&xenbus_req_lock);
 }
 
 void
 rumpxenbus_dev_user_shutdown(struct rumpxenbus_data_common *dc)
 {
-	struct rumpxenbus_data_user *d = dc->du;
+	struct rumpxenbus_data_user *du = dc->du;
 	for (;;) {
-		DPRINTF(("/dev/xen/xenbus[%p,du=%p]: close loop\n",dc,d));
+		DPRINTF(("/dev/xen/xenbus[%p,du=%p]: close loop\n",dc,du));
 		/* We need to go round this again and again because
 		 * there might be requests in flight.  Eg if the
 		 * user has an XS_WATCH in flight we have to wait for it
 		 * to be done and then unwatch it again. */
 
 		struct xenbus_dev_watch *watch, *watch_tmp;
-		LIST_FOREACH_SAFE(watch, &d->watches, entry, watch_tmp) {
+		LIST_FOREACH_SAFE(watch, &du->watches, entry, watch_tmp) {
 			DPRINTF(("/dev/xen/xenbus: close watch %p %d\n",
 				 watch, watch->visible_to_user));
 			if (watch->visible_to_user) {
@@ -573,7 +573,7 @@ rumpxenbus_dev_user_shutdown(struct rumpxenbus_data_common *dc)
 
 		struct xenbus_dev_transaction *trans, *trans_tmp;
 		const struct write_req trans_end_data = { "F", 2 };
-		LIST_FOREACH_SAFE(trans, &d->transactions, entry, trans_tmp) {
+		LIST_FOREACH_SAFE(trans, &du->transactions, entry, trans_tmp) {
 			DPRINTF(("/dev/xen/xenbus: close transaction"
 				 " %p %lx\n",
 				 trans, (unsigned long)trans->tx_id));
@@ -586,9 +586,9 @@ rumpxenbus_dev_user_shutdown(struct rumpxenbus_data_common *dc)
 		}
 
 		DPRINTF(("/dev/xen/xenbus: close outstanding=%d\n",
-			 d->outstanding_requests));
-		KASSERT(d->outstanding_requests >= 0);
-		if (!d->outstanding_requests)
+			 du->outstanding_requests));
+		KASSERT(du->outstanding_requests >= 0);
+		if (!du->outstanding_requests)
 			break;
 
 		void (*dfree)(void*);
@@ -600,11 +600,11 @@ rumpxenbus_dev_user_shutdown(struct rumpxenbus_data_common *dc)
 		dfree(discard);
 	}
 
-	KASSERT(!d->outstanding_requests);
-	KASSERT(LIST_EMPTY(&d->transactions));
-	KASSERT(LIST_EMPTY(&d->watches));
+	KASSERT(!du->outstanding_requests);
+	KASSERT(LIST_EMPTY(&du->transactions));
+	KASSERT(LIST_EMPTY(&du->watches));
 
-	xbd_free(d);
+	xbd_free(du);
 	dc->du = NULL;
 }
 
@@ -613,18 +613,18 @@ rumpxenbus_dev_user_open(struct rumpxenbus_data_common *dc)
 {
 	assert(!dc->du);
 
-	struct rumpxenbus_data_user *d = dc->du = xbd_malloc(sizeof(*dc->du));
-	if (!d)
+	struct rumpxenbus_data_user *du = dc->du = xbd_malloc(sizeof(*dc->du));
+	if (!du)
 		return ENOMEM;
 
-	DPRINTF(("/dev/xen/xenbus[%p,dd=%p]: open: user...\n",dc,d));
+	DPRINTF(("/dev/xen/xenbus[%p,dd=%p]: open: user...\n",dc,du));
 
-	d->c = dc;
-	d->outstanding_requests = 0;
-	LIST_INIT(&d->transactions);
-	LIST_INIT(&d->watches);
-	xenbus_event_queue_init(&d->replies);
-	d->replies.wakeup = xenbus_dev_xb_wakeup;
+	du->c = dc;
+	du->outstanding_requests = 0;
+	LIST_INIT(&du->transactions);
+	LIST_INIT(&du->watches);
+	xenbus_event_queue_init(&du->replies);
+	du->replies.wakeup = xenbus_dev_xb_wakeup;
 
 	dc->wbuf_used = 0;
 	dc->queued_enomem = 0;
