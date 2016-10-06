@@ -20,9 +20,10 @@ struct rumpxenbus_data_common {
 };
 
 /* void __NORETURN__ WTROUBLE(const char *details_without_newline);
- * assumes:   int err;
+ * assumes:   struct rumpxenbus_data_common *dc;
+ *            int err;
  *            end: */
-#define WTROUBLE(dc,s) do{ rumpxenbus_write_trouble((dc),s); err = EINVAL; goto end; }while(0)
+#define WTROUBLE(s) do{ rumpxenbus_write_trouble((dc),s); err = EINVAL; goto end; }while(0)
 
 void
 rumpxenbus_write_trouble(struct rumpxenbus_data_common *dc, const char *what);

@@ -236,14 +236,14 @@ rumpxenbus_process_request(struct rumpxenbus_data_common *dc)
 	case XS_SET_PERMS:
 		if (dc->wbuf.msg.tx_id) {
 			if (!find_transaction(dc, dc->wbuf.msg.tx_id))
-				WTROUBLE(dc,"unknown transaction");
+				WTROUBLE("unknown transaction");
 		}
 		forward_request(dc, req);
 		break;
 
 	case XS_TRANSACTION_START:
 		if (dc->wbuf.msg.tx_id)
-			WTROUBLE(dc,"nested transaction");
+			WTROUBLE("nested transaction");
 		req->u.trans = xbd_malloc(sizeof(*req->u.trans));
 		if (!req->u.trans) {
 			err = ENOMEM;
@@ -254,19 +254,19 @@ rumpxenbus_process_request(struct rumpxenbus_data_common *dc)
 
 	case XS_TRANSACTION_END:
 		if (!dc->wbuf.msg.tx_id)
-			WTROUBLE(dc,"ending zero transaction");
+			WTROUBLE("ending zero transaction");
 		req->u.trans = trans = find_transaction(dc, dc->wbuf.msg.tx_id);
 		if (!trans)
-			WTROUBLE(dc,"ending unknown transaction");
+			WTROUBLE("ending unknown transaction");
 		LIST_REMOVE(trans, entry); /* prevent more reqs using it */
 		forward_request(dc, req);
 		break;
  
 	case XS_WATCH:
 		if (dc->wbuf.msg.tx_id)
-			WTROUBLE(dc,"XS_WATCH with transaction");
+			WTROUBLE("XS_WATCH with transaction");
 		if (!watch_message_parse(&dc->wbuf.msg, &wpath, &wtoken))
-			WTROUBLE(dc,"bad XS_WATCH message");
+			WTROUBLE("bad XS_WATCH message");
 
 		watch = watch_free = xbd_malloc(sizeof(*watch));
 		if (!watch) {
@@ -292,20 +292,20 @@ rumpxenbus_process_request(struct rumpxenbus_data_common *dc)
 
 	case XS_UNWATCH:
 		if (dc->wbuf.msg.tx_id)
-			WTROUBLE(dc,"XS_UNWATCH with transaction");
+			WTROUBLE("XS_UNWATCH with transaction");
 		if (!watch_message_parse(&dc->wbuf.msg, &wpath, &wtoken))
-			WTROUBLE(dc,"bad XS_WATCH message");
+			WTROUBLE("bad XS_WATCH message");
 
 		watch = find_visible_watch(dc, wpath, wtoken);
 		if (!watch)
-			WTROUBLE(dc,"unwatch nonexistent watch");
+			WTROUBLE("unwatch nonexistent watch");
 
 		watch->visible_to_user = 0;
 		make_watch_request(dc, req, dc->wbuf.msg.tx_id, watch);
 		break;
 
 	default:
-		WTROUBLE(dc,"unknown request message type");
+		WTROUBLE("unknown request message type");
 	}
 
 	err = 0;

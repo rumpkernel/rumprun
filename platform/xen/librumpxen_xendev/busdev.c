@@ -140,7 +140,7 @@ xenbus_dev_write(struct file *fp, off_t *offset, struct uio *uio,
 				break;
 
 			if (dd->wbuf.msg.len > XENSTORE_PAYLOAD_MAX)
-				WTROUBLE(dc,"too much payload in packet");
+				WTROUBLE("too much payload in packet");
 
 			uint32_t packetlen =
 				dd->wbuf.msg.len + sizeof(dd->wbuf.msg);
