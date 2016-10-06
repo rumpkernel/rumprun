@@ -28,7 +28,7 @@ void
 rumpxenbus_write_trouble(struct rumpxenbus_data_common *dc, const char *what);
 
 int
-rumpxenbus_process_request(struct rumpxenbus_data_common *d);
+rumpxenbus_process_request(struct rumpxenbus_data_common *dc);
 
 struct xsd_sockmsg*
 rumpxenbus_next_event_msg(struct rumpxenbus_data_common *dc,

@@ -93,23 +93,23 @@ free_watch(struct xenbus_dev_watch *watch)
 }
 
 static struct xenbus_dev_transaction*
-find_transaction(struct rumpxenbus_data_common *d, xenbus_transaction_t id)
+find_transaction(struct rumpxenbus_data_common *dc, xenbus_transaction_t id)
 {
-	struct rumpxenbus_data_user *const du = d->du;
+	struct rumpxenbus_data_user *const du = dc->du;
 	struct xenbus_dev_transaction *trans;
 
 	LIST_FOREACH(trans, &du->transactions, entry)
-		if (trans->tx_id == d->wbuf.msg.tx_id)
+		if (trans->tx_id == dc->wbuf.msg.tx_id)
 			return trans;
 	/* not found */
 	return 0;
 }
 
 static struct xenbus_dev_watch*
-find_visible_watch(struct rumpxenbus_data_common *d,
+find_visible_watch(struct rumpxenbus_data_common *dc,
 		   const char *path, const char *token)
 {
-	struct rumpxenbus_data_user *const du = d->du;
+	struct rumpxenbus_data_user *const du = dc->du;
 	struct xenbus_dev_watch *watch;
 
 	LIST_FOREACH(watch, &du->watches, entry)
@@ -124,12 +124,12 @@ find_visible_watch(struct rumpxenbus_data_common *d,
 /*----- request handling (writes to the device) -----*/
 
 static void
-make_request(struct rumpxenbus_data_common *d, struct xenbus_dev_request *req,
+make_request(struct rumpxenbus_data_common *dc, struct xenbus_dev_request *req,
 	     uint32_t tx_id, const struct write_req *wreqs, int num_wreqs)
 /* Caller should have filled in req->req_id, ->u, and (if needed)
  * ->user_id.  We deal with ->xb and ->xb_id. */
 {
-	struct rumpxenbus_data_user *const du = d->du;
+	struct rumpxenbus_data_user *const du = dc->du;
 
 	req->xb.watch = 0;
 	req->xb_id = xenbus_id_allocate(&du->replies, &req->xb);
@@ -151,7 +151,7 @@ watch_write_req_string(struct write_req **wreqp, const char *string)
 }
 
 static void
-make_watch_request(struct rumpxenbus_data_common *d,
+make_watch_request(struct rumpxenbus_data_common *dc,
 		   struct xenbus_dev_request *req,
 		   uint32_t tx_id, struct xenbus_dev_watch *watch)
 {
@@ -161,18 +161,18 @@ make_watch_request(struct rumpxenbus_data_common *d,
 	KASSERT((char*)wreq == (char*)wreqs + sizeof(wreqs));
 
 	req->u.watch = watch;
-	make_request(d, req, tx_id, wreqs, 2);
+	make_request(dc, req, tx_id, wreqs, 2);
 }
 
 static void
-forward_request(struct rumpxenbus_data_common *d, struct xenbus_dev_request *req)
+forward_request(struct rumpxenbus_data_common *dc, struct xenbus_dev_request *req)
 {
 	struct write_req wreq = {
-		d->wbuf.buffer + sizeof(d->wbuf.msg),
-		d->wbuf_used - sizeof(d->wbuf.msg),
+		dc->wbuf.buffer + sizeof(dc->wbuf.msg),
+		dc->wbuf_used - sizeof(dc->wbuf.msg),
 	};
 
-	make_request(d, req, d->wbuf.msg.tx_id, &wreq, 1);
+	make_request(dc, req, dc->wbuf.msg.tx_id, &wreq, 1);
 }
 
 static _Bool
@@ -204,9 +204,9 @@ watch_message_parse(const struct xsd_sockmsg *msg,
 }
 
 int
-rumpxenbus_process_request(struct rumpxenbus_data_common *d)
+rumpxenbus_process_request(struct rumpxenbus_data_common *dc)
 {
-	struct rumpxenbus_data_user *const du = d->du;
+	struct rumpxenbus_data_user *const du = dc->du;
 	struct xenbus_dev_request *req;
 	struct xenbus_dev_transaction *trans;
 	struct xenbus_dev_watch *watch_free = 0, *watch;
@@ -214,17 +214,17 @@ rumpxenbus_process_request(struct rumpxenbus_data_common *d)
 	int err;
 
 	DPRINTF(("/dev/xen/xenbus[%p,du=%p]: request, type=%d\n",
-		 d,du, d->wbuf.msg.type));
+		 dc,du, dc->wbuf.msg.type));
 
 	req = xbd_malloc(sizeof(*req));
 	if (!req) {
 		err = ENOMEM;
 		goto end;
 	}
-	req->user_id = d->wbuf.msg.req_id;
-	req->req_type = d->wbuf.msg.type;
+	req->user_id = dc->wbuf.msg.req_id;
+	req->req_type = dc->wbuf.msg.type;
 
-	switch (d->wbuf.msg.type) {
+	switch (dc->wbuf.msg.type) {
 	case XS_DIRECTORY:
 	case XS_READ:
 	case XS_GET_PERMS:
@@ -234,39 +234,39 @@ rumpxenbus_process_request(struct rumpxenbus_data_common *d)
 	case XS_MKDIR:
 	case XS_RM:
 	case XS_SET_PERMS:
-		if (d->wbuf.msg.tx_id) {
-			if (!find_transaction(d, d->wbuf.msg.tx_id))
-				WTROUBLE(d,"unknown transaction");
+		if (dc->wbuf.msg.tx_id) {
+			if (!find_transaction(dc, dc->wbuf.msg.tx_id))
+				WTROUBLE(dc,"unknown transaction");
 		}
-		forward_request(d, req);
+		forward_request(dc, req);
 		break;
 
 	case XS_TRANSACTION_START:
-		if (d->wbuf.msg.tx_id)
-			WTROUBLE(d,"nested transaction");
+		if (dc->wbuf.msg.tx_id)
+			WTROUBLE(dc,"nested transaction");
 		req->u.trans = xbd_malloc(sizeof(*req->u.trans));
 		if (!req->u.trans) {
 			err = ENOMEM;
 			goto end;
 		}
-		forward_request(d, req);
+		forward_request(dc, req);
 		break;
 
 	case XS_TRANSACTION_END:
-		if (!d->wbuf.msg.tx_id)
-			WTROUBLE(d,"ending zero transaction");
-		req->u.trans = trans = find_transaction(d, d->wbuf.msg.tx_id);
+		if (!dc->wbuf.msg.tx_id)
+			WTROUBLE(dc,"ending zero transaction");
+		req->u.trans = trans = find_transaction(dc, dc->wbuf.msg.tx_id);
 		if (!trans)
-			WTROUBLE(d,"ending unknown transaction");
+			WTROUBLE(dc,"ending unknown transaction");
 		LIST_REMOVE(trans, entry); /* prevent more reqs using it */
-		forward_request(d, req);
+		forward_request(dc, req);
 		break;
  
 	case XS_WATCH:
-		if (d->wbuf.msg.tx_id)
-			WTROUBLE(d,"XS_WATCH with transaction");
-		if (!watch_message_parse(&d->wbuf.msg, &wpath, &wtoken))
-			WTROUBLE(d,"bad XS_WATCH message");
+		if (dc->wbuf.msg.tx_id)
+			WTROUBLE(dc,"XS_WATCH with transaction");
+		if (!watch_message_parse(&dc->wbuf.msg, &wpath, &wtoken))
+			WTROUBLE(dc,"bad XS_WATCH message");
 
 		watch = watch_free = xbd_malloc(sizeof(*watch));
 		if (!watch) {
@@ -287,25 +287,25 @@ rumpxenbus_process_request(struct rumpxenbus_data_common *d)
 		watch_free = 0; /* we are committed */
 		watch->visible_to_user = 0;
 		LIST_INSERT_HEAD(&du->watches, watch, entry);
-		make_watch_request(d, req, d->wbuf.msg.tx_id, watch);
+		make_watch_request(dc, req, dc->wbuf.msg.tx_id, watch);
 		break;
 
 	case XS_UNWATCH:
-		if (d->wbuf.msg.tx_id)
-			WTROUBLE(d,"XS_UNWATCH with transaction");
-		if (!watch_message_parse(&d->wbuf.msg, &wpath, &wtoken))
-			WTROUBLE(d,"bad XS_WATCH message");
+		if (dc->wbuf.msg.tx_id)
+			WTROUBLE(dc,"XS_UNWATCH with transaction");
+		if (!watch_message_parse(&dc->wbuf.msg, &wpath, &wtoken))
+			WTROUBLE(dc,"bad XS_WATCH message");
 
-		watch = find_visible_watch(d, wpath, wtoken);
+		watch = find_visible_watch(dc, wpath, wtoken);
 		if (!watch)
-			WTROUBLE(d,"unwatch nonexistent watch");
+			WTROUBLE(dc,"unwatch nonexistent watch");
 
 		watch->visible_to_user = 0;
-		make_watch_request(d, req, d->wbuf.msg.tx_id, watch);
+		make_watch_request(dc, req, dc->wbuf.msg.tx_id, watch);
 		break;
 
 	default:
-		WTROUBLE(d,"unknown request message type");
+		WTROUBLE(dc,"unknown request message type");
 	}
 
 	err = 0;
@@ -318,7 +318,7 @@ end:
 /*----- response and watch event handling (reads from the device) -----*/
 
 static struct xsd_sockmsg*
-process_watch_event(struct rumpxenbus_data_common *d, struct xenbus_event *event,
+process_watch_event(struct rumpxenbus_data_common *dc, struct xenbus_event *event,
 		    struct xenbus_dev_watch *watch,
 		    void (**mfree_r)(void*))
 {
@@ -329,7 +329,7 @@ process_watch_event(struct rumpxenbus_data_common *d, struct xenbus_event *event
 
 	DPRINTF(("/dev/xen/xenbus[%p]: watch event,"
 		 " wpath=%s user_token=%s epath=%s xb.token=%s\n",
-                 d,
+                 dc,
 		 watch->path, watch->user_token,
 		 event->path, watch->xb.token));
 
@@ -363,7 +363,7 @@ process_watch_event(struct rumpxenbus_data_common *d, struct xenbus_event *event
 		printf("xenbus dev: out of memory for watch event"
 		       " wpath=`%s' epath=`%s'\n",
 		       watch->path, event->path);
-		d->queued_enomem = 1;
+		dc->queued_enomem = 1;
 		goto end;
 	}
 
@@ -394,10 +394,10 @@ end:
 
 /* Returned value is from malloc() */
 static struct xsd_sockmsg*
-process_response(struct rumpxenbus_data_common *d, struct xenbus_dev_request *req,
+process_response(struct rumpxenbus_data_common *dc, struct xenbus_dev_request *req,
 		 void (**mfree_r)(void*))
 {
-	struct rumpxenbus_data_user *const du = d->du;
+	struct rumpxenbus_data_user *const du = dc->du;
 	struct xenbus_dev_watch *watch;
 	struct xsd_sockmsg *msg = req->xb.reply;
 
@@ -408,7 +408,7 @@ process_response(struct rumpxenbus_data_common *d, struct xenbus_dev_request *re
 
 	DPRINTF(("/dev/xen/xenbus[%p,du=%p]:"
                  " response, req_type=%d msg->type=%d\n",
-		 d,du, req->req_type, msg->type));
+		 dc,du, req->req_type, msg->type));
 
 	switch (req->req_type) {
 
@@ -457,20 +457,20 @@ process_response(struct rumpxenbus_data_common *d, struct xenbus_dev_request *re
 }
 
 static struct xsd_sockmsg*
-process_event(struct rumpxenbus_data_common *d, struct xenbus_event *event,
+process_event(struct rumpxenbus_data_common *dc, struct xenbus_event *event,
 	      void (**mfree_r)(void*))
 {
 	if (event->watch) {
 		struct xenbus_dev_watch *watch =
 			container_of(event->watch, struct xenbus_dev_watch, xb);
 
-		return process_watch_event(d, event, watch, mfree_r);
+		return process_watch_event(dc, event, watch, mfree_r);
 
 	} else {
 		struct xenbus_dev_request *req =
 			container_of(event, struct xenbus_dev_request, xb);
 
-		return process_response(d, req, mfree_r);
+		return process_response(dc, req, mfree_r);
 	}
 
 }
@@ -539,9 +539,9 @@ xenbus_dev_xb_wakeup(struct xenbus_event_queue *queue)
 }
 
 void
-rumpxenbus_dev_restart_wakeup(struct rumpxenbus_data_common *c)
+rumpxenbus_dev_restart_wakeup(struct rumpxenbus_data_common *dc)
 {
-	struct rumpxenbus_data_user *d = c->du;
+	struct rumpxenbus_data_user *d = dc->du;
 	spin_lock(&xenbus_req_lock);
 	minios_wake_up(&d->replies.waitq);
 	spin_unlock(&xenbus_req_lock);
