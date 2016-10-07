@@ -10,8 +10,6 @@
 #include <bmk-rumpuser/core_types.h>
 #include <bmk-rumpuser/rumpuser.h>
 
-#include <inttypes.h>
-
 #include "busdev_user.h"
 
 #define xbd_malloc(sz) (bmk_memalloc((sz), 0, BMK_MEMWHO_RUMPKERN))
@@ -574,8 +572,8 @@ rumpxenbus_dev_user_shutdown(struct rumpxenbus_data_common *dc)
 		const struct write_req trans_end_data = { "F", 2 };
 		LIST_FOREACH_SAFE(trans, &d->transactions, entry, trans_tmp) {
 			DPRINTF(("/dev/xen/xenbus: close transaction"
-				 " %p %"PRIx32"\n",
-				 trans, (unsigned int)trans->tx_id));
+				 " %p %lx\n",
+				 trans, (unsigned long)trans->tx_id));
 			/* mirrors process_request XS_TRANSACTION_END */
 			trans->destroy.req_type = XS_TRANSACTION_END;
 			trans->destroy.u.trans = trans;
