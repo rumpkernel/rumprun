@@ -116,9 +116,6 @@ xenbus_dev_write(struct file *fp, off_t *offset, struct uio *uio,
 
 	DPRINTF(("/dev/xen/xenbus[%p,dd=%p]: write...\n",dc,dd));
 
-	if (uio->uio_offset < 0)
-		return EINVAL;
-
 	mutex_enter(&dd->lock);
 
 	for (;;) { /* keep reading more until we're done */
