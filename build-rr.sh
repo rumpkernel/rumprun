@@ -309,7 +309,7 @@ checktools ()
 	delay=5
 
 	# check that gcc is modern enough
-	vers=$(${CC:-cc} -E -dM - < /dev/null | awk '
+	vers=$(${CC:-cc} -E -dM - < /dev/null | LANG=C awk '
 	    /__GNUC__/ {version += 100*$3}
 	    /__GNUC_MINOR__/ {version += $3}
 	    END { print version; if (version) exit 0; exit 1; }') \
@@ -326,7 +326,7 @@ checktools ()
 	fi
 
 	# check that ld is modern enough
-	vers=$(${CC:-cc} -Wl,--version 2>&1 | awk '
+	vers=$(${CC:-cc} -Wl,--version 2>&1 | LANG=C awk '
 	    /GNU ld/{version += 100*$NF}
 	    END { print version; if (version) exit 0; exit 1; }') \
 		|| die unable to probe ld version
