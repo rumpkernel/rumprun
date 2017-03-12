@@ -52,7 +52,7 @@ ENTRY(_start)
 
 	/* clear console */
 	pushl %eax
-	movw $0x20, %ax
+	movw $' ', %ax
 	movl $(CONS_ADDRESS), %edi
 	movl $(CONS_WIDTH*CONS_HEIGHT), %ecx
 	rep stosw
@@ -62,6 +62,18 @@ ENTRY(_start)
 	cmpl $MULTIBOOT_BOOTLOADER_MAGIC, %eax
 	jne nomultiboot
 
+	/* test the sse feature flag */
+	movl $CPUID_01H_LEAF, %eax
+	cpuid
+	test $CPUID_01H_EDX_SSE, %edx
+	jz no_sse
+
+	/* enable sse */
+	movl %cr4, %eax
+	orl $(CR4_OSXMMEXCPT|CR4_OSFXSR), %eax
+	movl %eax, %cr4
+
+no_sse:
 	call x86_boot
 
 	jmp haltme
@@ -74,6 +86,7 @@ nomultiboot:
 	movsbl (%ebx), %eax
 	test %al, %al
 	je haltme
+
 	orl $0x500, %eax
 	movl %eax, (%ecx)
 	inc %ebx
