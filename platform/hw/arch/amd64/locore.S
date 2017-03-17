@@ -71,7 +71,7 @@ ENTRY(_start)
 
 	/* clear console */
 	pushl %eax
-	movw $0x20, %ax
+	movw $' ', %ax
 	movl $(CONS_ADDRESS), %edi
 	movl $(CONS_WIDTH*CONS_HEIGHT), %ecx
 	rep stosw
@@ -102,13 +102,13 @@ ENTRY(_start)
 
 	/* 1: enable pae and sse */
 	movl %cr4, %eax
-	orl $0x620, %eax
+	orl $(CR4_OSXMMEXCPT|CR4_OSFXSR|CR4_PAE), %eax
 	movl %eax, %cr4
 
 	/* 2: enable long mode */
-	movl $0xc0000080, %ecx
+	movl $MSR_EFER, %ecx
 	rdmsr
-	movl $0x100, %eax
+	movl $MSR_EFER_LME, %eax
 	wrmsr
 
 	/* 3: load pml4 pointer */
@@ -117,7 +117,7 @@ ENTRY(_start)
 
 	/* 4: enable paging */
 	movl %cr0, %eax
-	orl $0x80010001, %eax
+	orl $(CR0_PG|CR0_WP|CR0_PE), %eax
 	movl %eax, %cr0
 
 	/* 5: poetically longjump to longmode */

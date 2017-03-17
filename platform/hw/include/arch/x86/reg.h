@@ -1,3 +1,20 @@
+#define CPUID_01H_LEAF	0x01
+
+#define CPUID_01H_EDX_SSE	0x02000000 /* SSE Extensions */
+
+#define CR0_PG		0x80000000 /* Paging */
+#define CR0_WP		0x00010000 /* Write Protect */
+#define CR0_PE		0x00000001 /* Protection Enable */
+
+#define CR4_OSXMMEXCPT	0x00000400 /* OS support for unmasked SIMD FP exceptions */
+#define CR4_OSFXSR	0x00000200 /* OS support for FXSAVE & FXRSTOR */
+#define CR4_PAE		0x00000020 /* Physical Address Extension */
+
+/* Extended Feature Enable Register */
+#define MSR_EFER	0xc0000080
+
+#define MSR_EFER_LME	0x00000100 /* Long Mode Enable */
+
 #define PIC1_CMD	0x20
 #define PIC1_DATA	0x21
 #define PIC2_CMD	0xa0
