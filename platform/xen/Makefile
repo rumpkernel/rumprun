@@ -24,6 +24,10 @@ default: prepare links mini-os ${MAINOBJ} ${TARGETS}
 CPPFLAGS+= -isystem xen/include
 CPPFLAGS+= -no-integrated-cpp
 
+# Disable PIE, but need to check if compiler supports it
+LDFLAGS-$(call cc-option,-no-pie) += -no-pie
+LDFLAGS += $(LDFLAGS-y)
+
 CFLAGS += -fno-builtin
 
 rump-src-y += rumphyper_bio.c

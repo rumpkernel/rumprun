@@ -23,3 +23,6 @@ INSTALLDIR=     ${RROBJ}/dest.stage
 else
 INSTALLDIR=     ${RRDEST}
 endif
+
+cc-option = $(shell if [ -z "`echo 'int p=1;' | $(CC) $(1) -S -o /dev/null -x c - 2>&1`" ]; \
+                       then echo y; else echo n; fi)
