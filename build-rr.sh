@@ -350,7 +350,7 @@ buildrump ()
 
 	extracflags=
 	[ "${MACHINE_GNU_ARCH}" = "x86_64" ] \
-	    && extracflags='-F CFLAGS=-mno-red-zone'
+	    && extracflags='-F CFLAGS=-mno-red-zone -F CPPFLAGS=-Wimplicit-fallthrough=0'
 
 	# build tools
 	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
