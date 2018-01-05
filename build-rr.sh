@@ -351,6 +351,13 @@ buildrump ()
 	extracflags=
 	[ "${MACHINE_GNU_ARCH}" = "x86_64" ] \
 	    && extracflags='-F CFLAGS=-mno-red-zone'
+		
+	
+	# Disable new errors on GCC 7 which break netbsd-src compilation
+	#
+	[ `gcc -dumpversion | cut -f1 -d.` -ge 7 ] \
+		&& extracflags="$extracflags -F CPPFLAGS=-Wimplicit-fallthrough=0"	
+
 
 	# build tools
 	${BUILDRUMP}/buildrump.sh ${BUILD_QUIET} ${STDJ} -k		\
