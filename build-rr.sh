@@ -493,6 +493,14 @@ makeconfig ()
 	else
 		echo "CONFIG_CXX=no" >> ${1}
 	fi
+
+	# Check for if compiler supports -no-pie and save to EXTRACCFLAGS
+	gccnopie=
+	if [ -z "`echo 'int p=1;' | ${CC} -no-pie -S -o /dev/null -x c - 2>&1`" ]; then
+		gccnopie=-no-pie
+	fi
+	echo "EXTRACCFLAGS=${quote}${gccnopie}${quote}" >> ${1}
+
 }
 
 dobuild ()

@@ -83,6 +83,7 @@ ${TOOLOBJ}/${2}: ${1} Makefile ${TOOLOBJ}
 		-e 's#!PLATFORM!#$(PLATFORM)#g;'			\
 		-e 's#!CPPFLAGS!#$(BUILDRUMP_TOOL_CPPFLAGS)#g;'		\
 		-e 's#!CFLAGS!#$(BUILDRUMP_TOOL_CFLAGS)#g;'		\
+		-e 's#!EXTRACCFLAGS!#$(EXTRACCFLAGS)#g;'		\
 		-e 's#!CXXFLAGS!#$(BUILDRUMP_TOOL_CXXFLAGS)#g;'		\
 		-e 's#!LDFLAGS_BAKE!#$(LDFLAGS_BAKE)#g;'
 	chmod 755 $$@

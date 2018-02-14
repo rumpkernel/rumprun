@@ -164,7 +164,7 @@ processonefile ()
 	ln -sf -- "${fabs}" ${LINKPATH}
 
 	${RUMPRUN_COOKFS_CC} !CFLAGS! !CPPFLAGS! -nostdlib		\
-	    -Wl,-r,-b,binary -o ${TMPDIR}/d${fn}.o ${LINKPATH}
+	    !EXTRACCFLAGS! -Wl,-r,-b,binary -o ${TMPDIR}/d${fn}.o ${LINKPATH}
 
 	${RUMPRUN_COOKFS_OBJCOPY}					\
 	    --redefine-sym ${LINKPATH_BIN}_start=${rf}_start		\
@@ -233,7 +233,7 @@ exec 1>&3 3>&-
 unset IFS
 
 ${RUMPRUN_COOKFS_CC} !CFLAGS! !CPPFLAGS! -I${RUMPRUN_COOKFS_INCDIR}	\
-    -nostdlib -Wl,-r -o ${TMPDIR}/fin.o ${TMPDIR}/d*.o ${TMPDIR}/constr.c
+    -nostdlib !EXTRACCFLAGS! -Wl,-r -o ${TMPDIR}/fin.o ${TMPDIR}/d*.o ${TMPDIR}/constr.c
 ${RUMPRUN_COOKFS_OBJCOPY} ${LSYM} ${TMPDIR}/fin.o ${OUTFILE}
 
 totsize=$(${RUMPRUN_COOKFS_SIZE} ${OUTFILE} | awk 'NR == 2{print $4}')
