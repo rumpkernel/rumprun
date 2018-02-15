@@ -96,7 +96,7 @@ ferment)
 	${CC} ${CFLAGS} -no-integrated-cpp \
 	    --sysroot !DESTDIR!/rumprun-!MACHINE_GNU_ARCH! \
 	    -specs=!DESTDIR!/rumprun-!MACHINE_GNU_ARCH!/lib/specs-compile_or_ferment \
-	    -Wl,-r -Wl,-u,main \
+	    !EXTRACCFLAGS! -Wl,-r -Wl,-u,main \
 	    "$@" !DESTDIR!/rumprun-!MACHINE_GNU_ARCH!/share/!TOOLTUPLE!-recipe.s ${EXTRALIBS} || die
 
 	# If the presumed output file did not change, and the compiler

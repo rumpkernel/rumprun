@@ -33,7 +33,9 @@ LDARCHLIB := -l$(ARCH_LIB_NAME)
 LDSCRIPT := $(TARGET_ARCH_DIR)/minios-$(XEN_TARGET_ARCH).lds
 LDFLAGS_FINAL := -T $(LDSCRIPT)
 
-LDFLAGS := -L$(abspath $(OBJ_DIR)/$(TARGET_ARCH_DIR))
+# Disable PIE, but need to check if compiler supports it
+LDFLAGS-$(call cc-option,-no-pie) += -no-pie
+LDFLAGS := -L$(abspath $(OBJ_DIR)/$(TARGET_ARCH_DIR)) $(LDFLAGS-y)
 
 # Prefixes for global API names. All other symbols in mini-os are localised
 # before linking with rumprun applications.

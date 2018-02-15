@@ -31,6 +31,10 @@ SRCS+=		intr.c clock_subr.c kernel.c multiboot.c undefs.c
 include ../Makefile.inc
 include arch/${ARCHDIR}/Makefile.inc
 
+# Disable PIE, but need to check if compiler supports it
+LDFLAGS-$(call cc-option,-no-pie) += -no-pie
+LDFLAGS += $(LDFLAGS-y)
+
 OBJS:=	$(patsubst %.c,${RROBJ}/platform/%.o,${SRCS}) \
 	$(patsubst %.S,${RROBJ}/platform/%.o,${ASMS})
 
@@ -54,7 +58,7 @@ ${RROBJ}/platform/%.o: %.S
 	${CC} -D_LOCORE ${CPPFLAGS} ${CFLAGS} -c $< -o $@
 
 ${MAINOBJ}: ${OBJS} platformlibs
-	${CC} -nostdlib ${CFLAGS} -Wl,-r ${OBJS} -o $@ \
+	${CC} -nostdlib ${CFLAGS} ${LDFLAGS} -Wl,-r ${OBJS} -o $@ \
 	    -L${RROBJLIB}/libbmk_core -L${RROBJLIB}/libbmk_rumpuser \
 	    -Wl,--whole-archive -lbmk_rumpuser -lbmk_core -Wl,--no-whole-archive
 	${OBJCOPY} -w -G bmk_* -G rumpuser_* -G jsmn_* \

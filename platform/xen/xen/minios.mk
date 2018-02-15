@@ -7,8 +7,9 @@ debug = y
 # Define some default flags.
 # NB. '-Wcast-qual' is nasty, so I omitted it.
 DEF_CFLAGS += -fno-builtin -Wall -Werror -Wredundant-decls -Wno-format -Wno-redundant-decls
-DEF_CFLAGS += $(call cc-option,$(CC),-fno-stack-protector,)
-DEF_CFLAGS += $(call cc-option,$(CC),-fgnu89-inline)
+DEF_CFLAGS-$(call cc-option,-fno-stack-protector) += -fno-stack-protector
+DEF_CFLAGS-$(call cc-option,-fgnu89-inline) += -fgnu89-inline
+DEF_CFLAGS += $(DEF_CFLAGS-y)
 DEF_CFLAGS += -Wstrict-prototypes -Wnested-externs -Wpointer-arith -Winline
 DEF_CPPFLAGS += -D__XEN_INTERFACE_VERSION__=$(XEN_INTERFACE_VERSION)
 
