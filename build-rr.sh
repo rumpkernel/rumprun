@@ -290,12 +290,12 @@ setvars ()
 		RROBJ="./obj-${MACHINE}-${PLATFORM}${GITBRANCH}${EXTSRC}"
 		${KERNONLY} && RROBJ="${RROBJ}-kernonly"
 	fi
+	abspath RROBJ
 	STAGING="${RROBJ}/dest.stage"
 	BROBJ="${RROBJ}/buildrump.sh"
 	RUMPTOOLS="${RROBJ}/rumptools"
 
 	abspath RRDEST
-	abspath RROBJ
 	abspath RUMPSRC
 }
 
@@ -371,7 +371,7 @@ buildrump ()
 	echo '>> further setup for rumprun build'
 	echo '>>'
 
-	RUMPMAKE=$(pwd)/${RUMPTOOLS}/rumpmake
+	RUMPMAKE=${RUMPTOOLS}/rumpmake
 
 	TOOLTUPLE=$(${RUMPMAKE} -f bsd.own.mk \
 	    -V '${MACHINE_GNU_PLATFORM:S/--netbsd/-rumprun-netbsd/}')
@@ -477,7 +477,7 @@ makeconfig ()
 	echo "BUILDRUMP=${quote}${BUILDRUMP}${quote}" > ${1}
 	echo "RUMPSRC=${quote}${RUMPSRC}${quote}" >> ${1}
 	echo "RUMPMAKE=${quote}${RUMPMAKE}${quote}" >> ${1}
-	echo "BUILDRUMP_TOOLFLAGS=${quote}$(pwd)/${RUMPTOOLS}/toolchain-conf.mk${quote}" >> ${1}
+	echo "BUILDRUMP_TOOLFLAGS=${quote}${RUMPTOOLS}/toolchain-conf.mk${quote}" >> ${1}
 	echo "MACHINE=${quote}${MACHINE}${quote}" >> ${1}
 	echo "MACHINE_GNU_ARCH=${quote}${MACHINE_GNU_ARCH}${quote}" >> ${1}
 	echo "TOOLTUPLE=${quote}${TOOLTUPLE}${quote}" >> ${1}
