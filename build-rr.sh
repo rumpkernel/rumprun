@@ -357,7 +357,7 @@ buildrump ()
 	
 	# Disable new errors on GCC 7 which break netbsd-src compilation
 	#
-	[ `gcc -dumpversion | cut -f1 -d.` -ge 7 ] \
+	[ `${CC} -dumpversion | cut -f1 -d.` -ge 7 ] \
 		&& extracflags="$extracflags -F CPPFLAGS=-Wimplicit-fallthrough=0"	
 
 
