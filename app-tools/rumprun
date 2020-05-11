@@ -73,6 +73,7 @@ PLATFORM is the rumprun runtime platform to use
     ec2  : create directory with contents necessary for a Amazon EC2 AMI
     iso  : bake app and config into a bootable iso image
     kvm  : hw guest via qemu -enable-kvm
+    hvf  : hw guest via qemu -accel hvf
     qemu : hw guest via qemu -no-kvm
     xen  : xen guest via xl(1)
 
@@ -665,6 +666,8 @@ run_qemu ()
 
 	if [ "${variant}" = "kvm" ]; then
 		opt_kvm="-enable-kvm -cpu host"
+	elif [ "${variant}" = "hvf" ]; then
+		opt_kvm="-accel hvf -cpu host"
 	else
 		# really old qemu versions don't support -no-kvm
 		if ${qemu} -no-kvm -h >/dev/null 2>&1; then
@@ -910,6 +913,9 @@ iso)
 	;;
 kvm)
 	run_qemu kvm "$@"
+	;;
+hvf)
+	run_qemu hvf "$@"
 	;;
 qemu)
 	run_qemu qemu "$@"
